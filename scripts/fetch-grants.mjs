@@ -1,5 +1,5 @@
 // Fetch open funding calls, extract structured fields and score suitability with Gemini.
-import { HAS_GEMINI, HAS_SB, chunk, gemini, getJson, getText, hash, http, loadSources, log, orgContext, parseFeed, readJson, recordRun, reportSource, sb, stripHtml, today, toIso, writeJson } from './lib.mjs';
+import { HAS_GEMINI, HAS_SB, geminiAvailable, geminiStatus, chunk, gemini, getJson, getText, hash, http, loadSources, log, orgContext, parseFeed, readJson, recordRun, reportSource, sb, stripHtml, today, toIso, writeJson } from './lib.mjs';
 
 const MAX_NEW = Number(process.env.MAX_NEW_GRANTS || 40);
 
@@ -88,6 +88,10 @@ ${JSON.stringify(items)}`;
   return Array.isArray(out) ? out : [];
 }
 
+function rawGrant(b, now) {
+  return { id: b.id, title: b.title, funder: b.funder || '', summary: (b.text || '').slice(0, 400), amount_text: b.amount || null, amount_usd: null, deadline: b.deadline || null, open_date: b.open_date || null, eligibility: null, requirements: null, countries: ['GLOBAL'], regions: [], themes: [], url: b.url, source_id: b.source_id, source_name: b.source_name, fetched_at: now, score: null, strengths: [], weaknesses: [], score_reason: null };
+}
+
 async function main() {
   const sources = (await loadSources('grants')).filter((s) => s.enabled);
   const prev = readJson('grants.json', { grants: [] }).grants || [];
@@ -124,6 +128,10 @@ async function main() {
     seen.add(k);
     return !g.deadline || g.deadline >= today();
   }).slice(0, MAX_NEW);
+  if (HAS_GEMINI) {
+    const unscored = existing.filter((g) => g.score == null && (!g.deadline || g.deadline >= today()) && !candidates.find((c) => c.id === g.id)).slice(0, 20);
+    for (const g of unscored) candidates.push({ id: g.id, title: g.title, url: g.url, funder: g.funder, deadline: g.deadline, open_date: g.open_date, text: g.summary, source_id: g.source_id, source_name: g.source_name });
+  }
 
   const now = new Date().toISOString();
   const added = [];
@@ -131,6 +139,10 @@ async function main() {
     const context = await orgContext();
     for (const c of candidates.filter((c) => (c.text || '').length < 400).slice(0, 25)) c.page = await pageText(c.url);
     for (const batch of chunk(candidates, 6)) {
+      if (!geminiAvailable()) {
+        for (const b of batch) added.push(rawGrant(b, now));
+        continue;
+      }
       try {
         const res = await enrich(batch, context);
         for (const r of res) {
@@ -150,11 +162,11 @@ async function main() {
         }
       } catch (e) {
         log('enrich batch failed', e.message);
+        for (const b of batch) added.push(rawGrant(b, now));
       }
     }
   } else {
-    for (const b of candidates)
-      added.push({ id: b.id, title: b.title, funder: b.funder || '', summary: (b.text || '').slice(0, 400), amount_text: b.amount || null, amount_usd: null, deadline: b.deadline || null, open_date: b.open_date || null, eligibility: null, requirements: null, countries: ['GLOBAL'], regions: [], themes: [], url: b.url, source_id: b.source_id, source_name: b.source_name, fetched_at: now, score: null, strengths: [], weaknesses: [], score_reason: null });
+    for (const b of candidates) added.push(rawGrant(b, now));
   }
 
   // keep calls whose deadline is unknown or within the last 60 days
@@ -166,7 +178,7 @@ async function main() {
   // Public file: listing fields only. Scores and fit notes stay in Supabase when it is connected.
   const pub = all.map((g) => (HAS_SB ? { ...g, score: null, strengths: [], weaknesses: [], score_reason: null } : g));
   writeJson('grants.json', { updated_at: now, grants: pub });
-  const msg = `${added.length} new calls added (${candidates.length} candidates), ${all.length} tracked${HAS_GEMINI ? '' : ' · no Gemini key: unscored'}`;
+  const msg = `${added.length} new calls added (${candidates.length} candidates), ${all.length} tracked${HAS_GEMINI ? ` · Gemini ${geminiStatus.ok}/${geminiStatus.calls} calls ok${geminiStatus.lastError ? ` (last error: ${geminiStatus.lastError})` : ''}` : ' · no Gemini key: unscored'}`;
   recordRun('grants', true, msg);
   log(msg);
 }

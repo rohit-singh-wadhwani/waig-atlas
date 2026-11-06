@@ -10,7 +10,7 @@ fs.mkdirSync(DATA, { recursive: true });
 const { GEMINI_API_KEY, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = process.env;
 export const HAS_GEMINI = !!GEMINI_API_KEY;
 export const HAS_SB = !!(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY);
-const MODELS = (process.env.GEMINI_MODEL || 'gemini-flash-latest,gemini-2.5-flash,gemini-2.0-flash').split(',').map((s) => s.trim());
+const MODELS = (process.env.GEMINI_MODEL || 'gemini-2.5-flash,gemini-flash-latest,gemini-2.5-flash-lite,gemini-flash-lite-latest').split(',').map((s) => s.trim());
 
 export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 export const hash = (s) => crypto.createHash('sha1').update(String(s)).digest('hex').slice(0, 16);
@@ -96,6 +96,15 @@ export function toIso(d) {
 /* ---------------- Gemini ---------------- */
 
 let lastCall = 0;
+const deadModels = new Set(); // models that are missing or out of quota for this run
+export const geminiStatus = { calls: 0, ok: 0, lastError: null };
+
+function quotaMessage(j) {
+  const msg = j?.error?.message || '';
+  const daily = /per ?day|PerDay|limit: 0|free_tier/i.test(JSON.stringify(j || {}));
+  return { msg: msg.slice(0, 220), daily };
+}
+
 export async function gemini(prompt, { json = true, search = false, temperature = 0.2 } = {}) {
   if (!HAS_GEMINI) throw new Error('GEMINI_API_KEY not set');
   const body = {
@@ -103,39 +112,68 @@ export async function gemini(prompt, { json = true, search = false, temperature 
     generationConfig: { temperature, ...(json && !search ? { responseMimeType: 'application/json' } : {}) },
     ...(search ? { tools: [{ google_search: {} }] } : {}),
   };
-  let lastErr;
+  let firstErr = null;
+  const note = (e) => {
+    firstErr = firstErr || e;
+    geminiStatus.lastError = e.message;
+  };
   for (const model of MODELS) {
-    for (let attempt = 0; attempt < 3; attempt++) {
-      const wait = 4500 - (Date.now() - lastCall); // stay under free-tier per-minute limits
+    if (deadModels.has(model + (search ? ':search' : ''))) continue;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const wait = 6500 - (Date.now() - lastCall); // <= ~9 requests a minute
       if (wait > 0) await sleep(wait);
       lastCall = Date.now();
+      geminiStatus.calls++;
+      let r;
       try {
-        const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+        r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
           method: 'POST',
           headers: { 'content-type': 'application/json', 'x-goog-api-key': GEMINI_API_KEY },
           body: JSON.stringify(body),
         });
-        if (r.status === 404) {
-          lastErr = new Error(`model ${model} not found`);
-          break; // try next model
-        }
-        if (r.status === 429 || r.status >= 500) {
-          lastErr = new Error(`Gemini ${r.status}`);
-          await sleep(15000 * (attempt + 1));
-          continue;
-        }
-        const j = await r.json();
-        if (!r.ok) throw new Error(`Gemini ${r.status}: ${JSON.stringify(j).slice(0, 300)}`);
-        const text = (j.candidates?.[0]?.content?.parts || []).map((p) => p.text || '').join('');
-        if (!json) return text;
-        return parseJsonLoose(text);
       } catch (e) {
-        lastErr = e;
-        if (String(e.message).startsWith('Gemini 4')) throw e;
+        note(new Error(`Gemini network error: ${e.message}`));
+        continue;
       }
+      const j = await r.json().catch(() => ({}));
+      if (r.status === 404) {
+        deadModels.add(model);
+        deadModels.add(model + ':search');
+        note(new Error(`Gemini model ${model} not available`));
+        break;
+      }
+      if (r.status === 429) {
+        const q = quotaMessage(j);
+        note(new Error(`Gemini ${model} quota: ${q.msg}`));
+        if (q.daily) {
+          deadModels.add(model + (search ? ':search' : ''));
+          break; // daily or zero quota: retrying won't help, try the next model
+        }
+        await sleep(20000);
+        continue;
+      }
+      if (r.status >= 500) {
+        note(new Error(`Gemini ${model} ${r.status}`));
+        await sleep(8000);
+        continue;
+      }
+      if (!r.ok) {
+        const e = new Error(`Gemini ${model} ${r.status}: ${(j?.error?.message || '').slice(0, 220)}`);
+        note(e);
+        if (r.status === 400 || r.status === 403) throw e; // bad key or bad request: stop
+        break;
+      }
+      const text = (j.candidates?.[0]?.content?.parts || []).map((p) => p.text || '').join('');
+      geminiStatus.ok++;
+      if (!json) return text;
+      return parseJsonLoose(text);
     }
   }
-  throw lastErr || new Error('Gemini failed');
+  throw firstErr || new Error('Gemini failed: no model available');
+}
+
+export function geminiAvailable() {
+  return HAS_GEMINI && !MODELS.every((m) => deadModels.has(m));
 }
 
 export function parseJsonLoose(text) {

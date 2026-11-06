@@ -1,5 +1,5 @@
 // Fetch public-health news, outbreak notices, research, social posts and tenders; summarise and tag with Gemini.
-import { HAS_GEMINI, chunk, gemini, getJson, getText, hash, loadSources, log, parseFeed, readJson, recordRun, reportSource, stripHtml, today, toIso, writeJson } from './lib.mjs';
+import { HAS_GEMINI, chunk, geminiAvailable, geminiStatus, sleep, gemini, getJson, getText, hash, loadSources, log, parseFeed, readJson, recordRun, reportSource, stripHtml, today, toIso, writeJson } from './lib.mjs';
 
 const KEEP_DAYS = 120;
 const MAX_ENRICH = Number(process.env.MAX_ENRICH_INSIGHTS || 90);
@@ -30,7 +30,14 @@ async function collect(src) {
       const s = await getJson(`${base}/esearch.fcgi?db=pubmed&retmode=json&sort=pub_date&retmax=25&term=${encodeURIComponent(src.url)}`);
       const ids = s?.esearchresult?.idlist || [];
       if (!ids.length) return [];
-      const sum = await getJson(`${base}/esummary.fcgi?db=pubmed&retmode=json&id=${ids.join(',')}`);
+      await sleep(1500); // NCBI allows ~3 requests a second without a key
+      let sum;
+      try {
+        sum = await getJson(`${base}/esummary.fcgi?db=pubmed&retmode=json&id=${ids.join(',')}`);
+      } catch {
+        await sleep(5000);
+        sum = await getJson(`${base}/esummary.fcgi?db=pubmed&retmode=json&id=${ids.join(',')}`);
+      }
       return ids.map((id) => sum.result?.[id]).filter(Boolean).map((r) => ({
         title: r.title, url: `https://pubmed.ncbi.nlm.nih.gov/${r.uid}/`, date: toIso(r.sortpubdate || r.pubdate), text: `${r.fulljournalname || r.source}. ${(r.authors || []).slice(0, 3).map((a) => a.name).join(', ')}`, kind: 'research',
       }));
@@ -98,6 +105,10 @@ async function main() {
   const added = [];
   const toEnrich = HAS_GEMINI ? uniq.slice(0, MAX_ENRICH) : [];
   for (const batch of chunk(toEnrich, 15)) {
+    if (!geminiAvailable()) {
+      for (const b of batch) added.push({ id: b.id, title: b.title, summary: (b.text || '').slice(0, 300), url: b.url, published_at: b.date, source_id: b.source_id, source_name: b.source_name, kind: b.kind, countries: [], diseases: [] });
+      continue;
+    }
     try {
       const res = await enrich(batch);
       for (const r of res) {
@@ -114,14 +125,13 @@ async function main() {
       for (const b of batch) added.push({ id: b.id, title: b.title, summary: (b.text || '').slice(0, 300), url: b.url, published_at: b.date, source_id: b.source_id, source_name: b.source_name, kind: b.kind, countries: [], diseases: [] });
     }
   }
-  if (!HAS_GEMINI)
-    for (const b of uniq.slice(0, 200)) added.push({ id: b.id, title: b.title, summary: (b.text || '').slice(0, 300), url: b.url, published_at: b.date, source_id: b.source_id, source_name: b.source_name, kind: b.kind, countries: [], diseases: [] });
+  for (const b of HAS_GEMINI ? uniq.slice(MAX_ENRICH, 200) : uniq.slice(0, 200)) added.push({ id: b.id, title: b.title, summary: (b.text || '').slice(0, 300), url: b.url, published_at: b.date, source_id: b.source_id, source_name: b.source_name, kind: b.kind, countries: [], diseases: [] });
 
   const cutoff = Date.now() - KEEP_DAYS * 86400000;
   const all = [...added, ...prev].filter((i) => +new Date(i.published_at) >= cutoff).sort((a, b) => b.published_at.localeCompare(a.published_at)).slice(0, 2000);
   writeJson('insights.json', { updated_at: new Date().toISOString(), insights: all });
   writeJson('insights-rejected.json', { ids: Array.from(rejected).slice(-8000) });
-  const msg = `${added.length} new insights (${uniq.length} candidates), ${all.length} kept`;
+  const msg = `${added.length} new insights (${uniq.length} candidates), ${all.length} kept${HAS_GEMINI ? ` · Gemini ${geminiStatus.ok}/${geminiStatus.calls} calls ok${geminiStatus.lastError ? ` (last error: ${geminiStatus.lastError})` : ''}` : ''}`;
   recordRun('insights', true, msg);
   log(msg);
 }
