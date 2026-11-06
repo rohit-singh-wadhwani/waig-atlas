@@ -110,6 +110,8 @@ async function main() {
       log('read grants from Supabase failed', e.message);
     }
   }
+  // older unscored items were tagged GLOBAL; use the source's usual eligibility instead
+  for (const g of existing) if (g.score == null && g.countries?.length === 1 && g.countries[0] === 'GLOBAL') g.countries = defaultCountries(g.source_id);
   const known = new Map(existing.map((g) => [g.id, g]));
   const rejected = new Set(readJson('grants-rejected.json', { ids: [] }).ids);
   const fresh = [];
