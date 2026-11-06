@@ -51,7 +51,7 @@ export function KpiCard({ icon, tint = 'teal', label, value, foot, onClick }: { 
 
 export function Segmented<T extends string>({ value, options, onChange, size = 'md' }: { value: T; options: { value: T; label: string }[]; onChange: (v: T) => void; size?: 'sm' | 'md' }) {
   return (
-    <div className="inline-flex items-center bg-gray-100/80 border border-gray-200 rounded-xl p-1 gap-0.5">
+    <div className="inline-flex items-center bg-gray-100/80 border border-gray-200 rounded-xl p-1 gap-0.5 max-w-full overflow-x-auto">
       {options.map((o) => (
         <button
           key={o.value}

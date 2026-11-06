@@ -389,7 +389,7 @@ function EditProject({ open, onClose, project, save }: { open: boolean; onClose:
             </li>
           ))}
         </ul>
-        <div className="grid grid-cols-[1fr_1.3fr_120px_auto] gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <TextInput placeholder="Title" value={lt} onChange={(e) => setLt(e.target.value)} />
           <TextInput placeholder="https://…" value={lu} onChange={(e) => setLu(e.target.value)} />
           <Select value={lk} onChange={(v) => setLk(v as any)} options={[{ value: 'dashboard', label: 'Dashboard' }, { value: 'document', label: 'Document' }, { value: 'repo', label: 'Repo' }, { value: 'link', label: 'Link' }]} />

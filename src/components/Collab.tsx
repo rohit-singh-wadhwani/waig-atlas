@@ -107,7 +107,7 @@ export function Attachments({ entityType, entityId, title = 'Attachments', subti
         }
       />
       {adding && (
-        <div className="grid grid-cols-1 md:grid-cols-[1fr_1.4fr_150px_auto] gap-2 mb-4">
+        <div className="grid gap-2 mb-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))' }}>
           <TextInput placeholder="Title" value={t} onChange={(e) => setT(e.target.value)} />
           <TextInput placeholder="https://…" value={u} onChange={(e) => setU(e.target.value)} />
           <Select value={k} onChange={(v) => setK(v as Attachment['kind'])} options={[{ value: 'link', label: 'Link' }, { value: 'dashboard', label: 'Dashboard' }, { value: 'document', label: 'Document' }]} />
