@@ -36,6 +36,7 @@ export function colorFor(value: number | undefined, breaks: number[]) {
 
 export default function WorldMap({
   geo, values, valueLabel = (v: number) => v.toLocaleString('en-GB'), points = [], selected, onCountryClick, onPointClick, height = 460, legendTitle, globe = true,
+  fills, fillLabels, legend, focus, overlay,
 }: {
   geo: WorldGeo | null;
   values?: Record<string, number>;
@@ -46,6 +47,16 @@ export default function WorldMap({
   onPointClick?: (id: string) => void;
   height?: number;
   legendTitle?: string;
+  /** categorical fill per country (ISO3 -> colour), drawn instead of the grey land */
+  fills?: Record<string, string>;
+  /** hover text per country when using fills */
+  fillLabels?: Record<string, string>;
+  /** categorical legend entries */
+  legend?: { color: string; label: string }[];
+  /** [lng, lat] to turn the globe towards when data arrives */
+  focus?: [number, number] | null;
+  /** extra content pinned to the top-left of the map */
+  overlay?: React.ReactNode;
   globe?: boolean;
 }) {
   const el = useRef<HTMLDivElement>(null);
@@ -56,8 +67,8 @@ export default function WorldMap({
   byId.current = new Map(points.map((p) => [p.id, p]));
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
-  const cb = useRef({ onCountryClick, onPointClick, valueLabel, values });
-  cb.current = { onCountryClick, onPointClick, valueLabel, values };
+  const cb = useRef({ onCountryClick, onPointClick, valueLabel, values, fillLabels });
+  cb.current = { onCountryClick, onPointClick, valueLabel, values, fillLabels };
 
   const breaks = useMemo(() => quantileBreaks(Object.values(values || {})), [values]);
 
@@ -67,10 +78,10 @@ export default function WorldMap({
       type: 'FeatureCollection',
       features: geo.features.map((f: any) => ({
         ...f,
-        properties: { ...f.properties, fill: values ? colorFor(values[f.properties.iso3], breaks) : '#d5dade', sel: f.properties.iso3 === selected ? 1 : 0 },
+        properties: { ...f.properties, fill: values ? colorFor(values[f.properties.iso3], breaks) : fills?.[f.properties.iso3] || '#d5dade', sel: f.properties.iso3 === selected ? 1 : 0 },
       })),
     };
-  }, [geo, values, breaks, selected]);
+  }, [geo, values, breaks, selected, fills]);
 
   const pointGeo = useMemo(
     () => ({
@@ -127,7 +138,8 @@ export default function WorldMap({
       };
       const countryHtml = (c: any) => {
         const v = cb.current.values?.[c.iso3];
-        return `<div class="atlas-pop-title">${escapeHtml(c.name)}</div>${cb.current.values ? `<div class="atlas-pop-sub">${v !== undefined ? escapeHtml(cb.current.valueLabel(v)) : 'No data'}</div>` : ''}`;
+        const extra = cb.current.fillLabels?.[c.iso3];
+        return `<div class="atlas-pop-title">${escapeHtml(c.name)}</div>${cb.current.values ? `<div class="atlas-pop-sub">${v !== undefined ? escapeHtml(cb.current.valueLabel(v)) : 'No data'}</div>` : ''}${cb.current.fillLabels ? `<div class="atlas-pop-sub">${escapeHtml(extra || 'No open calls')}</div>` : ''}`;
       };
       m.on('mousemove', (e: any) => {
         if (pinned.current?.isOpen?.()) return;
@@ -185,6 +197,11 @@ export default function WorldMap({
   useEffect(() => {
     if (ready) map.current?.getSource('points')?.setData(pointGeo);
   }, [ready, pointGeo]);
+  const focusKey = focus ? focus.join(',') : '';
+  useEffect(() => {
+    if (ready && focus) map.current?.easeTo({ center: focus, duration: 900 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, focusKey]);
 
   return (
     <div className="relative rounded-xl overflow-hidden border border-gray-100 bg-gray-50" style={{ height }}>
@@ -192,6 +209,14 @@ export default function WorldMap({
       {(failed || (geo && !geo.features.length)) && (
         <div className="absolute inset-0 flex items-center justify-center text-sm text-gray-500 p-6 text-center">
           The map couldn't load (map library or country boundaries unavailable on this network).
+        </div>
+      )}
+      {overlay && <div className="absolute left-3 top-3 z-10 flex flex-wrap gap-2 pr-16">{overlay}</div>}
+      {!values && legend && legend.length > 0 && (
+        <div className="absolute left-3 bottom-3 bg-white/95 border border-gray-200 rounded-xl px-3 py-2 shadow-card text-xs text-gray-600 space-y-1">
+          {legend.map((l) => (
+            <div key={l.label} className="flex items-center gap-2"><span className="w-3 h-3 rounded-sm" style={{ background: l.color }} />{l.label}</div>
+          ))}
         </div>
       )}
       {values && breaks.length > 0 && (

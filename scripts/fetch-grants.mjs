@@ -88,8 +88,15 @@ ${JSON.stringify(items)}`;
   return Array.isArray(out) ? out : [];
 }
 
+// Where a source's calls are usually eligible, used when Gemini can't read the call
+function defaultCountries(sourceId = '') {
+  if (/^(grantsgov|nih)/.test(sourceId)) return ['USA'];
+  if (/^ukri/.test(sourceId)) return ['GBR'];
+  return ['GLOBAL'];
+}
+
 function rawGrant(b, now) {
-  return { id: b.id, title: b.title, funder: b.funder || '', summary: (b.text || '').slice(0, 400), amount_text: b.amount || null, amount_usd: null, deadline: b.deadline || null, open_date: b.open_date || null, eligibility: null, requirements: null, countries: ['GLOBAL'], regions: [], themes: [], url: b.url, source_id: b.source_id, source_name: b.source_name, fetched_at: now, score: null, strengths: [], weaknesses: [], score_reason: null };
+  return { id: b.id, title: b.title, funder: b.funder || '', summary: (b.text || '').slice(0, 400), amount_text: b.amount || null, amount_usd: null, deadline: b.deadline || null, open_date: b.open_date || null, eligibility: null, requirements: null, countries: defaultCountries(b.source_id), regions: [], themes: [], url: b.url, source_id: b.source_id, source_name: b.source_name, fetched_at: now, score: null, strengths: [], weaknesses: [], score_reason: null };
 }
 
 async function main() {

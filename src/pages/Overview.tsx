@@ -68,6 +68,15 @@ export default function OverviewPage() {
     return out;
   }, [open, alerts, projects.data, ms.data, countries]);
 
+  const fills = useMemo(() => {
+    const out: Record<string, string> = {};
+    const best = new Map<string, number>();
+    for (const g of open) for (const c of g.countries) if (c !== 'GLOBAL') best.set(c, Math.max(best.get(c) ?? 0, g.score ?? 0));
+    best.forEach((b, iso) => (out[iso] = b >= 70 ? '#5aa5a6' : b >= 45 ? '#f3c766' : '#b8bec6'));
+    return out;
+  }, [open]);
+  const globalCalls = open.filter((g) => g.countries.includes('GLOBAL')).length;
+
   const statusCounts = ['watching', 'pursuing', 'submitted', 'won', 'lost'].map((s) => tracking.data.filter((t) => t.status === s).length);
 
   return (
@@ -95,7 +104,14 @@ export default function OverviewPage() {
       <div className="grid grid-cols-1 xl:grid-cols-[1.6fr_1fr] gap-6 mb-6">
         <Card>
           <CardHeader title="World view" subtitle={<span className="inline-flex flex-wrap gap-x-3 gap-y-1">Click any dot for details. <Legend c="#316d6e" l="Open calls (teal strong fit, amber possible, grey weak/unscored)" /><Legend c="#d03b3b" l="Outbreak alerts (30d)" /><Legend c="#6250d6" l="Our projects" /></span>} />
-          <WorldMap geo={world?.geo || null} points={points} height={420} />
+          <WorldMap
+            geo={world?.geo || null}
+            points={points}
+            fills={fills}
+            height={420}
+            legend={[{ color: '#5aa5a6', label: 'Country with strong-fit calls' }, { color: '#f3c766', label: 'Possible-fit calls' }, { color: '#b8bec6', label: 'Weak or unscored calls' }]}
+            overlay={globalCalls ? <span className="bg-white/95 border border-gray-200 rounded-lg px-2.5 py-1 text-xs text-gray-700 shadow-card">+ {globalCalls} global / multi-country call{globalCalls > 1 ? 's' : ''}</span> : undefined}
+          />
         </Card>
         <Card className="flex flex-col">
           <CardHeader title="Best-fit deals" right={<Link to="/grants" className="text-sm text-brand-700">All grants</Link>} />

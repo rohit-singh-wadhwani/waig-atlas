@@ -100,6 +100,24 @@ export default function GrantsPage() {
       })
       .filter(Boolean) as MapPoint[];
   }, [open, countries]);
+  // Country fills by best fit, plus a hover summary and a focus point on the busiest country
+  const FIT = { strong: '#5aa5a6', possible: '#f3c766', weak: '#b8bec6' };
+  const { fills, fillLabels, focus } = useMemo(() => {
+    const fills: Record<string, string> = {};
+    const fillLabels: Record<string, string> = {};
+    let top: [string, number] = ['', 0];
+    const by = new Map<string, Grant[]>();
+    for (const g of open) for (const c of g.countries || []) if (c !== 'GLOBAL') by.set(c, [...(by.get(c) || []), g]);
+    by.forEach((list, iso) => {
+      const best = Math.max(...list.map((g) => g.score ?? 0));
+      fills[iso] = best >= 70 ? FIT.strong : best >= 45 ? FIT.possible : FIT.weak;
+      fillLabels[iso] = `${list.length} open call${list.length > 1 ? 's' : ''} · best fit ${best || 'not scored'} · click to filter`;
+      if (list.length > top[1]) top = [iso, list.length];
+    });
+    const c = countries.find((x) => x.iso3 === (f.country || top[0]));
+    return { fills, fillLabels, focus: c ? ([c.lng, c.lat] as [number, number]) : null };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, countries, f.country]);
   const globalCount = open.filter((g) => g.countries?.includes('GLOBAL')).length;
 
   // Charts
@@ -145,15 +163,15 @@ export default function GrantsPage() {
       <div className="grid grid-cols-1 xl:grid-cols-[1.6fr_1fr] gap-6 mb-6">
         <Card>
           <CardHeader title="Where the money is" subtitle="Open calls by eligible country · teal = strong fit, amber = possible, grey = weak or unscored. Click a country to filter." />
-          <WorldMap geo={world?.geo || null} points={points} selected={f.country || null} onPointClick={(iso) => setF({ ...f, country: iso })} onCountryClick={(iso) => setF({ ...f, country: f.country === iso ? '' : iso })} height={440} />
+          <WorldMap geo={world?.geo || null} points={points} fills={fills} fillLabels={fillLabels} focus={focus} legend={[{ color: FIT.strong, label: 'Strong fit (70+)' }, { color: FIT.possible, label: 'Possible fit (45–69)' }, { color: FIT.weak, label: 'Weak fit or not scored' }]} overlay={globalCount ? <button type="button" onClick={() => setF({ ...f, country: '', region: '' })} className="bg-white/95 border border-gray-200 rounded-lg px-2.5 py-1 text-xs text-gray-700 shadow-card hover:border-brand-300">+ {globalCount} global / multi-country call{globalCount > 1 ? 's' : ''}</button> : undefined} selected={f.country || null} onPointClick={(iso) => setF({ ...f, country: iso })} onCountryClick={(iso) => setF({ ...f, country: f.country === iso ? '' : iso })} height={440} />
         </Card>
         <Card className="flex flex-col">
           <CardHeader title="Latest deals" subtitle="Newest first" />
           <div className="flex-1 overflow-y-auto -mx-2 max-h-[440px]">
             {[...open].sort((a, b) => (b.open_date || b.fetched_at).localeCompare(a.open_date || a.fetched_at)).slice(0, 25).map((g) => (
               <button key={g.id} type="button" onClick={() => setOpenId(g.id)} className="w-full text-left px-2 py-3 rounded-xl hover:bg-gray-50 border-b border-gray-100 last:border-0">
-                <div className="flex items-start gap-2">
-                  <span className="font-medium text-gray-900 text-[15px] leading-snug line-clamp-2 flex-1">{g.title}</span>
+                <div className="flex items-start gap-2 min-w-0">
+                  <span className="font-medium text-gray-900 text-[15px] leading-snug line-clamp-2 flex-1 min-w-0">{g.title}</span>
                   {g.score != null && <Badge className={scoreTone(g.score).cls}>{g.score}</Badge>}
                 </div>
                 <div className="text-sm text-gray-500 mt-1 flex flex-wrap gap-x-3">
