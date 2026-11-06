@@ -121,8 +121,12 @@ async function main() {
   }
 
   // de-duplicate across sources and drop calls already closed
+  const bySrc = new Map();
+  for (const f of fresh) bySrc.set(f.source_id, [...(bySrc.get(f.source_id) || []), f]);
+  const mixed = [];
+  for (let k = 0; mixed.length < fresh.length; k++) for (const list of bySrc.values()) if (list[k]) mixed.push(list[k]);
   const seen = new Set();
-  const candidates = fresh.filter((g) => {
+  const candidates = mixed.filter((g) => {
     const k = g.title.toLowerCase().replace(/\W+/g, ' ').trim();
     if (seen.has(k)) return false;
     seen.add(k);

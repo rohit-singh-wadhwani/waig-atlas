@@ -108,7 +108,7 @@ const BASE = 'https://generativelanguage.googleapis.com/v1beta';
 async function discoverModels() {
   if (models) return models;
   if (process.env.GEMINI_MODEL) return (models = process.env.GEMINI_MODEL.split(',').map((x) => x.trim()));
-  const fallback = ['gemini-flash-latest', 'gemini-flash-lite-latest', 'gemini-2.5-flash', 'gemini-2.5-flash-lite'];
+  const fallback = ['gemini-flash-lite-latest', 'gemini-flash-latest', 'gemini-2.5-flash-lite'];
   try {
     const r = await fetch(`${BASE}/models?pageSize=200`, { headers: { 'x-goog-api-key': GEMINI_API_KEY } });
     const j = await r.json();
@@ -117,7 +117,7 @@ async function discoverModels() {
       .map((m) => m.name.replace(/^models\//, ''))
       .filter((n) => /flash/.test(n) && !/image|tts|audio|live|thinking|exp|embedding|8b/.test(n));
     const ver = (n) => Number((n.match(/gemini-(\d+(?:\.\d+)?)/) || [])[1] || (/latest/.test(n) ? 99 : 0));
-    const ranked = names.sort((a, b) => Number(/lite/.test(a)) - Number(/lite/.test(b)) || Number(/preview/.test(a)) - Number(/preview/.test(b)) || ver(b) - ver(a));
+    const ranked = names.sort((a, b) => Number(!/lite/.test(a)) - Number(!/lite/.test(b)) || Number(/preview/.test(a)) - Number(/preview/.test(b)) || ver(b) - ver(a));
     models = ranked.length ? ranked.slice(0, 5) : fallback;
   } catch (e) {
     models = fallback;
