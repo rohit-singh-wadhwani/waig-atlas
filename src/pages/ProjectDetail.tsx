@@ -389,11 +389,14 @@ function EditProject({ open, onClose, project, save }: { open: boolean; onClose:
             </li>
           ))}
         </ul>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <TextInput placeholder="Title" value={lt} onChange={(e) => setLt(e.target.value)} />
-          <TextInput placeholder="https://…" value={lu} onChange={(e) => setLu(e.target.value)} />
-          <Select value={lk} onChange={(v) => setLk(v as any)} options={[{ value: 'dashboard', label: 'Dashboard' }, { value: 'document', label: 'Document' }, { value: 'repo', label: 'Repo' }, { value: 'link', label: 'Link' }]} />
-          <Button onClick={() => { if (/^https?:\/\//.test(lu)) { setP({ ...p, links: [...p.links, { title: lt || lu, url: lu, kind: lk }] }); setLt(''); setLu(''); } }}>Add</Button>
+        <div className="rounded-xl border border-dashed border-gray-300 p-3 space-y-2">
+          <div className="text-xs font-medium text-gray-500">Add a link</div>
+          <TextInput className="w-full" placeholder="Title, e.g. QA dashboard" value={lt} onChange={(e) => setLt(e.target.value)} />
+          <TextInput className="w-full" placeholder="https://…" value={lu} onChange={(e) => setLu(e.target.value)} />
+          <div className="flex gap-2">
+            <Select className="flex-1" value={lk} onChange={(v) => setLk(v as any)} options={[{ value: 'dashboard', label: 'Dashboard' }, { value: 'document', label: 'Document' }, { value: 'repo', label: 'Repo' }, { value: 'link', label: 'Link' }]} />
+            <Button icon="plus" className="h-11" onClick={() => { if (/^https?:\/\//.test(lu)) { setP({ ...p, links: [...p.links, { title: lt || lu, url: lu, kind: lk }] }); setLt(''); setLu(''); } }}>Add</Button>
+          </div>
         </div>
       </Field>
     </Modal>

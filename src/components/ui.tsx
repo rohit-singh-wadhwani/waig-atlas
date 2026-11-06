@@ -182,12 +182,12 @@ export function Modal({ open, onClose, title, children, footer }: { open: boolea
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-gray-900/30" onClick={onClose} />
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg">
+      <div role="dialog" aria-modal="true" className="relative bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col">
         <div className="flex items-center justify-between px-6 pt-5">
           <h3 className="text-lg font-semibold">{title}</h3>
           <IconButton icon="x" title="Close" onClick={onClose} />
         </div>
-        <div className="px-6 py-4 space-y-3">{children}</div>
+        <div className="px-6 py-4 space-y-3 overflow-y-auto min-h-0">{children}</div>
         {footer && <div className="px-6 pb-5 flex justify-end gap-2">{footer}</div>}
       </div>
     </div>
