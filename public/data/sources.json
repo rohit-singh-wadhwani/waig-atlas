@@ -10,9 +10,9 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-06T12:23:47.903Z",
+  "last_run": "2026-11-06T14:35:04.438Z",
   "last_status": "ok",
-  "last_message": "60 items, 60 new",
+  "last_message": "60 items, 20 new",
   "item_count": 60
  },
  {
@@ -26,9 +26,9 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-06T12:23:48.398Z",
+  "last_run": "2026-11-06T14:35:05.252Z",
   "last_status": "ok",
-  "last_message": "60 items, 60 new",
+  "last_message": "60 items, 59 new",
   "item_count": 60
  },
  {
@@ -42,10 +42,10 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-06T12:23:49.412Z",
+  "last_run": "2026-11-06T14:35:05.969Z",
   "last_status": "ok",
-  "last_message": "2 items, 2 new",
-  "item_count": 2
+  "last_message": "3 items, 3 new",
+  "item_count": 3
  },
  {
   "id": "fundsforngos-health",
@@ -58,7 +58,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-06T12:23:49.977Z",
+  "last_run": "2026-11-06T14:35:06.849Z",
   "last_status": "error",
   "last_message": "HTTP 403 Forbidden for https://www2.fundsforngos.org/category/health/feed/",
   "item_count": 0
@@ -74,7 +74,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-06T12:23:51.435Z",
+  "last_run": "2026-11-06T14:35:08.139Z",
   "last_status": "ok",
   "last_message": "20 items, 20 new",
   "item_count": 20
@@ -90,9 +90,9 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-06T12:28:17.008Z",
+  "last_run": "2026-11-06T14:38:54.134Z",
   "last_status": "error",
-  "last_message": "Gemini gemini-flash-latest (search) quota: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/",
+  "last_message": "Gemini gemini-flash-lite-latest (search) quota: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/",
   "item_count": 0
  },
  {
@@ -106,7 +106,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-06T12:28:17.625Z",
+  "last_run": "2026-11-06T14:38:55.147Z",
   "last_status": "error",
   "last_message": "Gemini failed: no model available",
   "item_count": 0
