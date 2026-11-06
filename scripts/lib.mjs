@@ -10,7 +10,6 @@ fs.mkdirSync(DATA, { recursive: true });
 const { GEMINI_API_KEY, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = process.env;
 export const HAS_GEMINI = !!GEMINI_API_KEY;
 export const HAS_SB = !!(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY);
-const MODELS = (process.env.GEMINI_MODEL || 'gemini-2.5-flash,gemini-flash-latest,gemini-2.5-flash-lite,gemini-flash-lite-latest').split(',').map((s) => s.trim());
 
 export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 export const hash = (s) => crypto.createHash('sha1').update(String(s)).digest('hex').slice(0, 16);
@@ -95,18 +94,55 @@ export function toIso(d) {
 
 /* ---------------- Gemini ---------------- */
 
+const STARTED = Date.now();
+const BUDGET_MS = Number(process.env.GEMINI_BUDGET_MIN || 14) * 60000; // stop calling Gemini after this, keep raw items
 let lastCall = 0;
-const deadModels = new Set(); // models that are missing or out of quota for this run
-export const geminiStatus = { calls: 0, ok: 0, lastError: null };
+let spacing = 6500; // ms between calls; grows when per-minute limits bite
+const deadModels = new Set(); // model or model:search that is missing / out of daily quota
+export const geminiStatus = { calls: 0, ok: 0, lastError: null, models: [] };
+let models = null;
 
-function quotaMessage(j) {
-  const msg = j?.error?.message || '';
-  const daily = /per ?day|PerDay|limit: 0|free_tier/i.test(JSON.stringify(j || {}));
-  return { msg: msg.slice(0, 220), daily };
+const BASE = 'https://generativelanguage.googleapis.com/v1beta';
+
+/** Pick flash models this key can actually call, newest first, lite variants last. */
+async function discoverModels() {
+  if (models) return models;
+  if (process.env.GEMINI_MODEL) return (models = process.env.GEMINI_MODEL.split(',').map((x) => x.trim()));
+  const fallback = ['gemini-flash-latest', 'gemini-flash-lite-latest', 'gemini-2.5-flash', 'gemini-2.5-flash-lite'];
+  try {
+    const r = await fetch(`${BASE}/models?pageSize=200`, { headers: { 'x-goog-api-key': GEMINI_API_KEY } });
+    const j = await r.json();
+    const names = (j.models || [])
+      .filter((m) => (m.supportedGenerationMethods || []).includes('generateContent'))
+      .map((m) => m.name.replace(/^models\//, ''))
+      .filter((n) => /flash/.test(n) && !/image|tts|audio|live|thinking|exp|embedding|8b/.test(n));
+    const ver = (n) => Number((n.match(/gemini-(\d+(?:\.\d+)?)/) || [])[1] || (/latest/.test(n) ? 99 : 0));
+    const ranked = names.sort((a, b) => Number(/lite/.test(a)) - Number(/lite/.test(b)) || Number(/preview/.test(a)) - Number(/preview/.test(b)) || ver(b) - ver(a));
+    models = ranked.length ? ranked.slice(0, 5) : fallback;
+  } catch (e) {
+    models = fallback;
+  }
+  geminiStatus.models = models;
+  log('Gemini models:', models.join(', '));
+  return models;
+}
+
+function quotaInfo(j) {
+  const raw = JSON.stringify(j || {});
+  const delay = Number(((raw.match(/"retryDelay":"(\d+(?:\.\d+)?)s"/) || [])[1]) || 0);
+  const daily = /PerDay|per day|"limit":\s*0|limit: 0/i.test(raw) && !/PerMinute/.test(raw);
+  return { msg: (j?.error?.message || '').slice(0, 160), delay, daily };
+}
+
+export function geminiAvailable() {
+  if (!HAS_GEMINI || Date.now() - STARTED > BUDGET_MS) return false;
+  return !models || !models.every((m) => deadModels.has(m));
 }
 
 export async function gemini(prompt, { json = true, search = false, temperature = 0.2 } = {}) {
   if (!HAS_GEMINI) throw new Error('GEMINI_API_KEY not set');
+  if (Date.now() - STARTED > BUDGET_MS) throw new Error('Gemini time budget for this run used up');
+  const list = await discoverModels();
   const body = {
     contents: [{ role: 'user', parts: [{ text: prompt }] }],
     generationConfig: { temperature, ...(json && !search ? { responseMimeType: 'application/json' } : {}) },
@@ -117,16 +153,17 @@ export async function gemini(prompt, { json = true, search = false, temperature 
     firstErr = firstErr || e;
     geminiStatus.lastError = e.message;
   };
-  for (const model of MODELS) {
-    if (deadModels.has(model + (search ? ':search' : ''))) continue;
-    for (let attempt = 0; attempt < 2; attempt++) {
-      const wait = 6500 - (Date.now() - lastCall); // <= ~9 requests a minute
+  for (const model of list) {
+    const key = model + (search ? ':search' : '');
+    if (deadModels.has(model) || deadModels.has(key)) continue;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const wait = spacing - (Date.now() - lastCall);
       if (wait > 0) await sleep(wait);
       lastCall = Date.now();
       geminiStatus.calls++;
       let r;
       try {
-        r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+        r = await fetch(`${BASE}/models/${model}:generateContent`, {
           method: 'POST',
           headers: { 'content-type': 'application/json', 'x-goog-api-key': GEMINI_API_KEY },
           body: JSON.stringify(body),
@@ -138,18 +175,18 @@ export async function gemini(prompt, { json = true, search = false, temperature 
       const j = await r.json().catch(() => ({}));
       if (r.status === 404) {
         deadModels.add(model);
-        deadModels.add(model + ':search');
         note(new Error(`Gemini model ${model} not available`));
         break;
       }
       if (r.status === 429) {
-        const q = quotaMessage(j);
-        note(new Error(`Gemini ${model} quota: ${q.msg}`));
-        if (q.daily) {
-          deadModels.add(model + (search ? ':search' : ''));
-          break; // daily or zero quota: retrying won't help, try the next model
+        const q = quotaInfo(j);
+        note(new Error(`Gemini ${model}${search ? ' (search)' : ''} quota: ${q.msg}`));
+        if (q.daily || attempt === 2) {
+          deadModels.add(key);
+          break;
         }
-        await sleep(20000);
+        spacing = Math.min(Math.round(spacing * 1.5), 20000);
+        await sleep(Math.min(60000, Math.max(10000, (q.delay || 15) * 1000)));
         continue;
       }
       if (r.status >= 500) {
@@ -158,9 +195,10 @@ export async function gemini(prompt, { json = true, search = false, temperature 
         continue;
       }
       if (!r.ok) {
-        const e = new Error(`Gemini ${model} ${r.status}: ${(j?.error?.message || '').slice(0, 220)}`);
+        const e = new Error(`Gemini ${model} ${r.status}: ${(j?.error?.message || '').slice(0, 200)}`);
         note(e);
-        if (r.status === 400 || r.status === 403) throw e; // bad key or bad request: stop
+        if (r.status === 401 || r.status === 403) throw e; // bad key
+        if (search && r.status === 400) deadModels.add(key); // search tool not allowed on this model
         break;
       }
       const text = (j.candidates?.[0]?.content?.parts || []).map((p) => p.text || '').join('');
@@ -170,10 +208,6 @@ export async function gemini(prompt, { json = true, search = false, temperature 
     }
   }
   throw firstErr || new Error('Gemini failed: no model available');
-}
-
-export function geminiAvailable() {
-  return HAS_GEMINI && !MODELS.every((m) => deadModels.has(m));
 }
 
 export function parseJsonLoose(text) {

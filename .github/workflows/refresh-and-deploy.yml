@@ -28,7 +28,7 @@ env:
 jobs:
   refresh:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 75
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -49,6 +49,8 @@ jobs:
           echo "jobs=$J" >> "$GITHUB_OUTPUT"
           echo "Running: $J"
       - name: Health datasets
+        timeout-minutes: 20
+        continue-on-error: true
         if: contains(steps.pick.outputs.jobs, 'health')
         run: node scripts/fetch-health.mjs
         env:
@@ -56,12 +58,16 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Insights
+        timeout-minutes: 20
+        continue-on-error: true
         if: contains(steps.pick.outputs.jobs, 'insights')
         run: node scripts/fetch-insights.mjs
         env:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       - name: Grants
+        timeout-minutes: 20
+        continue-on-error: true
         if: contains(steps.pick.outputs.jobs, 'grants')
         run: node scripts/fetch-grants.mjs
         env:
