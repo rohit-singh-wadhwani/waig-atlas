@@ -7,7 +7,13 @@ declare global {
   }
 }
 
-export type MapPoint = { id: string; lng: number; lat: number; size?: number; color?: string; label: string; sub?: string };
+export type MapLink = { label: string; href?: string; meta?: string };
+export type MapPoint = {
+  id: string; lng: number; lat: number; size?: number; color?: string;
+  label: string; sub?: string;
+  /** shown in the click popup */
+  items?: MapLink[]; href?: string; cta?: string; kind?: string;
+};
 
 // Sequential teal ramp (light -> dark) for magnitude.
 export const RAMP = ['#d8eeef', '#a9d6d7', '#74b7b8', '#3e8a8b', '#285a5b', '#173536'];
@@ -45,6 +51,9 @@ export default function WorldMap({
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<any>(null);
   const popup = useRef<any>(null);
+  const pinned = useRef<any>(null);
+  const byId = useRef<Map<string, MapPoint>>(new Map());
+  byId.current = new Map(points.map((p) => [p.id, p]));
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
   const cb = useRef({ onCountryClick, onPointClick, valueLabel, values });
@@ -108,36 +117,57 @@ export default function WorldMap({
         id: 'pts', type: 'circle', source: 'points',
         paint: { 'circle-radius': ['get', 'size'], 'circle-color': ['get', 'color'], 'circle-opacity': 0.85, 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 2 },
       });
-      m.on('mousemove', 'country-fill', (e: any) => {
-        const p = e.features?.[0]?.properties;
-        if (!p) return;
-        m.getCanvas().style.cursor = cb.current.onCountryClick ? 'pointer' : '';
-        const v = cb.current.values?.[p.iso3];
-        popup.current
-          .setLngLat(e.lngLat)
-          .setHTML(`<div style="font:500 13px Inter,sans-serif">${p.name}</div>${cb.current.values ? `<div style="font:13px Inter,sans-serif;color:#4b5563">${v !== undefined ? cb.current.valueLabel(v) : 'No data'}</div>` : ''}`)
-          .addTo(m);
+      const pick = (e: any) => {
+        const pad = 6;
+        const box = [[e.point.x - pad, e.point.y - pad], [e.point.x + pad, e.point.y + pad]];
+        const pts = m.queryRenderedFeatures(box, { layers: ['pts'] }) || [];
+        const ids = Array.from(new Set(pts.map((f: any) => f.properties.id))) as string[];
+        const country = (m.queryRenderedFeatures(e.point, { layers: ['country-fill'] }) || [])[0]?.properties;
+        return { ids, country };
+      };
+      const countryHtml = (c: any) => {
+        const v = cb.current.values?.[c.iso3];
+        return `<div class="atlas-pop-title">${escapeHtml(c.name)}</div>${cb.current.values ? `<div class="atlas-pop-sub">${v !== undefined ? escapeHtml(cb.current.valueLabel(v)) : 'No data'}</div>` : ''}`;
+      };
+      m.on('mousemove', (e: any) => {
+        if (pinned.current?.isOpen?.()) return;
+        const { ids, country } = pick(e);
+        if (ids.length) {
+          const first = byId.current.get(ids[0]);
+          m.getCanvas().style.cursor = 'pointer';
+          popup.current
+            .setLngLat(e.lngLat)
+            .setHTML(`<div class="atlas-pop-title">${escapeHtml(first?.label || '')}</div><div class="atlas-pop-sub">${ids.length > 1 ? `${ids.length} items here · ` : ''}click for details</div>`)
+            .addTo(m);
+        } else if (country) {
+          m.getCanvas().style.cursor = cb.current.onCountryClick ? 'pointer' : '';
+          popup.current.setLngLat(e.lngLat).setHTML(countryHtml(country)).addTo(m);
+        } else {
+          m.getCanvas().style.cursor = '';
+          popup.current.remove();
+        }
       });
-      m.on('mouseleave', 'country-fill', () => {
-        m.getCanvas().style.cursor = '';
+      m.getCanvas().addEventListener('mouseleave', () => popup.current?.remove());
+      m.on('click', (e: any) => {
+        const { ids, country } = pick(e);
         popup.current.remove();
-      });
-      m.on('click', 'country-fill', (e: any) => {
-        const iso = e.features?.[0]?.properties?.iso3;
-        if (iso && cb.current.onCountryClick) cb.current.onCountryClick(iso);
-      });
-      m.on('mouseenter', 'pts', (e: any) => {
-        const p = e.features?.[0]?.properties;
-        m.getCanvas().style.cursor = 'pointer';
-        if (p) popup.current.setLngLat(e.lngLat).setHTML(`<div style="font:500 13px Inter,sans-serif;max-width:240px">${escapeHtml(p.label)}</div><div style="font:12px Inter,sans-serif;color:#6b7280">${escapeHtml(p.sub)}</div>`).addTo(m);
-      });
-      m.on('mouseleave', 'pts', () => {
-        m.getCanvas().style.cursor = '';
-        popup.current.remove();
-      });
-      m.on('click', 'pts', (e: any) => {
-        const id = e.features?.[0]?.properties?.id;
-        if (id && cb.current.onPointClick) cb.current.onPointClick(id);
+        if (ids.length) {
+          const list = ids.map((id) => byId.current.get(id)).filter(Boolean) as MapPoint[];
+          pinned.current?.remove();
+          pinned.current = new ml.Popup({ closeButton: true, closeOnClick: true, offset: 12, maxWidth: '340px', className: 'atlas-popup atlas-pinned' })
+            .setLngLat(e.lngLat)
+            .setHTML(detailHtml(list))
+            .addTo(m);
+          if (cb.current.onPointClick) cb.current.onPointClick(list[0].id);
+          return;
+        }
+        if (country) {
+          if (cb.current.onCountryClick) cb.current.onCountryClick(country.iso3);
+          else {
+            pinned.current?.remove();
+            pinned.current = new ml.Popup({ closeButton: true, closeOnClick: true, offset: 8, className: 'atlas-popup atlas-pinned' }).setLngLat(e.lngLat).setHTML(countryHtml(country)).addTo(m);
+          }
+        }
       });
       setReady(true);
     });
@@ -187,6 +217,29 @@ export default function WorldMap({
 
 function short(v: number) {
   return v >= 1e6 ? `${(v / 1e6).toFixed(1)}M` : v >= 1e4 ? `${Math.round(v / 1e3)}K` : v.toLocaleString('en-GB', { maximumFractionDigits: v < 10 ? 1 : 0 });
+}
+
+function linkHtml(href: string | undefined, text: string) {
+  if (!href) return escapeHtml(text);
+  const internal = href.startsWith('#');
+  return `<a href="${escapeHtml(href)}"${internal ? '' : ' target="_blank" rel="noreferrer"'}>${escapeHtml(text)}</a>`;
+}
+
+function detailHtml(list: MapPoint[]) {
+  return list
+    .slice(0, 6)
+    .map((p) => {
+      const items = (p.items || []).slice(0, 5).map((it) => `<li>${linkHtml(it.href, it.label)}${it.meta ? `<span class="atlas-pop-meta">${escapeHtml(it.meta)}</span>` : ''}</li>`).join('');
+      const more = (p.items || []).length > 5 ? `<li class="atlas-pop-meta">+${(p.items || []).length - 5} more</li>` : '';
+      return `<div class="atlas-pop-block">
+        <div class="atlas-pop-kind" style="color:${p.color || '#316d6e'}">${escapeHtml(p.kind || '')}</div>
+        <div class="atlas-pop-title">${linkHtml(p.href, p.label)}</div>
+        ${p.sub ? `<div class="atlas-pop-sub">${escapeHtml(p.sub)}</div>` : ''}
+        ${items ? `<ul class="atlas-pop-list">${items}${more}</ul>` : ''}
+        ${p.href && p.cta ? `<div class="atlas-pop-cta">${linkHtml(p.href, p.cta + ' →')}</div>` : ''}
+      </div>`;
+    })
+    .join('');
 }
 
 function escapeHtml(s: string) {

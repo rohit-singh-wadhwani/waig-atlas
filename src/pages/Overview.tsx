@@ -34,24 +34,39 @@ export default function OverviewPage() {
 
   const points: MapPoint[] = useMemo(() => {
     const out: MapPoint[] = [];
-    const by = new Map<string, number>();
-    for (const g of strong) for (const c of g.countries) if (c !== 'GLOBAL') by.set(c, (by.get(c) || 0) + 1);
-    by.forEach((n, iso) => {
+    const by = new Map<string, typeof open>();
+    for (const g of open) for (const c of g.countries) if (c !== 'GLOBAL') by.set(c, [...(by.get(c) || []), g]);
+    by.forEach((list, iso) => {
       const c = countries.find((x) => x.iso3 === iso);
-      if (c) out.push({ id: 'g' + iso, lng: c.lng, lat: c.lat, size: 5 + Math.min(12, n * 3), color: '#316d6e', label: `${c.name}: ${n} strong-fit call${n > 1 ? 's' : ''}`, sub: 'Funds & Grants' });
+      if (!c) return;
+      const best = Math.max(...list.map((g) => g.score ?? 0));
+      const sorted = [...list].sort((a, b) => (b.score ?? -1) - (a.score ?? -1));
+      out.push({
+        id: 'g' + iso, kind: 'Open calls', lng: c.lng, lat: c.lat, size: 5 + Math.min(12, Math.sqrt(list.length) * 3.5),
+        color: best >= 70 ? '#316d6e' : best >= 45 ? '#eda100' : '#9ca3af',
+        label: `${c.name}: ${list.length} open call${list.length > 1 ? 's' : ''}`, sub: `Best fit ${best || 'not scored'}`,
+        items: sorted.map((g) => ({ label: g.title, href: g.url, meta: `${g.score != null ? `fit ${g.score} · ` : ''}due ${fmtDate(g.deadline, { day: 'numeric', month: 'short' })}` })),
+        href: '#/grants', cta: 'Open Funds & Grants',
+      });
     });
     for (const a of alerts)
       for (const iso of a.countries) {
         const c = countries.find((x) => x.iso3 === iso);
-        if (c) out.push({ id: a.id + iso, lng: c.lng + 1.5, lat: c.lat - 1.5, size: 6, color: '#d03b3b', label: a.title, sub: `Outbreak alert · ${fmtDate(a.published_at)}` });
+        if (c) out.push({ id: 'o' + a.id + iso, kind: 'Outbreak alert', lng: c.lng + 1.5, lat: c.lat - 1.5, size: 6, color: '#d03b3b', label: a.title, sub: `${c.name} · ${fmtDate(a.published_at)} · ${a.source_name}`, items: a.summary ? [{ label: a.summary }] : [], href: a.url, cta: 'Read the notice' });
       }
     for (const p of projects.data)
       for (const iso of p.countries) {
         const c = countries.find((x) => x.iso3 === iso);
-        if (c) out.push({ id: 'p' + p.id + iso, lng: c.lng - 1.5, lat: c.lat + 1.5, size: 8, color: '#6250d6', label: p.name, sub: 'Project' });
+        const pm = ms.data.filter((m) => m.project_id === p.id).sort((a, b) => a.order - b.order);
+        if (c)
+          out.push({
+            id: 'p' + p.id + iso, kind: 'Our project', lng: c.lng - 1.5, lat: c.lat + 1.5, size: 8, color: '#6250d6', label: p.name, sub: `${c.name}${p.funder ? ` · ${p.funder}` : ''}`,
+            items: pm.map((m) => ({ label: m.name, href: `#/projects/${p.slug}/${m.id}`, meta: m.status === 'done' ? 'done' : `${m.progress}%${m.target_date ? ` · due ${fmtDate(m.target_date, { day: 'numeric', month: 'short' })}` : ''}` })),
+            href: `#/projects/${p.slug}`, cta: 'Open project',
+          });
       }
     return out;
-  }, [strong, alerts, projects.data, countries]);
+  }, [open, alerts, projects.data, ms.data, countries]);
 
   const statusCounts = ['watching', 'pursuing', 'submitted', 'won', 'lost'].map((s) => tracking.data.filter((t) => t.status === s).length);
 
@@ -79,8 +94,8 @@ export default function OverviewPage() {
 
       <div className="grid grid-cols-1 xl:grid-cols-[1.6fr_1fr] gap-6 mb-6">
         <Card>
-          <CardHeader title="World view" subtitle={<span className="inline-flex flex-wrap gap-3"><Legend c="#316d6e" l="Strong-fit calls" /><Legend c="#d03b3b" l="Outbreak alerts (30d)" /><Legend c="#6250d6" l="Our projects" /></span>} />
-          <WorldMap geo={world?.geo || null} points={points} height={420} onCountryClick={() => {}} />
+          <CardHeader title="World view" subtitle={<span className="inline-flex flex-wrap gap-x-3 gap-y-1">Click any dot for details. <Legend c="#316d6e" l="Open calls (teal strong fit, amber possible, grey weak/unscored)" /><Legend c="#d03b3b" l="Outbreak alerts (30d)" /><Legend c="#6250d6" l="Our projects" /></span>} />
+          <WorldMap geo={world?.geo || null} points={points} height={420} />
         </Card>
         <Card className="flex flex-col">
           <CardHeader title="Best-fit deals" right={<Link to="/grants" className="text-sm text-brand-700">All grants</Link>} />

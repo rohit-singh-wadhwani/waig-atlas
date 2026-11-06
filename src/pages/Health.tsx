@@ -57,7 +57,7 @@ export default function HealthPage() {
         a.countries
           .map((iso) => countries.find((c) => c.iso3 === iso))
           .filter(Boolean)
-          .map((c) => ({ id: a.id + c!.iso3, lng: c!.lng, lat: c!.lat, size: 7, color: '#d03b3b', label: a.title, sub: `${fmtDate(a.published_at)} · ${a.source_name}` }))
+          .map((c) => ({ id: a.id + c!.iso3, kind: 'Outbreak alert', lng: c!.lng, lat: c!.lat, size: 7, color: '#d03b3b', label: a.title, sub: `${c!.name} · ${fmtDate(a.published_at)} · ${a.source_name}`, items: a.summary ? [{ label: a.summary }] : [], href: a.url, cta: 'Read the notice' }))
       )
     : [];
 

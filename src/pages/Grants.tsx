@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { PageHeader, useMe } from '../components/Layout';
 import { Badge, Button, Card, CardHeader, Drawer, Empty, ExtLink, Field, KpiCard, Progress, SectionLabel, Select, TextInput, cx } from '../components/ui';
 import { FilterBar, Filters, defaultFilters, inWindow, matchesPlace } from '../components/Filters';
@@ -48,7 +49,16 @@ export default function GrantsPage() {
   const [q, setQ] = useState('');
   const [status, setStatus] = useState('');
   const [fit, setFit] = useState('');
-  const [openId, setOpenId] = useState<string | null>(null);
+  const [openId, setOpenIdState] = useState<string | null>(null);
+  const [params, setParams] = useSearchParams();
+  useEffect(() => {
+    const o = params.get('open');
+    if (o) setOpenIdState(o);
+  }, [params]);
+  const setOpenId = (id: string | null) => {
+    setOpenIdState(id);
+    if (!id && params.get('open')) setParams({}, { replace: true });
+  };
   const me = useMe();
 
   const tMap = useMemo(() => new Map(tracking.data.map((t) => [t.grant_id, t])), [tracking.data]);
@@ -81,7 +91,12 @@ export default function GrantsPage() {
         const c = countries.find((x) => x.iso3 === iso);
         if (!c) return null;
         const best = Math.max(...list.map((g) => g.score ?? 0));
-        return { id: iso, lng: c.lng, lat: c.lat, size: 5 + Math.min(14, Math.sqrt(list.length) * 4), color: best >= 70 ? '#316d6e' : best >= 45 ? '#eda100' : '#9ca3af', label: `${c.name}: ${list.length} open call${list.length > 1 ? 's' : ''}`, sub: `Best fit ${best || '—'}` } as MapPoint;
+        const sorted = [...list].sort((a, b) => (b.score ?? -1) - (a.score ?? -1));
+        return {
+          id: iso, kind: 'Open calls', lng: c.lng, lat: c.lat, size: 5 + Math.min(14, Math.sqrt(list.length) * 4), color: best >= 70 ? '#316d6e' : best >= 45 ? '#eda100' : '#9ca3af',
+          label: `${c.name}: ${list.length} open call${list.length > 1 ? 's' : ''}`, sub: `Best fit ${best || 'not scored'} · list below is now filtered to ${c.name}`,
+          items: sorted.map((g) => ({ label: g.title, href: `#/grants?open=${g.id}`, meta: `${g.score != null ? `fit ${g.score} · ` : ''}due ${fmtDate(g.deadline, { day: 'numeric', month: 'short' })}` })),
+        } as MapPoint;
       })
       .filter(Boolean) as MapPoint[];
   }, [open, countries]);

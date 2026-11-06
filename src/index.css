@@ -38,3 +38,17 @@ body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', 
 
 .maplibregl-popup-content { border-radius: 10px !important; padding: 8px 10px !important; box-shadow: 0 4px 16px rgba(16, 24, 40, 0.12) !important; }
 .maplibregl-ctrl-group { border-radius: 10px !important; box-shadow: 0 1px 3px rgba(16, 24, 40, 0.1) !important; }
+
+.atlas-popup .maplibregl-popup-content { font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+.atlas-pinned .maplibregl-popup-content { padding: 12px 14px !important; max-height: 320px; overflow-y: auto; }
+.atlas-pinned .maplibregl-popup-close-button { font-size: 18px; padding: 2px 8px; color: #6b7280; }
+.atlas-pop-title { font-weight: 600; font-size: 13.5px; color: #111827; line-height: 1.35; padding-right: 14px; }
+.atlas-pop-title a, .atlas-pop-list a, .atlas-pop-cta a { color: #285a5b; text-decoration: none; }
+.atlas-pop-title a:hover, .atlas-pop-list a:hover, .atlas-pop-cta a:hover { text-decoration: underline; }
+.atlas-pop-sub { font-size: 12.5px; color: #6b7280; margin-top: 2px; }
+.atlas-pop-kind { font-size: 10.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 2px; }
+.atlas-pop-block + .atlas-pop-block { border-top: 1px solid #f1f2f4; margin-top: 10px; padding-top: 10px; }
+.atlas-pop-list { margin: 6px 0 0; padding-left: 16px; list-style: disc; font-size: 12.5px; color: #374151; }
+.atlas-pop-list li { margin: 3px 0; }
+.atlas-pop-meta { color: #9ca3af; margin-left: 6px; }
+.atlas-pop-cta { margin-top: 8px; font-size: 12.5px; font-weight: 500; }
