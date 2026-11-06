@@ -7,7 +7,7 @@ import BlockEditor from '../components/BlockEditor';
 import Gantt from '../components/Gantt';
 import Stepper from '../components/Stepper';
 import { Attachments, Comments } from '../components/Collab';
-import { useData } from '../lib/hooks';
+import { useData, useLocalPref } from '../lib/hooks';
 import { db, uid } from '../lib/store';
 import { addMilestone, milestoneProgress, teamProgress } from '../lib/projects';
 import { useWorld, NO_COUNTRIES } from '../lib/world';
@@ -44,6 +44,7 @@ export default function ProjectDetail() {
   const tasks = useData(() => (pid ? db.list<Task>('tasks', { project_id: pid }) : Promise.resolve([])), [pid], []);
   const [configuring, setConfiguring] = useState(false);
   const [editingProject, setEditingProject] = useState(false);
+  const [railOnly, setRailOnly] = useLocalPref('milestone-panel-collapsed', false);
 
   const milestones = useMemo(() => [...ms.data].sort((a, b) => a.order - b.order), [ms.data]);
   const current = milestones.find((m) => m.id === mid) || null;
@@ -86,11 +87,37 @@ export default function ProjectDetail() {
         <KpiCard icon="clock" tint="gray" label="Timeline" value={<span className="text-[20px]">{fmtDate(project.end_date, { month: 'short', year: 'numeric' })}</span>} foot={`from ${fmtDate(project.start_date)}`} />
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-[300px_1fr] gap-6">
-        <Card className="h-fit xl:sticky xl:top-6" pad={false}>
+      <div className={cx('grid grid-cols-1 gap-6', railOnly ? 'lg:grid-cols-[76px_1fr]' : 'xl:grid-cols-[300px_1fr]')}>
+        {railOnly ? (
+          <Card className="h-fit lg:sticky lg:top-6" pad={false}>
+            <nav className="flex lg:flex-col items-center gap-2 p-3" aria-label="Milestones">
+              <IconButton icon="chevronsRight" title="Show milestone panel" onClick={() => setRailOnly(false)} />
+              <span className="hidden lg:block w-8 border-t border-gray-200 my-1" />
+              <Link to={`/projects/${project.slug}`} title="Overview" className={cx('w-11 h-11 rounded-xl flex items-center justify-center', !current ? 'bg-brand-50 text-brand-700 ring-1 ring-brand-200' : 'text-gray-600 hover:bg-gray-50')}>
+                <Icon name="dashboard" size={19} />
+              </Link>
+              {milestones.map((m, i) => {
+                const s = MS_STATUS.find((x) => x.value === m.status) || MS_STATUS[0];
+                const sel = current?.id === m.id;
+                return (
+                  <Link key={m.id} to={`/projects/${project.slug}/${m.id}`} title={`${i + 1}. ${m.name} · ${s.label}`} className={cx('relative w-11 h-11 rounded-xl flex items-center justify-center text-[15px] font-semibold', sel ? 'bg-brand-50 text-brand-700 ring-1 ring-brand-200' : 'text-gray-700 hover:bg-gray-50')}>
+                    {i + 1}
+                    <span className={cx('absolute top-1.5 right-1.5 w-2 h-2 rounded-full ring-2 ring-white', s.dot)} />
+                  </Link>
+                );
+              })}
+              <span className="hidden lg:block w-8 border-t border-gray-200 my-1" />
+              <IconButton icon="settings" title="Configure milestones" onClick={() => setConfiguring(true)} />
+            </nav>
+          </Card>
+        ) : (
+        <Card className="h-fit lg:sticky lg:top-6" pad={false}>
           <div className="px-5 pt-5 pb-2 flex items-center justify-between">
             <span className="text-[13px] font-medium tracking-wider uppercase text-gray-500">Milestones</span>
-            <IconButton icon="settings" title="Configure milestones" onClick={() => setConfiguring(true)} />
+            <div className="flex items-center">
+              <IconButton icon="settings" title="Configure milestones" onClick={() => setConfiguring(true)} />
+              <IconButton icon="chevronsLeft" title="Collapse milestone panel" onClick={() => setRailOnly(true)} />
+            </div>
           </div>
           <nav className="px-3 pb-4 space-y-1">
             <Link to={`/projects/${project.slug}`} className={cx('flex items-center gap-3 rounded-xl px-3 py-2.5 text-[15px]', !current ? 'bg-brand-50 text-brand-700 font-medium' : 'text-gray-700 hover:bg-gray-50')}>
@@ -114,6 +141,7 @@ export default function ProjectDetail() {
             })}
           </nav>
         </Card>
+        )}
 
         <div className="space-y-6 min-w-0">
           {!current ? (
@@ -193,7 +221,7 @@ function MilestoneView({ project, m, page, tasks, me }: { project: Project; m: P
     <>
       <Card>
         <CardHeader title={m.name} subtitle="Milestone tracking" />
-        <div className="grid grid-cols-1 md:grid-cols-3 2xl:grid-cols-5 gap-4">
+        <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))' }}>
           <Field label="Status"><Select value={m.status} onChange={(v) => save({ status: v as ProjectMilestone['status'], progress: v === 'done' ? 100 : m.progress })} options={MS_STATUS.map((s) => ({ value: s.value, label: s.label }))} /></Field>
           <Field label="Owner"><Select value={m.owner || ''} onChange={(v) => save({ owner: v })} placeholder="Unassigned" options={TEAM.map((p) => ({ value: p.email, label: p.name }))} /></Field>
           <Field label="Team"><Select value={m.team || ''} onChange={(v) => save({ team: v })} placeholder="—" options={TEAMS.map((t) => ({ value: t, label: t }))} /></Field>

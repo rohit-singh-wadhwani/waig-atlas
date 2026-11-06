@@ -60,10 +60,20 @@ export function Sidebar() {
     <div className="flex flex-col h-full">
       <div className={cx('px-6 pt-6 pb-5 border-b border-gray-200', collapsed && 'px-3')}>
         {collapsed ? (
-          <img src={`${process.env.PUBLIC_URL}/favicon.png`} alt="Wadhwani AI Global" className="w-10 h-10 mx-auto" />
+          <div className="flex flex-col items-center gap-3">
+            <img src={`${process.env.PUBLIC_URL}/favicon.png`} alt="Wadhwani AI Global" className="w-10 h-10" />
+            <button type="button" onClick={() => setCollapsed(false)} title="Expand sidebar" aria-label="Expand sidebar" className="hidden lg:flex w-9 h-9 rounded-lg items-center justify-center text-gray-500 hover:bg-gray-100">
+              <Icon name="chevronsRight" size={18} />
+            </button>
+          </div>
         ) : (
           <>
-            <img src={`${process.env.PUBLIC_URL}/logo.png`} alt="Wadhwani AI Global" className="h-[52px] w-auto" />
+            <div className="flex items-start justify-between gap-2">
+              <img src={`${process.env.PUBLIC_URL}/logo.png`} alt="Wadhwani AI Global" className="h-[52px] w-auto" />
+              <button type="button" onClick={() => setCollapsed(true)} title="Collapse sidebar" aria-label="Collapse sidebar" className="hidden lg:flex w-9 h-9 rounded-lg items-center justify-center text-gray-500 hover:bg-gray-100 shrink-0">
+                <Icon name="chevronsLeft" size={18} />
+              </button>
+            </div>
             <div className="mt-4 text-[17px] text-gray-900 font-medium">WAIG Atlas</div>
             <div className="text-[15px] text-gray-500">Grants · health intelligence · projects</div>
           </>
