@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html { -webkit-font-smoothing: antialiased; }
+body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; color: #111827; }
+
+/* Rendered markdown pages */
+.prose-atlas { font-size: 15.5px; line-height: 1.65; color: #1f2937; }
+.prose-atlas h1 { font-size: 1.6rem; font-weight: 700; margin: 1.2rem 0 0.6rem; color: #111827; }
+.prose-atlas h2 { font-size: 1.3rem; font-weight: 650; margin: 1.6rem 0 0.5rem; color: #111827; padding-top: 0.25rem; }
+.prose-atlas h3 { font-size: 1.1rem; font-weight: 600; margin: 1.2rem 0 0.4rem; color: #111827; }
+.prose-atlas p { margin: 0.45rem 0; }
+.prose-atlas ul, .prose-atlas ol { margin: 0.45rem 0; padding-left: 1.4rem; }
+.prose-atlas ul { list-style: disc; }
+.prose-atlas ol { list-style: decimal; }
+.prose-atlas li { margin: 0.2rem 0; }
+.prose-atlas li input[type='checkbox'] { margin-right: 0.4rem; accent-color: #316d6e; }
+.prose-atlas a { color: #285a5b; text-decoration: underline; text-decoration-color: #b3dcdd; text-underline-offset: 2px; }
+.prose-atlas a:hover { text-decoration-color: #285a5b; }
+.prose-atlas strong { font-weight: 600; color: #111827; }
+.prose-atlas em { color: #6b7280; }
+.prose-atlas code { font-size: 0.85em; background: #f3f4f6; border-radius: 6px; padding: 0.1rem 0.35rem; }
+.prose-atlas pre { background: #0f172a; color: #e5e7eb; border-radius: 12px; padding: 0.9rem 1rem; overflow-x: auto; font-size: 13px; margin: 0.7rem 0; }
+.prose-atlas pre code { background: none; padding: 0; color: inherit; }
+.prose-atlas blockquote { border-left: 3px solid #b3dcdd; padding-left: 0.9rem; color: #4b5563; margin: 0.6rem 0; }
+.prose-atlas table { width: 100%; border-collapse: collapse; margin: 0.7rem 0; font-size: 14.5px; display: block; overflow-x: auto; }
+.prose-atlas th { text-align: left; font-weight: 600; background: #f9fafb; color: #374151; }
+.prose-atlas th, .prose-atlas td { border: 1px solid #e5e7eb; padding: 0.45rem 0.65rem; vertical-align: top; }
+.prose-atlas hr { border-color: #e5e7eb; margin: 1.2rem 0; }
+.prose-atlas .mermaid-holder { margin: 0.8rem 0; padding: 0.75rem; border: 1px solid #f1f2f4; border-radius: 12px; background: #fff; overflow-x: auto; }
+.prose-atlas .mermaid-holder svg { max-width: 100%; height: auto; }
+
+.line-clamp-1, .line-clamp-2, .line-clamp-3 { display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
+.line-clamp-1 { -webkit-line-clamp: 1; }
+.line-clamp-2 { -webkit-line-clamp: 2; }
+.line-clamp-3 { -webkit-line-clamp: 3; }
+
+.maplibregl-popup-content { border-radius: 10px !important; padding: 8px 10px !important; box-shadow: 0 4px 16px rgba(16, 24, 40, 0.12) !important; }
+.maplibregl-ctrl-group { border-radius: 10px !important; box-shadow: 0 1px 3px rgba(16, 24, 40, 0.1) !important; }

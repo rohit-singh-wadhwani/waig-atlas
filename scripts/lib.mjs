@@ -1,0 +1,249 @@
+// Shared helpers for the scheduled jobs. Node 20+, no dependencies.
+import fs from 'node:fs';
+import path from 'node:path';
+import crypto from 'node:crypto';
+
+export const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
+export const DATA = path.join(ROOT, 'public', 'data');
+fs.mkdirSync(DATA, { recursive: true });
+
+const { GEMINI_API_KEY, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = process.env;
+export const HAS_GEMINI = !!GEMINI_API_KEY;
+export const HAS_SB = !!(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY);
+const MODELS = (process.env.GEMINI_MODEL || 'gemini-flash-latest,gemini-2.5-flash,gemini-2.0-flash').split(',').map((s) => s.trim());
+
+export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+export const hash = (s) => crypto.createHash('sha1').update(String(s)).digest('hex').slice(0, 16);
+export const today = () => new Date().toISOString().slice(0, 10);
+
+export function readJson(file, fallback) {
+  try {
+    return JSON.parse(fs.readFileSync(path.join(DATA, file), 'utf8'));
+  } catch {
+    return fallback;
+  }
+}
+export function writeJson(file, data) {
+  fs.writeFileSync(path.join(DATA, file), JSON.stringify(data, null, file.endsWith('.geojson') ? 0 : 1));
+}
+
+export function log(...a) {
+  console.log(new Date().toISOString().slice(11, 19), ...a);
+}
+
+/* ---------------- HTTP ---------------- */
+
+const UA = 'WAIG-Atlas/0.1 (+https://github.com/rohit-singh-wadhwani/waig-atlas)';
+export async function http(url, opts = {}, timeoutMs = 30000) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const r = await fetch(url, { ...opts, signal: ctrl.signal, headers: { 'user-agent': UA, accept: '*/*', ...(opts.headers || {}) } });
+    if (!r.ok) throw new Error(`HTTP ${r.status} ${r.statusText} for ${url.slice(0, 120)}`);
+    return r;
+  } finally {
+    clearTimeout(t);
+  }
+}
+export const getText = async (url, opts) => (await http(url, opts)).text();
+export const getJson = async (url, opts) => (await http(url, { ...opts, headers: { accept: 'application/json', ...(opts?.headers || {}) } })).json();
+
+export function stripHtml(s = '') {
+  return String(s)
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;|&#8217;|&rsquo;/g, "'")
+    .replace(/&#8211;|&ndash;/g, '–')
+    .replace(/&#\d+;/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/** Minimal RSS 2.0 / Atom parser. */
+export function parseFeed(xml) {
+  const items = [];
+  const tag = (block, name) => {
+    const m = block.match(new RegExp(`<${name}[^>]*>([\\s\\S]*?)</${name}>`, 'i'));
+    return m ? stripHtml(m[1]) : '';
+  };
+  const blocks = xml.match(/<item[\s>][\s\S]*?<\/item>/gi) || [];
+  for (const b of blocks) {
+    items.push({ title: tag(b, 'title'), url: tag(b, 'link') || (b.match(/<guid[^>]*>([^<]+)<\/guid>/i) || [])[1] || '', date: tag(b, 'pubDate') || tag(b, 'dc:date'), text: tag(b, 'description') || tag(b, 'content:encoded') });
+  }
+  const entries = xml.match(/<entry[\s>][\s\S]*?<\/entry>/gi) || [];
+  for (const b of entries) {
+    const href = (b.match(/<link[^>]*rel="alternate"[^>]*href="([^"]+)"/i) || b.match(/<link[^>]*href="([^"]+)"/i) || [])[1] || '';
+    items.push({ title: tag(b, 'title'), url: href, date: tag(b, 'published') || tag(b, 'updated'), text: tag(b, 'summary') || tag(b, 'content') || tag(b, 'media:description') });
+  }
+  return items
+    .filter((i) => i.title && i.url)
+    .map((i) => ({ ...i, date: toIso(i.date), text: i.text.slice(0, 1500) }));
+}
+
+export function toIso(d) {
+  if (!d) return null;
+  const t = new Date(d);
+  return isNaN(+t) ? null : t.toISOString();
+}
+
+/* ---------------- Gemini ---------------- */
+
+let lastCall = 0;
+export async function gemini(prompt, { json = true, search = false, temperature = 0.2 } = {}) {
+  if (!HAS_GEMINI) throw new Error('GEMINI_API_KEY not set');
+  const body = {
+    contents: [{ role: 'user', parts: [{ text: prompt }] }],
+    generationConfig: { temperature, ...(json && !search ? { responseMimeType: 'application/json' } : {}) },
+    ...(search ? { tools: [{ google_search: {} }] } : {}),
+  };
+  let lastErr;
+  for (const model of MODELS) {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const wait = 4500 - (Date.now() - lastCall); // stay under free-tier per-minute limits
+      if (wait > 0) await sleep(wait);
+      lastCall = Date.now();
+      try {
+        const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', 'x-goog-api-key': GEMINI_API_KEY },
+          body: JSON.stringify(body),
+        });
+        if (r.status === 404) {
+          lastErr = new Error(`model ${model} not found`);
+          break; // try next model
+        }
+        if (r.status === 429 || r.status >= 500) {
+          lastErr = new Error(`Gemini ${r.status}`);
+          await sleep(15000 * (attempt + 1));
+          continue;
+        }
+        const j = await r.json();
+        if (!r.ok) throw new Error(`Gemini ${r.status}: ${JSON.stringify(j).slice(0, 300)}`);
+        const text = (j.candidates?.[0]?.content?.parts || []).map((p) => p.text || '').join('');
+        if (!json) return text;
+        return parseJsonLoose(text);
+      } catch (e) {
+        lastErr = e;
+        if (String(e.message).startsWith('Gemini 4')) throw e;
+      }
+    }
+  }
+  throw lastErr || new Error('Gemini failed');
+}
+
+export function parseJsonLoose(text) {
+  const t = String(text || '').trim();
+  try {
+    return JSON.parse(t);
+  } catch {}
+  const fence = t.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (fence) {
+    try {
+      return JSON.parse(fence[1]);
+    } catch {}
+  }
+  const start = Math.min(...['[', '{'].map((c) => (t.indexOf(c) < 0 ? Infinity : t.indexOf(c))));
+  const end = Math.max(t.lastIndexOf(']'), t.lastIndexOf('}'));
+  if (isFinite(start) && end > start) return JSON.parse(t.slice(start, end + 1));
+  throw new Error('Could not parse JSON from Gemini');
+}
+
+/* ---------------- Supabase (service role) ---------------- */
+
+async function sbFetch(pathq, opts = {}) {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${pathq}`, {
+    ...opts,
+    headers: { apikey: SUPABASE_SERVICE_ROLE_KEY, authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`, 'content-type': 'application/json', ...(opts.headers || {}) },
+  });
+  if (!r.ok) throw new Error(`Supabase ${r.status}: ${(await r.text()).slice(0, 300)}`);
+  const txt = await r.text();
+  return txt ? JSON.parse(txt) : null;
+}
+export const sb = {
+  select: (table, q = 'select=*') => sbFetch(`${table}?${q}`),
+  upsert: async (table, rows) => {
+    for (let i = 0; i < rows.length; i += 200)
+      await sbFetch(table, { method: 'POST', headers: { prefer: 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(rows.slice(i, i + 200)) });
+  },
+  patch: (table, id, row) => sbFetch(`${table}?id=eq.${encodeURIComponent(id)}`, { method: 'PATCH', headers: { prefer: 'return=minimal' }, body: JSON.stringify(row) }),
+};
+
+/* ---------------- Sources & run log ---------------- */
+
+const SOURCE_COLS = ['id', 'name', 'category', 'type', 'url', 'enabled', 'notes', 'kind', 'unit', 'display_name'];
+const normSource = (s) => Object.fromEntries(SOURCE_COLS.map((k) => [k, s[k] ?? (k === 'enabled' ? true : null)]));
+
+export async function loadSources(category) {
+  const config = JSON.parse(fs.readFileSync(path.join(ROOT, 'config', 'sources.json'), 'utf8')).map(normSource);
+  let all = config;
+  if (HAS_SB) {
+    try {
+      const rows = await sb.select('sources');
+      if (rows?.length) {
+        // add any new sources from config that the table doesn't have yet
+        const ids = new Set(rows.map((r) => r.id));
+        const missing = config.filter((c) => !ids.has(c.id));
+        if (missing.length) await sb.upsert('sources', missing);
+        all = [...rows, ...missing];
+      } else {
+        await sb.upsert('sources', config);
+      }
+    } catch (e) {
+      log('sources table unavailable, using config:', e.message);
+    }
+  }
+  return all.filter((s) => s.category === category);
+}
+
+export async function reportSource(s, status, message, count) {
+  const row = { last_run: new Date().toISOString(), last_status: status, last_message: String(message || '').slice(0, 300), item_count: count ?? null };
+  Object.assign(s, row);
+  if (HAS_SB) {
+    try {
+      await sb.patch('sources', s.id, row);
+    } catch (e) {
+      log('could not save source status', e.message);
+    }
+  }
+  // public mirror of the latest status (config + status; no private data)
+  const pub = readJson('sources.json', []);
+  const i = pub.findIndex((p) => p.id === s.id);
+  const merged = { ...normSource(s), ...row };
+  if (i >= 0) pub[i] = merged;
+  else pub.push(merged);
+  writeJson('sources.json', pub);
+}
+
+export function recordRun(job, ok, message) {
+  const r = readJson('runs.json', { runs: [] });
+  r.runs.unshift({ job, at: new Date().toISOString(), ok, message: String(message).slice(0, 300) });
+  r.runs = r.runs.slice(0, 60);
+  writeJson('runs.json', r);
+}
+
+export async function orgContext() {
+  if (HAS_SB) {
+    try {
+      const rows = await sb.select('org_context', 'select=content_md&id=eq.main');
+      if (rows?.[0]?.content_md) return rows[0].content_md;
+    } catch {}
+  }
+  try {
+    return fs.readFileSync(path.join(ROOT, 'config', 'org-context.md'), 'utf8');
+  } catch {
+    return 'Wadhwani AI Global builds AI for public health in low- and middle-income countries.';
+  }
+}
+
+export function chunk(arr, n) {
+  const out = [];
+  for (let i = 0; i < arr.length; i += n) out.push(arr.slice(i, i + n));
+  return out;
+}

@@ -1,0 +1,99 @@
+name: Refresh data and deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      jobs:
+        description: "Data jobs to run first (comma list: grants,insights,health or none)"
+        default: "grants,insights,health"
+  schedule:
+    - cron: "17 */3 * * *"   # insights every 3 hours
+    - cron: "41 1,13 * * *"  # grants every 12 hours (07:11 and 19:11 IST)
+    - cron: "53 0 * * *"     # health datasets daily (06:23 IST)
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: refresh-and-deploy
+  cancel-in-progress: false
+
+env:
+  SUPABASE_URL: https://sfjcioilzidqskzmqpog.supabase.co
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Pick jobs
+        id: pick
+        run: |
+          case "${{ github.event_name }}:${{ github.event.schedule }}" in
+            "schedule:17 */3 * * *") J="insights" ;;
+            "schedule:41 1,13 * * *") J="grants" ;;
+            "schedule:53 0 * * *") J="health" ;;
+            workflow_dispatch:*) J="${{ github.event.inputs.jobs }}" ;;
+            *) J="none" ;;
+          esac
+          # first deploy ever: fetch everything
+          if [ ! -f public/data/health.json ] && [ "$J" = "none" ]; then J="grants,insights,health"; fi
+          echo "jobs=$J" >> "$GITHUB_OUTPUT"
+          echo "Running: $J"
+      - name: Health datasets
+        if: contains(steps.pick.outputs.jobs, 'health')
+        run: node scripts/fetch-health.mjs
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Insights
+        if: contains(steps.pick.outputs.jobs, 'insights')
+        run: node scripts/fetch-insights.mjs
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      - name: Grants
+        if: contains(steps.pick.outputs.jobs, 'grants')
+        run: node scripts/fetch-grants.mjs
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      - name: Commit data
+        if: steps.pick.outputs.jobs != 'none'
+        run: |
+          git config user.name "waig-atlas-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add public/data
+          if git diff --cached --quiet; then echo "no data changes"; else
+            git commit -m "data: refresh ${{ steps.pick.outputs.jobs }} [skip ci]"
+            git pull --rebase origin main && git push
+          fi
+      - name: Build
+        run: |
+          npm install --no-audit --no-fund
+          npm run build
+        env:
+          CI: false
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: build
+
+  deploy:
+    needs: refresh
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

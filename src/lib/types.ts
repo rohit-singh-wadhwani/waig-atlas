@@ -1,0 +1,195 @@
+export type ID = string;
+
+export interface Grant {
+  id: ID;
+  title: string;
+  funder: string;
+  summary: string;
+  amount_text?: string;
+  amount_usd?: number | null;
+  deadline?: string | null; // ISO date
+  open_date?: string | null;
+  eligibility?: string;
+  requirements?: string;
+  countries: string[]; // ISO3, or ["GLOBAL"]
+  regions?: string[];
+  themes?: string[];
+  url: string;
+  source_id: string;
+  source_name: string;
+  fetched_at: string;
+  score?: number | null; // 0-100 suitability
+  strengths?: string[];
+  weaknesses?: string[];
+  score_reason?: string;
+}
+
+export interface StageMilestone {
+  key: string;
+  label: string;
+  target?: string | null; // ISO date
+  done_at?: string | null;
+  note?: string;
+}
+
+export interface GrantTracking {
+  grant_id: ID;
+  assignee?: string | null; // email or name
+  stage: string; // key of current stage
+  milestones: StageMilestone[];
+  status: 'watching' | 'pursuing' | 'submitted' | 'won' | 'lost' | 'dropped';
+  updated_at?: string;
+}
+
+export interface Comment {
+  id: ID;
+  entity_type: string;
+  entity_id: ID;
+  body: string;
+  author: string;
+  created_at: string;
+}
+
+export interface Attachment {
+  id: ID;
+  entity_type: string;
+  entity_id: ID;
+  title: string;
+  url: string;
+  kind: 'link' | 'file' | 'dashboard' | 'document';
+  author: string;
+  created_at: string;
+}
+
+export interface Insight {
+  id: ID;
+  title: string;
+  summary: string;
+  url: string;
+  published_at: string;
+  source_id: string;
+  source_name: string;
+  kind: 'news' | 'outbreak' | 'research' | 'social' | 'tender' | 'report';
+  countries: string[];
+  diseases?: string[];
+}
+
+export interface Source {
+  id: string;
+  name: string;
+  category: 'grants' | 'insights' | 'datasets';
+  type: string; // rss | grantsgov | json | pubmed | gemini_search | who_don | gho | opendengue
+  url: string;
+  enabled: boolean;
+  notes?: string;
+  kind?: string | null;
+  unit?: string | null;
+  display_name?: string | null;
+  last_run?: string | null;
+  last_status?: 'ok' | 'error' | 'skipped' | null;
+  last_message?: string | null;
+  item_count?: number | null;
+}
+
+export interface HealthIndicator {
+  key: string;
+  name: string;
+  unit: string;
+  source_name: string;
+  source_url: string;
+  years: number[];
+  values: Record<string, Record<string, number>>; // ISO3 -> year -> value
+}
+
+export interface HealthData {
+  updated_at: string | null;
+  indicators: HealthIndicator[];
+}
+
+export interface TemplateSection {
+  key: string;
+  title: string;
+}
+
+export interface TemplateMilestone {
+  key: string;
+  name: string;
+  description?: string;
+  sections: TemplateSection[];
+  stages?: { key: string; label: string }[]; // optional sub-checkpoints
+}
+
+export interface MilestoneTemplate {
+  id: ID;
+  name: string;
+  description?: string;
+  milestones: TemplateMilestone[];
+}
+
+export interface Project {
+  id: ID;
+  slug: string;
+  name: string;
+  summary: string;
+  countries: string[];
+  diseases: string[];
+  funder?: string;
+  status: 'idea' | 'applying' | 'active' | 'scaling' | 'closed';
+  lead?: string;
+  start_date?: string | null;
+  end_date?: string | null;
+  template_id?: ID;
+  links: { title: string; url: string; kind: 'dashboard' | 'document' | 'repo' | 'link' }[];
+  created_at?: string;
+}
+
+export interface ProjectMilestone {
+  id: ID;
+  project_id: ID;
+  key: string;
+  name: string;
+  order: number;
+  status: 'not_started' | 'in_progress' | 'done' | 'blocked';
+  start_date?: string | null;
+  target_date?: string | null;
+  owner?: string;
+  team?: string;
+  progress: number; // 0-100
+  stages?: StageMilestone[];
+}
+
+export interface Page {
+  id: ID;
+  project_id: ID;
+  milestone_id: ID;
+  title: string;
+  content_md: string;
+  updated_at: string;
+  updated_by?: string;
+}
+
+export interface Task {
+  id: ID;
+  project_id: ID;
+  milestone_id?: ID | null;
+  title: string;
+  team: string;
+  owner?: string;
+  status: 'todo' | 'in_progress' | 'done' | 'blocked';
+  due?: string | null;
+  url?: string;
+}
+
+export interface OrgContext {
+  content_md: string;
+  updated_at: string;
+}
+
+export interface Country {
+  iso3: string;
+  name: string;
+  region: string; // continent / subregion group
+  subregion?: string;
+  lng: number;
+  lat: number;
+}
