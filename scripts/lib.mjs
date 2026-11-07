@@ -101,6 +101,7 @@ let spacing = 6500; // ms between calls; grows when per-minute limits bite
 const deadModels = new Set(); // model or model:search that is missing / out of daily quota
 export const geminiStatus = { calls: 0, ok: 0, lastError: null, models: [] };
 let models = null;
+let qualityModels = null;
 
 const BASE = 'https://generativelanguage.googleapis.com/v1beta';
 
@@ -119,6 +120,8 @@ async function discoverModels() {
     const ver = (n) => Number((n.match(/gemini-(\d+(?:\.\d+)?)/) || [])[1] || (/latest/.test(n) ? 99 : 0));
     const ranked = names.sort((a, b) => Number(!/lite/.test(a)) - Number(!/lite/.test(b)) || Number(/preview/.test(a)) - Number(/preview/.test(b)) || ver(b) - ver(a));
     models = ranked.length ? ranked.slice(0, 5) : fallback;
+    // for careful writing: full Flash first, then the lite models
+    qualityModels = [...ranked.filter((n) => !/lite/.test(n) && !/preview/.test(n)).slice(0, 2), ...models];
   } catch (e) {
     models = fallback;
   }
@@ -139,10 +142,11 @@ export function geminiAvailable() {
   return !models || !models.every((m) => deadModels.has(m));
 }
 
-export async function gemini(prompt, { json = true, search = false, temperature = 0.2, schema = null } = {}) {
+export async function gemini(prompt, { json = true, search = false, temperature = 0.2, schema = null, quality = false } = {}) {
   if (!HAS_GEMINI) throw new Error('GEMINI_API_KEY not set');
   if (Date.now() - STARTED > BUDGET_MS) throw new Error('Gemini time budget for this run used up');
-  const list = await discoverModels();
+  const base = await discoverModels();
+  const list = quality && qualityModels ? qualityModels : base;
   const body = {
     contents: [{ role: 'user', parts: [{ text: prompt }] }],
     generationConfig: { temperature, ...(json && !search ? { responseMimeType: 'application/json', ...(schema ? { responseSchema: schema } : {}) } : {}) },

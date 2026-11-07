@@ -10,7 +10,7 @@
 //   scout_web     free web + news search (Bing RSS); url = search queries, one per line. Gemini reads the hits.
 import {
   HAS_GEMINI, HAS_SB, chunk, gemini, geminiAvailable, geminiStatus, hash, http, loadSources, log, orgContext, parseFeed,
-  readJson, recordRun, reportSource, sb, stripHtml, today, writeJson,
+  readJson, recordRun, reportSource, sb, sleep, stripHtml, today, writeJson,
 } from './lib.mjs';
 
 const MAX_NEW = Number(process.env.MAX_SCOUT_NEW || 60);
@@ -171,12 +171,14 @@ async function fromWeb(src) {
   const queries = String(src.url).split(/\n|;/).map((q) => q.trim()).filter(Boolean);
   const seen = new Set();
   const items = [];
-  const raw = { ddg: 0, bing: 0, news: 0 };
+  const raw = { ddg: 0, news: 0 };
   for (const q of queries) {
     const enc = q.split(/\s+/).map(encodeURIComponent).join('+');
     const engines = [
-      ['ddg', async () => ddgParse(await fetchPage(`https://html.duckduckgo.com/html/?q=${enc}`))],
-      ['bing', async () => parseFeed(await fetchPage(`https://www.bing.com/search?format=rss&count=20&q=${enc}`))],
+      ['ddg', async () => {
+        await sleep(4000); // DuckDuckGo returns an empty page to rapid repeat queries
+        return ddgParse(await fetchPage(`https://html.duckduckgo.com/html/?q=${enc}`));
+      }],
       ['news', async () => parseFeed(await fetchPage(`https://www.bing.com/news/search?format=rss&count=20&q=${enc}`))],
     ];
     const terms = [...words(q.replace(/\bOR\b/g, ' '))];
@@ -200,8 +202,8 @@ async function fromWeb(src) {
       }
     }
   }
-  const note = `search hits: DuckDuckGo ${raw.ddg}, Bing ${raw.bing}, Bing News ${raw.news}; ${items.length} look like funding calls`;
-  if (!raw.ddg && !raw.bing && !raw.news) throw new Error(`web search returned nothing (${note})`);
+  const note = `search hits: DuckDuckGo ${raw.ddg}, Bing News ${raw.news}; ${items.length} look like funding calls`;
+  if (!raw.ddg && !raw.news) throw new Error(`web search returned nothing (${note})`);
   return { items: items.slice(0, 25), note };
 }
 
@@ -240,7 +242,7 @@ For each item below, write it up the way the team's sheet does. Return a JSON ar
 - "i": item index
 - "relevant": false if it is not an organisational funding opportunity WAIG could pursue (e.g. individual fellowships, scholarships, student/academic-only, jobs, events, news, already closed); else true
 - "open": false if the deadline has passed
-- "title", "funder": clean names
+- "title", "funder": the full official names from the page (never cut off with "..."; do not guess a funder that is not stated)
 - "funding_range": as stated (e.g. "Up to $500K", "$50K–$1M") or null
 - "amount_usd": upper amount in USD (rough conversion) or null
 - "deadline": "YYYY-MM-DD" or null if rolling/unknown
@@ -258,7 +260,7 @@ For each item below, write it up the way the team's sheet does. Return a JSON ar
 - "themes": up to 4 short tags
 Return the JSON array only.
 ITEMS:
-${JSON.stringify(items)}`, { schema: WRITEUP_SCHEMA });
+${JSON.stringify(items)}`, { schema: WRITEUP_SCHEMA, quality: true });
   return Array.isArray(out) ? out : [];
 }
 
