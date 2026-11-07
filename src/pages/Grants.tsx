@@ -29,6 +29,13 @@ const statusOf = (s?: string) => STATUS.find((x) => x.value === s) || STATUS[0];
 const STATUS_ORDER = ['submitted', 'pursuing', 'watching', 'won', 'lost', 'dropped'];
 type View = 'pipeline' | 'discovered' | 'all';
 
+/** Upcoming deadlines first, then rolling / no date, then deadlines already passed. */
+function dueKey(g: Grant) {
+  const d = daysUntil(g.deadline);
+  if (d === null) return '1';
+  return d >= 0 ? `0${g.deadline}` : `2${g.deadline}`;
+}
+
 export function deadlineLabel(g: Grant) {
   if (g.deadline) return fmtDate(g.deadline);
   return g.deadline_text ? g.deadline_text.split(/[;(]/)[0].trim() : 'No deadline';
@@ -98,7 +105,7 @@ export default function GrantsPage() {
       .filter((g) => !fit || (fit === 'strong' ? (g.score ?? -1) >= 70 : fit === 'possible' ? (g.score ?? -1) >= 45 : true))
       .sort((a, b) =>
         view === 'pipeline'
-          ? STATUS_ORDER.indexOf(tMap.get(a.id)?.status || 'watching') - STATUS_ORDER.indexOf(tMap.get(b.id)?.status || 'watching') || (a.deadline || '9999').localeCompare(b.deadline || '9999') || (b.score ?? -1) - (a.score ?? -1)
+          ? STATUS_ORDER.indexOf(tMap.get(a.id)?.status || 'watching') - STATUS_ORDER.indexOf(tMap.get(b.id)?.status || 'watching') || dueKey(a).localeCompare(dueKey(b)) || (b.score ?? -1) - (a.score ?? -1)
           : (b.score ?? -1) - (a.score ?? -1) || (a.deadline || '9999').localeCompare(b.deadline || '9999')
       );
   }, [grants, f, q, status, fit, tMap, countries, view]);
@@ -222,7 +229,7 @@ export default function GrantsPage() {
         <Card className="flex flex-col">
           <CardHeader title={view === 'pipeline' ? 'Up next' : 'Latest deals'} subtitle={view === 'pipeline' ? 'Nearest deadlines first, then rolling' : 'Newest first'} />
           <div className="flex-1 overflow-y-auto -mx-2 max-h-[440px]">
-            {[...open].sort((a, b) => (view === 'pipeline' ? (a.deadline || '9999').localeCompare(b.deadline || '9999') : (b.open_date || b.fetched_at).localeCompare(a.open_date || a.fetched_at))).slice(0, 25).map((g) => (
+            {[...open].sort((a, b) => (view === 'pipeline' ? dueKey(a).localeCompare(dueKey(b)) : (b.open_date || b.fetched_at).localeCompare(a.open_date || a.fetched_at))).slice(0, 25).map((g) => (
               <button key={g.id} type="button" onClick={() => setOpenId(g.id)} className="w-full text-left px-2 py-3 rounded-xl hover:bg-gray-50 border-b border-gray-100 last:border-0">
                 <div className="flex items-start gap-2 min-w-0">
                   <span className="font-medium text-gray-900 text-[15px] leading-snug line-clamp-2 flex-1 min-w-0">{g.title}</span>
@@ -279,8 +286,8 @@ export default function GrantsPage() {
                 const d = daysUntil(g.deadline);
                 return (
                   <tr key={g.id} className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer" onClick={() => setOpenId(g.id)}>
-                    <td className="px-6 py-3 max-w-[420px]">
-                      <div className="font-medium text-gray-900 line-clamp-1">{g.title}</div>
+                    <td className="px-6 py-3 min-w-[300px] max-w-[460px]">
+                      <div className="font-medium text-gray-900 line-clamp-2" title={g.title}>{g.title}</div>
                       <div className="text-sm text-gray-500 line-clamp-1">{g.funder}{g.curated ? (g.sector ? ` · ${g.sector}` : '') : ` · ${g.source_name}`}</div>
                     </td>
                     <td className="px-3 py-3 tabular-nums max-w-[200px]"><span className="line-clamp-2 text-sm">{g.amount_text || fmtUsd(g.amount_usd)}</span></td>
