@@ -21,7 +21,7 @@ jobs:
         run: |
           set +e
           { npm install --no-audit --no-fund 2>&1; echo "INSTALL_EXIT=$?"; } | tee build.log
-          { npm ls @blocknote/core @blocknote/react @blocknote/mantine @mantine/core 2>&1; } | tee -a build.log
+          { npm ls @blocknote/core @blocknote/react @blocknote/mantine @mantine/core prosemirror-view 2>&1; } | tee -a build.log
           { REACT_APP_SUPABASE_URL= REACT_APP_SUPABASE_ANON_KEY= CI=false TSC_COMPILE_ON_ERROR=true npm run build 2>&1; echo "BUILD_EXIT=$?"; } | tee -a build.log
           exit 0
       - name: Publish build output to the preview-build branch

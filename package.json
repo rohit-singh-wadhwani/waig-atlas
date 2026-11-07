@@ -47,5 +47,8 @@
     "development": [
       "last 1 chrome version"
     ]
+  },
+  "overrides": {
+    "prosemirror-view": "~1.37.0"
   }
 }
