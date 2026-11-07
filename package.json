@@ -31,7 +31,8 @@
     "build": "react-scripts build",
     "fetch:grants": "node scripts/fetch-grants.mjs",
     "fetch:insights": "node scripts/fetch-insights.mjs",
-    "fetch:health": "node scripts/fetch-health.mjs"
+    "fetch:health": "node scripts/fetch-health.mjs",
+    "scout": "node scripts/scout-grants.mjs"
   },
   "eslintConfig": {
     "extends": [

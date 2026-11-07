@@ -101,7 +101,7 @@ function rawGrant(b, now) {
 }
 
 async function main() {
-  const sources = (await loadSources('grants')).filter((s) => s.enabled);
+  const sources = (await loadSources('grants')).filter((s) => s.enabled && !String(s.type).startsWith('scout')); // scout_* sources run in scout-grants.mjs
   const prev = readJson('grants.json', { grants: [] }).grants || [];
   let existing = prev;
   if (HAS_SB) {
@@ -191,7 +191,7 @@ async function main() {
   if (HAS_SB && added.length) await sb.upsert('grants', added);
   // Public file: listing fields only. Scores and fit notes stay in Supabase when it is connected.
   // Team-pipeline rows are private and never written to the public file.
-  const pub = all.filter((g) => !g.curated).map((g) => (HAS_SB ? { ...g, score: null, strengths: [], weaknesses: [], score_reason: null } : g));
+  const pub = all.filter((g) => !g.curated).map((g) => (HAS_SB ? { ...g, score: null, strengths: [], weaknesses: [], score_reason: null, fit: null, eligible_as: null, notes: null } : g));
   writeJson('grants.json', { updated_at: now, grants: pub });
   const msg = `${added.length} new calls added (${candidates.length} candidates), ${all.length} tracked${HAS_GEMINI ? ` · Gemini ${geminiStatus.ok}/${geminiStatus.calls} calls ok${geminiStatus.lastError ? ` (last error: ${geminiStatus.lastError})` : ''}` : ' · no Gemini key: unscored'}`;
   recordRun('grants', true, msg);

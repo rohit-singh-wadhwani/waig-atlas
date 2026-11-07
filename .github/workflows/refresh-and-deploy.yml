@@ -6,12 +6,13 @@ on:
   workflow_dispatch:
     inputs:
       jobs:
-        description: "Data jobs to run first (comma list: grants,insights,health or none)"
-        default: "grants,insights,health"
+        description: "Data jobs to run first (comma list: scout,grants,insights,health or none)"
+        default: "scout,grants,insights,health"
   schedule:
     - cron: "17 */3 * * *"   # insights every 3 hours
     - cron: "41 1,13 * * *"  # grants every 12 hours (07:11 and 19:11 IST)
     - cron: "53 0 * * *"     # health datasets daily (06:23 IST)
+    - cron: "29 2 * * *"     # grant scout daily (07:59 IST)
 
 permissions:
   contents: write
@@ -41,6 +42,7 @@ jobs:
             "schedule:17 */3 * * *") J="insights" ;;
             "schedule:41 1,13 * * *") J="grants" ;;
             "schedule:53 0 * * *") J="health" ;;
+            "schedule:29 2 * * *") J="scout,grants" ;;
             workflow_dispatch:*) J="${{ github.event.inputs.jobs }}" ;;
             *) J="none" ;;
           esac
@@ -67,6 +69,15 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_SEARCH: ${{ vars.GEMINI_SEARCH }}
+      - name: Grant scout
+        timeout-minutes: 25
+        continue-on-error: true
+        if: contains(steps.pick.outputs.jobs, 'scout')
+        run: node scripts/scout-grants.mjs
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_BUDGET_MIN: 20
       - name: Grants
         timeout-minutes: 20
         continue-on-error: true

@@ -9,8 +9,8 @@ import Stepper from '../components/Stepper';
 import { Attachments, Comments } from '../components/Collab';
 import Icon from '../components/Icon';
 import { useData } from '../lib/hooks';
-import { DEMO, db, importPipeline, loadGrants } from '../lib/store';
-import { FIT_OPTIONS, fitScore, parseCountries, parseDeadline, parseSheet, pipelineId } from '../lib/pipeline';
+import { DEMO, db, loadGrants } from '../lib/store';
+import { FIT_OPTIONS, fitScore, parseCountries, parseDeadline, pipelineId } from '../lib/pipeline';
 import { useWorld, NO_COUNTRIES } from '../lib/world';
 import { daysUntil, fmtDate, fmtTime, fmtUsd, relDays, scoreTone } from '../lib/format';
 import { GRANT_STAGES, TEAM, personName } from '../lib/team';
@@ -28,6 +28,14 @@ const STATUS: { value: GrantTracking['status']; label: string; cls: string }[] =
 const statusOf = (s?: string) => STATUS.find((x) => x.value === s) || STATUS[0];
 const STATUS_ORDER = ['submitted', 'pursuing', 'watching', 'won', 'lost', 'dropped'];
 type View = 'pipeline' | 'discovered' | 'all';
+
+/** Found by the daily grant scout (Gemini), rather than a raw feed like Grants.gov. */
+export const isScout = (g: Grant) => String(g.source_id || '').startsWith('scout');
+const isNew = (g: Grant) => isScout(g) && !g.curated && Date.now() - new Date(g.fetched_at).getTime() < 7 * 86400000;
+/** Pipeline = the team's own entries, scout finds rated High/Medium, and anything the team is actively pursuing. */
+function inPipeline(g: Grant, status?: string) {
+  return !!g.curated || (isScout(g) && (g.score ?? 0) >= 55) || ['pursuing', 'submitted', 'won'].includes(status || '');
+}
 
 /** Upcoming deadlines first, then rolling / no date, then deadlines already passed. */
 function dueKey(g: Grant) {
@@ -74,7 +82,6 @@ export default function GrantsPage() {
   const [status, setStatus] = useState('active');
   const [view, setView] = useState<View>('pipeline');
   const [adding, setAdding] = useState(false);
-  const [importing, setImporting] = useState(false);
   const [fit, setFit] = useState('');
   const [openId, setOpenIdState] = useState<string | null>(null);
   const [params, setParams] = useSearchParams();
@@ -94,7 +101,7 @@ export default function GrantsPage() {
   const filtered = useMemo(() => {
     const ql = q.toLowerCase();
     return grants
-      .filter((g) => view === 'all' || (view === 'pipeline' ? !!g.curated : !g.curated))
+      .filter((g) => view === 'all' || (view === 'pipeline') === inPipeline(g, tMap.get(g.id)?.status))
       .filter((g) => inWindow(g.deadline, f, true))
       .filter((g) => matchesPlace(g.countries, f, countries))
       .filter((g) => !ql || `${g.title} ${g.funder} ${g.summary} ${(g.themes || []).join(' ')} ${g.sector || ''} ${g.notes || ''}`.toLowerCase().includes(ql))
@@ -109,7 +116,10 @@ export default function GrantsPage() {
           : (b.score ?? -1) - (a.score ?? -1) || (a.deadline || '9999').localeCompare(b.deadline || '9999')
       );
   }, [grants, f, q, status, fit, tMap, countries, view]);
-  const counts = useMemo(() => ({ pipeline: grants.filter((g) => g.curated).length, discovered: grants.filter((g) => !g.curated).length }), [grants]);
+  const counts = useMemo(() => {
+    const p = grants.filter((g) => inPipeline(g, tMap.get(g.id)?.status)).length;
+    return { pipeline: p, discovered: grants.length - p, fresh: grants.filter((g) => isNew(g) && (g.score ?? 0) >= 55).length };
+  }, [grants, tMap]);
 
   const open = filtered.filter((g) => (daysUntil(g.deadline) ?? 1) >= 0);
   const closing30 = open.filter((g) => (daysUntil(g.deadline) ?? 999) <= 30);
@@ -173,22 +183,17 @@ export default function GrantsPage() {
     <>
       <PageHeader
         title="Funds & Grants"
-        subtitle="The team's pipeline, plus calls discovered automatically every 12 hours"
+        subtitle="A scout runs every morning: Gemini searches the web and funder pages, writes up open calls and rates fit the way the team does"
         updatedAt={feed.data.updated_at}
-        actions={
-          <>
-            <Button icon="upload" onClick={() => setImporting(true)}>Import from sheet</Button>
-            <Button variant="primary" icon="plus" onClick={() => setAdding(true)}>Add opportunity</Button>
-          </>
-        }
+        actions={<Button variant="primary" icon="plus" onClick={() => setAdding(true)}>Add opportunity</Button>}
       />
       <div className="flex flex-wrap items-center gap-3 mb-4">
         <Segmented value={view} onChange={(v) => { setView(v); setStatus(v === 'discovered' ? '' : 'active'); }} options={[
-          { value: 'pipeline', label: `Team pipeline (${counts.pipeline})` },
+          { value: 'pipeline', label: `Pipeline (${counts.pipeline})` },
           { value: 'discovered', label: `Discovered (${counts.discovered})` },
           { value: 'all', label: 'All' },
         ]} />
-        <span className="text-sm text-gray-500">{view === 'pipeline' ? 'Opportunities the team is tracking. Edit them here instead of the sheet.' : view === 'discovered' ? 'Found by the scheduled job from Grants.gov, NIH, UKRI and others. Add the good ones to the pipeline.' : ''}</span>
+        <span className="text-sm text-gray-500">{view === 'pipeline' ? `The team's opportunities plus High/Medium-fit calls the scout found${counts.fresh ? ` · ${counts.fresh} new this week` : ''}. Mark ones that don't fit as "Not relevant" and the scout learns from it.` : view === 'discovered' ? 'Lower-fit scout finds and raw listings from Grants.gov, NIH and UKRI. Add any good ones to the pipeline.' : ''}</span>
       </div>
       <FilterBar value={f} onChange={setF} countries={countries} rangeNames={{ '7': 'Closing 7d', '30': 'Closing 30d', '90': 'Closing 90d', all: 'All deadlines' }}>
         <Select className="w-[180px]" value={status} onChange={setStatus} placeholder="All statuses" options={[{ value: 'active', label: 'Active (not dropped)' }, ...STATUS.map((s) => ({ value: s.value, label: s.label }))]} />
@@ -245,7 +250,7 @@ export default function GrantsPage() {
             ))}
             {!feed.loading && open.length === 0 && (
               <Empty icon="coins" title="No open calls in view">
-                {grants.length ? 'Loosen the filters, or switch view above.' : 'Add an opportunity or import the team sheet.'}
+                {grants.length ? 'Loosen the filters, or switch view above.' : 'The scout runs every morning; you can also add an opportunity yourself.'}
               </Empty>
             )}
           </div>
@@ -288,7 +293,10 @@ export default function GrantsPage() {
                   <tr key={g.id} className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer" onClick={() => setOpenId(g.id)}>
                     <td className="px-6 py-3 min-w-[300px] max-w-[460px]">
                       <div className="font-medium text-gray-900 line-clamp-2" title={g.title}>{g.title}</div>
-                      <div className="text-sm text-gray-500 line-clamp-1">{g.funder}{g.curated ? (g.sector ? ` · ${g.sector}` : '') : ` · ${g.source_name}`}</div>
+                      <div className="text-sm text-gray-500 line-clamp-1">
+                        {isNew(g) && <span className="mr-1.5 rounded bg-brand-600 px-1.5 py-px text-[11px] font-semibold text-white align-[1px]">NEW</span>}
+                        {g.funder}{g.sector ? ` · ${g.sector}` : !g.curated ? ` · ${g.source_name}` : ''}
+                      </div>
                     </td>
                     <td className="px-3 py-3 tabular-nums max-w-[200px]"><span className="line-clamp-2 text-sm">{g.amount_text || fmtUsd(g.amount_usd)}</span></td>
                     <td className={cx('px-3 py-3 whitespace-nowrap', d !== null && d < 0 ? 'text-gray-400' : d !== null && d <= 14 ? 'text-red-600' : '')}>
@@ -313,7 +321,6 @@ export default function GrantsPage() {
 
       <GrantDrawer grant={selected} tracking={selected ? tMap.get(selected.id) : undefined} countries={countries} onClose={() => setOpenId(null)} />
       {adding && <GrantForm countries={countries} onClose={() => setAdding(false)} onSaved={(id) => { setAdding(false); setView('pipeline'); setOpenId(id); }} />}
-      {importing && <ImportSheet countries={countries} onClose={() => setImporting(false)} onDone={() => { setImporting(false); setView('pipeline'); }} />}
     </>
   );
 }
@@ -355,7 +362,7 @@ function GrantDrawerBody({ grant, t, tracking, save, tone, countries, onClose }:
         <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <span>{grant.funder}</span>
           {/^https?:\/\/.+\..+/.test(grant.url) && <ExtLink href={grant.url}>Open call page</ExtLink>}
-          <Badge className={grant.curated ? 'bg-brand-50 text-brand-700' : 'bg-gray-100 text-gray-600'}>{grant.curated ? 'Team pipeline' : `Discovered · ${grant.source_name}`}</Badge>
+          <Badge className={grant.curated ? 'bg-brand-50 text-brand-700' : 'bg-gray-100 text-gray-600'}>{grant.curated ? 'Added by the team' : isScout(grant) ? `Found by the scout · ${fmtTime(grant.fetched_at)}` : `Discovered · ${grant.source_name}`}</Badge>
         </span>
       }
     >
@@ -363,16 +370,17 @@ function GrantDrawerBody({ grant, t, tracking, save, tone, countries, onClose }:
         {grant.curated ? (
           <Button icon="edit" onClick={() => setEditing(true)}>Edit details</Button>
         ) : (
-          <Button variant="primary" icon="plus" onClick={() => saveGrant({ curated: true, added_by: me.email })}>Add to team pipeline</Button>
+          <Button variant="primary" icon="plus" onClick={() => saveGrant({ curated: true, added_by: me.email })}>{isScout(grant) && (grant.score ?? 0) >= 55 ? 'Keep in pipeline' : 'Add to pipeline'}</Button>
         )}
-        {grant.curated && <Button variant="ghost" onClick={() => saveGrant({ curated: false })}>Move back to discovered</Button>}
+        {!grant.curated && t.status !== 'dropped' && <Button icon="x" onClick={() => save({ status: 'dropped' })}>Not relevant</Button>}
+        {grant.curated && <Button variant="ghost" onClick={() => saveGrant({ curated: false })}>Remove from pipeline</Button>}
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
           ['Amount', grant.amount_text || fmtUsd(grant.amount_usd)],
           ['Deadline', grant.deadline ? `${fmtDate(grant.deadline)} · ${relDays(grant.deadline)}` : deadlineLabel(grant)],
           ['Where', grant.geography || placeLabel(grant.countries, countries)],
-          [grant.curated ? 'Team fit' : 'Fetched', grant.curated ? grant.fit || '—' : fmtTime(grant.fetched_at)],
+          [grant.curated ? 'Team fit' : 'Fit', grant.fit || (grant.score != null ? `${grant.score} / 100` : '—')],
         ].map(([k, v]) => (
           <div key={k} className="bg-white border border-gray-200 rounded-xl p-3">
             <div className="text-xs text-gray-500">{k}</div>
@@ -386,11 +394,11 @@ function GrantDrawerBody({ grant, t, tracking, save, tone, countries, onClose }:
         <p className="text-[15px] text-gray-700 leading-relaxed">{grant.summary || 'No summary yet.'}</p>
         {grant.deadline_text && grant.deadline_text !== deadlineLabel(grant) && <p className="text-sm text-gray-500 mt-3">Deadline note: {grant.deadline_text}</p>}
         {grant.sector && <p className="text-sm text-gray-500 mt-1">Sector: {grant.sector}</p>}
-        {(grant.eligibility || grant.requirements) && (
+        {(grant.eligible_as || grant.eligibility || grant.requirements) && (
           <div className="grid md:grid-cols-2 gap-4 mt-4">
             <div>
               <SectionLabel>Eligible as</SectionLabel>
-              <p className="text-[15px] text-gray-700 mt-1.5 whitespace-pre-line">{grant.eligibility || '—'}</p>
+              <p className="text-[15px] text-gray-700 mt-1.5 whitespace-pre-line">{grant.eligible_as || grant.eligibility || '—'}</p>
             </div>
             <div>
               <SectionLabel>Key requirements / notes</SectionLabel>
@@ -416,7 +424,7 @@ function GrantDrawerBody({ grant, t, tracking, save, tone, countries, onClose }:
 
       {!grant.curated && (
       <Card>
-        <CardHeader title="Suitability" subtitle="Scored by Gemini against the Org Context page (past work, strengths, geographies)" right={<Badge className={tone.cls}>{tone.label}</Badge>} />
+        <CardHeader title="Suitability" subtitle={isScout(grant) ? "Gemini's rating, calibrated on how the team rated past opportunities and the Org Context page" : 'Scored by Gemini against the Org Context page (past work, strengths, geographies)'} right={grant.fit ? <FitBadge g={grant} /> : <Badge className={tone.cls}>{tone.label}</Badge>} />
         <div className="flex gap-5 items-start">
           <ScoreRing score={grant.score} />
           <div className="flex-1 text-[15px] text-gray-700">{grant.score_reason || 'Not scored yet. Scores appear after the next grants run with a Gemini key.'}</div>
@@ -521,42 +529,3 @@ function GrantForm({ grant, countries, onClose, onSaved }: { grant?: Grant; coun
   );
 }
 
-/* ---------------- Import from the team's Google Sheet ---------------- */
-
-function ImportSheet({ countries, onClose, onDone }: { countries: Country[]; onClose: () => void; onDone: () => void }) {
-  const me = useMe();
-  const [text, setText] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [msg, setMsg] = useState<string | null>(null);
-  const parsed = useMemo(() => (text.trim() ? parseSheet(text, countries, TEAM) : { rows: [], skipped: 0 }), [text, countries]);
-  const run = async () => {
-    setBusy(true);
-    setMsg(null);
-    try {
-      const n = await importPipeline(parsed.rows, me.email);
-      setMsg(`Imported ${n} opportunities.`);
-      setTimeout(onDone, 900);
-    } catch (e: any) {
-      setMsg(e?.message || String(e));
-    } finally {
-      setBusy(false);
-    }
-  };
-  return (
-    <Modal open onClose={onClose} title="Import from the pipeline sheet" footer={<><Button onClick={onClose}>Cancel</Button><Button variant="primary" onClick={run} disabled={busy || !parsed.rows.length || DEMO}>{busy ? 'Importing…' : `Import ${parsed.rows.length || ''}`}</Button></>}>
-      <ol className="text-sm text-gray-600 list-decimal pl-5 space-y-1">
-        <li>In the Google Sheet, click the top-left corner to select everything (or select the rows including the header row).</li>
-        <li>Copy (Cmd/Ctrl + C) and paste below.</li>
-      </ol>
-      <TextArea rows={7} value={text} onChange={(e) => setText(e.target.value)} placeholder="Paste here…" className="font-mono text-xs" />
-      {parsed.rows.length > 0 && (
-        <div className="text-sm text-gray-700">
-          Found <b>{parsed.rows.length}</b> opportunities ({parsed.rows.filter((r) => r.status !== 'dropped').length} active, {parsed.rows.filter((r) => r.status === 'dropped').length} under "Discarded").
-          Existing ones are updated, not duplicated; POCs and status already set here are kept.
-        </div>
-      )}
-      {DEMO && <p className="text-sm text-amber-700">Import needs Supabase (not available in demo mode).</p>}
-      {msg && <p className="text-sm text-gray-800">{msg}</p>}
-    </Modal>
-  );
-}

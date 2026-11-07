@@ -10,6 +10,10 @@ import type { Source } from '../lib/types';
 export const REPO = process.env.REACT_APP_REPO || 'rohit-singh-wadhwani/waig-atlas';
 
 const TYPES = [
+  { value: 'scout_search', label: 'Grant scout: Gemini web search (brief in URL field)' },
+  { value: 'scout_page', label: 'Grant scout: funder page (Gemini reads it when it changes)' },
+  { value: 'scout_feed', label: 'Grant scout: opportunities feed (RSS)' },
+  { value: 'scout_eu', label: 'Grant scout: EU Funding & Tenders search (text in URL field)' },
   { value: 'rss', label: 'RSS / Atom feed' },
   { value: 'json', label: 'JSON API (Gemini extracts items)' },
   { value: 'html', label: 'Web page (Gemini extracts items)' },
