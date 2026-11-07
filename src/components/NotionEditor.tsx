@@ -310,7 +310,7 @@ export default function NotionEditor({ json, md, onSave, editable = true }: { js
       </BlockNoteView>
     </div>
   );
-}}
+}
 
 
 /* ------------------------------------------------------------------ */
