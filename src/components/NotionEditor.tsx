@@ -182,11 +182,28 @@ function slashItems(editor: Editor) {
   return [...getDefaultReactSlashMenuItems(editor as any), ...templates];
 }
 
-/** Convert legacy markdown (with ```mermaid fences) into editor blocks. */
+/** Convert legacy markdown (with ```mermaid fences and - [ ] checklists) into editor blocks. */
 async function fromMarkdown(editor: Editor, md: string) {
-  const blocks: any[] = await (editor as any).tryParseMarkdownToBlocks(md || '');
+  const parse = async (text: string): Promise<any[]> => (await (editor as any).tryParseMarkdownToBlocks(text)) || [];
   const textOf = (b: any) => (Array.isArray(b.content) ? b.content.map((c: any) => c.text || '').join('') : '');
-  return blocks.map((b) => {
+  const out: any[] = [];
+  let buf: string[] = [];
+  let inFence = false;
+  const flush = async () => {
+    if (buf.join('').trim()) out.push(...(await parse(buf.join('\n'))));
+    buf = [];
+  };
+  for (const line of (md || '').split('\n')) {
+    if (/^\s*(```|~~~)/.test(line)) inFence = !inFence;
+    const m = !inFence && line.match(/^\s*[-*]\s+\[( |x|X)\]\s+(.*)$/);
+    if (m) {
+      await flush();
+      const inline = (await parse(m[2]))[0]?.content;
+      out.push({ type: 'checkListItem', props: { checked: m[1].toLowerCase() === 'x' }, content: Array.isArray(inline) && inline.length ? inline : m[2] });
+    } else buf.push(line);
+  }
+  await flush();
+  return out.map((b) => {
     if (b.type === 'codeBlock') {
       const code = textOf(b);
       const lang = (b.props?.language || '').toLowerCase();
@@ -211,6 +228,10 @@ async function toMarkdown(editor: Editor, doc: any[]) {
     } else if (b.type === 'chart') {
       await flush();
       out.push('```chart\n' + JSON.stringify(b.props) + '\n```');
+    } else if (b.type === 'checkListItem') {
+      await flush();
+      const line = String(await (editor as any).blocksToMarkdownLossy([{ ...b, type: 'paragraph', props: {}, children: [] }])).trim();
+      out.push(`- [${b.props?.checked ? 'x' : ' '}] ${line}`);
     } else run.push(b);
   }
   await flush();
