@@ -22,6 +22,16 @@ export interface Grant {
   strengths?: string[];
   weaknesses?: string[];
   score_reason?: string;
+  // Team pipeline fields
+  curated?: boolean;
+  deadline_text?: string | null;
+  sector?: string | null;
+  fit?: string | null;
+  eligible_as?: string | null;
+  geography?: string | null;
+  notes?: string | null;
+  added_by?: string | null;
+  updated_at?: string | null;
 }
 
 export interface StageMilestone {

@@ -11,6 +11,7 @@ export const TEAM: { name: string; email: string; team: string }[] = [
   { name: 'Sneha Nikam', email: 'c-sneha@wadhwaniaiglobal.com', team: 'Public Health' },
   { name: 'Harsh Singh', email: 'harsh@wadhwaniaiglobal.com', team: 'Growth & Strategy' },
   { name: 'Karan Malik', email: 'karan@wadhwaniaiglobal.com', team: 'Growth & Strategy' },
+  { name: 'Ayushree', email: 'Ayushree', team: 'Growth & Strategy' },
 ];
 
 export const TEAMS = ['Product & Tech', 'Growth & Strategy', 'Programme', 'Public Health', 'Finance', 'Partners'];

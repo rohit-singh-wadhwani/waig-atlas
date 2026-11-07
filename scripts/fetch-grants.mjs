@@ -143,7 +143,7 @@ async function main() {
     return !g.deadline || g.deadline >= today();
   }).slice(0, MAX_NEW);
   if (HAS_GEMINI) {
-    const unscored = existing.filter((g) => g.score == null && (!g.deadline || g.deadline >= today()) && !candidates.find((c) => c.id === g.id)).slice(0, 20);
+    const unscored = existing.filter((g) => !g.curated && g.score == null && (!g.deadline || g.deadline >= today()) && !candidates.find((c) => c.id === g.id)).slice(0, 20);
     for (const g of unscored) candidates.push({ id: g.id, title: g.title, url: g.url, funder: g.funder, deadline: g.deadline, open_date: g.open_date, text: g.summary, source_id: g.source_id, source_name: g.source_name });
   }
 
@@ -190,7 +190,8 @@ async function main() {
   writeJson('grants-rejected.json', { ids: Array.from(rejected).slice(-5000) });
   if (HAS_SB && added.length) await sb.upsert('grants', added);
   // Public file: listing fields only. Scores and fit notes stay in Supabase when it is connected.
-  const pub = all.map((g) => (HAS_SB ? { ...g, score: null, strengths: [], weaknesses: [], score_reason: null } : g));
+  // Team-pipeline rows are private and never written to the public file.
+  const pub = all.filter((g) => !g.curated).map((g) => (HAS_SB ? { ...g, score: null, strengths: [], weaknesses: [], score_reason: null } : g));
   writeJson('grants.json', { updated_at: now, grants: pub });
   const msg = `${added.length} new calls added (${candidates.length} candidates), ${all.length} tracked${HAS_GEMINI ? ` · Gemini ${geminiStatus.ok}/${geminiStatus.calls} calls ok${geminiStatus.lastError ? ` (last error: ${geminiStatus.lastError})` : ''}` : ' · no Gemini key: unscored'}`;
   recordRun('grants', true, msg);

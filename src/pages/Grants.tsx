@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { PageHeader, useMe } from '../components/Layout';
-import { Badge, Button, Card, CardHeader, Drawer, Empty, ExtLink, Field, KpiCard, Progress, SectionLabel, Select, TextInput, cx } from '../components/ui';
+import { Badge, Button, Card, CardHeader, Drawer, Empty, ExtLink, Field, KpiCard, Modal, Progress, SectionLabel, Segmented, Select, TextArea, TextInput, cx } from '../components/ui';
 import { FilterBar, Filters, defaultFilters, inWindow, matchesPlace } from '../components/Filters';
 import WorldMap, { MapPoint } from '../components/WorldMap';
 import ChartCard from '../components/ChartCard';
@@ -9,7 +9,8 @@ import Stepper from '../components/Stepper';
 import { Attachments, Comments } from '../components/Collab';
 import Icon from '../components/Icon';
 import { useData } from '../lib/hooks';
-import { db, loadGrants } from '../lib/store';
+import { DEMO, db, importPipeline, loadGrants } from '../lib/store';
+import { FIT_OPTIONS, fitScore, parseCountries, parseDeadline, parseSheet, pipelineId } from '../lib/pipeline';
 import { useWorld, NO_COUNTRIES } from '../lib/world';
 import { daysUntil, fmtDate, fmtTime, fmtUsd, relDays, scoreTone } from '../lib/format';
 import { GRANT_STAGES, TEAM, personName } from '../lib/team';
@@ -25,6 +26,22 @@ const STATUS: { value: GrantTracking['status']; label: string; cls: string }[] =
   { value: 'dropped', label: 'Dropped', cls: 'bg-gray-100 text-gray-500' },
 ];
 const statusOf = (s?: string) => STATUS.find((x) => x.value === s) || STATUS[0];
+const STATUS_ORDER = ['submitted', 'pursuing', 'watching', 'won', 'lost', 'dropped'];
+type View = 'pipeline' | 'discovered' | 'all';
+
+export function deadlineLabel(g: Grant) {
+  if (g.deadline) return fmtDate(g.deadline);
+  return g.deadline_text ? g.deadline_text.split(/[;(]/)[0].trim() : 'No deadline';
+}
+
+function FitBadge({ g }: { g: Grant }) {
+  if (g.fit) {
+    const cls = /^high/i.test(g.fit) ? 'bg-green-50 text-green-700' : /^medium/i.test(g.fit) ? 'bg-amber-50 text-amber-700' : 'bg-gray-100 text-gray-600';
+    return <Badge className={cls}>{g.fit}</Badge>;
+  }
+  if (g.score == null) return <span className="text-gray-400 text-sm">—</span>;
+  return <Badge className={scoreTone(g.score).cls}>{g.score} · {scoreTone(g.score).label}</Badge>;
+}
 
 export function newTracking(g: Grant): Tracked {
   return {
@@ -47,7 +64,10 @@ export default function GrantsPage() {
   const tracking = useData(() => db.list<Tracked>('grant_tracking'), [], []);
   const [f, setF] = useState<Filters>({ ...defaultFilters, range: 'all' });
   const [q, setQ] = useState('');
-  const [status, setStatus] = useState('');
+  const [status, setStatus] = useState('active');
+  const [view, setView] = useState<View>('pipeline');
+  const [adding, setAdding] = useState(false);
+  const [importing, setImporting] = useState(false);
   const [fit, setFit] = useState('');
   const [openId, setOpenIdState] = useState<string | null>(null);
   const [params, setParams] = useSearchParams();
@@ -67,13 +87,22 @@ export default function GrantsPage() {
   const filtered = useMemo(() => {
     const ql = q.toLowerCase();
     return grants
+      .filter((g) => view === 'all' || (view === 'pipeline' ? !!g.curated : !g.curated))
       .filter((g) => inWindow(g.deadline, f, true))
       .filter((g) => matchesPlace(g.countries, f, countries))
-      .filter((g) => !ql || `${g.title} ${g.funder} ${g.summary} ${(g.themes || []).join(' ')}`.toLowerCase().includes(ql))
-      .filter((g) => !status || (tMap.get(g.id)?.status || 'watching') === status)
+      .filter((g) => !ql || `${g.title} ${g.funder} ${g.summary} ${(g.themes || []).join(' ')} ${g.sector || ''} ${g.notes || ''}`.toLowerCase().includes(ql))
+      .filter((g) => {
+        const st = tMap.get(g.id)?.status || 'watching';
+        return !status || (status === 'active' ? !['dropped', 'lost'].includes(st) : st === status);
+      })
       .filter((g) => !fit || (fit === 'strong' ? (g.score ?? -1) >= 70 : fit === 'possible' ? (g.score ?? -1) >= 45 : true))
-      .sort((a, b) => (b.score ?? -1) - (a.score ?? -1) || (a.deadline || '9999').localeCompare(b.deadline || '9999'));
-  }, [grants, f, q, status, fit, tMap, countries]);
+      .sort((a, b) =>
+        view === 'pipeline'
+          ? STATUS_ORDER.indexOf(tMap.get(a.id)?.status || 'watching') - STATUS_ORDER.indexOf(tMap.get(b.id)?.status || 'watching') || (a.deadline || '9999').localeCompare(b.deadline || '9999') || (b.score ?? -1) - (a.score ?? -1)
+          : (b.score ?? -1) - (a.score ?? -1) || (a.deadline || '9999').localeCompare(b.deadline || '9999')
+      );
+  }, [grants, f, q, status, fit, tMap, countries, view]);
+  const counts = useMemo(() => ({ pipeline: grants.filter((g) => g.curated).length, discovered: grants.filter((g) => !g.curated).length }), [grants]);
 
   const open = filtered.filter((g) => (daysUntil(g.deadline) ?? 1) >= 0);
   const closing30 = open.filter((g) => (daysUntil(g.deadline) ?? 999) <= 30);
@@ -81,6 +110,9 @@ export default function GrantsPage() {
   const value = open.reduce((s, g) => s + (g.amount_usd || 0), 0);
   const pursuing = filtered.filter((g) => ['pursuing', 'submitted'].includes(tMap.get(g.id)?.status || ''));
   const mine = filtered.filter((g) => tMap.get(g.id)?.assignee === me.email);
+  const submitted = filtered.filter((g) => tMap.get(g.id)?.status === 'submitted');
+  const unassigned = filtered.filter((g) => !tMap.get(g.id)?.assignee && !['dropped', 'lost'].includes(tMap.get(g.id)?.status || ''));
+  const rolling = open.filter((g) => !g.deadline);
 
   // Map: a bubble per country, sized by number of calls
   const points: MapPoint[] = useMemo(() => {
@@ -95,7 +127,7 @@ export default function GrantsPage() {
         return {
           id: iso, kind: 'Open calls', lng: c.lng, lat: c.lat, size: 5 + Math.min(14, Math.sqrt(list.length) * 4), color: best >= 70 ? '#316d6e' : best >= 45 ? '#eda100' : '#9ca3af',
           label: `${c.name}: ${list.length} open call${list.length > 1 ? 's' : ''}`, sub: `Best fit ${best || 'not scored'} · list below is now filtered to ${c.name}`,
-          items: sorted.map((g) => ({ label: g.title, href: `#/grants?open=${g.id}`, meta: `${g.score != null ? `fit ${g.score} · ` : ''}due ${fmtDate(g.deadline, { day: 'numeric', month: 'short' })}` })),
+          items: sorted.map((g) => ({ label: g.title, href: `#/grants?open=${g.id}`, meta: `${g.fit ? `${g.fit} fit · ` : g.score != null ? `fit ${g.score} · ` : ''}${deadlineLabel(g)}` })),
         } as MapPoint;
       })
       .filter(Boolean) as MapPoint[];
@@ -132,32 +164,54 @@ export default function GrantsPage() {
 
   return (
     <>
-      <PageHeader title="Funds & Grants" subtitle="Open calls, scored against our past work and refreshed every 12 hours" updatedAt={feed.data.updated_at} />
+      <PageHeader
+        title="Funds & Grants"
+        subtitle="The team's pipeline, plus calls discovered automatically every 12 hours"
+        updatedAt={feed.data.updated_at}
+        actions={
+          <>
+            <Button icon="upload" onClick={() => setImporting(true)}>Import from sheet</Button>
+            <Button variant="primary" icon="plus" onClick={() => setAdding(true)}>Add opportunity</Button>
+          </>
+        }
+      />
+      <div className="flex flex-wrap items-center gap-3 mb-4">
+        <Segmented value={view} onChange={(v) => { setView(v); setStatus(v === 'discovered' ? '' : 'active'); }} options={[
+          { value: 'pipeline', label: `Team pipeline (${counts.pipeline})` },
+          { value: 'discovered', label: `Discovered (${counts.discovered})` },
+          { value: 'all', label: 'All' },
+        ]} />
+        <span className="text-sm text-gray-500">{view === 'pipeline' ? 'Opportunities the team is tracking. Edit them here instead of the sheet.' : view === 'discovered' ? 'Found by the scheduled job from Grants.gov, NIH, UKRI and others. Add the good ones to the pipeline.' : ''}</span>
+      </div>
       <FilterBar value={f} onChange={setF} countries={countries} rangeNames={{ '7': 'Closing 7d', '30': 'Closing 30d', '90': 'Closing 90d', all: 'All deadlines' }}>
-        <Select className="w-[180px]" value={status} onChange={setStatus} placeholder="All statuses" options={STATUS.map((s) => ({ value: s.value, label: s.label }))} />
-        <Select className="w-[170px]" value={fit} onChange={setFit} placeholder="Any fit" options={[{ value: 'strong', label: 'Strong fit (70+)' }, { value: 'possible', label: 'Possible fit (45+)' }]} />
+        <Select className="w-[180px]" value={status} onChange={setStatus} placeholder="All statuses" options={[{ value: 'active', label: 'Active (not dropped)' }, ...STATUS.map((s) => ({ value: s.value, label: s.label }))]} />
+        <Select className="w-[170px]" value={fit} onChange={setFit} placeholder="Any fit" options={[{ value: 'strong', label: 'High fit' }, { value: 'possible', label: 'Medium fit or better' }]} />
         <div className="relative">
           <Icon name="search" size={17} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <TextInput placeholder="Search calls" value={q} onChange={(e) => setQ(e.target.value)} className="pl-9 w-[220px]" />
+          <TextInput placeholder="Search funder, call, notes" value={q} onChange={(e) => setQ(e.target.value)} className="pl-9 w-[220px]" />
         </div>
       </FilterBar>
 
       <Card className="mb-6">
-        <SectionLabel>Open calls in view</SectionLabel>
+        <SectionLabel>{view === 'pipeline' ? 'Active opportunities in view' : 'Open calls in view'}</SectionLabel>
         <div className="text-[44px] font-semibold text-gray-900 mt-3 leading-none tabular-nums">{feed.loading ? '—' : open.length}</div>
         <p className="text-[17px] text-gray-600 mt-4">
-          {pursuing.length} pursuing or submitted · {grants.length} tracked in total · last fetch {fmtTime(feed.data.updated_at)}
+          {pursuing.length} pursuing or submitted · {counts.pipeline} in the team pipeline · {counts.discovered} discovered · last fetch {fmtTime(feed.data.updated_at)}
         </p>
         <Progress className="mt-5" value={open.length ? (pursuing.length / open.length) * 100 : 0} />
       </Card>
 
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
         <KpiCard icon="clock" label="Closing in 30 days" value={closing30.length} foot="act on these first" onClick={() => setF({ ...f, range: '30' })} />
-        <KpiCard icon="target" tint="green" label="Strong fit (70+)" value={strong.length} foot="Gemini suitability score" onClick={() => setFit('strong')} />
-        <KpiCard icon="dollar" tint="orange" label="Funding available" value={fmtUsd(value)} foot="where amount is stated" />
+        <KpiCard icon="target" tint="green" label="High fit" value={strong.length} foot={view === 'pipeline' ? 'team rating' : 'Gemini score 70+'} onClick={() => setFit('strong')} />
+        {view === 'discovered' ? (
+          <KpiCard icon="dollar" tint="orange" label="Funding available" value={fmtUsd(value)} foot="where amount is stated" />
+        ) : (
+          <KpiCard icon="checkCircle" tint="orange" label="Submitted" value={submitted.length} foot="awaiting review" onClick={() => setStatus('submitted')} />
+        )}
         <KpiCard icon="flag" tint="purple" label="Pursuing" value={pursuing.length} foot="pursuing + submitted" onClick={() => setStatus('pursuing')} />
-        <KpiCard icon="user" tint="blue" label="Assigned to me" value={mine.length} />
-        <KpiCard icon="globe" tint="gray" label="Global / multi-country" value={globalCount} foot="not tied to one country" />
+        <KpiCard icon="user" tint="blue" label={view === 'pipeline' ? 'No owner yet' : 'Assigned to me'} value={view === 'pipeline' ? unassigned.length : mine.length} foot={view === 'pipeline' ? 'needs a POC' : undefined} />
+        <KpiCard icon="clock" tint="gray" label="Rolling / no fixed date" value={rolling.length} foot={`${globalCount} open worldwide`} />
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-[1.6fr_1fr] gap-6 mb-6">
@@ -166,24 +220,25 @@ export default function GrantsPage() {
           <WorldMap geo={world?.geo || null} points={points} fills={fills} fillLabels={fillLabels} focus={focus} legend={[{ color: FIT.strong, label: 'Strong fit (70+)' }, { color: FIT.possible, label: 'Possible fit (45–69)' }, { color: FIT.weak, label: 'Weak fit or not scored' }]} overlay={globalCount ? <button type="button" onClick={() => setF({ ...f, country: '', region: '' })} className="bg-white/95 border border-gray-200 rounded-lg px-2.5 py-1 text-xs text-gray-700 shadow-card hover:border-brand-300">+ {globalCount} global / multi-country call{globalCount > 1 ? 's' : ''}</button> : undefined} selected={f.country || null} onPointClick={(iso) => setF({ ...f, country: iso })} onCountryClick={(iso) => setF({ ...f, country: f.country === iso ? '' : iso })} height={440} />
         </Card>
         <Card className="flex flex-col">
-          <CardHeader title="Latest deals" subtitle="Newest first" />
+          <CardHeader title={view === 'pipeline' ? 'Up next' : 'Latest deals'} subtitle={view === 'pipeline' ? 'Nearest deadlines first, then rolling' : 'Newest first'} />
           <div className="flex-1 overflow-y-auto -mx-2 max-h-[440px]">
-            {[...open].sort((a, b) => (b.open_date || b.fetched_at).localeCompare(a.open_date || a.fetched_at)).slice(0, 25).map((g) => (
+            {[...open].sort((a, b) => (view === 'pipeline' ? (a.deadline || '9999').localeCompare(b.deadline || '9999') : (b.open_date || b.fetched_at).localeCompare(a.open_date || a.fetched_at))).slice(0, 25).map((g) => (
               <button key={g.id} type="button" onClick={() => setOpenId(g.id)} className="w-full text-left px-2 py-3 rounded-xl hover:bg-gray-50 border-b border-gray-100 last:border-0">
                 <div className="flex items-start gap-2 min-w-0">
                   <span className="font-medium text-gray-900 text-[15px] leading-snug line-clamp-2 flex-1 min-w-0">{g.title}</span>
-                  {g.score != null && <Badge className={scoreTone(g.score).cls}>{g.score}</Badge>}
+                  <FitBadge g={g} />
                 </div>
                 <div className="text-sm text-gray-500 mt-1 flex flex-wrap gap-x-3">
                   <span>{g.funder}</span>
                   <span>{g.amount_text || fmtUsd(g.amount_usd)}</span>
-                  <span className={cx((daysUntil(g.deadline) ?? 99) <= 14 && 'text-red-600')}>Due {fmtDate(g.deadline)}</span>
+                  <span className={cx((daysUntil(g.deadline) ?? 99) <= 14 && 'text-red-600')}>{g.deadline ? `Due ${fmtDate(g.deadline)}` : deadlineLabel(g)}</span>
+                  {tMap.get(g.id)?.assignee && <span>· {personName(tMap.get(g.id)?.assignee)}</span>}
                 </div>
               </button>
             ))}
             {!feed.loading && open.length === 0 && (
               <Empty icon="coins" title="No open calls in view">
-                {grants.length ? 'Loosen the filters.' : 'The grants job has not run yet. It runs every 12 hours, or trigger it from GitHub Actions.'}
+                {grants.length ? 'Loosen the filters, or switch view above.' : 'Add an opportunity or import the team sheet.'}
               </Empty>
             )}
           </div>
@@ -192,23 +247,27 @@ export default function GrantsPage() {
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
         <ChartCard title="Deadlines by month" subtitle="Open calls closing each month, next 6 months" labels={months.map((m) => m.toLocaleDateString('en-GB', { month: 'short', year: '2-digit' }))} series={[{ name: 'Calls closing', values: byMonth.map((l) => l.length) }]} modes={['bars', 'line', 'area']} />
-        <ChartCard title="Calls by source" subtitle="Where open calls in view came from" labels={bySource.map((x) => x.s)} series={[{ name: 'Open calls', values: bySource.map((x) => x.n) }]} modes={['bars', 'donut']} />
+        {view === 'pipeline' ? (
+          <ChartCard title="Pipeline by status" subtitle="Opportunities in view" labels={STATUS.map((s) => s.label)} series={[{ name: 'Opportunities', values: STATUS.map((s) => filtered.filter((g) => (tMap.get(g.id)?.status || 'watching') === s.value).length) }]} modes={['bars', 'donut']} />
+        ) : (
+          <ChartCard title="Calls by source" subtitle="Where open calls in view came from" labels={bySource.map((x) => x.s)} series={[{ name: 'Open calls', values: bySource.map((x) => x.n) }]} modes={['bars', 'donut']} />
+        )}
       </div>
 
       <Card pad={false}>
         <div className="p-6 pb-3">
-          <CardHeader title="Funds & grants directory" subtitle={`${filtered.length} calls · sorted by fit, then deadline`} />
+          <CardHeader title={view === 'pipeline' ? 'Team pipeline' : 'Funds & grants directory'} subtitle={`${filtered.length} opportunities · ${view === 'pipeline' ? 'submitted and pursuing first, then by deadline' : 'sorted by fit, then deadline'}`} />
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-[15px]">
             <thead>
               <tr className="text-left text-sm text-gray-500 border-y border-gray-100 bg-gray-50/60">
-                <th className="font-medium px-6 py-3">Call</th>
+                <th className="font-medium px-6 py-3">Opportunity</th>
                 <th className="font-medium px-3 py-3">Amount</th>
                 <th className="font-medium px-3 py-3">Deadline</th>
                 <th className="font-medium px-3 py-3">Where</th>
                 <th className="font-medium px-3 py-3">Fit</th>
-                <th className="font-medium px-3 py-3">Assignee</th>
+                <th className="font-medium px-3 py-3">POC</th>
                 <th className="font-medium px-3 py-3">Stage</th>
               </tr>
             </thead>
@@ -222,15 +281,15 @@ export default function GrantsPage() {
                   <tr key={g.id} className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer" onClick={() => setOpenId(g.id)}>
                     <td className="px-6 py-3 max-w-[420px]">
                       <div className="font-medium text-gray-900 line-clamp-1">{g.title}</div>
-                      <div className="text-sm text-gray-500 line-clamp-1">{g.funder} · {g.source_name}</div>
+                      <div className="text-sm text-gray-500 line-clamp-1">{g.funder}{g.curated ? (g.sector ? ` · ${g.sector}` : '') : ` · ${g.source_name}`}</div>
                     </td>
-                    <td className="px-3 py-3 whitespace-nowrap tabular-nums">{g.amount_text || fmtUsd(g.amount_usd)}</td>
+                    <td className="px-3 py-3 tabular-nums max-w-[200px]"><span className="line-clamp-2 text-sm">{g.amount_text || fmtUsd(g.amount_usd)}</span></td>
                     <td className={cx('px-3 py-3 whitespace-nowrap', d !== null && d < 0 ? 'text-gray-400' : d !== null && d <= 14 ? 'text-red-600' : '')}>
-                      {fmtDate(g.deadline)}
-                      <div className="text-xs text-gray-500">{relDays(g.deadline)}</div>
+                      <span className="block max-w-[180px] truncate" title={g.deadline_text || ''}>{deadlineLabel(g)}</span>
+                      {g.deadline && <div className="text-xs text-gray-500">{relDays(g.deadline)}</div>}
                     </td>
                     <td className="px-3 py-3 text-sm text-gray-600 max-w-[180px] truncate">{placeLabel(g.countries, countries)}</td>
-                    <td className="px-3 py-3">{g.score != null ? <Badge className={scoreTone(g.score).cls}>{g.score} · {scoreTone(g.score).label}</Badge> : <span className="text-gray-400 text-sm">—</span>}</td>
+                    <td className="px-3 py-3"><FitBadge g={g} /></td>
                     <td className="px-3 py-3 text-sm whitespace-nowrap">{personName(t?.assignee)}</td>
                     <td className="px-3 py-3 whitespace-nowrap">
                       <Badge className={st.cls}>{st.label}</Badge>
@@ -246,6 +305,8 @@ export default function GrantsPage() {
       </Card>
 
       <GrantDrawer grant={selected} tracking={selected ? tMap.get(selected.id) : undefined} countries={countries} onClose={() => setOpenId(null)} />
+      {adding && <GrantForm countries={countries} onClose={() => setAdding(false)} onSaved={(id) => { setAdding(false); setView('pipeline'); setOpenId(id); }} />}
+      {importing && <ImportSheet countries={countries} onClose={() => setImporting(false)} onDone={() => { setImporting(false); setView('pipeline'); }} />}
     </>
   );
 }
@@ -269,6 +330,15 @@ function GrantDrawer({ grant, tracking, countries, onClose }: { grant: Grant | n
   const t = tracking || newTracking(grant);
   const save = (patch: Partial<Tracked>) => db.upsert<Tracked>('grant_tracking', { ...t, ...patch, updated_at: new Date().toISOString() });
   const tone = scoreTone(grant.score);
+  return <GrantDrawerBody grant={grant} t={t} tracking={tracking} save={save} tone={tone} countries={countries} onClose={onClose} />;
+}
+
+function GrantDrawerBody({ grant, t, tracking, save, tone, countries, onClose }: any) {
+  const me = useMe();
+  const [editing, setEditing] = useState(false);
+  const [notes, setNotes] = useState(grant.notes || '');
+  useEffect(() => setNotes(grant.notes || ''), [grant.id, grant.notes]);
+  const saveGrant = (patch: Partial<Grant>) => db.upsert('grants' as any, { ...grant, ...patch, updated_at: new Date().toISOString() } as any);
   return (
     <Drawer
       open
@@ -277,20 +347,29 @@ function GrantDrawer({ grant, tracking, countries, onClose }: { grant: Grant | n
       subtitle={
         <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <span>{grant.funder}</span>
-          <ExtLink href={grant.url}>Open call ({grant.source_name})</ExtLink>
+          {/^https?:\/\/.+\..+/.test(grant.url) && <ExtLink href={grant.url}>Open call page</ExtLink>}
+          <Badge className={grant.curated ? 'bg-brand-50 text-brand-700' : 'bg-gray-100 text-gray-600'}>{grant.curated ? 'Team pipeline' : `Discovered · ${grant.source_name}`}</Badge>
         </span>
       }
     >
+      <div className="flex flex-wrap gap-2 -mt-1">
+        {grant.curated ? (
+          <Button icon="edit" onClick={() => setEditing(true)}>Edit details</Button>
+        ) : (
+          <Button variant="primary" icon="plus" onClick={() => saveGrant({ curated: true, added_by: me.email })}>Add to team pipeline</Button>
+        )}
+        {grant.curated && <Button variant="ghost" onClick={() => saveGrant({ curated: false })}>Move back to discovered</Button>}
+      </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
           ['Amount', grant.amount_text || fmtUsd(grant.amount_usd)],
-          ['Deadline', `${fmtDate(grant.deadline)} · ${relDays(grant.deadline)}`],
-          ['Where', placeLabel(grant.countries, countries)],
-          ['Fetched', fmtTime(grant.fetched_at)],
+          ['Deadline', grant.deadline ? `${fmtDate(grant.deadline)} · ${relDays(grant.deadline)}` : deadlineLabel(grant)],
+          ['Where', grant.geography || placeLabel(grant.countries, countries)],
+          [grant.curated ? 'Team fit' : 'Fetched', grant.curated ? grant.fit || '—' : fmtTime(grant.fetched_at)],
         ].map(([k, v]) => (
           <div key={k} className="bg-white border border-gray-200 rounded-xl p-3">
             <div className="text-xs text-gray-500">{k}</div>
-            <div className="font-medium text-gray-900 mt-0.5 text-[15px]">{v}</div>
+            <div className="font-medium text-gray-900 mt-0.5 text-[15px] line-clamp-3" title={String(v)}>{v}</div>
           </div>
         ))}
       </div>
@@ -298,14 +377,16 @@ function GrantDrawer({ grant, tracking, countries, onClose }: { grant: Grant | n
       <Card>
         <CardHeader title="Summary" />
         <p className="text-[15px] text-gray-700 leading-relaxed">{grant.summary || 'No summary yet.'}</p>
+        {grant.deadline_text && grant.deadline_text !== deadlineLabel(grant) && <p className="text-sm text-gray-500 mt-3">Deadline note: {grant.deadline_text}</p>}
+        {grant.sector && <p className="text-sm text-gray-500 mt-1">Sector: {grant.sector}</p>}
         {(grant.eligibility || grant.requirements) && (
           <div className="grid md:grid-cols-2 gap-4 mt-4">
             <div>
-              <SectionLabel>Eligibility</SectionLabel>
+              <SectionLabel>Eligible as</SectionLabel>
               <p className="text-[15px] text-gray-700 mt-1.5 whitespace-pre-line">{grant.eligibility || '—'}</p>
             </div>
             <div>
-              <SectionLabel>Requirements</SectionLabel>
+              <SectionLabel>Key requirements / notes</SectionLabel>
               <p className="text-[15px] text-gray-700 mt-1.5 whitespace-pre-line">{grant.requirements || '—'}</p>
             </div>
           </div>
@@ -319,6 +400,14 @@ function GrantDrawer({ grant, tracking, countries, onClose }: { grant: Grant | n
         ) : null}
       </Card>
 
+      {grant.curated && (
+        <Card>
+          <CardHeader title="Team notes" subtitle="Internal: approach, contacts, past grantees, open questions" right={notes !== (grant.notes || '') ? <Button variant="primary" className="h-9" onClick={() => saveGrant({ notes })}>Save notes</Button> : undefined} />
+          <TextArea rows={Math.min(14, Math.max(4, notes.split('\n').length + 1))} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Suggested approach, focus areas, past grantees, contacts…" />
+        </Card>
+      )}
+
+      {!grant.curated && (
       <Card>
         <CardHeader title="Suitability" subtitle="Scored by Gemini against the Org Context page (past work, strengths, geographies)" right={<Badge className={tone.cls}>{tone.label}</Badge>} />
         <div className="flex gap-5 items-start">
@@ -346,11 +435,12 @@ function GrantDrawer({ grant, tracking, countries, onClose }: { grant: Grant | n
           </div>
         ) : null}
       </Card>
+      )}
 
       <Card>
-        <CardHeader title="Pursuit" subtitle="Self-managed: assign an owner, then tick stages as they happen" />
+        <CardHeader title="Pursuit" subtitle="Assign a POC, set the status, and tick stages as they happen" />
         <div className="grid md:grid-cols-2 gap-4 mb-4">
-          <Field label="Assignee">
+          <Field label="POC">
             <Select value={t.assignee || ''} onChange={(v) => save({ assignee: v || null, status: v && t.status === 'watching' ? 'pursuing' : t.status })} placeholder="Unassigned" options={TEAM.map((p) => ({ value: p.email, label: `${p.name} · ${p.team}` }))} />
           </Field>
           <Field label="Status">
@@ -367,8 +457,99 @@ function GrantDrawer({ grant, tracking, countries, onClose }: { grant: Grant | n
       <Attachments entityType="grant" entityId={grant.id} subtitle="Concept notes, budgets, eligibility letters, partner LOIs" />
       <Comments entityType="grant" entityId={grant.id} />
       <div className="flex justify-end">
-        <Button icon="external" onClick={() => window.open(grant.url, '_blank', 'noreferrer')}>Open original call</Button>
+        {/^https?:\/\/.+\..+/.test(grant.url) && <Button icon="external" onClick={() => window.open(grant.url, '_blank', 'noreferrer')}>Open original call</Button>}
       </div>
+      {editing && <GrantForm grant={grant} countries={countries} onClose={() => setEditing(false)} onSaved={() => setEditing(false)} />}
     </Drawer>
+  );
+}
+
+/* ---------------- Add / edit an opportunity ---------------- */
+
+function GrantForm({ grant, countries, onClose, onSaved }: { grant?: Grant; countries: Country[]; onClose: () => void; onSaved: (id: string) => void }) {
+  const me = useMe();
+  const [g, setG] = useState<Partial<Grant>>(grant || { curated: true, countries: ['GLOBAL'] });
+  const [err, setErr] = useState<string | null>(null);
+  const set = (patch: Partial<Grant>) => setG({ ...g, ...patch });
+  const save = async () => {
+    if (!g.title?.trim() || !g.funder?.trim()) return setErr('Funder and opportunity name are needed.');
+    const id = grant?.id || pipelineId(g.funder!, g.title!);
+    const deadline = g.deadline || parseDeadline(g.deadline_text) || null;
+    const row: Grant = {
+      ...(grant || {}),
+      id, title: g.title!.trim(), funder: g.funder!.trim(), summary: g.summary || '', amount_text: g.amount_text || null, amount_usd: grant?.amount_usd ?? null,
+      deadline, deadline_text: g.deadline_text || null, sector: g.sector || null, fit: g.fit || null, score: fitScore(g.fit) ?? grant?.score ?? null,
+      score_reason: g.fit ? `Team rating: ${g.fit}` : grant?.score_reason, eligible_as: g.eligible_as || null, eligibility: g.eligible_as || grant?.eligibility || undefined,
+      requirements: g.requirements || undefined, geography: g.geography || null, countries: parseCountries(g.geography, countries), url: g.url || 'https://',
+      notes: g.notes || null, curated: true, source_id: grant?.source_id || 'manual', source_name: grant?.source_name || 'Team pipeline',
+      fetched_at: grant?.fetched_at || new Date().toISOString(), added_by: grant?.added_by || me.email, updated_at: new Date().toISOString(),
+    } as Grant;
+    try {
+      await db.upsert('grants' as any, row as any);
+      onSaved(id);
+    } catch (e: any) {
+      setErr(e?.message || String(e));
+    }
+  };
+  const input = (label: string, key: keyof Grant, placeholder = '') => (
+    <Field label={label}><TextInput className="w-full" value={(g[key] as string) || ''} placeholder={placeholder} onChange={(e) => set({ [key]: e.target.value } as any)} /></Field>
+  );
+  return (
+    <Modal open onClose={onClose} title={grant ? 'Edit opportunity' : 'Add an opportunity'} footer={<><Button onClick={onClose}>Cancel</Button><Button variant="primary" onClick={save}>Save</Button></>}>
+      <div className="grid sm:grid-cols-2 gap-3">
+        {input('Donor / funder', 'funder', 'e.g. Rockefeller Foundation + OpenAI')}
+        {input('Opportunity name', 'title', 'e.g. Cities Deliver: AI Solutions…')}
+        {input('Funding range', 'amount_text', 'e.g. $500K–$2M per grant')}
+        {input('Deadline', 'deadline_text', 'e.g. 29 Nov 2026, or Rolling')}
+        {input('Sector focus', 'sector', 'e.g. Healthcare (surveillance)')}
+        {input('Geography focus', 'geography', 'e.g. Rwanda, Kenya, or Global')}
+        <Field label="WAIG fit"><Select value={g.fit || ''} onChange={(v) => set({ fit: v })} placeholder="Not rated" options={FIT_OPTIONS.map((o) => ({ value: o, label: o }))} /></Field>
+        {input('Eligible as', 'eligible_as', 'e.g. NPO or PLC')}
+      </div>
+      {input('Link', 'url', 'https://…')}
+      <Field label="Brief description"><TextArea rows={3} value={g.summary || ''} onChange={(e) => set({ summary: e.target.value })} /></Field>
+      <Field label="Key requirements / notes"><TextArea rows={3} value={g.requirements || ''} onChange={(e) => set({ requirements: e.target.value })} /></Field>
+      {err && <p className="text-sm text-red-600">{err}</p>}
+    </Modal>
+  );
+}
+
+/* ---------------- Import from the team's Google Sheet ---------------- */
+
+function ImportSheet({ countries, onClose, onDone }: { countries: Country[]; onClose: () => void; onDone: () => void }) {
+  const me = useMe();
+  const [text, setText] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  const parsed = useMemo(() => (text.trim() ? parseSheet(text, countries, TEAM) : { rows: [], skipped: 0 }), [text, countries]);
+  const run = async () => {
+    setBusy(true);
+    setMsg(null);
+    try {
+      const n = await importPipeline(parsed.rows, me.email);
+      setMsg(`Imported ${n} opportunities.`);
+      setTimeout(onDone, 900);
+    } catch (e: any) {
+      setMsg(e?.message || String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <Modal open onClose={onClose} title="Import from the pipeline sheet" footer={<><Button onClick={onClose}>Cancel</Button><Button variant="primary" onClick={run} disabled={busy || !parsed.rows.length || DEMO}>{busy ? 'Importing…' : `Import ${parsed.rows.length || ''}`}</Button></>}>
+      <ol className="text-sm text-gray-600 list-decimal pl-5 space-y-1">
+        <li>In the Google Sheet, click the top-left corner to select everything (or select the rows including the header row).</li>
+        <li>Copy (Cmd/Ctrl + C) and paste below.</li>
+      </ol>
+      <TextArea rows={7} value={text} onChange={(e) => setText(e.target.value)} placeholder="Paste here…" className="font-mono text-xs" />
+      {parsed.rows.length > 0 && (
+        <div className="text-sm text-gray-700">
+          Found <b>{parsed.rows.length}</b> opportunities ({parsed.rows.filter((r) => r.status !== 'dropped').length} active, {parsed.rows.filter((r) => r.status === 'dropped').length} under "Discarded").
+          Existing ones are updated, not duplicated; POCs and status already set here are kept.
+        </div>
+      )}
+      {DEMO && <p className="text-sm text-amber-700">Import needs Supabase (not available in demo mode).</p>}
+      {msg && <p className="text-sm text-gray-800">{msg}</p>}
+    </Modal>
   );
 }

@@ -232,6 +232,15 @@ export async function signInWithEmail(email: string): Promise<string | null> {
   return error ? error.message : null;
 }
 
+/** Import rows from the team's pipeline sheet (server-side upsert into grants, tracking and comments). */
+export async function importPipeline(rows: any[], author: string): Promise<number> {
+  if (!supabase) throw new Error('Importing needs Supabase.');
+  const { data, error } = await supabase.rpc('import_pipeline', { rows, author });
+  if (error) throw error;
+  emit();
+  return Number(data) || 0;
+}
+
 export async function signOut() {
   if (supabase) await supabase.auth.signOut();
 }
