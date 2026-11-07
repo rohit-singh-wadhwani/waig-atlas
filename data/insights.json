@@ -1,0 +1,1014 @@
+{
+ "updated_at": "2026-11-07T10:06:16.006Z",
+ "insights": [
+  {
+   "id": "9b807fe45fb20e46",
+   "title": "Aptamer-CRISPR/Cas as a tool in point-of-care testing of infectious diseases.",
+   "summary": "This review discusses Aptamer-CRISPR/Cas systems as emerging tools for point-of-care diagnostic testing of infectious diseases.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/42892010/",
+   "published_at": "2027-03-01T00:00:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "f80291815f84cb19",
+   "title": "Local adaptation of a chest radiograph AI model for pulmonary tuberculosis triage in Uzbekistan: Pooled and site-stratified internal validation and exploratory workstation integration.",
+   "summary": "This study validates a chest radiograph AI model adapted for pulmonary tuberculosis triage in clinical workflows in Uzbekistan.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/42784986/",
+   "published_at": "2026-12-01T00:00:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [
+    "UZB"
+   ],
+   "diseases": [
+    "tuberculosis"
+   ]
+  },
+  {
+   "id": "439bb1e457896072",
+   "title": "Advances in mosquito gut microbiota: Mechanisms of regulating pathogen transmission and applications in vector control.",
+   "summary": "The authors review mosquito gut microbiota interactions that influence pathogen transmission and potential novel vector control applications.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/42717435/",
+   "published_at": "2026-12-01T00:00:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [],
+   "diseases": [
+    "malaria",
+    "dengue"
+   ]
+  },
+  {
+   "id": "fb6bae4cdd5bddcb",
+   "title": "Free energy perturbation and machine learning-assisted identification of novel molecules for the Mycobacterium tuberculosis KasA protein: a fragment-based drug design approach.",
+   "summary": "Machine learning and free energy calculations were used to identify novel drug candidate fragments targeting the Mycobacterium tuberculosis KasA protein.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/42693318/",
+   "published_at": "2026-12-01T00:00:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [],
+   "diseases": [
+    "tuberculosis"
+   ]
+  },
+  {
+   "id": "e10cd4d06ff0568f",
+   "title": "Machine learning approaches to identify rare fungal and tuberculous infections in hospitalized patients.",
+   "summary": "Machine learning models were developed to aid clinical identification of tuberculous and rare fungal infections in hospitalized patients.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/42691871/",
+   "published_at": "2026-12-01T00:00:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [],
+   "diseases": [
+    "tuberculosis"
+   ]
+  },
+  {
+   "id": "1309bcf3ae1e2938",
+   "title": "Hybrid probabilistic forecasting of under-five malaria admissions in Ghana: A Gaussian process regression with Holt-Winters smoothing.",
+   "summary": "A hybrid probabilistic model combining Gaussian process regression and Holt-Winters smoothing was evaluated for forecasting under-five malaria admissions in Ghana.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/42685512/",
+   "published_at": "2026-12-01T00:00:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [
+    "GHA"
+   ],
+   "diseases": [
+    "malaria"
+   ]
+  },
+  {
+   "id": "cf4b4a470a8b44ce",
+   "title": "A YOLOv8-based dual-validation study against nine experienced microscopists for detection of intraerythrocytic Plasmodium species and cellular mimics on Giemsa-stained thin films in an Indonesian endemic setting.",
+   "summary": "A YOLOv8 object detection model was validated against nine microscopists for identifying Plasmodium species on Giemsa-stained blood smears in Indonesia.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/42607623/",
+   "published_at": "2026-12-01T00:00:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [
+    "IDN"
+   ],
+   "diseases": [
+    "malaria"
+   ]
+  },
+  {
+   "id": "09daa8fde2796d30",
+   "title": "Early-stage anthelmintic discovery: Integrating phenotype, target and mechanism.",
+   "summary": "The review examines integrated screening strategies combining phenotypic, target, and mechanistic approaches for early anthelmintic drug discovery.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/42600712/",
+   "published_at": "2026-12-01T00:00:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "f028e213df2ac36e",
+   "title": "Therapeutic approaches against dengue virus: current status of vaccines, antivirals, and monoclonal antibodies.",
+   "summary": "The paper provides an overview of current progress and pipelines for dengue vaccines, direct-acting antivirals, and therapeutic monoclonal antibodies.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/42253092/",
+   "published_at": "2026-12-01T00:00:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [],
+   "diseases": [
+    "dengue"
+   ]
+  },
+  {
+   "id": "6f9c4ac7f1b9504f",
+   "title": "Exploring anti-dengue activity with atomic-weighted vectors, class balancing and machine learning.",
+   "summary": "Machine learning models utilizing atomic-weighted vectors and class balancing techniques were applied to discover compounds with anti-dengue activity.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/42105140/",
+   "published_at": "2026-12-01T00:00:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [],
+   "diseases": [
+    "dengue"
+   ]
+  },
+  {
+   "id": "937c6b67b43d7d17",
+   "title": "Construction of a diagnostic model for tuberculosis based on long non-coding RNA.",
+   "summary": "Researchers constructed a diagnostic prediction model for tuberculosis based on long non-coding RNA expression profiles.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/41543364/",
+   "published_at": "2026-12-01T00:00:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [],
+   "diseases": [
+    "tuberculosis"
+   ]
+  },
+  {
+   "id": "21a82cfa14dc6dac",
+   "title": "Deep learning diagnosis model of spinal tuberculosis based on CT bone window gradient attention mechanism: multi-center study.",
+   "summary": "A multi-center study validated a deep learning model using gradient attention mechanisms on CT scans to diagnose spinal tuberculosis.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/41459642/",
+   "published_at": "2026-12-01T00:00:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [],
+   "diseases": [
+    "tuberculosis"
+   ]
+  },
+  {
+   "id": "c078ed3c1dcf4cb8",
+   "title": "Smartphone-Enabled Cough Detection in Severely Exacerbated COPD: An Exploratory Pilot Study.",
+   "summary": "An exploratory pilot study evaluates smartphone-based acoustic analysis for detecting coughs in patients experiencing severe COPD exacerbations.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/41558973/",
+   "published_at": "2026-12-01T00:00:00.000Z",
+   "source_id": "pubmed-cough-acoustics",
+   "source_name": "PubMed: cough acoustics",
+   "kind": "research",
+   "countries": [],
+   "diseases": [
+    "COPD"
+   ]
+  },
+  {
+   "id": "7e19243b7d04a648",
+   "title": "Global freshwater resistomes reveal environmental signatures associated with the burden of drug-resistant tuberculosis.",
+   "summary": "Research analyzes global freshwater resistomes to identify environmental markers associated with drug-resistant tuberculosis burdens.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/42692396/",
+   "published_at": "2026-11-15T00:00:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [],
+   "diseases": [
+    "tuberculosis"
+   ]
+  },
+  {
+   "id": "e2b0da2af8dc9b98",
+   "title": "Mucus Plugging Across Multiple Chronic Respiratory Diseases: A Systematic Review and Meta-analysis.",
+   "summary": "A systematic review and meta-analysis examines mucus plugging across multiple chronic respiratory diseases.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/42993210/",
+   "published_at": "2026-11-06T00:00:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [],
+   "diseases": [
+    "respiratory diseases"
+   ]
+  },
+  {
+   "id": "8399f55b4ac5c466",
+   "title": "Two new Ebola vaccines to join DR Congo clinical trial",
+   "summary": "Two candidate vaccines are being added to clinical trials in the Democratic Republic of the Congo to combat an active Ebola outbreak.",
+   "url": "https://news.un.org/feed/view/en/story/2026/11/1168742",
+   "published_at": "2026-11-05T12:00:00.000Z",
+   "source_id": "un-news-health",
+   "source_name": "UN News: health",
+   "kind": "outbreak",
+   "countries": [
+    "COD"
+   ],
+   "diseases": [
+    "Ebola"
+   ]
+  },
+  {
+   "id": "04171a93cc77189e",
+   "title": "Identification of Plasmodium sporozoites using angle-resolved scattered light pulse shapes.",
+   "summary": "A laboratory study demonstrates an optical detection method using scattered light pulse shapes to identify Plasmodium sporozoites.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/42986815/",
+   "published_at": "2026-11-05T00:00:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [],
+   "diseases": [
+    "malaria"
+   ]
+  },
+  {
+   "id": "7d608a66ac2885f7",
+   "title": "Media briefing on #Ebola and global health issues with Dr Tedros",
+   "summary": "WHO Director-General Dr. Tedros delivers a press briefing addressing ongoing Ebola responses and critical global health concerns.",
+   "url": "https://www.youtube.com/watch?v=jCAC77XH0dU",
+   "published_at": "2026-11-04T17:33:13.000Z",
+   "source_id": "who-youtube",
+   "source_name": "WHO on YouTube",
+   "kind": "social",
+   "countries": [],
+   "diseases": [
+    "Ebola"
+   ]
+  },
+  {
+   "id": "2371d1f6414a800a",
+   "title": "Ethiopia: Violence in the north is pushing health system to the brink, WHO chief warns",
+   "summary": "Escalating conflict and drone strikes in northern Ethiopia threaten health infrastructure and severe disruption of essential services.",
+   "url": "https://news.un.org/feed/view/en/story/2026/11/1168720",
+   "published_at": "2026-11-02T12:00:00.000Z",
+   "source_id": "un-news-health",
+   "source_name": "UN News: health",
+   "kind": "news",
+   "countries": [
+    "ETH"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "af61a0a3e1e7aeb1",
+   "title": "Comparing watershed-based spatial units and administrative boundaries for malaria prediction in the Peruvian Amazon.",
+   "summary": "Researchers compare watershed-based spatial units against traditional administrative boundaries to refine malaria spatial prediction models in the Peruvian Amazon.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/42970547/",
+   "published_at": "2026-11-02T00:00:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [
+    "PER"
+   ],
+   "diseases": [
+    "malaria"
+   ]
+  },
+  {
+   "id": "7472d479cbd85627",
+   "title": "A 1-year-old boy with near-complete tracheobronchial obstruction from endobronchial tuberculosis.",
+   "summary": "A case report describes severe tracheobronchial obstruction caused by endobronchial tuberculosis in a one-year-old child.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/42365784/",
+   "published_at": "2026-11-01T00:00:00.000Z",
+   "source_id": "pubmed-cough-acoustics",
+   "source_name": "PubMed: cough acoustics",
+   "kind": "research",
+   "countries": [],
+   "diseases": [
+    "tuberculosis"
+   ]
+  },
+  {
+   "id": "12ce55a57cdba3dc",
+   "title": "DR Congo: WHO urges sustained efforts as Ebola cases top 10,000",
+   "summary": "WHO urges continued containment efforts in the Democratic Republic of the Congo as Ebola cases exceed 10,000.",
+   "url": "https://news.un.org/feed/view/en/story/2026/10/1168689",
+   "published_at": "2026-10-28T12:00:00.000Z",
+   "source_id": "un-news-health",
+   "source_name": "UN News: health",
+   "kind": "outbreak",
+   "countries": [
+    "COD"
+   ],
+   "diseases": [
+    "Ebola"
+   ]
+  },
+  {
+   "id": "874a8c849ef74772",
+   "title": "Ebola: 20 contacts released from quarantine in Kenya, amid vaccine ‘hope’ in DR Congo",
+   "summary": "Kenya released 20 Ebola contacts from a 21-day quarantine while Ebola vaccination efforts progress in DR Congo.",
+   "url": "https://news.un.org/feed/view/en/story/2026/10/1168676",
+   "published_at": "2026-10-27T12:00:00.000Z",
+   "source_id": "un-news-health",
+   "source_name": "UN News: health",
+   "kind": "outbreak",
+   "countries": [
+    "KEN",
+    "COD"
+   ],
+   "diseases": [
+    "Ebola"
+   ]
+  },
+  {
+   "id": "4910a9025d642b6c",
+   "title": "Ebola: UN officials condemn killing of nurse in DR Congo",
+   "summary": "UN and WHO officials condemned the killing of a healthcare worker participating in the Ebola response in DR Congo.",
+   "url": "https://news.un.org/feed/view/en/story/2026/10/1168667",
+   "published_at": "2026-10-26T12:00:00.000Z",
+   "source_id": "un-news-health",
+   "source_name": "UN News: health",
+   "kind": "news",
+   "countries": [
+    "COD"
+   ],
+   "diseases": [
+    "Ebola"
+   ]
+  },
+  {
+   "id": "575d39761949d6f1",
+   "title": "A polio-free world - let's make it happen!",
+   "summary": "WHO highlights global partner unity and advocacy efforts aimed at achieving polio eradication worldwide.",
+   "url": "https://www.youtube.com/shorts/sNeJOdgUNf8",
+   "published_at": "2026-10-25T15:48:57.000Z",
+   "source_id": "who-youtube",
+   "source_name": "WHO on YouTube",
+   "kind": "social",
+   "countries": [],
+   "diseases": [
+    "polio"
+   ]
+  },
+  {
+   "id": "da9f539c100a8429",
+   "title": "Ebola disease caused by Bundibugyo virus, Democratic Republic of the Congo, Kenya and Nigeria",
+   "summary": "An outbreak of Bundibugyo virus disease continues to expand in the Democratic Republic of the Congo, with imported cases reported in Kenya and Nigeria. High community mortality underscores ongoing challenges in early case detection and access to care.",
+   "url": "https://www.who.int/emergencies/disease-outbreak-news/item/2026-DON622",
+   "published_at": "2026-10-23T15:03:45.000Z",
+   "source_id": "who-don",
+   "source_name": "WHO Disease Outbreak News",
+   "kind": "outbreak",
+   "countries": [
+    "COD",
+    "KEN",
+    "NGA",
+    "UGA"
+   ],
+   "diseases": [
+    "Ebola",
+    "Bundibugyo virus disease"
+   ]
+  },
+  {
+   "id": "1c49752f085d4b37",
+   "title": "‘Burden and loss’ builds in DR Congo, as Kenya strengthens Ebola containment",
+   "summary": "UN agencies are calling for increased resources as the Ebola outbreak expands in the Democratic Republic of the Congo and Kenya works to strengthen containment measures.",
+   "url": "https://news.un.org/feed/view/en/story/2026/10/1168655",
+   "published_at": "2026-10-23T12:00:00.000Z",
+   "source_id": "un-news-health",
+   "source_name": "UN News: health",
+   "kind": "news",
+   "countries": [
+    "COD",
+    "KEN"
+   ],
+   "diseases": [
+    "Ebola"
+   ]
+  },
+  {
+   "id": "233e8dfc68183e92",
+   "title": "First human case of Shamonda virus reported in France as patient dies",
+   "summary": "France has reported its first recorded fatal human case of Shamonda virus infection.",
+   "url": "https://news.un.org/feed/view/en/story/2026/10/1168652",
+   "published_at": "2026-10-22T12:00:00.000Z",
+   "source_id": "un-news-health",
+   "source_name": "UN News: health",
+   "kind": "outbreak",
+   "countries": [
+    "FRA"
+   ],
+   "diseases": [
+    "Shamonda virus disease"
+   ]
+  },
+  {
+   "id": "0939ddfd332b0fa6",
+   "title": "DR Congo: Ebola responders under pressure as outbreak expands",
+   "summary": "Ebola response operations in the Democratic Republic of the Congo face severe pressure following expansion into an eighth province, while preparedness efforts assess risk in Nigeria.",
+   "url": "https://news.un.org/feed/view/en/story/2026/10/1168647",
+   "published_at": "2026-10-22T12:00:00.000Z",
+   "source_id": "un-news-health",
+   "source_name": "UN News: health",
+   "kind": "news",
+   "countries": [
+    "COD",
+    "NGA"
+   ],
+   "diseases": [
+    "Ebola"
+   ]
+  },
+  {
+   "id": "ac082012fc6c9f5f",
+   "title": "WHO supports Nigeria after first Ebola case confirmed",
+   "summary": "WHO is assisting health authorities in Nigeria following the detection of the country's first case of Bundibugyo virus disease.",
+   "url": "https://news.un.org/feed/view/en/story/2026/10/1168637",
+   "published_at": "2026-10-21T12:00:00.000Z",
+   "source_id": "un-news-health",
+   "source_name": "UN News: health",
+   "kind": "news",
+   "countries": [
+    "NGA"
+   ],
+   "diseases": [
+    "Ebola",
+    "Bundibugyo virus disease"
+   ]
+  },
+  {
+   "id": "df57162d4ccccbf0",
+   "title": "Research protocol for the diagnostic accuracy of intelligent portable impulse oscillometry across different respiratory diseases: a multicentre, cross-sectional study.",
+   "summary": "A study protocol outlines a multicenter trial evaluating the diagnostic accuracy of intelligent portable impulse oscillometry across various respiratory diseases.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/42907121/",
+   "published_at": "2026-10-21T00:00:00.000Z",
+   "source_id": "pubmed-cough-acoustics",
+   "source_name": "PubMed: cough acoustics",
+   "kind": "research",
+   "countries": [],
+   "diseases": [
+    "respiratory diseases"
+   ]
+  },
+  {
+   "id": "1ed5931165318bec",
+   "title": "Deep learning based detection of active pulmonary tuberculosis from chest radiographs in a retrospective prospective multicenter study.",
+   "summary": "A multicenter study evaluated a deep learning algorithm designed to detect active pulmonary tuberculosis from chest radiographs.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/42936410/",
+   "published_at": "2026-10-20T00:00:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [],
+   "diseases": [
+    "tuberculosis"
+   ]
+  },
+  {
+   "id": "ecd347bfbe79950f",
+   "title": "WHO scales up Ebola readiness in 22 countries across three continents",
+   "summary": "WHO is expanding Ebola readiness and response capacity across 22 countries affected by ongoing regional conflict and population displacement.",
+   "url": "https://news.un.org/feed/view/en/story/2026/10/1168613",
+   "published_at": "2026-10-16T12:00:00.000Z",
+   "source_id": "un-news-health",
+   "source_name": "UN News: health",
+   "kind": "news",
+   "countries": [],
+   "diseases": [
+    "Ebola"
+   ]
+  },
+  {
+   "id": "44e8abd0ef85f5a3",
+   "title": "Middle East respiratory syndrome coronavirus - Kingdom of Saudi Arabia",
+   "summary": "Saudi Arabia reported eight sporadic MERS-CoV cases, including one death, associated primarily with zoonotic spillover from dromedary camels.",
+   "url": "https://www.who.int/emergencies/disease-outbreak-news/item/middle-east-respiratory-syndrome-coronavirus---kingdom-of-saudi-arabia",
+   "published_at": "2026-10-15T16:00:00.000Z",
+   "source_id": "who-don",
+   "source_name": "WHO Disease Outbreak News",
+   "kind": "outbreak",
+   "countries": [
+    "SAU"
+   ],
+   "diseases": [
+    "MERS-CoV"
+   ]
+  },
+  {
+   "id": "91142016b6f28553",
+   "title": "WHO urges vigilance after Kenya confirms second Ebola case",
+   "summary": "WHO called for heightened surveillance after Kenya confirmed a second case of Ebola caused by the Bundibugyo virus.",
+   "url": "https://news.un.org/feed/view/en/story/2026/10/1168602",
+   "published_at": "2026-10-15T12:00:00.000Z",
+   "source_id": "un-news-health",
+   "source_name": "UN News: health",
+   "kind": "news",
+   "countries": [
+    "KEN"
+   ],
+   "diseases": [
+    "Ebola",
+    "Bundibugyo virus disease"
+   ]
+  },
+  {
+   "id": "3e41912829e43205",
+   "title": "DR Congo: Cholera cases spike amid fight against Ebola",
+   "summary": "The Democratic Republic of the Congo is facing a severe cholera epidemic with over 125,000 suspected cases alongside an ongoing Ebola response.",
+   "url": "https://news.un.org/feed/view/en/story/2026/10/1168595",
+   "published_at": "2026-10-14T12:00:00.000Z",
+   "source_id": "un-news-health",
+   "source_name": "UN News: health",
+   "kind": "news",
+   "countries": [
+    "COD"
+   ],
+   "diseases": [
+    "Cholera",
+    "Ebola"
+   ]
+  },
+  {
+   "id": "6532b0149358d08f",
+   "title": "Health workers tackle taboos over drinking with new AI tool",
+   "summary": "WHO launched a new AI-powered platform to assist healthcare workers in assessing alcohol-related health risks and discussing prevention with patients.",
+   "url": "https://news.un.org/feed/view/en/story/2026/10/1168594",
+   "published_at": "2026-10-14T12:00:00.000Z",
+   "source_id": "un-news-health",
+   "source_name": "UN News: health",
+   "kind": "news",
+   "countries": [],
+   "diseases": [
+    "Cancer"
+   ]
+  },
+  {
+   "id": "12dff38b72eb38d2",
+   "title": "WHO calls for urgent health action across the Eastern Mediterranean",
+   "summary": "WHO has called for urgent health action across the Eastern Mediterranean region to address severe crises in countries including Sudan, Yemen, and the Occupied Palestinian Territory.",
+   "url": "https://news.un.org/feed/view/en/story/2026/10/1168590",
+   "published_at": "2026-10-14T12:00:00.000Z",
+   "source_id": "un-news-health",
+   "source_name": "UN News: health",
+   "kind": "news",
+   "countries": [
+    "SDN",
+    "YEM",
+    "PSE"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "bf88b22aac0ce6b9",
+   "title": "Yemen: Houthi siege, cholera outbreak and aid cuts put civilians in the crosshairs",
+   "summary": "Civilians in Taiz, Yemen, face a compounding humanitarian crisis driven by supply shortages and an ongoing cholera outbreak.",
+   "url": "https://news.un.org/feed/view/en/story/2026/10/1168589",
+   "published_at": "2026-10-13T12:00:00.000Z",
+   "source_id": "un-news-health",
+   "source_name": "UN News: health",
+   "kind": "news",
+   "countries": [
+    "YEM"
+   ],
+   "diseases": [
+    "Cholera"
+   ]
+  },
+  {
+   "id": "70f1a9e04efe2de3",
+   "title": "General Assembly adopts pandemic declaration, but not by consensus",
+   "summary": "The UN General Assembly adopted a political declaration on pandemic prevention, preparedness, and response by a vote of 153 in favor.",
+   "url": "https://news.un.org/feed/view/en/story/2026/10/1168581",
+   "published_at": "2026-10-12T12:00:00.000Z",
+   "source_id": "un-news-health",
+   "source_name": "UN News: health",
+   "kind": "news",
+   "countries": [
+    "ARG",
+    "ISR",
+    "USA",
+    "NZL",
+    "PRY"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "8022336bc29dcd84",
+   "title": "Pneumonia of undetermined etiology - the Russian Federation",
+   "summary": "WHO investigated media reports of a fatal laboratory exposure to suspected pneumonic plague in Irkutsk, Russia, though local authorities reported negative pathogen tests.",
+   "url": "https://www.who.int/emergencies/disease-outbreak-news/item/2026-DON620",
+   "published_at": "2026-10-10T15:00:00.000Z",
+   "source_id": "who-don",
+   "source_name": "WHO Disease Outbreak News",
+   "kind": "outbreak",
+   "countries": [
+    "RUS"
+   ],
+   "diseases": [
+    "Pneumonia",
+    "Plague"
+   ]
+  },
+  {
+   "id": "a6ce6c799899740d",
+   "title": "New WHO technical package to help countries improve health data for COVID-19 response and beyond",
+   "summary": "WHO introduced the SCORE Technical Package to help member states strengthen health data collection systems and data analytics for health emergencies.",
+   "url": "https://www.who.int/news/item/27-08-2020-new-who-technical-package-health-data-for-covid-19-response",
+   "published_at": "2026-10-10T07:49:45.000Z",
+   "source_id": "who-news",
+   "source_name": "WHO news",
+   "kind": "news",
+   "countries": [],
+   "diseases": [
+    "COVID-19"
+   ]
+  },
+  {
+   "id": "003a6aae4a1c12d1",
+   "title": "Ebola disease caused by Bundibugyo virus - Democratic Republic of the Congo",
+   "summary": "An expanding Bundibugyo Ebola outbreak in the Democratic Republic of the Congo has led to over 8,700 confirmed cases and an imported fatal case in Kenya.",
+   "url": "https://www.who.int/emergencies/disease-outbreak-news/item/2026-DON619",
+   "published_at": "2026-10-08T15:16:26.000Z",
+   "source_id": "who-don",
+   "source_name": "WHO Disease Outbreak News",
+   "kind": "outbreak",
+   "countries": [
+    "COD",
+    "KEN",
+    "UGA"
+   ],
+   "diseases": [
+    "Ebola disease"
+   ]
+  },
+  {
+   "id": "2800c70e1c40a521",
+   "title": "Kenya races to trace all contacts after first Ebola death, WHO official says",
+   "summary": "Kenyan health authorities are conducting contact tracing following the country's first recorded Ebola death linked to travel from the Democratic Republic of the Congo.",
+   "url": "https://news.un.org/feed/view/en/story/2026/10/1168542",
+   "published_at": "2026-10-07T12:00:00.000Z",
+   "source_id": "un-news-health",
+   "source_name": "UN News: health",
+   "kind": "news",
+   "countries": [
+    "KEN"
+   ],
+   "diseases": [
+    "Ebola"
+   ]
+  },
+  {
+   "id": "2788c342845f8a28",
+   "title": "Critical funding gap threatens health response in Yemen",
+   "summary": "WHO warned that critical funding shortfalls threaten its ongoing emergency health operations in conflict-affected Yemen.",
+   "url": "https://news.un.org/feed/view/en/story/2026/10/1168541",
+   "published_at": "2026-10-07T12:00:00.000Z",
+   "source_id": "un-news-health",
+   "source_name": "UN News: health",
+   "kind": "news",
+   "countries": [
+    "YEM"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "99ccbb710fc47c07",
+   "title": "‘Ebola takes the people children depend on’: UNICEF",
+   "summary": "UNICEF reported that the Ebola outbreak in the eastern Democratic Republic of the Congo is severely impacting children by claiming the lives of caregivers and children alike.",
+   "url": "https://news.un.org/feed/view/en/story/2026/10/1168531",
+   "published_at": "2026-10-06T12:00:00.000Z",
+   "source_id": "un-news-health",
+   "source_name": "UN News: health",
+   "kind": "news",
+   "countries": [
+    "COD"
+   ],
+   "diseases": [
+    "Ebola"
+   ]
+  },
+  {
+   "id": "38d51ba91c048e47",
+   "title": "Extreme heat making pregnancy a ‘new fault line’ in climate crisis",
+   "summary": "The head of the UN climate action body warned that extreme heat is threatening maternal and newborn health, calling for maternal care to be integrated into national climate action plans.",
+   "url": "https://news.un.org/feed/view/en/story/2026/10/1168522",
+   "published_at": "2026-10-05T12:00:00.000Z",
+   "source_id": "un-news-health",
+   "source_name": "UN News: health",
+   "kind": "news",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "1d01cb14de210a1b",
+   "title": "Cough-E: A Multimodal, Privacy-Preserving Cough Detection Algorithm for the Edge.",
+   "summary": "A novel privacy-preserving, edge-based cough detection algorithm called Cough-E was proposed for multimodal respiratory monitoring.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/40478704/",
+   "published_at": "2026-10-01T00:00:00.000Z",
+   "source_id": "pubmed-cough-acoustics",
+   "source_name": "PubMed: cough acoustics",
+   "kind": "research",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "6927748033f57e1c",
+   "title": "Optimizing Tuberculosis Incidence Prediction: A Systematic Review of Hybrid Modeling Approaches and Machine Learning Techniques.",
+   "summary": "A systematic review examined hybrid modeling approaches and machine learning techniques used to forecast tuberculosis incidence.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/42813076/",
+   "published_at": "2026-09-29T00:00:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [],
+   "diseases": [
+    "Tuberculosis"
+   ]
+  },
+  {
+   "id": "e45792ab5d2da081",
+   "title": "Ebola disease caused by Bundibugyo virus - Democratic Republic of the Congo",
+   "summary": "The Bundibugyo virus outbreak in the Democratic Republic of the Congo expanded to 63 health zones across seven provinces, reaching 7,890 confirmed cases and 3,799 deaths.",
+   "url": "https://www.who.int/emergencies/disease-outbreak-news/item/2026-DON621",
+   "published_at": "2026-09-25T15:16:26.000Z",
+   "source_id": "who-don",
+   "source_name": "WHO Disease Outbreak News",
+   "kind": "outbreak",
+   "countries": [
+    "COD"
+   ],
+   "diseases": [
+    "Ebola"
+   ]
+  },
+  {
+   "id": "d2812079b55c7a46",
+   "title": "Recurrent Plasmodium falciparum Malaria after Delayed Hemolysis Induced by Artemether-Lumefantrine.",
+   "summary": "A case study documented recurrent Plasmodium falciparum malaria following delayed hemolysis induced by artemether-lumefantrine treatment.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/42753717/",
+   "published_at": "2026-09-17T00:00:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [],
+   "diseases": [
+    "Malaria"
+   ]
+  },
+  {
+   "id": "4353f5942e62ceac",
+   "title": "Consensus Definition for Community-acquired Pneumonia in Children Using a Delphi Approach.",
+   "summary": "Researchers established a standardized consensus definition for community-acquired pneumonia in pediatric populations using a Delphi approach.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/42750427/",
+   "published_at": "2026-09-17T00:00:00.000Z",
+   "source_id": "pubmed-cough-acoustics",
+   "source_name": "PubMed: cough acoustics",
+   "kind": "research",
+   "countries": [],
+   "diseases": [
+    "Pneumonia"
+   ]
+  },
+  {
+   "id": "a131366160f4a12e",
+   "title": "Ebola disease caused by Bundibugyo virus - Democratic Republic of the Congo",
+   "summary": "An update on the Bundibugyo Ebola outbreak in the Democratic Republic of the Congo detailed 6,757 confirmed cases across 61 health zones in six provinces.",
+   "url": "https://www.who.int/emergencies/disease-outbreak-news/item/2026-DON617",
+   "published_at": "2026-09-10T08:16:08.000Z",
+   "source_id": "who-don",
+   "source_name": "WHO Disease Outbreak News",
+   "kind": "outbreak",
+   "countries": [
+    "COD"
+   ],
+   "diseases": [
+    "Ebola"
+   ]
+  },
+  {
+   "id": "6650390daced5d7f",
+   "title": "Environmental and epidemiological drivers of dengue forecasting across heterogeneous transmission settings in Brazil and Panama.",
+   "summary": "A study evaluated environmental and epidemiological drivers to improve dengue predictive modeling across different transmission settings in Brazil and Panama.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/42761835/",
+   "published_at": "2026-09-10T00:00:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [
+    "BRA",
+    "PAN"
+   ],
+   "diseases": [
+    "Dengue"
+   ]
+  },
+  {
+   "id": "f9d915ae2620d86d",
+   "title": "Voice analysis in asthmatic and healthy individuals: comparative assessment of asthma control levels using machine learning models.",
+   "summary": "BMC pulmonary medicine. Alagöz N, Uysal MA, Gezer M",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/42947116/",
+   "published_at": "2026-09-02T00:00:00.000Z",
+   "source_id": "pubmed-cough-acoustics",
+   "source_name": "PubMed: cough acoustics",
+   "kind": "research",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "5685b4e743eabbb6",
+   "title": "Foreign Body Aspiration Presenting as Recurrent Bronchiolitis: Case Report.",
+   "summary": "Journal of pediatric health care : official publication of National Association of Pediatric Nurse Associates & Practitioners. Guilarte L, Guilarte G, Valdes-Fernandez L",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/41999377/",
+   "published_at": "2026-09-01T00:00:00.000Z",
+   "source_id": "pubmed-cough-acoustics",
+   "source_name": "PubMed: cough acoustics",
+   "kind": "research",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "2b81df1fcde0391a",
+   "title": "Ebola disease caused by Bundibugyo virus - Democratic Republic of the Congo",
+   "summary": "Since the last Disease Outbreak News was published on 14 August 2026, the outbreak has spread from 54 to 60 health zones. The number of affected provinces stands at six out of 26 provinces of the country: Bas-Uélé, Haut-Uélé, Ituri, North Kivu, South Kivu, and Tshopo. Six additional health zones rep",
+   "url": "https://www.who.int/emergencies/disease-outbreak-news/item/2026-DON616",
+   "published_at": "2026-08-28T15:28:00.000Z",
+   "source_id": "who-don",
+   "source_name": "WHO Disease Outbreak News",
+   "kind": "outbreak",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "5f65c20fc6d4d3ba",
+   "title": "The calf holobiont under challenge: longitudinal microbiota-pathogen dynamics and respiratory health.",
+   "summary": "Veterinary research. Monié-Ibanes M, Sikht FZ, Hygonenq MC",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/42665823/",
+   "published_at": "2026-08-28T00:00:00.000Z",
+   "source_id": "pubmed-cough-acoustics",
+   "source_name": "PubMed: cough acoustics",
+   "kind": "research",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "8f4cf3df9ab0572d",
+   "title": "Seroprevalence and molecular surveillance of Dirofilaria immitis in shelter dogs from central New Mexico, USA.",
+   "summary": "Parasites & vectors. Kelly MA, Starnes A, Schech M",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/42625234/",
+   "published_at": "2026-08-20T00:00:00.000Z",
+   "source_id": "pubmed-cough-acoustics",
+   "source_name": "PubMed: cough acoustics",
+   "kind": "research",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "347f49235548ee83",
+   "title": "Retrospective review of clinical and anesthetic findings in 164 heartworm-positive dogs undergoing spay-neuter surgery.",
+   "summary": "Parasites & vectors. Salob M, DiGangi BA",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/42625191/",
+   "published_at": "2026-08-20T00:00:00.000Z",
+   "source_id": "pubmed-cough-acoustics",
+   "source_name": "PubMed: cough acoustics",
+   "kind": "research",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "b11bec91069e8e07",
+   "title": "Pulmonary function estimation and reliability assessment using hybrid-optimized ensemble learning.",
+   "summary": "Physiological measurement. Zhu J, Yan D, Sun C",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/42561996/",
+   "published_at": "2026-08-20T00:00:00.000Z",
+   "source_id": "pubmed-cough-acoustics",
+   "source_name": "PubMed: cough acoustics",
+   "kind": "research",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "a07a0ff572a06871",
+   "title": "On-device cough detection and respiratory disease classification enhanced by generative data augmentation.",
+   "summary": "Computers in biology and medicine. Kontogiannis G, Tzamalis P, Giannikopoulos A",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/42229246/",
+   "published_at": "2026-08-15T00:00:00.000Z",
+   "source_id": "pubmed-cough-acoustics",
+   "source_name": "PubMed: cough acoustics",
+   "kind": "research",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "cf7fedaca5439db5",
+   "title": "Ebola disease caused by Bundibugyo virus - Democratic Republic of the Congo",
+   "summary": "The Bundibugyo virus disease (BVD) outbreak in the Democratic Republic of the Congo is in a phase of intense transmission. It is the largest Ebola outbreak ever reported in the country and expanding faster than any previous Ebola outbreak. The epidemic is increasingly characterized by sustained tran",
+   "url": "https://www.who.int/emergencies/disease-outbreak-news/item/2026-DON615",
+   "published_at": "2026-08-14T15:38:29.000Z",
+   "source_id": "who-don",
+   "source_name": "WHO Disease Outbreak News",
+   "kind": "outbreak",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "47110271cc0d6e09",
+   "title": "Artificial Intelligence-Driven Digital Tools for Diabetes Self-management in Children: A Scoping Review.",
+   "summary": "International journal of endocrinology and metabolism. Nakhaee Moghadam M, Amini S, Lotfi M",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/42763696/",
+   "published_at": "2026-08-11T00:00:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "e0d80d478271bd5f",
+   "title": "Clinical characteristics and risk factors for poor prognosis of RSV lower respiratory tract infection: a two-center study.",
+   "summary": "BMC pediatrics. Chen T, Guo X, Tang W",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/42963743/",
+   "published_at": "2026-08-10T00:00:00.000Z",
+   "source_id": "pubmed-cough-acoustics",
+   "source_name": "PubMed: cough acoustics",
+   "kind": "research",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "92a2821601dfc7bf",
+   "title": "Enablers and barriers to stool sample collection for TB diagnosis: insights from caregivers and adult patients in three high TB/HIV burden countries in Sub-Saharan Africa (Eswatini, Mozambique, and Uganda).",
+   "summary": "BMC infectious diseases. Lima AV, Kikoyo JN, Nkala B",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/42983342/",
+   "published_at": "2026-08-06T00:00:00.000Z",
+   "source_id": "pubmed-cough-acoustics",
+   "source_name": "PubMed: cough acoustics",
+   "kind": "research",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "591bde7b240136ad",
+   "title": "Unraveling the neuro-immune axis in cough hypersensitivity: from pathogenesis to synergistic management.",
+   "summary": "Frontiers in medicine. Shi D, He J, Huang Y",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/42614292/",
+   "published_at": "2026-08-04T00:00:00.000Z",
+   "source_id": "pubmed-cough-acoustics",
+   "source_name": "PubMed: cough acoustics",
+   "kind": "research",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "3bfa829676563f56",
+   "title": "Ebola disease caused by Bundibugyo virus - Democratic Republic of the Congo",
+   "summary": "The Bundibugyo virus disease (BVD) outbreak in the Democratic Republic of the Congo is intensifying, with sustained transmission and continued increases in reported cases and deaths. Initially confined to the Mongbwalu health zone in Ituri Province, over the last two months, the outbreak has expande",
+   "url": "https://www.who.int/emergencies/disease-outbreak-news/item/2026-DON614",
+   "published_at": "2026-08-01T10:13:28.000Z",
+   "source_id": "who-don",
+   "source_name": "WHO Disease Outbreak News",
+   "kind": "outbreak",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "fcdb3cdc26f978a1",
+   "title": "Variational mode decomposition based prediction model for cough sounds using Xception-GRU classifier.",
+   "summary": "Computers in biology and medicine. Jayalakshmy S, Lakshmipriya B",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/42176364/",
+   "published_at": "2026-08-01T00:00:00.000Z",
+   "source_id": "pubmed-cough-acoustics",
+   "source_name": "PubMed: cough acoustics",
+   "kind": "research",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "75d465aa366f642d",
+   "title": "Ebola disease caused by Bundibugyo virus, Democratic Republic of the Congo & Uganda",
+   "summary": "The Bundibugyo virus disease (BVD) outbreak in the Democratic Republic of the Congo remains active, with sustained transmission driving increases in reported cases and deaths. As of 15 July 2026, a cumulative total of 2124 confirmed cases, including 828 deaths, have been reported from the Democratic",
+   "url": "https://www.who.int/emergencies/disease-outbreak-news/item/2026-DON613",
+   "published_at": "2026-07-17T16:13:00.000Z",
+   "source_id": "who-don",
+   "source_name": "WHO Disease Outbreak News",
+   "kind": "outbreak",
+   "countries": [],
+   "diseases": []
+  }
+ ]
+}
