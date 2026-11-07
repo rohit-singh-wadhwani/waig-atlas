@@ -11,7 +11,12 @@
     "react-dom": "18.3.1",
     "react-router-dom": "6.30.2",
     "react-scripts": "5.0.1",
-    "typescript": "4.9.5"
+    "typescript": "4.9.5",
+    "@blocknote/core": "0.22.0",
+    "@blocknote/react": "0.22.0",
+    "@blocknote/mantine": "0.22.0",
+    "@mantine/core": "^7.15.0",
+    "@mantine/hooks": "^7.15.0"
   },
   "devDependencies": {
     "@types/node": "20.19.25",
@@ -28,6 +33,22 @@
     "fetch:insights": "node scripts/fetch-insights.mjs",
     "fetch:health": "node scripts/fetch-health.mjs"
   },
-  "eslintConfig": { "extends": ["react-app"] },
-  "browserslist": { "production": [">0.2%", "not dead", "not op_mini all"], "development": ["last 1 chrome version"] }
+  "eslintConfig": {
+    "extends": [
+      "react-app"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version"
+    ]
+  },
+  "overrides": {
+    "prosemirror-view": "~1.37.0"
+  }
 }

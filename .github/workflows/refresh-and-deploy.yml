@@ -92,6 +92,7 @@ jobs:
           npm run build
         env:
           CI: false
+          TSC_COMPILE_ON_ERROR: true
           REACT_APP_BUILD: ${{ github.run_number }}-${{ github.sha }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

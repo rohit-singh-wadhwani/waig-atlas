@@ -3,7 +3,6 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { PageHeader, useMe } from '../components/Layout';
 import { Badge, Button, Card, CardHeader, Empty, ExtLink, Field, IconButton, KpiCard, Modal, Progress, Select, TextInput, cx } from '../components/ui';
 import Icon from '../components/Icon';
-import BlockEditor from '../components/BlockEditor';
 import Gantt from '../components/Gantt';
 import Stepper from '../components/Stepper';
 import { Attachments, Comments } from '../components/Collab';
@@ -16,6 +15,8 @@ import { TEAM, TEAMS, personName } from '../lib/team';
 import type { MilestoneTemplate, Page, Project, ProjectMilestone, Task } from '../lib/types';
 import { PROJECT_STATUS } from './Projects';
 import { placeLabel } from './Grants';
+
+const NotionEditor = React.lazy(() => import('../components/NotionEditor'));
 
 const MS_STATUS: { value: ProjectMilestone['status']; label: string; dot: string }[] = [
   { value: 'not_started', label: 'Not started', dot: 'bg-gray-300' },
@@ -211,9 +212,10 @@ function Overview({ project, milestones, tasks, onSelect }: { project: Project; 
 
 function MilestoneView({ project, m, page, tasks, me }: { project: Project; m: ProjectMilestone; page?: Page; tasks: Task[]; me: string }) {
   const save = (patch: Partial<ProjectMilestone>) => db.upsert('project_milestones', { ...m, ...patch } as any);
-  const savePage = async (md: string) => {
-    const p: Page = page ? { ...page, content_md: md, updated_at: new Date().toISOString(), updated_by: me } : { id: uid('pg'), project_id: project.id, milestone_id: m.id, title: m.name, content_md: md, updated_at: new Date().toISOString(), updated_by: me };
-    await db.upsert('pages', p as any);
+  const pageId = React.useRef(page?.id || uid('pg'));
+  const savePage = async ({ json, md }: { json: any[]; md: string }) => {
+    const base: Page = page || { id: pageId.current, project_id: project.id, milestone_id: m.id, title: m.name, content_md: '', updated_at: '' };
+    await db.upsert('pages', { ...base, content_md: md, content_json: json, updated_at: new Date().toISOString(), updated_by: me } as any);
   };
   const headings = (page?.content_md || '').split('\n').filter((l) => /^##\s/.test(l)).map((l) => l.replace(/^##\s+/, ''));
 
@@ -243,17 +245,19 @@ function MilestoneView({ project, m, page, tasks, me }: { project: Project; m: P
       <Card>
         <CardHeader
           title="Page"
-          subtitle={page ? `Last edited ${fmtTime(page.updated_at)}${page.updated_by ? ` by ${personName(page.updated_by)}` : ''} · click any block to edit` : 'Click to start writing'}
+          subtitle={page ? `Last edited ${fmtTime(page.updated_at)}${page.updated_by ? ` by ${personName(page.updated_by)}` : ''} · type / to add a table, chart, diagram or template` : 'Type / to add a table, chart, diagram or template'}
         />
         {headings.length > 3 && (
           <div className="flex flex-wrap gap-1.5 mb-5 pb-4 border-b border-gray-100">
             {headings.map((h) => (
-              <a key={h} href={`#${slugId(h)}`} onClick={(e) => { e.preventDefault(); document.getElementById(slugId(h))?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }} className="text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1 hover:border-brand-300 hover:text-brand-700">{h}</a>
+              <a key={h} href={`#${slugId(h)}`} onClick={(e) => { e.preventDefault(); const el = Array.from(document.querySelectorAll('.atlas-editor h1, .atlas-editor h2, .atlas-editor h3, .prose-atlas h2')).find((x) => x.textContent?.trim() === h.trim()); el?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }} className="text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1 hover:border-brand-300 hover:text-brand-700">{h}</a>
             ))}
           </div>
         )}
-        <div className="pl-8">
-          <BlockEditor md={page?.content_md || ''} onSave={savePage} />
+        <div className="-mx-2 sm:-mx-4">
+          <React.Suspense fallback={<div className="text-sm text-gray-400 py-4 px-4">Loading editor…</div>}>
+            <NotionEditor key={m.id} json={page?.content_json} md={page?.content_md || ''} onSave={savePage} />
+          </React.Suspense>
         </div>
       </Card>
 
