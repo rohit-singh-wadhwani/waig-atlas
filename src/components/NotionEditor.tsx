@@ -272,13 +272,95 @@ export default function NotionEditor({ json, md, onSave, editable = true }: { js
     [editor]
   );
 
+  /** Insert a block after the block the cursor is in (or at the end), then place the cursor in it. */
+  const insert = (block: any) => {
+    const ed = editor as any;
+    let ref: any = null;
+    try {
+      ref = ed.getTextCursorPosition()?.block;
+    } catch {}
+    const doc = ed.document;
+    if (!ref) ref = doc[doc.length - 1];
+    const inserted = ed.insertBlocks([block], ref, 'after');
+    try {
+      const first = inserted?.[0];
+      if (first && first.type === 'table') ed.setTextCursorPosition(first, 'start');
+      ed.focus();
+    } catch {}
+  };
+
   return (
-    <div className="atlas-editor relative">
-      <div className="absolute -top-7 right-0 text-xs text-gray-400">{saving === 'saving' ? 'Saving…' : saving === 'saved' ? 'Saved' : 'Type / for blocks and templates'}</div>
+    <div className="atlas-editor">
+      {editable && (
+        <div className="sticky top-0 z-20 -mx-1 mb-3 px-1 py-2 bg-white/95 backdrop-blur border-b border-gray-100 flex flex-wrap items-center gap-1.5">
+          <ToolButton label="Table" icon={TABLE_ICON} onClick={() => insert({ type: 'table', content: { type: 'tableContent', rows: [['', '', ''], ['', '', ''], ['', '', '']].map((cells) => ({ cells })) } })} />
+          <ToolButton label="Checklist" icon={CHECK_ICON} onClick={() => insert({ type: 'checkListItem', content: '' })} />
+          <ToolButton label="Heading" icon={H_ICON} onClick={() => insert({ type: 'heading', props: { level: 2 }, content: '' })} />
+          <ToolMenu label="Chart" icon={CHART_ICON} items={TEMPLATES.filter((t) => t.block.type === 'chart')} onPick={(t) => insert(t.block)} />
+          <ToolMenu label="Diagram" icon={FLOW_ICON} items={TEMPLATES.filter((t) => t.block.type === 'mermaid')} onPick={(t) => insert(t.block)} />
+          <ToolMenu label="Templates" icon={TPL_ICON} items={TABLE_TEMPLATES} onPick={(t) => insert(t.block)} />
+          <span className="ml-auto text-xs text-gray-400 pl-2">
+            {saving === 'saving' ? 'Saving…' : saving === 'saved' ? 'Saved ✓' : 'Tip: type / anywhere for more'}
+          </span>
+        </div>
+      )}
       {!ready && <div className="text-sm text-gray-400 py-4">Loading page…</div>}
       <BlockNoteView editor={editor as any} editable={editable} theme="light" slashMenu={false} onChange={() => ready && save()}>
         <SuggestionMenuController triggerCharacter="/" getItems={async (query: string) => filterSuggestionItems(slashItems(editor) as any, query) as any} />
       </BlockNoteView>
+    </div>
+  );
+}}
+
+
+/* ------------------------------------------------------------------ */
+/* Toolbar                                                              */
+/* ------------------------------------------------------------------ */
+
+const svg = (d: React.ReactNode) => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{d}</svg>
+);
+const TABLE_ICON = svg(<><rect x="3.5" y="4" width="17" height="16" rx="2" /><path d="M3.5 10h17M3.5 15h17M10 4v16" /></>);
+const CHECK_ICON = svg(<><rect x="3.5" y="3.5" width="17" height="17" rx="3" /><path d="m8 12 3 3 5-6" /></>);
+const H_ICON = svg(<path d="M6 4v16M18 4v16M6 12h12" />);
+const CHART_ICON = svg(<path d="M5 20V10M12 20V4M19 20v-7" />);
+const FLOW_ICON = svg(<><rect x="3" y="4" width="7" height="5" rx="1" /><rect x="14" y="15" width="7" height="5" rx="1" /><path d="M6.5 9v4a2 2 0 0 0 2 2H14" /></>);
+const TPL_ICON = svg(<><rect x="3.5" y="3.5" width="7" height="7" rx="1.5" /><rect x="13.5" y="3.5" width="7" height="7" rx="1.5" /><rect x="3.5" y="13.5" width="7" height="7" rx="1.5" /><rect x="13.5" y="13.5" width="7" height="7" rx="1.5" /></>);
+
+function ToolButton({ label, icon, onClick }: { label: string; icon: React.ReactNode; onClick: () => void }) {
+  return (
+    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={onClick} className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-sm text-gray-700 hover:bg-gray-100 border border-transparent hover:border-gray-200">
+      {icon}
+      {label}
+    </button>
+  );
+}
+
+function ToolMenu<T extends { title: string; subtext: string }>({ label, icon, items, onPick }: { label: string; icon: React.ReactNode; items: T[]; onPick: (t: T) => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const close = (e: MouseEvent) => ref.current && !ref.current.contains(e.target as Node) && setOpen(false);
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
+  }, []);
+  return (
+    <div className="relative" ref={ref}>
+      <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => setOpen(!open)} className={`inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-sm border ${open ? 'bg-gray-100 border-gray-200' : 'text-gray-700 border-transparent hover:bg-gray-100 hover:border-gray-200'}`}>
+        {icon}
+        {label}
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m6 9 6 6 6-6" /></svg>
+      </button>
+      {open && (
+        <div className="absolute left-0 top-9 z-30 w-60 bg-white border border-gray-200 rounded-xl shadow-lg p-1">
+          {items.map((t) => (
+            <button key={t.title} type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => { onPick(t); setOpen(false); }} className="w-full text-left px-3 py-2 rounded-lg hover:bg-brand-50">
+              <div className="text-sm text-gray-900">{t.title}</div>
+              <div className="text-xs text-gray-500">{t.subtext}</div>
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

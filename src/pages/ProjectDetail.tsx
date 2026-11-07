@@ -245,7 +245,7 @@ function MilestoneView({ project, m, page, tasks, me }: { project: Project; m: P
       <Card>
         <CardHeader
           title="Page"
-          subtitle={page ? `Last edited ${fmtTime(page.updated_at)}${page.updated_by ? ` by ${personName(page.updated_by)}` : ''} · type / to add a table, chart, diagram or template` : 'Type / to add a table, chart, diagram or template'}
+          subtitle={page ? `Last edited ${fmtTime(page.updated_at)}${page.updated_by ? ` by ${personName(page.updated_by)}` : ''} · click anywhere to type; use the toolbar to add tables, charts and diagrams` : 'Type / to add a table, chart, diagram or template'}
         />
         {headings.length > 3 && (
           <div className="flex flex-wrap gap-1.5 mb-5 pb-4 border-b border-gray-100">
