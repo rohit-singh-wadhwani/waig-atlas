@@ -165,6 +165,7 @@ export interface Page {
   milestone_id: ID;
   title: string;
   content_md: string;
+  content_json?: any[] | null;
   updated_at: string;
   updated_by?: string;
 }
