@@ -7,12 +7,13 @@
 //   scout_page    a funder's "open calls" page; Gemini reads it when it changes
 //   scout_feed    an RSS feed of opportunities (aggregators)
 //   scout_eu      EU Funding & Tenders portal search; url = search text
+//   scout_web     free web + news search (Bing RSS); url = search queries, one per line. Gemini reads the hits.
 import {
   HAS_GEMINI, HAS_SB, chunk, gemini, geminiAvailable, geminiStatus, hash, http, loadSources, log, orgContext, parseFeed,
   readJson, recordRun, reportSource, sb, stripHtml, today, writeJson,
 } from './lib.mjs';
 
-const MAX_NEW = Number(process.env.MAX_SCOUT_NEW || 40);
+const MAX_NEW = Number(process.env.MAX_SCOUT_NEW || 60);
 const BROWSER_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36';
 const FIT_SCORE = { high: 80, medium: 55, 'medium - low': 40, low: 25, 'not eligible': 5 };
 const FITS = ['High', 'Medium', 'Medium - Low', 'Low', 'Not eligible'];
@@ -39,7 +40,9 @@ const deepPath = (u) => {
 };
 function isDuplicate(c, known) {
   const p = deepPath(c.url);
-  return known.some((k) => (p && deepPath(k.url) === p && similar(c.title, k.title) >= 0.3) || (similar(c.title, k.title) >= 0.7 && (similar(c.funder, k.funder) >= 0.5 || !c.funder || !k.funder)));
+  const host = (u) => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return ''; } };
+  return known.some((k) => (p && deepPath(k.url) === p && similar(c.title, k.title) >= 0.3) ||
+    (host(c.url) && host(c.url) === host(k.url) && similar(c.title, k.title) >= 0.5) || (similar(c.title, k.title) >= 0.7 && (similar(c.funder, k.funder) >= 0.5 || !c.funder || !k.funder)));
 }
 
 /* ---------- channels ---------- */
@@ -113,11 +116,46 @@ async function fromEu(src) {
         amount: null,
         text: stripHtml(one(md.descriptionByte) || x.content || x.summary || '').slice(0, 1500),
       };
-    }).filter((i) => i.title && i.url),
+    }).filter((i) => i.title && i.url && (!i.deadline_text || i.deadline_text >= today())),
   };
 }
 
-const CHANNELS = { scout_page: fromPage, scout_search: fromSearch, scout_feed: fromFeed, scout_eu: fromEu };
+/** Bing returns search results as RSS for free; news links carry the real URL in a url= parameter. */
+function unwrapBing(u) {
+  try {
+    const x = new URL(u);
+    const real = x.searchParams.get('url');
+    return /bing\.com$/.test(x.hostname) && real ? real : u;
+  } catch {
+    return u;
+  }
+}
+const SKIP_HOSTS = /(linkedin|facebook|twitter|x\.com|youtube|instagram|reddit|wikipedia|indeed|glassdoor)\./i;
+async function fromWeb(src) {
+  const queries = String(src.url).split(/\n|;/).map((q) => q.trim()).filter(Boolean);
+  const seen = new Set();
+  const items = [];
+  let ok = 0;
+  for (const q of queries) {
+    for (const base of ['https://www.bing.com/search?format=rss&count=20&q=', 'https://www.bing.com/news/search?format=rss&count=20&q=']) {
+      try {
+        for (const i of parseFeed(await fetchPage(base + encodeURIComponent(q)))) {
+          const url = unwrapBing(i.url);
+          if (!url || seen.has(url) || SKIP_HOSTS.test(url)) continue;
+          seen.add(url);
+          items.push({ title: i.title, url, funder: '', deadline_text: null, amount: null, text: (i.text || '').slice(0, 600), date: i.date });
+        }
+        ok++;
+      } catch (e) {
+        log('web search failed', q, e.message);
+      }
+    }
+  }
+  if (!ok) throw new Error('web search returned nothing (Bing may be blocking automated requests)');
+  return { items };
+}
+
+const CHANNELS = { scout_page: fromPage, scout_search: fromSearch, scout_feed: fromFeed, scout_eu: fromEu, scout_web: fromWeb };
 
 /* ---------- write-up in the team's sheet format ---------- */
 async function resolveUrl(u) {
@@ -179,6 +217,8 @@ async function main() {
   const sources = (await loadSources('grants')).filter((s) => s.enabled && CHANNELS[s.type]);
   const state = readJson('scout-state.json', { pages: {} });
   const rejected = new Set(readJson('scout-rejected.json', { ids: [] }).ids);
+  // candidates found earlier but not written up yet (Gemini failed or the per-run cap was reached)
+  const pending = readJson('scout-pending.json', { items: [] }).items || [];
   let existing = [];
   let tracking = [];
   if (HAS_SB) {
@@ -187,13 +227,23 @@ async function main() {
   } else existing = readJson('grants.json', { grants: [] }).grants || [];
 
   // 1. collect candidates (searches first: they find the most, then pages, feeds, EU)
-  const order = { scout_search: 0, scout_page: 1, scout_eu: 2, scout_feed: 3 };
+  const order = { scout_search: 0, scout_web: 1, scout_page: 2, scout_eu: 3, scout_feed: 4 };
+  let groundingOff = null;
   sources.sort((a, b) => order[a.type] - order[b.type]);
   const candidates = [];
   const known = [...existing];
+  for (const c of pending) {
+    if (rejected.has(c.id) || known.some((k) => k.id === c.id) || isDuplicate(c, known)) continue;
+    known.push(c);
+    candidates.push(c);
+  }
   for (const src of sources) {
     if (['scout_search', 'scout_page'].includes(src.type) && !geminiAvailable()) {
       await reportSource(src, 'skipped', HAS_GEMINI ? 'Skipped: Gemini quota or time budget used up this run' : 'Skipped: no Gemini key', 0);
+      continue;
+    }
+    if (src.type === 'scout_search' && groundingOff) {
+      await reportSource(src, 'skipped', `Skipped: ${groundingOff}`, 0);
       continue;
     }
     try {
@@ -211,7 +261,9 @@ async function main() {
       await reportSource(src, 'ok', note || `${items.length} opportunities seen, ${fresh} new`, items.length);
       log(src.id, items.length, 'seen', fresh, 'new', note || '');
     } catch (e) {
-      const msg = /search/.test(src.type) && /quota|400|billing|not supported|tool/i.test(e.message) ? `Google Search grounding unavailable on this key: ${e.message}` : e.message;
+      const noGrounding = src.type === 'scout_search' && /quota|400|billing|not supported|tool|no model available/i.test(e.message);
+      if (noGrounding) groundingOff = 'Gemini Google Search needs billing enabled on the Gemini key (free tier has no search quota). The free "web search" sources cover this meanwhile.';
+      const msg = noGrounding ? groundingOff : e.message;
       await reportSource(src, 'error', msg, 0);
       log(src.id, 'ERROR', msg);
     }
@@ -221,23 +273,45 @@ async function main() {
   const now = new Date().toISOString();
   const pick = candidates.slice(0, MAX_NEW);
   for (const c of pick) c.url = await resolveUrl(c.url);
-  for (const c of pick.filter((c) => (c.text || '').length < 300).slice(0, 20)) {
+  for (const c of pick.filter((c) => (c.text || '').length < 700).slice(0, 40)) {
     try {
-      c.page = stripHtml(await fetchPage(c.url)).slice(0, 5000);
+      c.page = pageDigest(await fetchPage(c.url), c.url).text.slice(0, 5000);
     } catch {}
   }
   const added = [];
+  const leftover = [];
   if (HAS_GEMINI && pick.length) {
     const context = await orgContext();
     const examples = teamExamples(existing, tracking);
-    for (const batch of chunk(pick, 6)) {
-      if (!geminiAvailable()) break;
+    const done = new Set();
+    const writeBatch = async (batch) => {
       try {
-        for (const r of await writeUp(batch, context, examples)) {
+        return await writeUp(batch, context, examples);
+      } catch (e) {
+        log('write-up batch failed, retrying one by one:', e.message);
+        const out = [];
+        for (const one of batch) {
+          if (!geminiAvailable()) break;
+          try {
+            const [r] = await writeUp([one], context, examples);
+            if (r) out.push({ ...r, i: batch.indexOf(one) });
+          } catch (e2) {
+            log('write-up failed for', one.title, e2.message);
+          }
+        }
+        return out;
+      }
+    };
+    for (const batch of chunk(pick, 4)) {
+      if (!geminiAvailable()) break;
+      {
+        for (const r of await writeBatch(batch)) {
           const b = batch[r.i];
-          if (!b) continue;
+          if (!b || done.has(b.id)) continue;
+          done.add(b.id);
           if (r.relevant === false || r.open === false || (r.deadline && r.deadline < today())) {
             rejected.add(b.id);
+            log(' -', r.relevant === false ? 'not relevant' : 'closed', '|', b.title);
             continue;
           }
           const fit = FITS.find((f) => f.toLowerCase() === String(r.fit || '').toLowerCase()) || null;
@@ -252,17 +326,17 @@ async function main() {
             updated_at: now,
           });
         }
-      } catch (e) {
-        log('write-up batch failed', e.message);
       }
     }
-  }
+    leftover.push(...candidates.filter((c) => !done.has(c.id)));
+  } else leftover.push(...candidates);
 
   if (HAS_SB && added.length) await sb.upsert('grants', added);
   writeJson('scout-state.json', { ...state, last_run: now });
   writeJson('scout-rejected.json', { ids: Array.from(rejected).slice(-5000) });
+  writeJson('scout-pending.json', { items: leftover.slice(0, 300).map(({ page, ...c }) => c) });
   const good = added.filter((a) => (a.score || 0) >= 55).length;
-  const msg = `${added.length} new opportunities written up (${good} rated High/Medium) from ${candidates.length} new candidates · Gemini ${geminiStatus.ok}/${geminiStatus.calls} calls ok${geminiStatus.lastError ? ` (last error: ${geminiStatus.lastError})` : ''}`;
+  const msg = `${added.length} new opportunities written up (${good} rated High/Medium) from ${candidates.length} candidates (${leftover.length} queued for the next run) · Gemini ${geminiStatus.ok}/${geminiStatus.calls} calls ok${geminiStatus.lastError ? ` (last error: ${geminiStatus.lastError})` : ''}`;
   recordRun('scout', true, msg);
   log(msg);
   for (const a of added) log(' +', a.fit, '|', a.funder, '|', a.title, '|', a.deadline_text);

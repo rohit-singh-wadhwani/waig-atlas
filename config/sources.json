@@ -326,8 +326,8 @@
     "category": "grants",
     "type": "scout_page",
     "url": "https://www.cisco.com/site/us/en/about/purpose/social-impact/investments/global-impact-cash-grants.html",
-    "enabled": true,
-    "notes": "Scout · funder page, read by Gemini when it changes."
+    "enabled": false,
+    "notes": "Scout · funder page, read by Gemini when it changes. Disabled: the site blocks automated readers (already in the pipeline / covered by web search)."
   },
   {
     "id": "scout-page-kirby",
@@ -335,8 +335,8 @@
     "category": "grants",
     "type": "scout_page",
     "url": "https://case.fuqua.duke.edu/kirby-impact-prize/",
-    "enabled": true,
-    "notes": "Scout · funder page, read by Gemini when it changes."
+    "enabled": false,
+    "notes": "Scout · funder page, read by Gemini when it changes. Disabled: the site blocks automated readers (already in the pipeline / covered by web search)."
   },
   {
     "id": "scout-page-elrha",
@@ -389,8 +389,8 @@
     "category": "grants",
     "type": "scout_feed",
     "url": "https://www2.fundsforngos.org/category/health/feed/",
-    "enabled": true,
-    "notes": "Scout · aggregator feed; sometimes blocks automated readers."
+    "enabled": false,
+    "notes": "Scout · aggregator feed; sometimes blocks automated readers. Disabled: the site blocks automated readers (already in the pipeline / covered by web search)."
   },
   {
     "id": "scout-eu-ai-health",
@@ -400,5 +400,41 @@
     "url": "artificial intelligence health",
     "enabled": true,
     "notes": "Scout · EU portal search; url = search text."
+  },
+  {
+    "id": "scout-web-ai-health",
+    "name": "AI for health calls (free web search)",
+    "category": "grants",
+    "type": "scout_web",
+    "url": "\"call for proposals\" AI health Africa\n\"request for proposals\" artificial intelligence global health\n\"open call\" AI primary health care low- and middle-income countries",
+    "enabled": true,
+    "notes": "Scout · free web + news search (Bing). One query per line; Gemini reads the hits and keeps real open opportunities."
+  },
+  {
+    "id": "scout-web-foundations",
+    "name": "Foundation & tech-philanthropy calls (free web search)",
+    "category": "grants",
+    "type": "scout_web",
+    "url": "foundation launches fund AI public services nonprofits\nOpenAI OR Rockefeller OR Gates AI grant call nonprofits apply\n\"call for applications\" AI social impact nonprofits grant 2026",
+    "enabled": true,
+    "notes": "Scout · free web + news search (Bing). One query per line; Gemini reads the hits and keeps real open opportunities."
+  },
+  {
+    "id": "scout-web-tenders",
+    "name": "Global health tenders (free web search)",
+    "category": "grants",
+    "type": "scout_web",
+    "url": "Global Fund request for proposals digital health 2026\nUnitaid OR Gavi OR UNICEF \"call for proposals\" digital health AI",
+    "enabled": true,
+    "notes": "Scout · free web + news search (Bing). One query per line; Gemini reads the hits and keeps real open opportunities."
+  },
+  {
+    "id": "scout-web-innovation",
+    "name": "Innovation funds & prizes (free web search)",
+    "category": "grants",
+    "type": "scout_web",
+    "url": "\"innovation fund\" open call development low-income countries 2026\nprize \"scaling impact\" nonprofits apply 2026",
+    "enabled": true,
+    "notes": "Scout · free web + news search (Bing). One query per line; Gemini reads the hits and keeps real open opportunities."
   }
 ]

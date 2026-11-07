@@ -268,7 +268,7 @@ export default function GrantsPage() {
 
       <Card pad={false}>
         <div className="p-6 pb-3">
-          <CardHeader title={view === 'pipeline' ? 'Team pipeline' : 'Funds & grants directory'} subtitle={`${filtered.length} opportunities · ${view === 'pipeline' ? 'submitted and pursuing first, then by deadline' : 'sorted by fit, then deadline'}`} />
+          <CardHeader title={view === 'pipeline' ? 'Pipeline' : 'Funds & grants directory'} subtitle={`${filtered.length} opportunities · ${view === 'pipeline' ? 'submitted and pursuing first, then by deadline' : 'sorted by fit, then deadline'}`} />
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-[15px]">

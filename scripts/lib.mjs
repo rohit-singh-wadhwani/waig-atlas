@@ -181,6 +181,10 @@ export async function gemini(prompt, { json = true, search = false, temperature 
       if (r.status === 429) {
         const q = quotaInfo(j);
         note(new Error(`Gemini ${model}${search ? ' (search)' : ''} quota: ${q.msg}`));
+        if (search && /plan and billing/i.test(q.msg)) {
+          for (const m of list) deadModels.add(m + ':search'); // no search quota on this key at all
+          break;
+        }
         if (q.daily || attempt === 2) {
           deadModels.add(key);
           break;
@@ -223,7 +227,20 @@ export function parseJsonLoose(text) {
   }
   const start = Math.min(...['[', '{'].map((c) => (t.indexOf(c) < 0 ? Infinity : t.indexOf(c))));
   const end = Math.max(t.lastIndexOf(']'), t.lastIndexOf('}'));
-  if (isFinite(start) && end > start) return JSON.parse(t.slice(start, end + 1));
+  if (isFinite(start) && end > start) {
+    const body = t.slice(start, end + 1);
+    try {
+      return JSON.parse(body);
+    } catch (e) {
+      // common model slips: trailing commas, smart quotes, raw newlines inside strings
+      const fixed = body.replace(/,\s*([}\]])/g, '$1').replace(/[\u201c\u201d]/g, '"').replace(/"([^"\\]*?)\n([^"\\]*?)"/g, '"$1 $2"');
+      try {
+        return JSON.parse(fixed);
+      } catch {
+        throw e;
+      }
+    }
+  }
   throw new Error('Could not parse JSON from Gemini');
 }
 

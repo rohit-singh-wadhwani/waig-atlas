@@ -13,6 +13,7 @@ const TYPES = [
   { value: 'scout_search', label: 'Grant scout: Gemini web search (brief in URL field)' },
   { value: 'scout_page', label: 'Grant scout: funder page (Gemini reads it when it changes)' },
   { value: 'scout_feed', label: 'Grant scout: opportunities feed (RSS)' },
+  { value: 'scout_web', label: 'Grant scout: free web + news search (one query per line)' },
   { value: 'scout_eu', label: 'Grant scout: EU Funding & Tenders search (text in URL field)' },
   { value: 'rss', label: 'RSS / Atom feed' },
   { value: 'json', label: 'JSON API (Gemini extracts items)' },
@@ -161,7 +162,7 @@ function AddSource({ open, onClose }: { open: boolean; onClose: () => void }) {
         <Field label="Category"><Select value={s.category || 'insights'} onChange={(v) => setS({ ...s, category: v as Source['category'] })} options={[{ value: 'grants', label: 'Grants' }, { value: 'insights', label: 'Insights' }, { value: 'datasets', label: 'Datasets' }]} /></Field>
         <Field label="Type"><Select value={s.type || 'rss'} onChange={(v) => setS({ ...s, type: v })} options={TYPES} /></Field>
       </div>
-      <Field label="URL, query or code" hint="For Gemini web search, write the search request in plain words."><TextInput className="w-full" value={s.url || ''} onChange={(e) => setS({ ...s, url: e.target.value })} /></Field>
+      <Field label="URL, query or code" hint="Gemini web search: write the brief in plain words. Free web search: separate queries with ;"><TextInput className="w-full" value={s.url || ''} onChange={(e) => setS({ ...s, url: e.target.value })} /></Field>
       <Field label="Notes"><TextArea rows={2} value={s.notes || ''} onChange={(e) => setS({ ...s, notes: e.target.value })} /></Field>
     </Modal>
   );
