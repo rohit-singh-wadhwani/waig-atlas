@@ -1,25 +1,242 @@
 [
-  { "id": "grantsgov-health-ai", "name": "Grants.gov: AI in health", "category": "grants", "type": "grantsgov", "url": "artificial intelligence health", "enabled": true, "notes": "US federal opportunities; keyword search" },
-  { "id": "grantsgov-global-health", "name": "Grants.gov: global health", "category": "grants", "type": "grantsgov", "url": "global health tuberculosis malaria", "enabled": true },
-  { "id": "nih-guide", "name": "NIH Guide: funding opportunities", "category": "grants", "type": "rss", "url": "https://grants.nih.gov/grants/guide/newsfeed/fundingopps.xml", "enabled": true },
-  { "id": "fundsforngos-health", "name": "fundsforNGOs: health", "category": "grants", "type": "rss", "url": "https://www2.fundsforngos.org/category/health/feed/", "enabled": true },
-  { "id": "ukri-opportunities", "name": "UKRI funding finder", "category": "grants", "type": "rss", "url": "https://www.ukri.org/opportunity/feed/", "enabled": true },
-  { "id": "gemini-health-ai-calls", "name": "Web search: health AI calls (Africa, Asia)", "category": "grants", "type": "gemini_search", "url": "currently open grant calls, challenges or RFPs funding AI or digital health for TB, malaria, dengue, maternal health or disease surveillance in Africa or South Asia (e.g. Gates Foundation, Grand Challenges, Wellcome, Global Fund, Unitaid, Google.org, USAID successors, EDCTP, IDRC, Fondation Botnar)", "enabled": true, "notes": "Gemini with Google Search grounding" },
-  { "id": "gemini-ai-for-good", "name": "Web search: AI for good funds", "category": "grants", "type": "gemini_search", "url": "open calls for proposals for AI for social good, AI for public sector or AI in education in low- and middle-income countries", "enabled": true },
-
-  { "id": "who-news", "name": "WHO news", "category": "insights", "type": "rss", "url": "https://www.who.int/rss-feeds/news-english.xml", "enabled": true, "kind": "news" },
-  { "id": "who-don", "name": "WHO Disease Outbreak News", "category": "insights", "type": "who_don", "url": "https://www.who.int/api/news/diseaseoutbreaknews?sf_culture=en&$orderby=PublicationDateAndTime%20desc&$top=40", "enabled": true, "kind": "outbreak" },
-  { "id": "un-news-health", "name": "UN News: health", "category": "insights", "type": "rss", "url": "https://news.un.org/feed/subscribe/en/news/topic/health/feed/rss.xml", "enabled": true, "kind": "news" },
-  { "id": "pubmed-ai-tb-malaria-dengue", "name": "PubMed: AI for TB, malaria, dengue", "category": "insights", "type": "pubmed", "url": "(tuberculosis OR malaria OR dengue) AND (artificial intelligence OR machine learning OR deep learning)", "enabled": true, "kind": "research" },
-  { "id": "pubmed-cough-acoustics", "name": "PubMed: cough acoustics", "category": "insights", "type": "pubmed", "url": "cough AND (acoustic OR audio OR sound) AND (tuberculosis OR screening)", "enabled": true, "kind": "research" },
-  { "id": "who-youtube", "name": "WHO on YouTube", "category": "insights", "type": "rss", "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UC07-dOwgza1IguKA86jqxNA", "enabled": true, "kind": "social" },
-  { "id": "gemini-ministry-updates", "name": "Web search: health ministry and WHO updates", "category": "insights", "type": "gemini_search", "url": "latest announcements from health ministries of Ghana, Kenya, Nigeria, Rwanda, India and from WHO, UN and Global Fund on TB, malaria, dengue or digital health, including official social media posts", "enabled": true, "kind": "social" },
-  { "id": "gemini-health-tenders", "name": "Web search: health and digital tenders", "category": "insights", "type": "gemini_search", "url": "open procurement tenders or RFPs for digital health, health information systems or AI from UNGM, UNDP, UNICEF, World Bank or health ministries in Africa and South Asia", "enabled": true, "kind": "tender" },
-
-  { "id": "gho-tb-incidence", "name": "WHO GHO: TB incidence", "category": "datasets", "type": "gho", "url": "MDG_0000000020", "enabled": true, "display_name": "TB incidence", "unit": "per 100,000 population" },
-  { "id": "gho-malaria-incidence", "name": "WHO GHO: malaria incidence", "category": "datasets", "type": "gho", "url": "MALARIA_EST_INCIDENCE", "enabled": true, "display_name": "Malaria incidence", "unit": "per 1,000 population at risk" },
-  { "id": "opendengue-national", "name": "OpenDengue: national cases", "category": "datasets", "type": "opendengue", "url": "https://opendengue.org", "enabled": true, "display_name": "Dengue reported cases", "unit": "cases" },
-  { "id": "gho-cholera-cases", "name": "WHO GHO: cholera cases", "category": "datasets", "type": "gho", "url": "CHOLERA_0000000001", "enabled": true, "display_name": "Cholera reported cases", "unit": "cases" },
-  { "id": "gho-measles-cases", "name": "WHO GHO: measles cases", "category": "datasets", "type": "gho", "url": "WHS3_62", "enabled": true, "display_name": "Measles reported cases", "unit": "cases" },
-  { "id": "gho-hiv-prevalence", "name": "WHO GHO: HIV prevalence 15–49", "category": "datasets", "type": "gho", "url": "MDG_0000000029", "enabled": true, "display_name": "HIV prevalence, adults 15–49", "unit": "%" }
+ {
+  "id": "grantsgov-health-ai",
+  "name": "Grants.gov: AI in health",
+  "category": "grants",
+  "type": "grantsgov",
+  "url": "artificial intelligence health",
+  "enabled": true,
+  "notes": "US federal opportunities; keyword search"
+ },
+ {
+  "id": "grantsgov-global-health",
+  "name": "Grants.gov: global health",
+  "category": "grants",
+  "type": "grantsgov",
+  "url": "global health tuberculosis malaria",
+  "enabled": true
+ },
+ {
+  "id": "nih-guide",
+  "name": "NIH Guide: funding opportunities",
+  "category": "grants",
+  "type": "rss",
+  "url": "https://grants.nih.gov/grants/guide/newsfeed/fundingopps.xml",
+  "enabled": true
+ },
+ {
+  "id": "fundsforngos-health",
+  "name": "fundsforNGOs: health",
+  "category": "grants",
+  "type": "rss",
+  "url": "https://www2.fundsforngos.org/category/health/feed/",
+  "enabled": false,
+  "notes": "Site blocks automated requests (HTTP 403). Kept for reference."
+ },
+ {
+  "id": "ukri-opportunities",
+  "name": "UKRI funding finder",
+  "category": "grants",
+  "type": "rss",
+  "url": "https://www.ukri.org/opportunity/feed/",
+  "enabled": true
+ },
+ {
+  "id": "gemini-health-ai-calls",
+  "name": "Web search: health AI calls (Africa, Asia)",
+  "category": "grants",
+  "type": "gemini_search",
+  "url": "currently open grant calls, challenges or RFPs funding AI or digital health for TB, malaria, dengue, maternal health or disease surveillance in Africa or South Asia (e.g. Gates Foundation, Grand Challenges, Wellcome, Global Fund, Unitaid, Google.org, USAID successors, EDCTP, IDRC, Fondation Botnar)",
+  "enabled": true,
+  "notes": "Gemini with Google Search grounding Needs a billing-enabled Gemini key (repo variable GEMINI_SEARCH=1)."
+ },
+ {
+  "id": "gemini-ai-for-good",
+  "name": "Web search: AI for good funds",
+  "category": "grants",
+  "type": "gemini_search",
+  "url": "open calls for proposals for AI for social good, AI for public sector or AI in education in low- and middle-income countries",
+  "enabled": true,
+  "notes": " Needs a billing-enabled Gemini key (repo variable GEMINI_SEARCH=1)."
+ },
+ {
+  "id": "who-news",
+  "name": "WHO news",
+  "category": "insights",
+  "type": "rss",
+  "url": "https://www.who.int/rss-feeds/news-english.xml",
+  "enabled": true,
+  "kind": "news"
+ },
+ {
+  "id": "who-don",
+  "name": "WHO Disease Outbreak News",
+  "category": "insights",
+  "type": "who_don",
+  "url": "https://www.who.int/api/news/diseaseoutbreaknews?sf_culture=en&$orderby=PublicationDateAndTime%20desc&$top=40",
+  "enabled": true,
+  "kind": "outbreak"
+ },
+ {
+  "id": "un-news-health",
+  "name": "UN News: health",
+  "category": "insights",
+  "type": "rss",
+  "url": "https://news.un.org/feed/subscribe/en/news/topic/health/feed/rss.xml",
+  "enabled": true,
+  "kind": "news"
+ },
+ {
+  "id": "pubmed-ai-tb-malaria-dengue",
+  "name": "PubMed: AI for TB, malaria, dengue",
+  "category": "insights",
+  "type": "pubmed",
+  "url": "(tuberculosis OR malaria OR dengue) AND (artificial intelligence OR machine learning OR deep learning)",
+  "enabled": true,
+  "kind": "research"
+ },
+ {
+  "id": "pubmed-cough-acoustics",
+  "name": "PubMed: cough acoustics",
+  "category": "insights",
+  "type": "pubmed",
+  "url": "cough AND (acoustic OR audio OR sound) AND (tuberculosis OR screening)",
+  "enabled": true,
+  "kind": "research"
+ },
+ {
+  "id": "who-youtube",
+  "name": "WHO on YouTube",
+  "category": "insights",
+  "type": "rss",
+  "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UC07-dOwgza1IguKA86jqxNA",
+  "enabled": true,
+  "kind": "social"
+ },
+ {
+  "id": "gemini-ministry-updates",
+  "name": "Web search: health ministry and WHO updates",
+  "category": "insights",
+  "type": "gemini_search",
+  "url": "latest announcements from health ministries of Ghana, Kenya, Nigeria, Rwanda, India and from WHO, UN and Global Fund on TB, malaria, dengue or digital health, including official social media posts",
+  "enabled": true,
+  "kind": "social",
+  "notes": " Needs a billing-enabled Gemini key (repo variable GEMINI_SEARCH=1)."
+ },
+ {
+  "id": "gemini-health-tenders",
+  "name": "Web search: health and digital tenders",
+  "category": "insights",
+  "type": "gemini_search",
+  "url": "open procurement tenders or RFPs for digital health, health information systems or AI from UNGM, UNDP, UNICEF, World Bank or health ministries in Africa and South Asia",
+  "enabled": true,
+  "kind": "tender",
+  "notes": " Needs a billing-enabled Gemini key (repo variable GEMINI_SEARCH=1)."
+ },
+ {
+  "id": "gho-tb-incidence",
+  "name": "WHO GHO: TB incidence",
+  "category": "datasets",
+  "type": "gho",
+  "url": "MDG_0000000020",
+  "enabled": true,
+  "display_name": "TB incidence",
+  "unit": "per 100,000 population"
+ },
+ {
+  "id": "gho-malaria-incidence",
+  "name": "WHO GHO: malaria incidence",
+  "category": "datasets",
+  "type": "gho",
+  "url": "MALARIA_EST_INCIDENCE",
+  "enabled": true,
+  "display_name": "Malaria incidence",
+  "unit": "per 1,000 population at risk"
+ },
+ {
+  "id": "opendengue-national",
+  "name": "OpenDengue: national cases",
+  "category": "datasets",
+  "type": "opendengue",
+  "url": "https://opendengue.org",
+  "enabled": true,
+  "display_name": "Dengue reported cases",
+  "unit": "cases"
+ },
+ {
+  "id": "gho-cholera-cases",
+  "name": "WHO GHO: cholera cases",
+  "category": "datasets",
+  "type": "gho",
+  "url": "CHOLERA_0000000001",
+  "enabled": true,
+  "display_name": "Cholera reported cases",
+  "unit": "cases"
+ },
+ {
+  "id": "gho-measles-cases",
+  "name": "WHO GHO: measles cases",
+  "category": "datasets",
+  "type": "gho",
+  "url": "WHS3_62",
+  "enabled": true,
+  "display_name": "Measles reported cases",
+  "unit": "cases"
+ },
+ {
+  "id": "gho-hiv-prevalence",
+  "name": "WHO GHO: HIV prevalence 15–49",
+  "category": "datasets",
+  "type": "gho",
+  "url": "MDG_0000000029",
+  "enabled": true,
+  "display_name": "HIV prevalence, adults 15–49",
+  "unit": "%"
+ },
+ {
+  "id": "wellcome-schemes",
+  "name": "Wellcome: funding schemes",
+  "category": "grants",
+  "type": "html",
+  "url": "https://wellcome.org/research-funding/schemes",
+  "enabled": true,
+  "notes": "Gemini reads the page and lists open schemes"
+ },
+ {
+  "id": "grand-challenges",
+  "name": "Grand Challenges (Gates): open challenges",
+  "category": "grants",
+  "type": "html",
+  "url": "https://gcgh.grandchallenges.org/challenges",
+  "enabled": true,
+  "notes": "Gemini reads the page"
+ },
+ {
+  "id": "idrc-funding",
+  "name": "IDRC: funding opportunities",
+  "category": "grants",
+  "type": "html",
+  "url": "https://idrc-crdi.ca/en/funding",
+  "enabled": true,
+  "notes": "Gemini reads the page"
+ },
+ {
+  "id": "edctp-calls",
+  "name": "Global Health EDCTP3: calls",
+  "category": "grants",
+  "type": "html",
+  "url": "https://www.global-health-edctp3.europa.eu/funding-opportunities/calls_en",
+  "enabled": true,
+  "notes": "Gemini reads the page"
+ },
+ {
+  "id": "worldbank-health-tenders",
+  "name": "World Bank: health procurement notices",
+  "category": "insights",
+  "type": "worldbank",
+  "url": "https://search.worldbank.org/api/v2/procnotices?format=json&rows=40&qterm=health&srt=noticedate&order=desc",
+  "enabled": true,
+  "kind": "tender",
+  "notes": "No Gemini needed"
+ }
 ]

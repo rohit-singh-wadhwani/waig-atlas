@@ -8,9 +8,11 @@ export function useData<T>(fn: () => Promise<T>, deps: any[], initial: T) {
   const [error, setError] = useState<string | null>(null);
   const fnRef = useRef(fn);
   fnRef.current = fn;
+  const loadedOnce = useRef(false);
   const load = useCallback(() => {
     let alive = true;
-    setLoading(true);
+    if (!loadedOnce.current) setLoading(true); // background refreshes keep showing current data
+    loadedOnce.current = true;
     fnRef
       .current()
       .then((d) => alive && (setData(d), setError(null)))

@@ -19,6 +19,7 @@ const TYPES = [
   { value: 'pubmed', label: 'PubMed query' },
   { value: 'gho', label: 'WHO GHO indicator code' },
   { value: 'opendengue', label: 'OpenDengue national data' },
+  { value: 'worldbank', label: 'World Bank procurement API' },
 ];
 
 export default function SourcesPage() {

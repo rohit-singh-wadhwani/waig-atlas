@@ -40,6 +40,7 @@ ${raw}`);
     }
     case 'gemini_search': {
       if (!HAS_GEMINI) throw new Error('needs Gemini');
+      if (!process.env.GEMINI_SEARCH) throw Object.assign(new Error('Skipped: Gemini web search needs a paid (billing-enabled) key; set repo variable GEMINI_SEARCH=1 to turn on'), { skip: true });
       const out = await gemini(`Today is ${today()}. Search the web: ${src.url}
 Only include calls whose deadline is after today, or rolling calls. Return ONLY a JSON array of
 {"title","url":"official call page","funder","deadline":"YYYY-MM-DD or null","amount":"as stated or null","text":"2-3 sentence description incl. eligibility"}. Max 15 items.`, { search: true });
@@ -124,8 +125,8 @@ async function main() {
       await reportSource(src, 'ok', `${items.length} items, ${isNew.length} new`, items.length);
       log(src.id, items.length, 'items', isNew.length, 'new');
     } catch (e) {
-      await reportSource(src, 'error', e.message, 0);
-      log(src.id, 'ERROR', e.message);
+      await reportSource(src, e.skip ? 'skipped' : 'error', e.message, 0);
+      log(src.id, e.skip ? 'SKIPPED' : 'ERROR', e.message);
     }
   }
 

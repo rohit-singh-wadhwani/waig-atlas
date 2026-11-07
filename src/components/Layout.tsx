@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import Icon, { IconName } from './Icon';
 import { Avatar, Badge, cx } from './ui';
-import { DEMO, Me, signOut } from '../lib/store';
+import { DEMO, Me, onSaveError, signOut } from '../lib/store';
 import { useLocalPref } from '../lib/hooks';
 
 export const MeContext = createContext<Me | null>(null);
@@ -96,9 +96,12 @@ export function Sidebar() {
         {!collapsed && (
           <p className="text-[13px] text-gray-500 mt-3 leading-relaxed flex gap-1.5">
             <Icon name="bars" size={15} className="mt-0.5 shrink-0" />
-            {DEMO
-              ? 'Demo mode: your edits are saved in this browser only. Feeds refresh on schedule.'
-              : 'Signed in. Edits are shared with the team. Feeds refresh on schedule.'}
+            <span>
+              {DEMO
+                ? 'Demo mode: your edits are saved in this browser only. Feeds refresh on schedule.'
+                : 'Signed in. Edits are shared with the team. Feeds refresh on schedule.'}
+              {process.env.REACT_APP_BUILD && <span className="block text-gray-400 mt-1">Build {process.env.REACT_APP_BUILD}</span>}
+            </span>
           </p>
         )}
       </div>
@@ -165,11 +168,54 @@ export function PageHeader({ title, subtitle, updatedAt, actions }: { title: str
   );
 }
 
+function useNewVersion() {
+  const [stale, setStale] = useState(false);
+  useEffect(() => {
+    const current = Array.from(document.scripts).map((s) => s.src).find((s) => /static\/js\/main\.[\w]+\.js/.test(s));
+    if (!current) return;
+    const check = async () => {
+      try {
+        const r = await fetch(`${process.env.PUBLIC_URL}/asset-manifest.json`, { cache: 'no-store' });
+        const j = await r.json();
+        const latest = j?.files?.['main.js'];
+        if (latest && !current.endsWith(latest.replace(/^\.\//, '').replace(/^\//, ''))) setStale(true);
+      } catch {}
+    };
+    const t = setInterval(check, 5 * 60 * 1000);
+    check();
+    return () => clearInterval(t);
+  }, []);
+  return stale;
+}
+
 export function Shell({ children }: { children: React.ReactNode }) {
+  const stale = useNewVersion();
+  const [toast, setToast] = useState<string | null>(null);
+  useEffect(() => {
+    const off = onSaveError((m) => {
+      setToast(`Couldn't save: ${m}`);
+      setTimeout(() => setToast(null), 6000);
+    });
+    return () => {
+      off();
+    };
+  }, []);
   return (
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
-      <main className="flex-1 min-w-0 px-4 sm:px-8 lg:px-12 py-6 lg:py-10">{children}</main>
+      <main className="flex-1 min-w-0 px-4 sm:px-8 lg:px-12 py-6 lg:py-10">
+        {stale && (
+          <div className="mb-5 flex flex-wrap items-center gap-3 bg-brand-50 border border-brand-200 text-brand-800 rounded-2xl px-5 py-3 text-[15px]">
+            <Icon name="refresh" size={18} />
+            <span className="flex-1">A newer version of Atlas is available.</span>
+            <button type="button" onClick={() => window.location.reload()} className="px-3 h-9 rounded-lg bg-brand-600 text-white text-sm font-medium">Reload</button>
+          </div>
+        )}
+        {children}
+      </main>
+      {toast && (
+        <div role="alert" className="fixed bottom-5 right-5 z-[70] max-w-sm bg-gray-900 text-white text-sm rounded-xl px-4 py-3 shadow-2xl">{toast}</div>
+      )}
     </div>
   );
 }

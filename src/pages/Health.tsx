@@ -46,7 +46,7 @@ export default function HealthPage() {
   }, [ind, year, region, regionSet]);
 
   const ranked = Object.entries(values).sort((a, b) => b[1] - a[1]);
-  const nameOf = (iso: string) => countries.find((c) => c.iso3 === iso)?.name || iso;
+  const nameOf = (iso: string) => countries.find((c) => c.iso3 === iso)?.name || health.data.names?.[iso] || iso;
   const median = ranked.length ? ranked[Math.floor(ranked.length / 2)][1] : null;
   const fmt = (v: number) => `${fmtNum(v, v < 10 ? 1 : 0)}`;
 

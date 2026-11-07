@@ -121,7 +121,11 @@ export const db = {
   async upsert<T extends Row>(table: TableName, row: T): Promise<T> {
     if (supabase) {
       const { data, error } = await supabase.from(table).upsert(row).select().single();
-      if (error) throw error;
+      if (error) {
+        notifyError(error.message);
+        throw error;
+      }
+      emit(); // refresh every view that reads this data
       return data as T;
     }
     const t = await demo();
@@ -136,7 +140,11 @@ export const db = {
   async remove(table: TableName, id: string): Promise<void> {
     if (supabase) {
       const { error } = await supabase.from(table).delete().eq('id', id);
-      if (error) throw error;
+      if (error) {
+        notifyError(error.message);
+        throw error;
+      }
+      emit();
       return;
     }
     const t = await demo();
@@ -146,7 +154,17 @@ export const db = {
   },
 };
 
-/* ---------- change listeners (demo mode) ---------- */
+/* ---------- save errors, shown as a toast ---------- */
+const errorListeners = new Set<(msg: string) => void>();
+export function onSaveError(fn: (msg: string) => void) {
+  errorListeners.add(fn);
+  return () => errorListeners.delete(fn);
+}
+function notifyError(msg: string) {
+  errorListeners.forEach((f) => f(msg));
+}
+
+/* ---------- change listeners ---------- */
 const listeners = new Set<() => void>();
 export function onChange(fn: () => void) {
   listeners.add(fn);

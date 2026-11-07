@@ -229,8 +229,8 @@ function MilestoneView({ project, m, page, tasks, me }: { project: Project; m: P
           <Field label="Target"><TextInput type="date" className="w-full" value={(m.target_date || '').slice(0, 10)} onChange={(e) => save({ target_date: e.target.value || null })} /></Field>
         </div>
         <div className="mt-5">
-          <div className="flex justify-between text-sm mb-1.5"><span className="text-gray-600">Progress</span><span className="font-medium tabular-nums">{m.status === 'done' ? 100 : m.progress}%</span></div>
-          <input type="range" min={0} max={100} step={5} value={m.status === 'done' ? 100 : m.progress} onChange={(e) => save({ progress: Number(e.target.value) })} className="w-full accent-[#316d6e]" aria-label="Progress" />
+          <div className="text-sm mb-1.5 text-gray-600">Progress (%)</div>
+          <ProgressSlider value={m.status === 'done' ? 100 : m.progress} onCommit={(v) => save({ progress: v, status: v === 100 ? 'done' : m.status === 'done' || (m.status === 'not_started' && v > 0) ? 'in_progress' : m.status })} />
         </div>
         {m.stages?.length ? (
           <div className="mt-5">
@@ -261,6 +261,35 @@ function MilestoneView({ project, m, page, tasks, me }: { project: Project; m: P
       <Attachments entityType="milestone" entityId={m.id} />
       <Comments entityType="milestone" entityId={m.id} />
     </>
+  );
+}
+
+/** Slider keeps its own value while dragging and saves once on release, so it never snaps back. */
+function ProgressSlider({ value, onCommit }: { value: number; onCommit: (v: number) => void }) {
+  const [v, setV] = useState(value);
+  const dragging = React.useRef(false);
+  React.useEffect(() => {
+    if (!dragging.current) setV(value);
+  }, [value]);
+  const commit = () => {
+    dragging.current = false;
+    if (v !== value) onCommit(v);
+  };
+  return (
+    <div className="flex items-center gap-4">
+      <input
+        type="range" min={0} max={100} step={5} value={v} aria-label="Progress"
+        onChange={(e) => { dragging.current = true; setV(Number(e.target.value)); }}
+        onMouseUp={commit} onTouchEnd={commit} onKeyUp={commit} onBlur={commit}
+        className="flex-1 accent-[#316d6e] cursor-pointer"
+      />
+      <input
+        type="number" min={0} max={100} step={5} value={v} aria-label="Progress percent"
+        onChange={(e) => setV(Math.max(0, Math.min(100, Number(e.target.value) || 0)))}
+        onBlur={commit} onKeyDown={(e) => e.key === 'Enter' && commit()}
+        className="w-20 border border-gray-200 rounded-lg px-2 h-9 text-sm text-right tabular-nums"
+      />
+    </div>
   );
 }
 

@@ -119,7 +119,15 @@ async function main() {
       log(src.id, 'ERROR', e.message);
     }
   }
-  writeJson('health.json', { updated_at: new Date().toISOString(), indicators });
+  // full country names (the boundary file leaves out some small island states)
+  let names = prev.names || {};
+  try {
+    const d = await getJson(`${GHO}/DIMENSION/COUNTRY/DimensionValues`);
+    names = Object.fromEntries((d.value || []).map((v) => [v.Code, v.Title]));
+  } catch (e) {
+    log('country names unavailable', e.message);
+  }
+  writeJson('health.json', { updated_at: new Date().toISOString(), indicators, names });
   recordRun('health', true, `${indicators.length} indicators`);
 }
 

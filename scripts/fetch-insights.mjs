@@ -42,6 +42,19 @@ async function collect(src) {
         title: r.title, url: `https://pubmed.ncbi.nlm.nih.gov/${r.uid}/`, date: toIso(r.sortpubdate || r.pubdate), text: `${r.fulljournalname || r.source}. ${(r.authors || []).slice(0, 3).map((a) => a.name).join(', ')}`, kind: 'research',
       }));
     }
+    case 'worldbank': {
+      const j = await getJson(src.url);
+      const rows = j.procnotices || j.documents || j.rows || [];
+      const list = Array.isArray(rows) ? rows : Object.values(rows);
+      return list.filter((r) => r && typeof r === 'object').map((r) => ({
+        title: r.bid_description || r.project_name || r.notice_title || 'World Bank procurement notice',
+        url: r.url || (r.id ? `https://projects.worldbank.org/en/projects-operations/procurement-detail/${r.id}` : 'https://projects.worldbank.org/en/projects-operations/procurement'),
+        date: toIso(r.noticedate || r.notice_date || r.submission_date),
+        text: [r.notice_type, r.project_ctry_name, r.project_name, r.submission_deadline_date ? `Deadline ${r.submission_deadline_date}` : ''].filter(Boolean).join(' · '),
+        country_name: r.project_ctry_name,
+        kind: 'tender',
+      }));
+    }
     case 'json':
     case 'html': {
       if (!HAS_GEMINI) throw new Error('needs Gemini to extract items');
@@ -53,6 +66,7 @@ ${raw}`);
     }
     case 'gemini_search': {
       if (!HAS_GEMINI) throw new Error('needs Gemini');
+      if (!process.env.GEMINI_SEARCH) throw Object.assign(new Error('Skipped: Gemini web search needs a paid (billing-enabled) key; set repo variable GEMINI_SEARCH=1 to turn on'), { skip: true });
       const out = await gemini(`Today is ${today()}. Search the web: ${src.url}
 Return ONLY a JSON array (max 12) of {"title","url":"original source URL","date":"YYYY-MM-DD","text":"1-2 sentence summary"} from the last 14 days.`, { search: true });
       return (Array.isArray(out) ? out : []).map((o) => ({ ...o, date: toIso(o.date), kind }));
@@ -89,8 +103,8 @@ async function main() {
       await reportSource(src, 'ok', `${items.length} recent items, ${isNew.length} new`, items.length);
       log(src.id, items.length, isNew.length);
     } catch (e) {
-      await reportSource(src, 'error', e.message, 0);
-      log(src.id, 'ERROR', e.message);
+      await reportSource(src, e.skip ? 'skipped' : 'error', e.message, 0);
+      log(src.id, e.skip ? 'SKIPPED' : 'ERROR', e.message);
     }
   }
 

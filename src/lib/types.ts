@@ -104,6 +104,7 @@ export interface HealthIndicator {
 export interface HealthData {
   updated_at: string | null;
   indicators: HealthIndicator[];
+  names?: Record<string, string>;
 }
 
 export interface TemplateSection {
