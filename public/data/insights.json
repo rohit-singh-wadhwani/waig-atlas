@@ -1,5 +1,5 @@
 {
- "updated_at": "2026-11-06T22:00:39.049Z",
+ "updated_at": "2026-11-07T01:27:09.680Z",
  "insights": [
   {
    "id": "9b807fe45fb20e46",
@@ -198,6 +198,20 @@
    "countries": [],
    "diseases": [
     "tuberculosis"
+   ]
+  },
+  {
+   "id": "e2b0da2af8dc9b98",
+   "title": "Mucus Plugging Across Multiple Chronic Respiratory Diseases: A Systematic Review and Meta-analysis.",
+   "summary": "A systematic review and meta-analysis examines mucus plugging across multiple chronic respiratory diseases.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/42993210/",
+   "published_at": "2026-11-06T00:00:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [],
+   "diseases": [
+    "respiratory diseases"
    ]
   },
   {
