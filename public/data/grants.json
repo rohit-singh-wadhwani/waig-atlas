@@ -1,34 +1,37 @@
 {
- "updated_at": "2026-11-07T14:23:19.568Z",
+ "updated_at": "2026-11-07T21:54:13.733Z",
  "grants": [
   {
-   "id": "9d99017196b4c6dc",
-   "title": "John G. Bene Fellowship 2026",
-   "funder": "IDRC - International Development Research Centre",
-   "summary": "Funds research topics aligned with IDRC priorities and programming aimed at finding solutions for development challenges. Targets researchers in developing regions.",
+   "id": "303bc8d807cc1f89",
+   "title": "Interdisciplinary Research to Understand the Complex Biology of Resilience to Alzheimer’s and Related Dementias Disease Risk",
+   "funder": "National Institutes of Health",
+   "summary": "This funding opportunity supports interdisciplinary research projects investigating the biological mechanisms of resilience against Alzheimer's disease and related dementias. It targets academic and research institutions aiming to advance fundamental biomedical understanding.",
    "amount_text": null,
    "amount_usd": null,
-   "deadline": "2026-11-30",
-   "open_date": null,
-   "eligibility": "Graduate students and researchers working on development challenges in developing countries.",
-   "requirements": "Research proposal aligned with IDRC development programming.",
+   "deadline": null,
+   "open_date": "2025-09-03",
+   "eligibility": "Higher education institutions, non-profits, for-profit organizations, and foreign institutions.",
+   "requirements": "Interdisciplinary research teams proposing rigorous studies on dementia resilience biology.",
    "countries": [
     "GLOBAL"
    ],
    "regions": [],
    "themes": [
-    "Global Development",
-    "Research",
-    "Innovation"
+    "Health",
+    "Biomedical Research",
+    "AI"
    ],
-   "url": "https://idrc-crdi.ca/en/funding",
-   "source_id": "idrc-funding",
-   "source_name": "IDRC: funding opportunities",
-   "fetched_at": "2026-11-07T14:23:19.568Z",
+   "url": "https://www.grants.gov/search-results-detail/360453",
+   "source_id": "grantsgov-health-ai",
+   "source_name": "Grants.gov: AI in health",
+   "fetched_at": "2026-11-07T21:54:13.733Z",
    "score": null,
    "strengths": [],
    "weaknesses": [],
-   "score_reason": null
+   "score_reason": null,
+   "fit": null,
+   "eligible_as": null,
+   "notes": null
   },
   {
    "id": "f4a4ef7d5c8b0fd4",
@@ -57,7 +60,16 @@
    "score": null,
    "strengths": [],
    "weaknesses": [],
-   "score_reason": null
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
   },
   {
    "id": "d999e5d1a94126c9",
@@ -87,7 +99,16 @@
    "score": null,
    "strengths": [],
    "weaknesses": [],
-   "score_reason": null
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
   },
   {
    "id": "2d982d70b8485c29",
@@ -117,7 +138,16 @@
    "score": null,
    "strengths": [],
    "weaknesses": [],
-   "score_reason": null
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
   },
   {
    "id": "70f9899f3c1cfcf5",
@@ -147,7 +177,16 @@
    "score": null,
    "strengths": [],
    "weaknesses": [],
-   "score_reason": null
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
   },
   {
    "id": "eda952cffd2a748e",
@@ -177,7 +216,16 @@
    "score": null,
    "strengths": [],
    "weaknesses": [],
-   "score_reason": null
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
   },
   {
    "id": "35bc0ed005934fa7",
@@ -207,7 +255,16 @@
    "score": null,
    "strengths": [],
    "weaknesses": [],
-   "score_reason": null
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
   },
   {
    "id": "fb1c12643a894f9b",
@@ -237,7 +294,16 @@
    "score": null,
    "strengths": [],
    "weaknesses": [],
-   "score_reason": null
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
   },
   {
    "id": "26576dee040bbec6",
@@ -267,7 +333,16 @@
    "score": null,
    "strengths": [],
    "weaknesses": [],
-   "score_reason": null
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
   },
   {
    "id": "d1ec615ce15147a3",
@@ -297,7 +372,16 @@
    "score": null,
    "strengths": [],
    "weaknesses": [],
-   "score_reason": null
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
   },
   {
    "id": "545e2c774f52993a",
@@ -327,7 +411,16 @@
    "score": null,
    "strengths": [],
    "weaknesses": [],
-   "score_reason": null
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
   },
   {
    "id": "af5205ed9c56cd14",
@@ -357,7 +450,16 @@
    "score": null,
    "strengths": [],
    "weaknesses": [],
-   "score_reason": null
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
   },
   {
    "id": "b10da2c855b6460c",
@@ -387,7 +489,16 @@
    "score": null,
    "strengths": [],
    "weaknesses": [],
-   "score_reason": null
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
   },
   {
    "id": "8d58da6613ed59af",
@@ -412,7 +523,16 @@
    "score": null,
    "strengths": [],
    "weaknesses": [],
-   "score_reason": null
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
   },
   {
    "id": "14577ad0c9783bd5",
@@ -437,7 +557,16 @@
    "score": null,
    "strengths": [],
    "weaknesses": [],
-   "score_reason": null
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
   },
   {
    "id": "9171f1e8e17b8dee",
@@ -462,7 +591,16 @@
    "score": null,
    "strengths": [],
    "weaknesses": [],
-   "score_reason": null
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
   },
   {
    "id": "399a4e27de2f822b",
@@ -487,32 +625,16 @@
    "score": null,
    "strengths": [],
    "weaknesses": [],
-   "score_reason": null
-  },
-  {
-   "id": "303bc8d807cc1f89",
-   "title": "Interdisciplinary Research to Understand the Complex Biology of Resilience to Alzheimer&rsquo;s and Related Dementias Disease Risk",
-   "funder": "National Institutes of Health",
-   "summary": "Interdisciplinary Research to Understand the Complex Biology of Resilience to Alzheimer&rsquo;s and Related Dementias Disease Risk. Agency: National Institutes of Health. Number: PAR-26-067. Status: forecasted.",
-   "amount_text": null,
-   "amount_usd": null,
-   "deadline": null,
-   "open_date": "2025-09-03",
-   "eligibility": null,
-   "requirements": null,
-   "countries": [
-    "USA"
-   ],
-   "regions": [],
-   "themes": [],
-   "url": "https://www.grants.gov/search-results-detail/360453",
-   "source_id": "grantsgov-health-ai",
-   "source_name": "Grants.gov: AI in health",
-   "fetched_at": "2026-11-06T12:28:18.439+00:00",
-   "score": null,
-   "strengths": [],
-   "weaknesses": [],
-   "score_reason": null
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
   },
   {
    "id": "e29764e24b4eaf9a",
@@ -537,7 +659,16 @@
    "score": null,
    "strengths": [],
    "weaknesses": [],
-   "score_reason": null
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
   },
   {
    "id": "1575126692f56218",
@@ -562,7 +693,16 @@
    "score": null,
    "strengths": [],
    "weaknesses": [],
-   "score_reason": null
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
   },
   {
    "id": "4ab367490efe51aa",
@@ -587,7 +727,16 @@
    "score": null,
    "strengths": [],
    "weaknesses": [],
-   "score_reason": null
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
   },
   {
    "id": "b672aa9653c60f80",
@@ -612,7 +761,16 @@
    "score": null,
    "strengths": [],
    "weaknesses": [],
-   "score_reason": null
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
   },
   {
    "id": "d47e8f7db5966d8f",
@@ -641,7 +799,16 @@
    "score": null,
    "strengths": [],
    "weaknesses": [],
-   "score_reason": null
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
   },
   {
    "id": "35c9305293e5f5d9",
@@ -666,7 +833,16 @@
    "score": null,
    "strengths": [],
    "weaknesses": [],
-   "score_reason": null
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
   },
   {
    "id": "037c791b14e30d26",
@@ -691,7 +867,16 @@
    "score": null,
    "strengths": [],
    "weaknesses": [],
-   "score_reason": null
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
   },
   {
    "id": "7d08bdcdfd029ddc",
@@ -720,7 +905,16 @@
    "score": null,
    "strengths": [],
    "weaknesses": [],
-   "score_reason": null
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
   },
   {
    "id": "393791da364c7454",
@@ -749,7 +943,16 @@
    "score": null,
    "strengths": [],
    "weaknesses": [],
-   "score_reason": null
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
   },
   {
    "id": "6df9dd9fcc20b96d",
@@ -779,7 +982,16 @@
    "score": null,
    "strengths": [],
    "weaknesses": [],
-   "score_reason": null
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
   },
   {
    "id": "4ca58499c7c57ffb",
@@ -808,7 +1020,16 @@
    "score": null,
    "strengths": [],
    "weaknesses": [],
-   "score_reason": null
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
   },
   {
    "id": "b1035b91fbaf174a",
@@ -838,7 +1059,16 @@
    "score": null,
    "strengths": [],
    "weaknesses": [],
-   "score_reason": null
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
   },
   {
    "id": "206cd415cbb164cc",
@@ -867,7 +1097,16 @@
    "score": null,
    "strengths": [],
    "weaknesses": [],
-   "score_reason": null
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
   },
   {
    "id": "a9838cbe07da38db",
@@ -896,7 +1135,16 @@
    "score": null,
    "strengths": [],
    "weaknesses": [],
-   "score_reason": null
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
   },
   {
    "id": "969ff3dc504ab736",
@@ -925,7 +1173,16 @@
    "score": null,
    "strengths": [],
    "weaknesses": [],
-   "score_reason": null
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
   },
   {
    "id": "1a0ee468b7e21536",
@@ -954,7 +1211,16 @@
    "score": null,
    "strengths": [],
    "weaknesses": [],
-   "score_reason": null
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
   },
   {
    "id": "f995a955b37ae82d",
@@ -983,7 +1249,16 @@
    "score": null,
    "strengths": [],
    "weaknesses": [],
-   "score_reason": null
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
   },
   {
    "id": "4cbfbb2b8ace2240",
@@ -1013,7 +1288,16 @@
    "score": null,
    "strengths": [],
    "weaknesses": [],
-   "score_reason": null
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
   },
   {
    "id": "8c30f700668b84c9",
@@ -1042,7 +1326,16 @@
    "score": null,
    "strengths": [],
    "weaknesses": [],
-   "score_reason": null
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
   },
   {
    "id": "5297fabcc8eeafc1",
@@ -1071,7 +1364,16 @@
    "score": null,
    "strengths": [],
    "weaknesses": [],
-   "score_reason": null
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
   },
   {
    "id": "478f09a95e7f53d1",
@@ -1100,7 +1402,16 @@
    "score": null,
    "strengths": [],
    "weaknesses": [],
-   "score_reason": null
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
   },
   {
    "id": "cd18e670740fffa5",
@@ -1130,7 +1441,16 @@
    "score": null,
    "strengths": [],
    "weaknesses": [],
-   "score_reason": null
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
   },
   {
    "id": "c2bf3a535b04f48a",
@@ -1160,7 +1480,16 @@
    "score": null,
    "strengths": [],
    "weaknesses": [],
-   "score_reason": null
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
   },
   {
    "id": "f1b4f9744073682e",
@@ -1189,7 +1518,16 @@
    "score": null,
    "strengths": [],
    "weaknesses": [],
-   "score_reason": null
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
   },
   {
    "id": "be14b00c6895c3f2",
@@ -1218,7 +1556,16 @@
    "score": null,
    "strengths": [],
    "weaknesses": [],
-   "score_reason": null
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
   },
   {
    "id": "57d1f86415b83754",
@@ -1247,7 +1594,16 @@
    "score": null,
    "strengths": [],
    "weaknesses": [],
-   "score_reason": null
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
   },
   {
    "id": "a4af653776b1dd03",
@@ -1276,7 +1632,16 @@
    "score": null,
    "strengths": [],
    "weaknesses": [],
-   "score_reason": null
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
   },
   {
    "id": "9731b376d2faa47e",
@@ -1306,7 +1671,16 @@
    "score": null,
    "strengths": [],
    "weaknesses": [],
-   "score_reason": null
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
   },
   {
    "id": "4428cc206bc4ac9a",
@@ -1336,7 +1710,16 @@
    "score": null,
    "strengths": [],
    "weaknesses": [],
-   "score_reason": null
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
   },
   {
    "id": "1253847fcea19e5a",
@@ -1366,7 +1749,16 @@
    "score": null,
    "strengths": [],
    "weaknesses": [],
-   "score_reason": null
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
   },
   {
    "id": "7fe05635d998d431",
@@ -1395,7 +1787,16 @@
    "score": null,
    "strengths": [],
    "weaknesses": [],
-   "score_reason": null
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
   },
   {
    "id": "3de6cbb7415995c2",
@@ -1424,7 +1825,16 @@
    "score": null,
    "strengths": [],
    "weaknesses": [],
-   "score_reason": null
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
   },
   {
    "id": "0dceed0873aba13e",
@@ -1453,7 +1863,16 @@
    "score": null,
    "strengths": [],
    "weaknesses": [],
-   "score_reason": null
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
   },
   {
    "id": "c8787562f9f5d22e",
@@ -1482,7 +1901,16 @@
    "score": null,
    "strengths": [],
    "weaknesses": [],
-   "score_reason": null
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
   },
   {
    "id": "470c1af8cf6f93b8",
@@ -1512,7 +1940,16 @@
    "score": null,
    "strengths": [],
    "weaknesses": [],
-   "score_reason": null
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
   },
   {
    "id": "117a5f460379e319",
@@ -1543,7 +1980,92 @@
    "score": null,
    "strengths": [],
    "weaknesses": [],
-   "score_reason": null
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
+  },
+  {
+   "id": "9d99017196b4c6dc",
+   "title": "John G. Bene Fellowship 2026",
+   "funder": "IDRC - International Development Research Centre",
+   "summary": "Funds research topics aligned with IDRC priorities and programming aimed at finding solutions for development challenges. Targets researchers in developing regions.",
+   "amount_text": null,
+   "amount_usd": null,
+   "deadline": "2026-11-30",
+   "open_date": null,
+   "eligibility": "Graduate students and researchers working on development challenges in developing countries.",
+   "requirements": "Research proposal aligned with IDRC development programming.",
+   "countries": [
+    "GLOBAL"
+   ],
+   "regions": [],
+   "themes": [
+    "Global Development",
+    "Research",
+    "Innovation"
+   ],
+   "url": "https://idrc-crdi.ca/en/funding",
+   "source_id": "idrc-funding",
+   "source_name": "IDRC: funding opportunities",
+   "fetched_at": "2026-11-07T14:23:19.568+00:00",
+   "score": null,
+   "strengths": [],
+   "weaknesses": [],
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
+  },
+  {
+   "id": "sc_7d0170dba094f166",
+   "title": "The Audacious Project Open Ideas Survey",
+   "funder": "The Audacious Project",
+   "summary": "Sources transformative, bold ideas tackling critical global challenges from organizations with operating budgets of at least $2M and a proven multi-year strategy.",
+   "amount_text": "Multi-million dollar funding",
+   "amount_usd": 5000000,
+   "deadline": null,
+   "open_date": null,
+   "eligibility": "NPO, NGO, or Collaboration",
+   "requirements": "[\"Operating budget of at least $2M\",\"Multi-year strategy\",\"Initial survey submission\"]",
+   "countries": [
+    "GLOBAL"
+   ],
+   "regions": [],
+   "themes": [
+    "Transformative Ideas",
+    "Global Health",
+    "Scale"
+   ],
+   "url": "https://audaciousproject.my.site.com/s/Apply-IdeaSurvey/Idea_Submission",
+   "source_id": "scout-page-audacious",
+   "source_name": "The Audacious Project",
+   "fetched_at": "2026-11-07T21:51:48.46+00:00",
+   "score": null,
+   "strengths": [],
+   "weaknesses": [],
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": "Rolling",
+   "sector": "Cross-cutting (Global Health and Education)",
+   "fit": null,
+   "eligible_as": null,
+   "geography": "Global",
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:51:48.46+00:00"
   }
  ]
 }
