@@ -10,7 +10,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T22:01:56.927Z",
+  "last_run": "2026-11-07T22:15:12.042Z",
   "last_status": "ok",
   "last_message": "60 items, 0 new",
   "item_count": 60
@@ -26,7 +26,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T22:01:54.656Z",
+  "last_run": "2026-11-07T22:15:09.343Z",
   "last_status": "ok",
   "last_message": "60 items, 0 new",
   "item_count": 60
@@ -42,7 +42,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T22:01:55.263Z",
+  "last_run": "2026-11-07T22:15:10.435Z",
   "last_status": "ok",
   "last_message": "3 items, 0 new",
   "item_count": 3
@@ -74,7 +74,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T22:01:56.437Z",
+  "last_run": "2026-11-07T22:15:11.591Z",
   "last_status": "ok",
   "last_message": "20 items, 0 new",
   "item_count": 20
@@ -426,7 +426,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T21:58:26.811Z",
+  "last_run": "2026-11-07T22:11:00.965Z",
   "last_status": "error",
   "last_message": "Gemini Google Search needs billing enabled on the Gemini key (free tier has no search quota). The free \"web search\" sources cover this meanwhile.",
   "item_count": 0
@@ -442,7 +442,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T21:58:27.636Z",
+  "last_run": "2026-11-07T22:11:01.274Z",
   "last_status": "skipped",
   "last_message": "Skipped: Gemini Google Search needs billing enabled on the Gemini key (free tier has no search quota). The free \"web search\" sources cover this meanwhile.",
   "item_count": 0
@@ -458,7 +458,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T21:58:27.955Z",
+  "last_run": "2026-11-07T22:11:01.630Z",
   "last_status": "skipped",
   "last_message": "Skipped: Gemini Google Search needs billing enabled on the Gemini key (free tier has no search quota). The free \"web search\" sources cover this meanwhile.",
   "item_count": 0
@@ -474,7 +474,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T21:58:28.285Z",
+  "last_run": "2026-11-07T22:11:01.903Z",
   "last_status": "skipped",
   "last_message": "Skipped: Gemini Google Search needs billing enabled on the Gemini key (free tier has no search quota). The free \"web search\" sources cover this meanwhile.",
   "item_count": 0
@@ -490,7 +490,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T21:58:28.585Z",
+  "last_run": "2026-11-07T22:11:02.668Z",
   "last_status": "skipped",
   "last_message": "Skipped: Gemini Google Search needs billing enabled on the Gemini key (free tier has no search quota). The free \"web search\" sources cover this meanwhile.",
   "item_count": 0
@@ -506,7 +506,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T21:58:28.898Z",
+  "last_run": "2026-11-07T22:11:02.976Z",
   "last_status": "skipped",
   "last_message": "Skipped: Gemini Google Search needs billing enabled on the Gemini key (free tier has no search quota). The free \"web search\" sources cover this meanwhile.",
   "item_count": 0
@@ -522,9 +522,9 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T21:58:36.446Z",
+  "last_run": "2026-11-07T22:11:04.692Z",
   "last_status": "ok",
-  "last_message": "0 opportunities seen, 0 new",
+  "last_message": "unchanged since last run",
   "item_count": 0
  },
  {
@@ -538,10 +538,10 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T21:58:43.228Z",
+  "last_run": "2026-11-07T22:11:05.920Z",
   "last_status": "ok",
-  "last_message": "1 opportunities seen, 0 new",
-  "item_count": 1
+  "last_message": "unchanged since last run",
+  "item_count": 0
  },
  {
   "id": "scout-page-div",
@@ -554,10 +554,10 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T21:58:49.810Z",
+  "last_run": "2026-11-07T22:11:06.651Z",
   "last_status": "ok",
-  "last_message": "1 opportunities seen, 0 new",
-  "item_count": 1
+  "last_message": "unchanged since last run",
+  "item_count": 0
  },
  {
   "id": "scout-page-drk",
@@ -570,10 +570,10 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T21:58:56.179Z",
+  "last_run": "2026-11-07T22:11:06.977Z",
   "last_status": "ok",
-  "last_message": "1 opportunities seen, 0 new",
-  "item_count": 1
+  "last_message": "unchanged since last run",
+  "item_count": 0
  },
  {
   "id": "scout-page-gcgh",
@@ -586,9 +586,9 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T21:59:02.381Z",
+  "last_run": "2026-11-07T22:11:07.380Z",
   "last_status": "ok",
-  "last_message": "0 opportunities seen, 0 new",
+  "last_message": "unchanged since last run",
   "item_count": 0
  },
  {
@@ -602,10 +602,10 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T21:59:09.184Z",
+  "last_run": "2026-11-07T22:11:10.101Z",
   "last_status": "ok",
-  "last_message": "1 opportunities seen, 0 new",
-  "item_count": 1
+  "last_message": "unchanged since last run",
+  "item_count": 0
  },
  {
   "id": "scout-page-idrc",
@@ -618,10 +618,10 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T21:59:15.748Z",
+  "last_run": "2026-11-07T22:11:10.801Z",
   "last_status": "ok",
-  "last_message": "1 opportunities seen, 0 new",
-  "item_count": 1
+  "last_message": "unchanged since last run",
+  "item_count": 0
  },
  {
   "id": "scout-page-globalfund",
@@ -634,10 +634,10 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T21:59:22.632Z",
+  "last_run": "2026-11-07T22:11:11.527Z",
   "last_status": "ok",
-  "last_message": "1 opportunities seen, 0 new",
-  "item_count": 1
+  "last_message": "unchanged since last run",
+  "item_count": 0
  },
  {
   "id": "scout-page-rockefeller",
@@ -650,9 +650,9 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T21:59:28.505Z",
+  "last_run": "2026-11-07T22:11:11.913Z",
   "last_status": "ok",
-  "last_message": "0 opportunities seen, 0 new",
+  "last_message": "unchanged since last run",
   "item_count": 0
  },
  {
@@ -666,10 +666,10 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T21:59:35.268Z",
+  "last_run": "2026-11-07T22:11:12.272Z",
   "last_status": "ok",
-  "last_message": "1 opportunities seen, 0 new",
-  "item_count": 1
+  "last_message": "unchanged since last run",
+  "item_count": 0
  },
  {
   "id": "scout-page-cisco",
@@ -714,10 +714,10 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T21:59:43.258Z",
+  "last_run": "2026-11-07T22:11:12.863Z",
   "last_status": "ok",
-  "last_message": "6 opportunities seen, 0 new",
-  "item_count": 6
+  "last_message": "unchanged since last run",
+  "item_count": 0
  },
  {
   "id": "scout-page-nwo",
@@ -730,10 +730,10 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T21:59:48.813Z",
+  "last_run": "2026-11-07T22:11:15.503Z",
   "last_status": "ok",
-  "last_message": "3 opportunities seen, 1 new",
-  "item_count": 3
+  "last_message": "unchanged since last run",
+  "item_count": 0
  },
  {
   "id": "scout-page-fcdo",
@@ -746,10 +746,10 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T21:59:55.865Z",
+  "last_run": "2026-11-07T22:11:08.908Z",
   "last_status": "ok",
-  "last_message": "3 opportunities seen, 3 new",
-  "item_count": 3
+  "last_message": "unchanged since last run",
+  "item_count": 0
  },
  {
   "id": "scout-page-lacuna",
@@ -762,10 +762,10 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T22:00:01.137Z",
+  "last_run": "2026-11-07T22:11:09.384Z",
   "last_status": "ok",
-  "last_message": "1 opportunities seen, 1 new",
-  "item_count": 1
+  "last_message": "unchanged since last run",
+  "item_count": 0
  },
  {
   "id": "scout-eu-ai-health",
@@ -778,9 +778,9 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T22:00:02.958Z",
+  "last_run": "2026-11-07T22:11:17.474Z",
   "last_status": "ok",
-  "last_message": "43 opportunities seen, 17 new",
+  "last_message": "43 opportunities seen, 0 new",
   "item_count": 43
  },
  {
@@ -794,9 +794,9 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T22:00:04.036Z",
+  "last_run": "2026-11-07T22:11:18.432Z",
   "last_status": "ok",
-  "last_message": "10 opportunities seen, 10 new",
+  "last_message": "10 opportunities seen, 0 new",
   "item_count": 10
  },
  {
@@ -826,10 +826,10 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T21:58:30.576Z",
+  "last_run": "2026-11-07T22:11:20.070Z",
   "last_status": "ok",
-  "last_message": "27 opportunities seen, 21 new",
-  "item_count": 27
+  "last_message": "0 opportunities seen, 0 new",
+  "item_count": 0
  },
  {
   "id": "scout-web-foundations",
@@ -842,10 +842,10 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T21:58:32.439Z",
+  "last_run": "2026-11-07T22:11:21.778Z",
   "last_status": "ok",
-  "last_message": "30 opportunities seen, 14 new",
-  "item_count": 30
+  "last_message": "0 opportunities seen, 0 new",
+  "item_count": 0
  },
  {
   "id": "scout-web-tenders",
@@ -858,10 +858,10 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T21:58:33.420Z",
+  "last_run": "2026-11-07T22:11:23.114Z",
   "last_status": "ok",
-  "last_message": "20 opportunities seen, 13 new",
-  "item_count": 20
+  "last_message": "0 opportunities seen, 0 new",
+  "item_count": 0
  },
  {
   "id": "scout-web-innovation",
@@ -874,9 +874,9 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T21:58:34.428Z",
+  "last_run": "2026-11-07T22:11:24.507Z",
   "last_status": "ok",
-  "last_message": "18 opportunities seen, 11 new",
-  "item_count": 18
+  "last_message": "0 opportunities seen, 0 new",
+  "item_count": 0
  }
 ]
