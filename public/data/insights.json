@@ -1,5 +1,5 @@
 {
- "updated_at": "2026-11-07T10:06:16.006Z",
+ "updated_at": "2026-11-07T13:13:44.654Z",
  "insights": [
   {
    "id": "9b807fe45fb20e46",
@@ -201,6 +201,88 @@
    ]
   },
   {
+   "id": "7fb79061e1a16321",
+   "title": "Procurement and distribution of NCDs materials",
+   "summary": "An invitation for bids for the procurement and distribution of NCD materials in Mozambique.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00479873",
+   "published_at": "2026-11-06T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "MOZ"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "69b3bc77a65596bd",
+   "title": "Dotation en équipements et réactifs pour les diagnostics des maladies humaines",
+   "summary": "A contract award for diagnostic equipment and reagents for human diseases in Western and Central Africa.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00479838",
+   "published_at": "2026-11-06T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "8890da6703d0d079",
+   "title": "Sélection d'un cabinet pour la réalisation du diagnostic national des infrastructures et compétences numériques du système de santé/Zone N°2",
+   "summary": "Selection of a firm to conduct a national diagnostic of health system digital infrastructure and skills in Senegal.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00479918",
+   "published_at": "2026-11-06T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "SEN"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "93e354cda581e5fe",
+   "title": "Sélection d'un cabinet pour la réalisation du diagnostic national des infrastructures et compétences numériques du système de santé Zone N°1",
+   "summary": "Selection of a firm to conduct a national diagnostic of health system digital infrastructure and skills in Senegal.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00479931",
+   "published_at": "2026-11-06T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "SEN"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "dc8cf0675992bc52",
+   "title": "Sélection d'un cabinet pour la réalisation du diagnostic national des infrastructures et compétences numériques du système de santé/Zone N°3",
+   "summary": "Selection of a firm to conduct a national diagnostic of health system digital infrastructure and skills in Senegal.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00479923",
+   "published_at": "2026-11-06T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "SEN"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "302efc6742d53bbf",
+   "title": "Acquisition et montage des équipements scolaires et médicaux en faveur de 103 IBD (Ecoles, Centres de Santé, Salle Pollyvalente et Marchés ruraux) dans les Provinces de KWILU, KWANGO et MAINDOMBE dans le cadre de la mise en œuvre du Projet STAR RDC",
+   "summary": "Procurement of school and medical equipment for health centers and schools in the Democratic Republic of Congo.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00479824",
+   "published_at": "2026-11-06T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "COD"
+   ],
+   "diseases": []
+  },
+  {
    "id": "e2b0da2af8dc9b98",
    "title": "Mucus Plugging Across Multiple Chronic Respiratory Diseases: A Systematic Review and Meta-analysis.",
    "summary": "A systematic review and meta-analysis examines mucus plugging across multiple chronic respiratory diseases.",
@@ -229,6 +311,192 @@
    "diseases": [
     "Ebola"
    ]
+  },
+  {
+   "id": "060b1ccc7727d759",
+   "title": "Consulting and supervision of the COESP requalification works.",
+   "summary": "Consulting and supervision services for healthcare infrastructure requalification works in Mozambique.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00479663",
+   "published_at": "2026-11-05T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "MOZ"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "8d6c207721991805",
+   "title": "Consulting services for the development of the SEMMO Strategic Plan.",
+   "summary": "Consulting services to develop a strategic plan for health emergency preparedness, response, and resilience in Mozambique.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00479671",
+   "published_at": "2026-11-05T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "MOZ"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "b9ab8b270396c9d4",
+   "title": "Acquisition d'un dispositif Solaire pour la salle de Réunion et Serveur et achat des équipements Visio conférence au profit de l'UCP",
+   "summary": "Procurement of solar power systems and video conferencing equipment to strengthen health system performance in Chad.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00479584",
+   "published_at": "2026-11-05T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "TCD"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "7eeee2f44a2db98f",
+   "title": "Acquisition, convoyage et installation de 6 containers aménagés pour conserver les pièces administratives et financières des 6 ACV sur les sites à Sarh, Doba, Bongor, Mongo, Mao et Biltine",
+   "summary": "Acquisition and installation of containers for administrative and financial record storage across multiple health sites in Chad.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00479580",
+   "published_at": "2026-11-05T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "TCD"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "f6cf563a03e71ede",
+   "title": "Supply and delivery of Office Equipment  Lot 1 and Office Computers Lot 2 for Quality Assurance Department",
+   "summary": "Supply of office equipment and computers for the Quality Assurance Department under a health and nutrition system strengthening project in Lesotho.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00479537",
+   "published_at": "2026-11-05T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "LSO"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "4b49f586366c2ddc",
+   "title": "Supply and delivery of Office Equipment  Lot 1 and Office Computers Lot 2 for Quality Assurance Department",
+   "summary": "Supply of office equipment and computers for the Quality Assurance Department under a health and nutrition system strengthening project in Lesotho.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00479540",
+   "published_at": "2026-11-05T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "LSO"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "d05d0726288062b2",
+   "title": "recrutement d’un bureau d’études techniques pour la réalisation des notices d’impact environnemental et social (nies) des activités de réhabilitation et d’installation des incinérateurs dans le cadre du projet de sécurité sanitaire en Afrique centrale.",
+   "summary": "Recruitment of a technical engineering firm for environmental and social impact assessments related to incinerator installations under a regional health security program in West and Central Africa.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00479685",
+   "published_at": "2026-11-05T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "ac9473d0c5a0965f",
+   "title": "Procurement of field camping, personal protective and survival equipment for wildlife monitoring and patrol activities for the State Institution \"Specially Protected Natural Areas\" of the Committee for Environmental Protection",
+   "summary": "Procurement of field camping and personal protective equipment for wildlife monitoring under a One Health and pandemic prevention project in Central Asia.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00479582",
+   "published_at": "2026-11-05T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "62598e9509d1d5f6",
+   "title": "Procurement of wildlife monitoring, navigation, field communication and photography equipment for the State Institution “Specially Protected Natural Areas” of the Committee for Environmental Protection packaged in two lots",
+   "summary": "Procurement of wildlife monitoring and field communication equipment for a One Health pandemic prevention initiative in Central Asia.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00479586",
+   "published_at": "2026-11-05T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "de9337df1c3d163b",
+   "title": "Procurement of wildlife monitoring, navigation, field communication and photography equipment for the State Institution “Specially Protected Natural Areas” of the Committee for Environmental Protection packaged in two lots",
+   "summary": "Procurement of wildlife monitoring and field communication equipment for a One Health pandemic prevention initiative in Central Asia.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00479588",
+   "published_at": "2026-11-05T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "9cdea6869383aa15",
+   "title": "Acquisition des kits de prélèvement et triples emballages pour la recherche active des cas",
+   "summary": "Acquisition of sample collection kits and triple packaging materials for active case finding under a regional health security program in West and Central Africa.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00479703",
+   "published_at": "2026-11-05T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "1b5763e6d3a68b05",
+   "title": "Responsable de Suivi et d’Évaluation pour l'Unité de Gestion des Projets du Ministère de la Santé Publique et de la Population (UGP-MSPP)",
+   "summary": "The Ministry of Public Health and Population in Haiti is seeking a Monitoring and Evaluation Officer for project management to strengthen primary healthcare and surveillance.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00479723",
+   "published_at": "2026-11-05T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "HTI"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "90a3e028823ac5c0",
+   "title": "Comprehensive Insurance for 150 Brand new Ambulances for twelve months period",
+   "summary": "Zambia awarded a contract for comprehensive insurance for 150 new ambulances under its health emergency preparedness and resilience project.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00479651",
+   "published_at": "2026-11-05T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "ZMB"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "bad5bffca5deed8d",
+   "title": "Procurement of Android Device (Tablet)",
+   "summary": "Nigeria has issued an invitation for bids to procure Android tablets for a nutrition acceleration program.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00478608",
+   "published_at": "2026-11-05T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "NGA"
+   ],
+   "diseases": []
   },
   {
    "id": "04171a93cc77189e",

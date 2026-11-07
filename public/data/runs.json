@@ -2,6 +2,12 @@
  "runs": [
   {
    "job": "insights",
+   "at": "2026-11-07T13:13:44.656Z",
+   "ok": true,
+   "message": "20 new insights (40 candidates), 90 kept · Gemini 3/3 calls ok"
+  },
+  {
+   "job": "insights",
    "at": "2026-11-07T10:06:16.007Z",
    "ok": true,
    "message": "0 new insights (0 candidates), 70 kept · Gemini 0/13 calls ok (last error: Gemini gemini-3.1-flash-lite-preview (search) quota: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://aistudio.google.com/docs/rate-)"

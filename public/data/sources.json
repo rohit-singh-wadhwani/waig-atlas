@@ -122,7 +122,7 @@
   "kind": "news",
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T10:06:15.768Z",
+  "last_run": "2026-11-07T13:13:26.069Z",
   "last_status": "ok",
   "last_message": "1 recent items, 0 new",
   "item_count": 1
@@ -138,7 +138,7 @@
   "kind": "outbreak",
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T10:02:25.741Z",
+  "last_run": "2026-11-07T13:13:20.441Z",
   "last_status": "ok",
   "last_message": "10 recent items, 0 new",
   "item_count": 10
@@ -154,7 +154,7 @@
   "kind": "news",
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T10:02:26.143Z",
+  "last_run": "2026-11-07T13:13:21.386Z",
   "last_status": "ok",
   "last_message": "30 recent items, 0 new",
   "item_count": 30
@@ -170,7 +170,7 @@
   "kind": "research",
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T10:02:24.314Z",
+  "last_run": "2026-11-07T13:13:28.360Z",
   "last_status": "ok",
   "last_message": "25 recent items, 0 new",
   "item_count": 25
@@ -186,7 +186,7 @@
   "kind": "research",
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T10:02:28.202Z",
+  "last_run": "2026-11-07T13:13:23.798Z",
   "last_status": "ok",
   "last_message": "25 recent items, 0 new",
   "item_count": 25
@@ -202,7 +202,7 @@
   "kind": "social",
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T10:02:24.683Z",
+  "last_run": "2026-11-07T13:13:28.786Z",
   "last_status": "ok",
   "last_message": "15 recent items, 0 new",
   "item_count": 15
@@ -214,13 +214,13 @@
   "type": "gemini_search",
   "url": "latest announcements from health ministries of Ghana, Kenya, Nigeria, Rwanda, India and from WHO, UN and Global Fund on TB, malaria, dengue or digital health, including official social media posts",
   "enabled": true,
-  "notes": null,
+  "notes": " Needs a billing-enabled Gemini key (repo variable GEMINI_SEARCH=1).",
   "kind": "social",
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T10:06:14.562Z",
-  "last_status": "error",
-  "last_message": "Gemini failed: no model available",
+  "last_run": "2026-11-07T13:13:24.943Z",
+  "last_status": "skipped",
+  "last_message": "Skipped: Gemini web search needs a paid (billing-enabled) key; set repo variable GEMINI_SEARCH=1 to turn on",
   "item_count": 0
  },
  {
@@ -230,13 +230,13 @@
   "type": "gemini_search",
   "url": "open procurement tenders or RFPs for digital health, health information systems or AI from UNGM, UNDP, UNICEF, World Bank or health ministries in Africa and South Asia",
   "enabled": true,
-  "notes": null,
+  "notes": " Needs a billing-enabled Gemini key (repo variable GEMINI_SEARCH=1).",
   "kind": "tender",
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T10:06:13.882Z",
-  "last_status": "error",
-  "last_message": "Gemini gemini-flash-lite-latest (search) quota: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://aistudio.google.com/docs/rate-",
+  "last_run": "2026-11-07T13:13:24.089Z",
+  "last_status": "skipped",
+  "last_message": "Skipped: Gemini web search needs a paid (billing-enabled) key; set repo variable GEMINI_SEARCH=1 to turn on",
   "item_count": 0
  },
  {
@@ -334,5 +334,21 @@
   "last_status": "ok",
   "last_message": "145 countries, 2000–2025",
   "item_count": 145
+ },
+ {
+  "id": "worldbank-health-tenders",
+  "name": "World Bank: health procurement notices",
+  "category": "insights",
+  "type": "worldbank",
+  "url": "https://search.worldbank.org/api/v2/procnotices?format=json&rows=40&qterm=health&srt=noticedate&order=desc",
+  "enabled": true,
+  "notes": "No Gemini needed",
+  "kind": "tender",
+  "unit": null,
+  "display_name": null,
+  "last_run": "2026-11-07T13:13:29.379Z",
+  "last_status": "ok",
+  "last_message": "40 recent items, 40 new",
+  "item_count": 40
  }
 ]
