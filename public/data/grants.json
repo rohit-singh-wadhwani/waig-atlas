@@ -1,407 +1,447 @@
 {
- "updated_at": "2026-11-06T14:38:55.892Z",
+ "updated_at": "2026-11-07T02:29:38.646Z",
  "grants": [
   {
-   "id": "7d08bdcdfd029ddc",
-   "title": "Accelerating Research and Development of Next Generation Vaccines against Malaria",
+   "id": "478f09a95e7f53d1",
+   "title": "Global Brain and Nervous System Disorders Research Across the Lifespan - Exploratory Grants",
    "funder": "National Institutes of Health",
-   "summary": "This funding opportunity supports research and development of next-generation vaccines against malaria and other mosquito-borne diseases. It is aimed at research organizations and academic institutions.",
-   "amount_text": null,
-   "amount_usd": null,
-   "deadline": "2027-02-11",
-   "open_date": "2026-10-13",
-   "eligibility": "Higher education institutions, non-profits, for-profit organizations, and international organizations.",
-   "requirements": "Pre-clinical or translational research on malaria vaccines, excluding clinical trials under this phase.",
-   "countries": [
-    "GLOBAL"
-   ],
-   "regions": [],
-   "themes": [
-    "Malaria",
-    "Vaccines",
-    "Infectious Disease"
-   ],
-   "url": "https://www.grants.gov/search-results-detail/361832",
-   "source_id": "grantsgov-global-health",
-   "source_name": "Grants.gov: global health",
-   "fetched_at": "2026-11-06T14:38:55.892Z",
-   "score": null,
-   "strengths": [],
-   "weaknesses": [],
-   "score_reason": null
-  },
-  {
-   "id": "393791da364c7454",
-   "title": "Strengthening Collaboration Between Tuberculosis Control Programs and Affiliated Partners in the United States",
-   "funder": "Centers for Disease Control - NCHHSTP",
-   "summary": "This forecasted grant funds efforts to strengthen collaboration between public TB control programs and affiliated partners to improve TB elimination activities. It is aimed at public health organizations and agencies.",
+   "summary": "This program funds exploratory collaborative research on brain and nervous system disorders in low- and middle-income countries. It targets international research teams combining U.S. and LMIC institutions.",
    "amount_text": null,
    "amount_usd": null,
    "deadline": null,
-   "open_date": "2026-09-25",
-   "eligibility": "Domestic public and private non-profit organizations, state and local governments.",
-   "requirements": "Enhance partnerships and programmatic support for TB control activities.",
-   "countries": [
-    "USA"
+   "open_date": "2025-09-26",
+   "eligibility": [
+    "Higher education institutions, non-profits, and research organizations in the U.S. and LMICs",
+    "Collaborative partnerships involving LMIC entities"
    ],
-   "regions": [],
-   "themes": [
-    "TB",
-    "Public Health",
-    "Infectious Disease"
+   "requirements": [
+    "Conduct exploratory neuroscience or neurological health research in LMICs",
+    "Establish equitable global research partnerships"
    ],
-   "url": "https://www.grants.gov/search-results-detail/363956",
-   "source_id": "grantsgov-global-health",
-   "source_name": "Grants.gov: global health",
-   "fetched_at": "2026-11-06T14:38:55.892Z",
-   "score": null,
-   "strengths": [],
-   "weaknesses": [],
-   "score_reason": null
-  },
-  {
-   "id": "6df9dd9fcc20b96d",
-   "title": "Department of Defense HIV/AIDS Prevention Program",
-   "funder": "Defense Health Agency Contracting Activity (DHACA)",
-   "summary": "Supports international HIV/AIDS prevention, care, and treatment programs in partner nations. Funds military and civilian public health partnerships for infectious disease control.",
-   "amount_text": null,
-   "amount_usd": null,
-   "deadline": "2027-09-18",
-   "open_date": "2022-09-19",
-   "eligibility": "Global academic institutions, non-profits, and international organizations capable of executing international health programs.",
-   "requirements": "Implement HIV/AIDS prevention and surveillance activities in alignment with partner nation military and civilian health priorities.",
    "countries": [
     "GLOBAL"
    ],
    "regions": [],
    "themes": [
-    "HIV/AIDS",
-    "Infectious Diseases",
-    "Public Health",
-    "Global Health"
+    "Global Health",
+    "Neuroscience",
+    "LMIC Research"
    ],
-   "url": "https://www.grants.gov/search-results-detail/343653",
+   "url": "https://www.grants.gov/search-results-detail/360660",
    "source_id": "grantsgov-global-health",
    "source_name": "Grants.gov: global health",
-   "fetched_at": "2026-11-06T14:38:55.892Z",
+   "fetched_at": "2026-11-07T02:29:38.646Z",
    "score": null,
    "strengths": [],
    "weaknesses": [],
    "score_reason": null
   },
   {
-   "id": "4ca58499c7c57ffb",
-   "title": "Improved Drug Susceptibility Testing (DST) for Mycobacteria",
+   "id": "cd18e670740fffa5",
+   "title": "Emerging Global Leader Award (K43)",
    "funder": "National Institutes of Health",
-   "summary": "This funding opportunity supports research to improve drug susceptibility testing methods and technologies for mycobacteria, including tuberculosis. It is aimed at research organizations and institutions working on TB diagnostics.",
-   "amount_text": null,
-   "amount_usd": null,
-   "deadline": null,
-   "open_date": "2026-06-24",
-   "eligibility": [
-    "Higher education institutions",
-    "Nonprofits and for-profit organizations",
-    "International organizations"
-   ],
-   "requirements": [
-    "Develop improved drug susceptibility testing approaches for mycobacteria"
-   ],
-   "countries": [
-    "GLOBAL"
-   ],
-   "regions": [],
-   "themes": [
-    "TB",
-    "diagnostics",
-    "infectious disease"
-   ],
-   "url": "https://www.grants.gov/search-results-detail/362948",
-   "source_id": "grantsgov-global-health",
-   "source_name": "Grants.gov: global health",
-   "fetched_at": "2026-11-06T14:38:55.892Z",
-   "score": null,
-   "strengths": [],
-   "weaknesses": [],
-   "score_reason": null
-  },
-  {
-   "id": "b1035b91fbaf174a",
-   "title": "UKRI translation: MRC proof of concept: stage two",
-   "funder": "Medical Research Council",
-   "summary": "This funding opportunity supports translational research projects to develop and test novel therapeutics, medical devices, and diagnostics from prototype to early-phase clinical studies. It is open to research organizations eligible for MRC funding and their international partners.",
-   "amount_text": "No funding limit specified",
-   "amount_usd": null,
-   "deadline": "2027-03-03",
-   "open_date": "2026-11-05",
-   "eligibility": [
-    "Must have successfully completed stage one application",
-    "UKRI-eligible research organizations with international co-lead options"
-   ],
-   "requirements": [
-    "Develop and test novel diagnostics, medical devices or interventions",
-    "Stage two application following successful stage one invite"
-   ],
-   "countries": [
-    "GBR",
-    "GLOBAL"
-   ],
-   "regions": [],
-   "themes": [
-    "diagnostics",
-    "medical devices",
-    "translational research"
-   ],
-   "url": "https://www.ukri.org/opportunity/mrc-proof-of-concept-stage-two/",
-   "source_id": "ukri-opportunities",
-   "source_name": "UKRI funding finder",
-   "fetched_at": "2026-11-06T14:38:55.892Z",
-   "score": null,
-   "strengths": [],
-   "weaknesses": [],
-   "score_reason": null
-  },
-  {
-   "id": "206cd415cbb164cc",
-   "title": "Advancing Global Health",
-   "funder": "Bureau of Global Health Security and Diplomacy",
-   "summary": "This funding opportunity supports global health security and diplomacy initiatives implemented by eligible organizations worldwide. It targets programs addressing major global health priorities and health systems strengthening.",
-   "amount_text": null,
-   "amount_usd": null,
-   "deadline": "2027-02-14",
-   "open_date": "2026-09-21",
-   "eligibility": [
-    "Nonprofit organizations, international organizations, and academic institutions"
-   ],
-   "requirements": [
-    "Implement global health security or public health strengthening programs"
-   ],
-   "countries": [
-    "GLOBAL"
-   ],
-   "regions": [],
-   "themes": [
-    "global health",
-    "health systems",
-    "infectious disease"
-   ],
-   "url": "https://www.grants.gov/search-results-detail/363912",
-   "source_id": "grantsgov-global-health",
-   "source_name": "Grants.gov: global health",
-   "fetched_at": "2026-11-06T14:38:55.892Z",
-   "score": null,
-   "strengths": [],
-   "weaknesses": [],
-   "score_reason": null
-  },
-  {
-   "id": "a9838cbe07da38db",
-   "title": "Capacity Building for Global, Regional, and National Immunization Programs",
-   "funder": "Centers for Disease Control and Prevention",
-   "summary": "Provides funding to strengthen global, regional, and national immunization programs and public health capacities. Targets international health organizations, governments, and implementing partners.",
-   "amount_text": null,
-   "amount_usd": null,
-   "deadline": null,
-   "open_date": "2026-08-14",
-   "eligibility": [
-    "Government entities, international organizations, and non-profit/private organizations working in global health"
-   ],
-   "requirements": [
-    "Implement capacity building activities for immunization programs",
-    "Support surveillance and public health infrastructure"
-   ],
-   "countries": [
-    "GLOBAL"
-   ],
-   "regions": [],
-   "themes": [
-    "Public Health",
-    "Immunization",
-    "Global Health"
-   ],
-   "url": "https://www.grants.gov/search-results-detail/363591",
-   "source_id": "grantsgov-global-health",
-   "source_name": "Grants.gov: global health",
-   "fetched_at": "2026-11-06T14:38:55.892Z",
-   "score": null,
-   "strengths": [],
-   "weaknesses": [],
-   "score_reason": null
-  },
-  {
-   "id": "969ff3dc504ab736",
-   "title": "Hubs of Interdisciplinary Research and Training in Global Environmental and Occupational Health (GEOHealth)",
-   "funder": "National Institutes of Health",
-   "summary": "Funds interdisciplinary research and training hubs addressing global environmental and occupational health threats. Targets international and domestic research institutions partnering in low- and middle-income countries.",
+   "summary": "Provides time-protected research and career development support for junior international scientists from low- and middle-income countries. It funds global health research relevant to NIH priorities.",
    "amount_text": null,
    "amount_usd": null,
    "deadline": null,
    "open_date": "2026-09-16",
-   "eligibility": [
-    "Higher education institutions and research organizations globally, particularly those partnering with LMIC institutions"
-   ],
-   "requirements": [
-    "Establish interdisciplinary research hubs addressing environmental and occupational health",
-    "Conduct research and capacity building in LMICs"
-   ],
+   "eligibility": "Junior faculty or research scientists at equivalent academic/research institutions in LMICs.",
+   "requirements": "Mentored career development plan and a global health research project conducted in an LMIC.",
    "countries": [
     "GLOBAL"
    ],
    "regions": [],
    "themes": [
     "Global Health",
-    "Environmental Health",
-    "Research Hubs"
-   ],
-   "url": "https://www.grants.gov/search-results-detail/363873",
-   "source_id": "grantsgov-global-health",
-   "source_name": "Grants.gov: global health",
-   "fetched_at": "2026-11-06T14:38:55.892Z",
-   "score": null,
-   "strengths": [],
-   "weaknesses": [],
-   "score_reason": null
-  },
-  {
-   "id": "1a0ee468b7e21536",
-   "title": "LAUNCHing Leaders for Future U.S. Investments in Global Health Research",
-   "funder": "National Institutes of Health",
-   "summary": "It funds global health research and training programs for international and U.S. academic institutions. It aims to build research capacity in low- and middle-income countries.",
-   "amount_text": null,
-   "amount_usd": null,
-   "deadline": null,
-   "open_date": "2025-09-22",
-   "eligibility": "Higher education institutions and research organizations globally.",
-   "requirements": "Global health research and leadership training focus.",
-   "countries": [
-    "GLOBAL"
-   ],
-   "regions": [],
-   "themes": [
-    "Global Health",
+    "Infectious Diseases",
     "Capacity Building",
     "Research"
    ],
-   "url": "https://www.grants.gov/search-results-detail/360638",
+   "url": "https://www.grants.gov/search-results-detail/363872",
    "source_id": "grantsgov-global-health",
    "source_name": "Grants.gov: global health",
-   "fetched_at": "2026-11-06T14:38:55.892Z",
+   "fetched_at": "2026-11-07T02:29:38.646Z",
    "score": null,
    "strengths": [],
    "weaknesses": [],
    "score_reason": null
   },
   {
-   "id": "f995a955b37ae82d",
-   "title": "The Genesis Mission: Transforming Science and Energy with AI",
-   "funder": "Office of Science",
-   "summary": "Funds advanced AI research and applications to transform science and energy capabilities. Targeted at research institutions, technology developers, and scientific organizations.",
-   "amount_text": null,
-   "amount_usd": null,
-   "deadline": "2026-12-17",
-   "open_date": "2026-03-17",
-   "eligibility": "Research organizations, universities, and technology developers.",
-   "requirements": "Develop and apply cutting-edge AI models for scientific and technical advancement.",
-   "countries": [
-    "GLOBAL"
-   ],
-   "regions": [],
-   "themes": [
-    "AI",
-    "Foundation Models",
-    "Technology"
-   ],
-   "url": "https://www.grants.gov/search-results-detail/361526",
-   "source_id": "grantsgov-health-ai",
-   "source_name": "Grants.gov: AI in health",
-   "fetched_at": "2026-11-06T14:38:55.892Z",
-   "score": null,
-   "strengths": [],
-   "weaknesses": [],
-   "score_reason": null
-  },
-  {
-   "id": "4cbfbb2b8ace2240",
-   "title": "Utilizing Real-World Data and Algorithmic Analyses to Assess Post-Market Clinical Outcomes in Patients Switching Amongst Therapeutically Equivalent Complex Generic Drug Products and Reference Listed Drugs (U01)",
-   "funder": "Food and Drug Administration",
-   "summary": "Funds real-world data and algorithmic/AI analyses to evaluate clinical outcomes of drug switching. Targets researchers developing methodological approaches using health datasets.",
+   "id": "c2bf3a535b04f48a",
+   "title": "Informing global polio eradication efforts through innovative modeling approaches",
+   "funder": "Centers for Disease Control and Prevention",
+   "summary": "Funds innovative modeling approaches to inform and support global polio eradication efforts. It targets public health agencies, academic institutions, and research organizations.",
    "amount_text": null,
    "amount_usd": null,
    "deadline": null,
-   "open_date": "2023-11-24",
-   "eligibility": "Higher education institutions, non-profits, for-profit organizations, and foreign entities.",
-   "requirements": "U01 cooperative agreement requiring sophisticated real-world data analytics and algorithmic modeling.",
+   "open_date": "2026-08-31",
+   "eligibility": "Eligible applicants include state, local, and national government entities, non-profits, and research institutions globally or in the US depending on specific RFA terms.",
+   "requirements": "Mathematical and data-driven modeling proposals focused on polio surveillance and eradication strategies.",
    "countries": [
     "GLOBAL"
    ],
    "regions": [],
    "themes": [
-    "Digital Health",
-    "AI",
-    "Real-World Data",
-    "Clinical Outcomes"
+    "Polio",
+    "Infectious Disease",
+    "Surveillance",
+    "Modeling"
    ],
-   "url": "https://www.grants.gov/search-results-detail/351125",
-   "source_id": "grantsgov-health-ai",
-   "source_name": "Grants.gov: AI in health",
-   "fetched_at": "2026-11-06T14:38:55.892Z",
+   "url": "https://www.grants.gov/search-results-detail/363748",
+   "source_id": "grantsgov-global-health",
+   "source_name": "Grants.gov: global health",
+   "fetched_at": "2026-11-07T02:29:38.646Z",
    "score": null,
    "strengths": [],
    "weaknesses": [],
    "score_reason": null
   },
   {
-   "id": "8c30f700668b84c9",
-   "title": "Expeditions in Computing",
-   "funder": "U.S. National Science Foundation",
-   "summary": "This program funds transformational research in computer science and engineering that creates new paradigms. It targets multi-investigator research teams pursuing ambitious, high-impact computing projects.",
-   "amount_text": "Up to $15,000,000",
-   "amount_usd": 15000000,
-   "deadline": "2027-03-31",
-   "open_date": "2020-02-14",
-   "eligibility": "U.S. academic institutions and non-profits (though international collaboration is sometimes possible via subawards).",
-   "requirements": "Large-scale collaborative computing research proposals with transformative potential.",
-   "countries": [
-    "USA"
-   ],
-   "regions": [],
-   "themes": [
-    "AI",
-    "Computer Science",
-    "Global Impact"
-   ],
-   "url": "https://www.grants.gov/search-results-detail/324456",
-   "source_id": "grantsgov-health-ai",
-   "source_name": "Grants.gov: AI in health",
-   "fetched_at": "2026-11-06T14:38:55.892Z",
-   "score": null,
-   "strengths": [],
-   "weaknesses": [],
-   "score_reason": null
-  },
-  {
-   "id": "5297fabcc8eeafc1",
-   "title": "Multimodal AI to Accelerate Precision Medicine for Type 1 Diabetes (U01- Clinical Trials Not Allowed)",
+   "id": "f1b4f9744073682e",
+   "title": "Research Grants in Clinical Informatics (R01)",
    "funder": "National Institutes of Health",
-   "summary": "This funding opportunity supports the development of multimodal AI approaches to advance precision medicine for Type 1 diabetes. It targets research teams with strong AI and clinical informatics capabilities.",
+   "summary": "Funds clinical informatics research projects to improve health care delivery and patient outcomes. For eligible domestic and foreign academic, non-profit, and public research organizations.",
    "amount_text": null,
    "amount_usd": null,
-   "deadline": null,
-   "open_date": "2026-08-20",
-   "eligibility": "Higher education institutions, non-profits, for-profit organizations, and international organizations.",
-   "requirements": "Development of multimodal AI models for Type 1 diabetes without clinical trials.",
+   "deadline": "2029-03-05",
+   "open_date": "2026-02-11",
+   "eligibility": "Higher education institutions, non-profits, for-profits, foreign organizations, and governments.",
+   "requirements": "Submit a detailed research plan focusing on clinical informatics, data integration, or health IT solutions.",
    "countries": [
     "GLOBAL"
    ],
    "regions": [],
    "themes": [
-    "AI",
-    "Precision Medicine",
-    "Health AI"
+    "Clinical Informatics",
+    "Digital Health",
+    "Health IT"
    ],
-   "url": "https://www.grants.gov/search-results-detail/363678",
+   "url": "https://www.grants.gov/search-results-detail/359004",
    "source_id": "grantsgov-health-ai",
    "source_name": "Grants.gov: AI in health",
-   "fetched_at": "2026-11-06T14:38:55.892Z",
+   "fetched_at": "2026-11-07T02:29:38.646Z",
+   "score": null,
+   "strengths": [],
+   "weaknesses": [],
+   "score_reason": null
+  },
+  {
+   "id": "be14b00c6895c3f2",
+   "title": "Community Led Monitoring Intervention",
+   "funder": "U.S. Mission to Mozambique",
+   "summary": "Funds community-led monitoring interventions to improve health service delivery and accountability in Mozambique. For local and international organizations working in public health.",
+   "amount_text": null,
+   "amount_usd": null,
+   "deadline": null,
+   "open_date": "2020-05-27",
+   "eligibility": "Non-profit organizations, NGOs, and community-based groups.",
+   "requirements": "Implement monitoring programs engaging communities to track health service quality and access.",
+   "countries": [
+    "MOZ"
+   ],
+   "regions": [],
+   "themes": [
+    "Public Health",
+    "Community Monitoring",
+    "Health Services"
+   ],
+   "url": "https://www.grants.gov/search-results-detail/327345",
+   "source_id": "grantsgov-global-health",
+   "source_name": "Grants.gov: global health",
+   "fetched_at": "2026-11-07T02:29:38.646Z",
+   "score": null,
+   "strengths": [],
+   "weaknesses": [],
+   "score_reason": null
+  },
+  {
+   "id": "57d1f86415b83754",
+   "title": "Resource-Related Research Projects for Development of Models and Related Materials (R24)",
+   "funder": "National Institutes of Health",
+   "summary": "Funds resource-related research projects to develop models and materials for studying human health and diseases. For public and private non-profit or for-profit organizations.",
+   "amount_text": null,
+   "amount_usd": null,
+   "deadline": "2028-09-28",
+   "open_date": "2025-12-05",
+   "eligibility": "Higher education institutions, non-profits, for-profits, and foreign entities.",
+   "requirements": "Develop research models, computational frameworks, or related materials to support biomedical and health studies.",
+   "countries": [
+    "GLOBAL"
+   ],
+   "regions": [],
+   "themes": [
+    "Research Models",
+    "Biomedical Research",
+    "Health"
+   ],
+   "url": "https://www.grants.gov/search-results-detail/359648",
+   "source_id": "grantsgov-health-ai",
+   "source_name": "Grants.gov: AI in health",
+   "fetched_at": "2026-11-07T02:29:38.646Z",
+   "score": null,
+   "strengths": [],
+   "weaknesses": [],
+   "score_reason": null
+  },
+  {
+   "id": "a4af653776b1dd03",
+   "title": "Centers for Research on Neglected Infectious Diseases",
+   "funder": "National Institutes of Health",
+   "summary": "Establishes research centers focused on neglected infectious diseases to advance therapeutics, diagnostics, and surveillance. For domestic and international research institutions.",
+   "amount_text": null,
+   "amount_usd": null,
+   "deadline": null,
+   "open_date": "2026-10-06",
+   "eligibility": "Higher education institutions, research organizations, and non-profits globally.",
+   "requirements": "Establish a research center structure focused on neglected tropical and infectious diseases.",
+   "countries": [
+    "GLOBAL"
+   ],
+   "regions": [],
+   "themes": [
+    "Neglected Diseases",
+    "Infectious Diseases",
+    "Surveillance"
+   ],
+   "url": "https://www.grants.gov/search-results-detail/364027",
+   "source_id": "grantsgov-global-health",
+   "source_name": "Grants.gov: global health",
+   "fetched_at": "2026-11-07T02:29:38.646Z",
+   "score": null,
+   "strengths": [],
+   "weaknesses": [],
+   "score_reason": null
+  },
+  {
+   "id": "9731b376d2faa47e",
+   "title": "Prevention and Treatment through a Comprehensive Care Continuum for HIV-affected Adolescents in Resource-Constrained Settings--Implementation Science Network (PATC3H-IN)",
+   "funder": "National Institutes of Health",
+   "summary": "Supports implementation science research to improve HIV prevention, treatment, and care continuum outcomes for adolescents in resource-constrained settings. It funds international and domestic research institutions partnering with local implementers.",
+   "amount_text": null,
+   "amount_usd": null,
+   "deadline": null,
+   "open_date": "2026-10-20",
+   "eligibility": "Higher education institutions, non-profits, for-profit organizations, and foreign institutions.",
+   "requirements": "Implementation science research protocols focused on HIV-affected adolescents in resource-limited settings.",
+   "countries": [
+    "GLOBAL"
+   ],
+   "regions": [],
+   "themes": [
+    "HIV",
+    "adolescent health",
+    "implementation science",
+    "global health"
+   ],
+   "url": "https://www.grants.gov/search-results-detail/364127",
+   "source_id": "grantsgov-global-health",
+   "source_name": "Grants.gov: global health",
+   "fetched_at": "2026-11-07T02:29:38.646Z",
+   "score": null,
+   "strengths": [],
+   "weaknesses": [],
+   "score_reason": null
+  },
+  {
+   "id": "4428cc206bc4ac9a",
+   "title": "Capacity Building for National Immunization Programs in the Eastern Mediterranean Region",
+   "funder": "Centers for Disease Control-GHC",
+   "summary": "Supports capacity building initiatives for national immunization programs within countries in the Eastern Mediterranean Region. It targets public health organizations and implementing partners.",
+   "amount_text": null,
+   "amount_usd": null,
+   "deadline": null,
+   "open_date": "2026-08-31",
+   "eligibility": "Government entities, non-profits, international organizations, and academic institutions.",
+   "requirements": "Technical assistance and capacity building for national immunization and vaccine-preventable disease programs.",
+   "countries": [
+    "GLOBAL"
+   ],
+   "regions": [],
+   "themes": [
+    "immunization",
+    "public health",
+    "capacity building",
+    "global health"
+   ],
+   "url": "https://www.grants.gov/search-results-detail/363749",
+   "source_id": "grantsgov-global-health",
+   "source_name": "Grants.gov: global health",
+   "fetched_at": "2026-11-07T02:29:38.646Z",
+   "score": null,
+   "strengths": [],
+   "weaknesses": [],
+   "score_reason": null
+  },
+  {
+   "id": "1253847fcea19e5a",
+   "title": "Global Collaborative Research Training on Non-Communicable Diseases and Disorders Across the Lifespan",
+   "funder": "National Institutes of Health",
+   "summary": "Supports institutional research training programs to build scientific capacity in low- and middle-income countries for non-communicable diseases. It targets academic and research institutions globally.",
+   "amount_text": null,
+   "amount_usd": null,
+   "deadline": null,
+   "open_date": "2026-02-13",
+   "eligibility": "Higher education institutions and research organizations in the US and LMICs.",
+   "requirements": "Establishment of collaborative research training programs focused on NCDs in LMICs.",
+   "countries": [
+    "GLOBAL"
+   ],
+   "regions": [],
+   "themes": [
+    "non-communicable diseases",
+    "research training",
+    "capacity building",
+    "global health"
+   ],
+   "url": "https://www.grants.gov/search-results-detail/361294",
+   "source_id": "grantsgov-global-health",
+   "source_name": "Grants.gov: global health",
+   "fetched_at": "2026-11-07T02:29:38.646Z",
+   "score": null,
+   "strengths": [],
+   "weaknesses": [],
+   "score_reason": null
+  },
+  {
+   "id": "7fe05635d998d431",
+   "title": "National Foundation for the Centers for Disease Control and Prevention",
+   "funder": "Centers for Disease Control - OD",
+   "summary": "This forecasted opportunity supports public health partnerships and programmatic activities aligned with CDC priorities. It provides funding for global public health initiatives and health systems strengthening.",
+   "amount_text": null,
+   "amount_usd": null,
+   "deadline": null,
+   "open_date": "2026-08-06",
+   "eligibility": "Nonprofit organizations, academic institutions, and global health implementers.",
+   "requirements": "Grant application addressing CDC public health objectives.",
+   "countries": [
+    "GLOBAL"
+   ],
+   "regions": [],
+   "themes": [
+    "Public Health",
+    "Infectious Disease",
+    "Health Systems"
+   ],
+   "url": "https://www.grants.gov/search-results-detail/363484",
+   "source_id": "grantsgov-global-health",
+   "source_name": "Grants.gov: global health",
+   "fetched_at": "2026-11-07T02:29:38.646Z",
+   "score": null,
+   "strengths": [],
+   "weaknesses": [],
+   "score_reason": null
+  },
+  {
+   "id": "3de6cbb7415995c2",
+   "title": "International Research Scientist Development Award (IRSDA)",
+   "funder": "National Institutes of Health",
+   "summary": "This award provides support for sustained, intensive research-career development for low- and middle-income country (LMIC) scientists. It funds mentored research in health and disease priorities relevant to LMICs.",
+   "amount_text": null,
+   "amount_usd": null,
+   "deadline": null,
+   "open_date": "2026-07-02",
+   "eligibility": "Early-career investigators from LMICs with a sponsoring US or international institution.",
+   "requirements": "Mentored research plan and institutional commitment.",
+   "countries": [
+    "GLOBAL"
+   ],
+   "regions": [],
+   "themes": [
+    "Global Health",
+    "Research Capacity",
+    "Infectious Disease"
+   ],
+   "url": "https://www.grants.gov/search-results-detail/363050",
+   "source_id": "grantsgov-global-health",
+   "source_name": "Grants.gov: global health",
+   "fetched_at": "2026-11-07T02:29:38.646Z",
+   "score": null,
+   "strengths": [],
+   "weaknesses": [],
+   "score_reason": null
+  },
+  {
+   "id": "0dceed0873aba13e",
+   "title": "DHQP Global NOFO",
+   "funder": "Centers for Disease Control - NCEZID",
+   "summary": "This global notice of funding opportunity supports public health activities and infectious disease prevention globally. It is designed for international public health organizations and institutions.",
+   "amount_text": null,
+   "amount_usd": null,
+   "deadline": null,
+   "open_date": "2026-08-03",
+   "eligibility": "Open to international organizations, non-profits, and government health agencies.",
+   "requirements": "Submission of programmatic proposals addressing global health protection and disease prevention.",
+   "countries": [
+    "GLOBAL"
+   ],
+   "regions": [],
+   "themes": [
+    "Public health",
+    "Infectious diseases",
+    "Global health"
+   ],
+   "url": "https://www.grants.gov/search-results-detail/363448",
+   "source_id": "grantsgov-global-health",
+   "source_name": "Grants.gov: global health",
+   "fetched_at": "2026-11-07T02:29:38.646Z",
+   "score": null,
+   "strengths": [],
+   "weaknesses": [],
+   "score_reason": null
+  },
+  {
+   "id": "c8787562f9f5d22e",
+   "title": "Emerging Global Leader Award (K43 Independent Clinical Trial Required)",
+   "funder": "National Institutes of Health",
+   "summary": "Provides research support and protected time to funded early-career researchers from low- and middle-income countries. It requires an independent clinical trial.",
+   "amount_text": null,
+   "amount_usd": null,
+   "deadline": "2026-12-03",
+   "open_date": "2024-10-15",
+   "eligibility": "Early-career investigators from LMICs at appropriate institutions.",
+   "requirements": "Independent clinical trial research plan, institutional commitment.",
+   "countries": [
+    "GLOBAL"
+   ],
+   "regions": [],
+   "themes": [
+    "Global Health",
+    "Clinical Trial",
+    "Capacity Building"
+   ],
+   "url": "https://www.grants.gov/search-results-detail/356724",
+   "source_id": "grantsgov-global-health",
+   "source_name": "Grants.gov: global health",
+   "fetched_at": "2026-11-07T02:29:38.646Z",
+   "score": null,
+   "strengths": [],
+   "weaknesses": [],
+   "score_reason": null
+  },
+  {
+   "id": "d47e8f7db5966d8f",
+   "title": "Systems Biology of Infection and Inflammation in Chronic Diseases (U19 Clinical Trial Not Allowed)",
+   "funder": "National Institutes of Health",
+   "summary": "Supports systems biology approaches to study infection and inflammation in chronic diseases. It funds collaborative research centers.",
+   "amount_text": null,
+   "amount_usd": null,
+   "deadline": "2027-02-18",
+   "open_date": "2026-11-04",
+   "eligibility": "Higher education institutions, nonprofits, for-profit organizations, and foreign entities.",
+   "requirements": "Multi-project systems biology research center application.",
+   "countries": [
+    "GLOBAL"
+   ],
+   "regions": [],
+   "themes": [
+    "Infectious Disease",
+    "Systems Biology",
+    "Chronic Disease"
+   ],
+   "url": "https://www.grants.gov/search-results-detail/362952",
+   "source_id": "grantsgov-health-ai",
+   "source_name": "Grants.gov: AI in health",
+   "fetched_at": "2026-11-07T02:29:38.646Z",
    "score": null,
    "strengths": [],
    "weaknesses": [],
@@ -792,31 +832,6 @@
    "score_reason": null
   },
   {
-   "id": "d47e8f7db5966d8f",
-   "title": "Systems Biology of Infection and Inflammation in Chronic Diseases (U19 Clinical Trial Not Allowed)",
-   "funder": "National Institutes of Health",
-   "summary": "Systems Biology of Infection and Inflammation in Chronic Diseases (U19 Clinical Trial Not Allowed). Agency: National Institutes of Health. Number: RFA-AI-28-014. Status: posted.",
-   "amount_text": null,
-   "amount_usd": null,
-   "deadline": "2027-02-18",
-   "open_date": "2026-11-04",
-   "eligibility": null,
-   "requirements": null,
-   "countries": [
-    "USA"
-   ],
-   "regions": [],
-   "themes": [],
-   "url": "https://www.grants.gov/search-results-detail/362952",
-   "source_id": "grantsgov-health-ai",
-   "source_name": "Grants.gov: AI in health",
-   "fetched_at": "2026-11-06T12:28:18.439+00:00",
-   "score": null,
-   "strengths": [],
-   "weaknesses": [],
-   "score_reason": null
-  },
-  {
    "id": "14577ad0c9783bd5",
    "title": "Tribal Colleges Research Grants Program",
    "funder": "National Institute of Food and Agriculture",
@@ -1061,6 +1076,386 @@
    "source_id": "grantsgov-health-ai",
    "source_name": "Grants.gov: AI in health",
    "fetched_at": "2026-11-06T12:28:18.439+00:00",
+   "score": null,
+   "strengths": [],
+   "weaknesses": [],
+   "score_reason": null
+  },
+  {
+   "id": "7d08bdcdfd029ddc",
+   "title": "Accelerating Research and Development of Next Generation Vaccines against Malaria",
+   "funder": "National Institutes of Health",
+   "summary": "This funding opportunity supports research and development of next-generation vaccines against malaria and other mosquito-borne diseases. It is aimed at research organizations and academic institutions.",
+   "amount_text": null,
+   "amount_usd": null,
+   "deadline": "2027-02-11",
+   "open_date": "2026-10-13",
+   "eligibility": "Higher education institutions, non-profits, for-profit organizations, and international organizations.",
+   "requirements": "Pre-clinical or translational research on malaria vaccines, excluding clinical trials under this phase.",
+   "countries": [
+    "GLOBAL"
+   ],
+   "regions": [],
+   "themes": [
+    "Malaria",
+    "Vaccines",
+    "Infectious Disease"
+   ],
+   "url": "https://www.grants.gov/search-results-detail/361832",
+   "source_id": "grantsgov-global-health",
+   "source_name": "Grants.gov: global health",
+   "fetched_at": "2026-11-06T14:38:55.892+00:00",
+   "score": null,
+   "strengths": [],
+   "weaknesses": [],
+   "score_reason": null
+  },
+  {
+   "id": "393791da364c7454",
+   "title": "Strengthening Collaboration Between Tuberculosis Control Programs and Affiliated Partners in the United States",
+   "funder": "Centers for Disease Control - NCHHSTP",
+   "summary": "This forecasted grant funds efforts to strengthen collaboration between public TB control programs and affiliated partners to improve TB elimination activities. It is aimed at public health organizations and agencies.",
+   "amount_text": null,
+   "amount_usd": null,
+   "deadline": null,
+   "open_date": "2026-09-25",
+   "eligibility": "Domestic public and private non-profit organizations, state and local governments.",
+   "requirements": "Enhance partnerships and programmatic support for TB control activities.",
+   "countries": [
+    "USA"
+   ],
+   "regions": [],
+   "themes": [
+    "TB",
+    "Public Health",
+    "Infectious Disease"
+   ],
+   "url": "https://www.grants.gov/search-results-detail/363956",
+   "source_id": "grantsgov-global-health",
+   "source_name": "Grants.gov: global health",
+   "fetched_at": "2026-11-06T14:38:55.892+00:00",
+   "score": null,
+   "strengths": [],
+   "weaknesses": [],
+   "score_reason": null
+  },
+  {
+   "id": "6df9dd9fcc20b96d",
+   "title": "Department of Defense HIV/AIDS Prevention Program",
+   "funder": "Defense Health Agency Contracting Activity (DHACA)",
+   "summary": "Supports international HIV/AIDS prevention, care, and treatment programs in partner nations. Funds military and civilian public health partnerships for infectious disease control.",
+   "amount_text": null,
+   "amount_usd": null,
+   "deadline": "2027-09-18",
+   "open_date": "2022-09-19",
+   "eligibility": "Global academic institutions, non-profits, and international organizations capable of executing international health programs.",
+   "requirements": "Implement HIV/AIDS prevention and surveillance activities in alignment with partner nation military and civilian health priorities.",
+   "countries": [
+    "GLOBAL"
+   ],
+   "regions": [],
+   "themes": [
+    "HIV/AIDS",
+    "Infectious Diseases",
+    "Public Health",
+    "Global Health"
+   ],
+   "url": "https://www.grants.gov/search-results-detail/343653",
+   "source_id": "grantsgov-global-health",
+   "source_name": "Grants.gov: global health",
+   "fetched_at": "2026-11-06T14:38:55.892+00:00",
+   "score": null,
+   "strengths": [],
+   "weaknesses": [],
+   "score_reason": null
+  },
+  {
+   "id": "4ca58499c7c57ffb",
+   "title": "Improved Drug Susceptibility Testing (DST) for Mycobacteria",
+   "funder": "National Institutes of Health",
+   "summary": "This funding opportunity supports research to improve drug susceptibility testing methods and technologies for mycobacteria, including tuberculosis. It is aimed at research organizations and institutions working on TB diagnostics.",
+   "amount_text": null,
+   "amount_usd": null,
+   "deadline": null,
+   "open_date": "2026-06-24",
+   "eligibility": "[\"Higher education institutions\",\"Nonprofits and for-profit organizations\",\"International organizations\"]",
+   "requirements": "[\"Develop improved drug susceptibility testing approaches for mycobacteria\"]",
+   "countries": [
+    "GLOBAL"
+   ],
+   "regions": [],
+   "themes": [
+    "TB",
+    "diagnostics",
+    "infectious disease"
+   ],
+   "url": "https://www.grants.gov/search-results-detail/362948",
+   "source_id": "grantsgov-global-health",
+   "source_name": "Grants.gov: global health",
+   "fetched_at": "2026-11-06T14:38:55.892+00:00",
+   "score": null,
+   "strengths": [],
+   "weaknesses": [],
+   "score_reason": null
+  },
+  {
+   "id": "b1035b91fbaf174a",
+   "title": "UKRI translation: MRC proof of concept: stage two",
+   "funder": "Medical Research Council",
+   "summary": "This funding opportunity supports translational research projects to develop and test novel therapeutics, medical devices, and diagnostics from prototype to early-phase clinical studies. It is open to research organizations eligible for MRC funding and their international partners.",
+   "amount_text": "No funding limit specified",
+   "amount_usd": null,
+   "deadline": "2027-03-03",
+   "open_date": "2026-11-05",
+   "eligibility": "[\"Must have successfully completed stage one application\",\"UKRI-eligible research organizations with international co-lead options\"]",
+   "requirements": "[\"Develop and test novel diagnostics, medical devices or interventions\",\"Stage two application following successful stage one invite\"]",
+   "countries": [
+    "GBR",
+    "GLOBAL"
+   ],
+   "regions": [],
+   "themes": [
+    "diagnostics",
+    "medical devices",
+    "translational research"
+   ],
+   "url": "https://www.ukri.org/opportunity/mrc-proof-of-concept-stage-two/",
+   "source_id": "ukri-opportunities",
+   "source_name": "UKRI funding finder",
+   "fetched_at": "2026-11-06T14:38:55.892+00:00",
+   "score": null,
+   "strengths": [],
+   "weaknesses": [],
+   "score_reason": null
+  },
+  {
+   "id": "206cd415cbb164cc",
+   "title": "Advancing Global Health",
+   "funder": "Bureau of Global Health Security and Diplomacy",
+   "summary": "This funding opportunity supports global health security and diplomacy initiatives implemented by eligible organizations worldwide. It targets programs addressing major global health priorities and health systems strengthening.",
+   "amount_text": null,
+   "amount_usd": null,
+   "deadline": "2027-02-14",
+   "open_date": "2026-09-21",
+   "eligibility": "[\"Nonprofit organizations, international organizations, and academic institutions\"]",
+   "requirements": "[\"Implement global health security or public health strengthening programs\"]",
+   "countries": [
+    "GLOBAL"
+   ],
+   "regions": [],
+   "themes": [
+    "global health",
+    "health systems",
+    "infectious disease"
+   ],
+   "url": "https://www.grants.gov/search-results-detail/363912",
+   "source_id": "grantsgov-global-health",
+   "source_name": "Grants.gov: global health",
+   "fetched_at": "2026-11-06T14:38:55.892+00:00",
+   "score": null,
+   "strengths": [],
+   "weaknesses": [],
+   "score_reason": null
+  },
+  {
+   "id": "a9838cbe07da38db",
+   "title": "Capacity Building for Global, Regional, and National Immunization Programs",
+   "funder": "Centers for Disease Control and Prevention",
+   "summary": "Provides funding to strengthen global, regional, and national immunization programs and public health capacities. Targets international health organizations, governments, and implementing partners.",
+   "amount_text": null,
+   "amount_usd": null,
+   "deadline": null,
+   "open_date": "2026-08-14",
+   "eligibility": "[\"Government entities, international organizations, and non-profit/private organizations working in global health\"]",
+   "requirements": "[\"Implement capacity building activities for immunization programs\",\"Support surveillance and public health infrastructure\"]",
+   "countries": [
+    "GLOBAL"
+   ],
+   "regions": [],
+   "themes": [
+    "Public Health",
+    "Immunization",
+    "Global Health"
+   ],
+   "url": "https://www.grants.gov/search-results-detail/363591",
+   "source_id": "grantsgov-global-health",
+   "source_name": "Grants.gov: global health",
+   "fetched_at": "2026-11-06T14:38:55.892+00:00",
+   "score": null,
+   "strengths": [],
+   "weaknesses": [],
+   "score_reason": null
+  },
+  {
+   "id": "969ff3dc504ab736",
+   "title": "Hubs of Interdisciplinary Research and Training in Global Environmental and Occupational Health (GEOHealth)",
+   "funder": "National Institutes of Health",
+   "summary": "Funds interdisciplinary research and training hubs addressing global environmental and occupational health threats. Targets international and domestic research institutions partnering in low- and middle-income countries.",
+   "amount_text": null,
+   "amount_usd": null,
+   "deadline": null,
+   "open_date": "2026-09-16",
+   "eligibility": "[\"Higher education institutions and research organizations globally, particularly those partnering with LMIC institutions\"]",
+   "requirements": "[\"Establish interdisciplinary research hubs addressing environmental and occupational health\",\"Conduct research and capacity building in LMICs\"]",
+   "countries": [
+    "GLOBAL"
+   ],
+   "regions": [],
+   "themes": [
+    "Global Health",
+    "Environmental Health",
+    "Research Hubs"
+   ],
+   "url": "https://www.grants.gov/search-results-detail/363873",
+   "source_id": "grantsgov-global-health",
+   "source_name": "Grants.gov: global health",
+   "fetched_at": "2026-11-06T14:38:55.892+00:00",
+   "score": null,
+   "strengths": [],
+   "weaknesses": [],
+   "score_reason": null
+  },
+  {
+   "id": "1a0ee468b7e21536",
+   "title": "LAUNCHing Leaders for Future U.S. Investments in Global Health Research",
+   "funder": "National Institutes of Health",
+   "summary": "It funds global health research and training programs for international and U.S. academic institutions. It aims to build research capacity in low- and middle-income countries.",
+   "amount_text": null,
+   "amount_usd": null,
+   "deadline": null,
+   "open_date": "2025-09-22",
+   "eligibility": "Higher education institutions and research organizations globally.",
+   "requirements": "Global health research and leadership training focus.",
+   "countries": [
+    "GLOBAL"
+   ],
+   "regions": [],
+   "themes": [
+    "Global Health",
+    "Capacity Building",
+    "Research"
+   ],
+   "url": "https://www.grants.gov/search-results-detail/360638",
+   "source_id": "grantsgov-global-health",
+   "source_name": "Grants.gov: global health",
+   "fetched_at": "2026-11-06T14:38:55.892+00:00",
+   "score": null,
+   "strengths": [],
+   "weaknesses": [],
+   "score_reason": null
+  },
+  {
+   "id": "f995a955b37ae82d",
+   "title": "The Genesis Mission: Transforming Science and Energy with AI",
+   "funder": "Office of Science",
+   "summary": "Funds advanced AI research and applications to transform science and energy capabilities. Targeted at research institutions, technology developers, and scientific organizations.",
+   "amount_text": null,
+   "amount_usd": null,
+   "deadline": "2026-12-17",
+   "open_date": "2026-03-17",
+   "eligibility": "Research organizations, universities, and technology developers.",
+   "requirements": "Develop and apply cutting-edge AI models for scientific and technical advancement.",
+   "countries": [
+    "GLOBAL"
+   ],
+   "regions": [],
+   "themes": [
+    "AI",
+    "Foundation Models",
+    "Technology"
+   ],
+   "url": "https://www.grants.gov/search-results-detail/361526",
+   "source_id": "grantsgov-health-ai",
+   "source_name": "Grants.gov: AI in health",
+   "fetched_at": "2026-11-06T14:38:55.892+00:00",
+   "score": null,
+   "strengths": [],
+   "weaknesses": [],
+   "score_reason": null
+  },
+  {
+   "id": "4cbfbb2b8ace2240",
+   "title": "Utilizing Real-World Data and Algorithmic Analyses to Assess Post-Market Clinical Outcomes in Patients Switching Amongst Therapeutically Equivalent Complex Generic Drug Products and Reference Listed Drugs (U01)",
+   "funder": "Food and Drug Administration",
+   "summary": "Funds real-world data and algorithmic/AI analyses to evaluate clinical outcomes of drug switching. Targets researchers developing methodological approaches using health datasets.",
+   "amount_text": null,
+   "amount_usd": null,
+   "deadline": null,
+   "open_date": "2023-11-24",
+   "eligibility": "Higher education institutions, non-profits, for-profit organizations, and foreign entities.",
+   "requirements": "U01 cooperative agreement requiring sophisticated real-world data analytics and algorithmic modeling.",
+   "countries": [
+    "GLOBAL"
+   ],
+   "regions": [],
+   "themes": [
+    "Digital Health",
+    "AI",
+    "Real-World Data",
+    "Clinical Outcomes"
+   ],
+   "url": "https://www.grants.gov/search-results-detail/351125",
+   "source_id": "grantsgov-health-ai",
+   "source_name": "Grants.gov: AI in health",
+   "fetched_at": "2026-11-06T14:38:55.892+00:00",
+   "score": null,
+   "strengths": [],
+   "weaknesses": [],
+   "score_reason": null
+  },
+  {
+   "id": "8c30f700668b84c9",
+   "title": "Expeditions in Computing",
+   "funder": "U.S. National Science Foundation",
+   "summary": "This program funds transformational research in computer science and engineering that creates new paradigms. It targets multi-investigator research teams pursuing ambitious, high-impact computing projects.",
+   "amount_text": "Up to $15,000,000",
+   "amount_usd": 15000000,
+   "deadline": "2027-03-31",
+   "open_date": "2020-02-14",
+   "eligibility": "U.S. academic institutions and non-profits (though international collaboration is sometimes possible via subawards).",
+   "requirements": "Large-scale collaborative computing research proposals with transformative potential.",
+   "countries": [
+    "USA"
+   ],
+   "regions": [],
+   "themes": [
+    "AI",
+    "Computer Science",
+    "Global Impact"
+   ],
+   "url": "https://www.grants.gov/search-results-detail/324456",
+   "source_id": "grantsgov-health-ai",
+   "source_name": "Grants.gov: AI in health",
+   "fetched_at": "2026-11-06T14:38:55.892+00:00",
+   "score": null,
+   "strengths": [],
+   "weaknesses": [],
+   "score_reason": null
+  },
+  {
+   "id": "5297fabcc8eeafc1",
+   "title": "Multimodal AI to Accelerate Precision Medicine for Type 1 Diabetes (U01- Clinical Trials Not Allowed)",
+   "funder": "National Institutes of Health",
+   "summary": "This funding opportunity supports the development of multimodal AI approaches to advance precision medicine for Type 1 diabetes. It targets research teams with strong AI and clinical informatics capabilities.",
+   "amount_text": null,
+   "amount_usd": null,
+   "deadline": null,
+   "open_date": "2026-08-20",
+   "eligibility": "Higher education institutions, non-profits, for-profit organizations, and international organizations.",
+   "requirements": "Development of multimodal AI models for Type 1 diabetes without clinical trials.",
+   "countries": [
+    "GLOBAL"
+   ],
+   "regions": [],
+   "themes": [
+    "AI",
+    "Precision Medicine",
+    "Health AI"
+   ],
+   "url": "https://www.grants.gov/search-results-detail/363678",
+   "source_id": "grantsgov-health-ai",
+   "source_name": "Grants.gov: AI in health",
+   "fetched_at": "2026-11-06T14:38:55.892+00:00",
    "score": null,
    "strengths": [],
    "weaknesses": [],
