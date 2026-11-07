@@ -42,7 +42,8 @@ function isDuplicate(c, known) {
   const p = deepPath(c.url);
   const host = (u) => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return ''; } };
   return known.some((k) => (p && deepPath(k.url) === p && similar(c.title, k.title) >= 0.3) ||
-    (host(c.url) && host(c.url) === host(k.url) && similar(c.title, k.title) >= 0.5) || (similar(c.title, k.title) >= 0.7 && (similar(c.funder, k.funder) >= 0.5 || !c.funder || !k.funder)));
+    (host(c.url) && host(c.url) === host(k.url) && similar(c.title, k.title) >= 0.5) ||
+    (c.funder && k.funder && similar(c.funder, k.funder) >= 0.6 && (similar(c.title, k.title) >= 0.4 || (c.deadline && c.deadline === k.deadline))) || (similar(c.title, k.title) >= 0.7 && (similar(c.funder, k.funder) >= 0.5 || !c.funder || !k.funder)));
 }
 
 /* ---------- structured output (Gemini must return valid JSON in this shape) ---------- */
@@ -53,7 +54,7 @@ const RAW_SCHEMA = { type: 'ARRAY', items: S({ title: { type: 'STRING' }, funder
 const WRITEUP_SCHEMA = {
   type: 'ARRAY',
   items: S({
-    i: { type: 'INTEGER' }, relevant: { type: 'BOOLEAN' }, open: { type: 'BOOLEAN' }, title: STR, funder: STR, funding_range: STR,
+    i: { type: 'INTEGER' }, same_as: STR, relevant: { type: 'BOOLEAN' }, open: { type: 'BOOLEAN' }, title: STR, funder: STR, funding_range: STR,
     amount_usd: { type: 'NUMBER', nullable: true }, deadline: STR, deadline_text: STR, sector: STR, geography: STR, countries: LIST,
     fit: { type: 'STRING', enum: ['High', 'Medium', 'Medium - Low', 'Low', 'Not eligible'] }, eligible_as: STR, description: STR,
     requirements: STR, strengths: LIST, weaknesses: LIST, why: STR, themes: LIST,
@@ -229,7 +230,7 @@ function teamExamples(existing, tracking) {
   }).join('\n');
 }
 
-async function writeUp(batch, context, examples) {
+async function writeUp(batch, context, examples, tracked = '') {
   const items = batch.map((b, i) => ({ i, title: b.title, funder: b.funder, url: b.url, deadline_text: b.deadline_text, amount: b.amount, text: `${b.text || ''}\n${b.page || ''}`.slice(0, 5000) }));
   const out = await gemini(`You are the grants scout for Wadhwani AI Global (WAIG). Today is ${today()}.
 ORGANISATION CONTEXT:
@@ -238,8 +239,12 @@ ${context}
 HOW THE TEAM RATES OPPORTUNITIES (their own pipeline sheet; learn their taste from it):
 ${examples || '(no examples yet)'}
 
-For each item below, write it up the way the team's sheet does. Return a JSON array of objects:
+ALREADY TRACKED (do not add these again; news articles and aggregator posts often describe one of them):
+${tracked || '(none)'}
+
+For each item below, write it up the way the team's sheet does. An item may be a news article or aggregator post about a call: write up the call itself, with the call's own name as the title (e.g. "Cities Deliver: AI Solutions for Public Services", not the headline). Return a JSON array of objects:
 - "i": item index
+- "same_as": the exact title from ALREADY TRACKED if this is the same opportunity, else null
 - "relevant": false if it is not an organisational funding opportunity WAIG could pursue (e.g. individual fellowships, scholarships, student/academic-only, jobs, events, news, already closed); else true
 - "open": false if the deadline has passed
 - "title", "funder": the full official names from the page (never cut off with "..."; do not guess a funder that is not stated)
@@ -274,7 +279,7 @@ async function main() {
   let existing = [];
   let tracking = [];
   if (HAS_SB) {
-    existing = (await sb.select('grants', 'select=id,title,funder,url,fit,sector,eligible_as,curated,source_id')) || [];
+    existing = (await sb.select('grants', 'select=id,title,funder,url,fit,sector,eligible_as,curated,source_id,deadline')) || [];
     tracking = (await sb.select('grant_tracking', 'select=grant_id,status')) || [];
   } else existing = readJson('grants.json', { grants: [] }).grants || [];
 
@@ -349,16 +354,17 @@ async function main() {
     const context = await orgContext();
     const examples = teamExamples(existing, tracking);
     const done = new Set();
+    const trackedList = () => [...existing, ...added].slice(-150).map((g) => `- ${g.title} (${g.funder || '?'})`).join('\n');
     const writeBatch = async (batch) => {
       try {
-        return await writeUp(batch, context, examples);
+        return await writeUp(batch, context, examples, trackedList());
       } catch (e) {
         log('write-up batch failed, retrying one by one:', e.message);
         const out = [];
         for (const one of batch) {
           if (!geminiAvailable()) break;
           try {
-            const [r] = await writeUp([one], context, examples);
+            const [r] = await writeUp([one], context, examples, trackedList());
             if (r) out.push({ ...r, i: batch.indexOf(one) });
           } catch (e2) {
             log('write-up failed for', one.title, e2.message);
@@ -379,7 +385,7 @@ async function main() {
             log(' -', r.relevant === false ? 'not relevant' : 'closed', '|', b.title);
             continue;
           }
-          if (isDuplicate({ title: r.title || b.title, funder: r.funder || b.funder, url: b.url }, existing)) {
+          if (r.same_as || isDuplicate({ title: r.title || b.title, funder: r.funder || b.funder, url: b.url, deadline: r.deadline }, [...existing, ...added])) {
             rejected.add(b.id);
             log(' = already tracked |', r.title || b.title);
             continue;
