@@ -2,6 +2,18 @@
  "runs": [
   {
    "job": "grants",
+   "at": "2026-11-07T22:22:31.703Z",
+   "ok": true,
+   "message": "0 new calls added (10 candidates), 84 tracked · Gemini 2/2 calls ok"
+  },
+  {
+   "job": "scout",
+   "at": "2026-11-07T22:22:13.293Z",
+   "ok": true,
+   "message": "2 new opportunities written up (2 rated High/Medium) from 11 candidates (4 queued for the next run) · Gemini 3/4 calls ok (last error: Gemini gemini-flash-lite-latest (search) quota: You exceeded your current quota, please check your plan and billing details. For more information on this error, head"
+  },
+  {
+   "job": "grants",
    "at": "2026-11-07T22:15:33.610Z",
    "ok": true,
    "message": "0 new calls added (10 candidates), 82 tracked · Gemini 2/2 calls ok"

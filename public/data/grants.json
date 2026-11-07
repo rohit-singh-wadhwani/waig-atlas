@@ -1,5 +1,5 @@
 {
- "updated_at": "2026-11-07T22:15:12.359Z",
+ "updated_at": "2026-11-07T22:22:18.802Z",
  "grants": [
   {
    "id": "f4a4ef7d5c8b0fd4",
@@ -2189,6 +2189,74 @@
    "notes": null,
    "added_by": null,
    "updated_at": "2026-11-07T22:11:24.787+00:00"
+  },
+  {
+   "id": "sc_33dff419a5a5537b",
+   "title": "Call for Proposals: Enhancing integrated research and healthcare in sub ...",
+   "funder": "Global Health EDCTP3",
+   "summary": "Global Health EDCTP3 supports training and innovation networks for sustained capacity development in ethics, regulatory frameworks, pharmacovigilance, and digital health platforms in Sub-Saharan Africa. This aligns with WAIG's focus on digital health infrastructure and deployment in the region, though it heavily emphasizes regulatory and ethics capacity building.",
+   "amount_text": null,
+   "amount_usd": null,
+   "deadline": null,
+   "open_date": null,
+   "eligibility": "Research Consortium Partner",
+   "requirements": "Focus on digital health infrastructure, regulatory frameworks, and training networks in Sub-Saharan Africa.",
+   "countries": [
+    "GLOBAL"
+   ],
+   "regions": [],
+   "themes": [],
+   "url": "https://cartafrica.org/opportunities/call-for-proposals-enhancing-integrated-research-and-healthcare-in-sub-saharan-africa-through-digital-innovation-and-artificial-intelligence/",
+   "source_id": "scout-web-ai-health",
+   "source_name": "AI for health calls (free web search)",
+   "fetched_at": "2026-11-07T22:21:03.157+00:00",
+   "score": null,
+   "strengths": [],
+   "weaknesses": [],
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": "Rolling",
+   "sector": "Healthcare (Digital Health / Regulatory)",
+   "fit": null,
+   "eligible_as": null,
+   "geography": "Sub-Saharan Africa",
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T22:21:03.157+00:00"
+  },
+  {
+   "id": "sc_e2debf9c3e2e71a3",
+   "title": "Request for Proposals: Global Health and Wellbeing in an Era of ...",
+   "funder": "Open Philanthropy (Effective Altruism Foundation)",
+   "summary": "Open Philanthropy's Request for Proposals on Global Health and Wellbeing in an Era of Transformative AI supports research, policy development, implementation, and field-building to ensure AI improves health and wellbeing for the global poor. It directly targets the intersection of transformative AI and global health outcomes in low- and middle-income countries.",
+   "amount_text": null,
+   "amount_usd": null,
+   "deadline": null,
+   "open_date": null,
+   "eligibility": "NPO or Research Institution",
+   "requirements": "Focus on transformative AI applications in global health with a public communication or policy engagement component.",
+   "countries": [
+    "GLOBAL"
+   ],
+   "regions": [],
+   "themes": [],
+   "url": "https://grantedai.com/grants/request-for-proposals-global-health-and-wellbeing-in-an-era-of-transform-open-philanthropy-effective-altruism-fou-5438098b",
+   "source_id": "scout-web-ai-health",
+   "source_name": "AI for health calls (free web search)",
+   "fetched_at": "2026-11-07T22:21:03.157+00:00",
+   "score": null,
+   "strengths": [],
+   "weaknesses": [],
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": "Active",
+   "sector": "Healthcare (AI for Global Health)",
+   "fit": null,
+   "eligible_as": null,
+   "geography": "Global (LMICs)",
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T22:21:03.157+00:00"
   }
  ]
 }
