@@ -10,7 +10,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T21:54:13.399Z",
+  "last_run": "2026-11-07T22:01:56.927Z",
   "last_status": "ok",
   "last_message": "60 items, 0 new",
   "item_count": 60
@@ -26,7 +26,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T21:54:10.479Z",
+  "last_run": "2026-11-07T22:01:54.656Z",
   "last_status": "ok",
   "last_message": "60 items, 0 new",
   "item_count": 60
@@ -42,7 +42,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T21:54:11.153Z",
+  "last_run": "2026-11-07T22:01:55.263Z",
   "last_status": "ok",
   "last_message": "3 items, 0 new",
   "item_count": 3
@@ -74,7 +74,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T21:54:12.924Z",
+  "last_run": "2026-11-07T22:01:56.437Z",
   "last_status": "ok",
   "last_message": "20 items, 0 new",
   "item_count": 20
@@ -426,9 +426,9 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T21:46:43.294Z",
+  "last_run": "2026-11-07T21:58:26.811Z",
   "last_status": "error",
-  "last_message": "Google Search grounding unavailable on this key: Gemini gemini-flash-lite-latest (search) quota: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://aistudio.google.com/docs/rate-",
+  "last_message": "Gemini Google Search needs billing enabled on the Gemini key (free tier has no search quota). The free \"web search\" sources cover this meanwhile.",
   "item_count": 0
  },
  {
@@ -442,9 +442,9 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T21:46:44.704Z",
-  "last_status": "error",
-  "last_message": "Gemini failed: no model available",
+  "last_run": "2026-11-07T21:58:27.636Z",
+  "last_status": "skipped",
+  "last_message": "Skipped: Gemini Google Search needs billing enabled on the Gemini key (free tier has no search quota). The free \"web search\" sources cover this meanwhile.",
   "item_count": 0
  },
  {
@@ -458,9 +458,9 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T21:46:45.791Z",
-  "last_status": "error",
-  "last_message": "Gemini failed: no model available",
+  "last_run": "2026-11-07T21:58:27.955Z",
+  "last_status": "skipped",
+  "last_message": "Skipped: Gemini Google Search needs billing enabled on the Gemini key (free tier has no search quota). The free \"web search\" sources cover this meanwhile.",
   "item_count": 0
  },
  {
@@ -474,9 +474,9 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T21:46:46.151Z",
-  "last_status": "error",
-  "last_message": "Gemini failed: no model available",
+  "last_run": "2026-11-07T21:58:28.285Z",
+  "last_status": "skipped",
+  "last_message": "Skipped: Gemini Google Search needs billing enabled on the Gemini key (free tier has no search quota). The free \"web search\" sources cover this meanwhile.",
   "item_count": 0
  },
  {
@@ -490,9 +490,9 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T21:46:46.501Z",
-  "last_status": "error",
-  "last_message": "Gemini failed: no model available",
+  "last_run": "2026-11-07T21:58:28.585Z",
+  "last_status": "skipped",
+  "last_message": "Skipped: Gemini Google Search needs billing enabled on the Gemini key (free tier has no search quota). The free \"web search\" sources cover this meanwhile.",
   "item_count": 0
  },
  {
@@ -506,9 +506,9 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T21:46:46.807Z",
-  "last_status": "error",
-  "last_message": "Gemini failed: no model available",
+  "last_run": "2026-11-07T21:58:28.898Z",
+  "last_status": "skipped",
+  "last_message": "Skipped: Gemini Google Search needs billing enabled on the Gemini key (free tier has no search quota). The free \"web search\" sources cover this meanwhile.",
   "item_count": 0
  },
  {
@@ -522,7 +522,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T21:47:10.907Z",
+  "last_run": "2026-11-07T21:58:36.446Z",
   "last_status": "ok",
   "last_message": "0 opportunities seen, 0 new",
   "item_count": 0
@@ -538,7 +538,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T21:47:30.385Z",
+  "last_run": "2026-11-07T21:58:43.228Z",
   "last_status": "ok",
   "last_message": "1 opportunities seen, 0 new",
   "item_count": 1
@@ -554,7 +554,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T21:47:50.424Z",
+  "last_run": "2026-11-07T21:58:49.810Z",
   "last_status": "ok",
   "last_message": "1 opportunities seen, 0 new",
   "item_count": 1
@@ -570,9 +570,9 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T21:48:09.815Z",
+  "last_run": "2026-11-07T21:58:56.179Z",
   "last_status": "ok",
-  "last_message": "1 opportunities seen, 1 new",
+  "last_message": "1 opportunities seen, 0 new",
   "item_count": 1
  },
  {
@@ -586,7 +586,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T21:48:30.843Z",
+  "last_run": "2026-11-07T21:59:02.381Z",
   "last_status": "ok",
   "last_message": "0 opportunities seen, 0 new",
   "item_count": 0
@@ -602,9 +602,9 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T21:48:51.317Z",
+  "last_run": "2026-11-07T21:59:09.184Z",
   "last_status": "ok",
-  "last_message": "1 opportunities seen, 1 new",
+  "last_message": "1 opportunities seen, 0 new",
   "item_count": 1
  },
  {
@@ -618,7 +618,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T21:49:08.554Z",
+  "last_run": "2026-11-07T21:59:15.748Z",
   "last_status": "ok",
   "last_message": "1 opportunities seen, 0 new",
   "item_count": 1
@@ -634,9 +634,9 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T21:49:27.644Z",
+  "last_run": "2026-11-07T21:59:22.632Z",
   "last_status": "ok",
-  "last_message": "1 opportunities seen, 1 new",
+  "last_message": "1 opportunities seen, 0 new",
   "item_count": 1
  },
  {
@@ -650,7 +650,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T21:49:48.388Z",
+  "last_run": "2026-11-07T21:59:28.505Z",
   "last_status": "ok",
   "last_message": "0 opportunities seen, 0 new",
   "item_count": 0
@@ -666,9 +666,9 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T21:50:06.933Z",
+  "last_run": "2026-11-07T21:59:35.268Z",
   "last_status": "ok",
-  "last_message": "1 opportunities seen, 1 new",
+  "last_message": "1 opportunities seen, 0 new",
   "item_count": 1
  },
  {
@@ -714,9 +714,9 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T21:50:27.850Z",
+  "last_run": "2026-11-07T21:59:43.258Z",
   "last_status": "ok",
-  "last_message": "6 opportunities seen, 6 new",
+  "last_message": "6 opportunities seen, 0 new",
   "item_count": 6
  },
  {
@@ -730,9 +730,9 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T21:50:44.800Z",
+  "last_run": "2026-11-07T21:59:48.813Z",
   "last_status": "ok",
-  "last_message": "3 opportunities seen, 3 new",
+  "last_message": "3 opportunities seen, 1 new",
   "item_count": 3
  },
  {
@@ -746,7 +746,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T21:51:29.459Z",
+  "last_run": "2026-11-07T21:59:55.865Z",
   "last_status": "ok",
   "last_message": "3 opportunities seen, 3 new",
   "item_count": 3
@@ -762,7 +762,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T21:51:44.283Z",
+  "last_run": "2026-11-07T22:00:01.137Z",
   "last_status": "ok",
   "last_message": "1 opportunities seen, 1 new",
   "item_count": 1
@@ -778,10 +778,10 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T21:51:46.583Z",
+  "last_run": "2026-11-07T22:00:02.958Z",
   "last_status": "ok",
-  "last_message": "50 opportunities seen, 36 new",
-  "item_count": 50
+  "last_message": "43 opportunities seen, 17 new",
+  "item_count": 43
  },
  {
   "id": "scout-feed-oppdesk",
@@ -794,9 +794,9 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-07T21:51:47.607Z",
+  "last_run": "2026-11-07T22:00:04.036Z",
   "last_status": "ok",
-  "last_message": "10 opportunities seen, 9 new",
+  "last_message": "10 opportunities seen, 10 new",
   "item_count": 10
  },
  {
@@ -814,5 +814,69 @@
   "last_status": "error",
   "last_message": "HTTP 403 Forbidden for https://www2.fundsforngos.org/category/health/feed/",
   "item_count": 0
+ },
+ {
+  "id": "scout-web-ai-health",
+  "name": "AI for health calls (free web search)",
+  "category": "grants",
+  "type": "scout_web",
+  "url": "\"call for proposals\" AI health Africa\n\"request for proposals\" artificial intelligence global health\n\"open call\" AI primary health care low- and middle-income countries",
+  "enabled": true,
+  "notes": "Scout · free web + news search (Bing). One query per line; Gemini reads the hits and keeps real open opportunities.",
+  "kind": null,
+  "unit": null,
+  "display_name": null,
+  "last_run": "2026-11-07T21:58:30.576Z",
+  "last_status": "ok",
+  "last_message": "27 opportunities seen, 21 new",
+  "item_count": 27
+ },
+ {
+  "id": "scout-web-foundations",
+  "name": "Foundation & tech-philanthropy calls (free web search)",
+  "category": "grants",
+  "type": "scout_web",
+  "url": "foundation launches fund AI public services nonprofits\nOpenAI OR Rockefeller OR Gates AI grant call nonprofits apply\n\"call for applications\" AI social impact nonprofits grant 2026",
+  "enabled": true,
+  "notes": "Scout · free web + news search (Bing). One query per line; Gemini reads the hits and keeps real open opportunities.",
+  "kind": null,
+  "unit": null,
+  "display_name": null,
+  "last_run": "2026-11-07T21:58:32.439Z",
+  "last_status": "ok",
+  "last_message": "30 opportunities seen, 14 new",
+  "item_count": 30
+ },
+ {
+  "id": "scout-web-tenders",
+  "name": "Global health tenders (free web search)",
+  "category": "grants",
+  "type": "scout_web",
+  "url": "Global Fund request for proposals digital health 2026\nUnitaid OR Gavi OR UNICEF \"call for proposals\" digital health AI",
+  "enabled": true,
+  "notes": "Scout · free web + news search (Bing). One query per line; Gemini reads the hits and keeps real open opportunities.",
+  "kind": null,
+  "unit": null,
+  "display_name": null,
+  "last_run": "2026-11-07T21:58:33.420Z",
+  "last_status": "ok",
+  "last_message": "20 opportunities seen, 13 new",
+  "item_count": 20
+ },
+ {
+  "id": "scout-web-innovation",
+  "name": "Innovation funds & prizes (free web search)",
+  "category": "grants",
+  "type": "scout_web",
+  "url": "\"innovation fund\" open call development low-income countries 2026\nprize \"scaling impact\" nonprofits apply 2026",
+  "enabled": true,
+  "notes": "Scout · free web + news search (Bing). One query per line; Gemini reads the hits and keeps real open opportunities.",
+  "kind": null,
+  "unit": null,
+  "display_name": null,
+  "last_run": "2026-11-07T21:58:34.428Z",
+  "last_status": "ok",
+  "last_message": "18 opportunities seen, 11 new",
+  "item_count": 18
  }
 ]

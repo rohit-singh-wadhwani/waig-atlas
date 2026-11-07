@@ -1,38 +1,6 @@
 {
- "updated_at": "2026-11-07T21:54:13.733Z",
+ "updated_at": "2026-11-07T22:01:57.254Z",
  "grants": [
-  {
-   "id": "303bc8d807cc1f89",
-   "title": "Interdisciplinary Research to Understand the Complex Biology of Resilience to Alzheimer’s and Related Dementias Disease Risk",
-   "funder": "National Institutes of Health",
-   "summary": "This funding opportunity supports interdisciplinary research projects investigating the biological mechanisms of resilience against Alzheimer's disease and related dementias. It targets academic and research institutions aiming to advance fundamental biomedical understanding.",
-   "amount_text": null,
-   "amount_usd": null,
-   "deadline": null,
-   "open_date": "2025-09-03",
-   "eligibility": "Higher education institutions, non-profits, for-profit organizations, and foreign institutions.",
-   "requirements": "Interdisciplinary research teams proposing rigorous studies on dementia resilience biology.",
-   "countries": [
-    "GLOBAL"
-   ],
-   "regions": [],
-   "themes": [
-    "Health",
-    "Biomedical Research",
-    "AI"
-   ],
-   "url": "https://www.grants.gov/search-results-detail/360453",
-   "source_id": "grantsgov-health-ai",
-   "source_name": "Grants.gov: AI in health",
-   "fetched_at": "2026-11-07T21:54:13.733Z",
-   "score": null,
-   "strengths": [],
-   "weaknesses": [],
-   "score_reason": null,
-   "fit": null,
-   "eligible_as": null,
-   "notes": null
-  },
   {
    "id": "f4a4ef7d5c8b0fd4",
    "title": "Science of Learning and Augmented Intelligence (SL)",
@@ -796,6 +764,44 @@
    "source_id": "grantsgov-health-ai",
    "source_name": "Grants.gov: AI in health",
    "fetched_at": "2026-11-07T02:29:38.646+00:00",
+   "score": null,
+   "strengths": [],
+   "weaknesses": [],
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T21:06:34.547621+00:00"
+  },
+  {
+   "id": "303bc8d807cc1f89",
+   "title": "Interdisciplinary Research to Understand the Complex Biology of Resilience to Alzheimer’s and Related Dementias Disease Risk",
+   "funder": "National Institutes of Health",
+   "summary": "This funding opportunity supports interdisciplinary research projects investigating the biological mechanisms of resilience against Alzheimer's disease and related dementias. It targets academic and research institutions aiming to advance fundamental biomedical understanding.",
+   "amount_text": null,
+   "amount_usd": null,
+   "deadline": null,
+   "open_date": "2025-09-03",
+   "eligibility": "Higher education institutions, non-profits, for-profit organizations, and foreign institutions.",
+   "requirements": "Interdisciplinary research teams proposing rigorous studies on dementia resilience biology.",
+   "countries": [
+    "GLOBAL"
+   ],
+   "regions": [],
+   "themes": [
+    "Health",
+    "Biomedical Research",
+    "AI"
+   ],
+   "url": "https://www.grants.gov/search-results-detail/360453",
+   "source_id": "grantsgov-health-ai",
+   "source_name": "Grants.gov: AI in health",
+   "fetched_at": "2026-11-07T21:54:13.733+00:00",
    "score": null,
    "strengths": [],
    "weaknesses": [],
@@ -2066,6 +2072,45 @@
    "notes": null,
    "added_by": null,
    "updated_at": "2026-11-07T21:51:48.46+00:00"
+  },
+  {
+   "id": "sc_8dcbe504c0245fce",
+   "title": "Cities Deliver: AI Solutions for Public Services",
+   "funder": "Rockefeller Foundation / OpenAI Foundation",
+   "summary": "A $50 million partnership supporting organizations that help cities around the world improve public services through AI. This aligns closely with WAIG's focus on deploying AI solutions for public health and government partnerships.",
+   "amount_text": "Up to $50M total initiative",
+   "amount_usd": 5000000,
+   "deadline": null,
+   "open_date": null,
+   "eligibility": "NPO (incl. university labs, fiscally sponsored orgs) or Public Benefit Corp. Must have city government partner.",
+   "requirements": "[\"Must partner with a city government\",\"Focus on AI solutions for public services\"]",
+   "countries": [
+    "GLOBAL"
+   ],
+   "regions": [],
+   "themes": [
+    "AI for Public Services",
+    "Government Partnerships",
+    "Global Health",
+    "Civic Innovation"
+   ],
+   "url": "https://finance.yahoo.com/technology/ai/articles/rockefeller-foundation-openai-foundation-announce-133800648.html",
+   "source_id": "scout-web-foundations",
+   "source_name": "Foundation & tech-philanthropy calls (free web search)",
+   "fetched_at": "2026-11-07T22:00:04.388+00:00",
+   "score": null,
+   "strengths": [],
+   "weaknesses": [],
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": "Rolling / Open",
+   "sector": "Healthcare (frontline care, disease surveillance, nutrition) / Environmental Resilience / Civic Engagement",
+   "fit": null,
+   "eligible_as": null,
+   "geography": "Global (Cities worldwide)",
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-07T22:00:04.388+00:00"
   }
  ]
 }
