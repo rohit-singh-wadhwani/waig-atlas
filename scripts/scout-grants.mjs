@@ -45,6 +45,23 @@ function isDuplicate(c, known) {
     (host(c.url) && host(c.url) === host(k.url) && similar(c.title, k.title) >= 0.5) || (similar(c.title, k.title) >= 0.7 && (similar(c.funder, k.funder) >= 0.5 || !c.funder || !k.funder)));
 }
 
+/* ---------- structured output (Gemini must return valid JSON in this shape) ---------- */
+const S = (props, req = []) => ({ type: 'OBJECT', properties: props, required: req });
+const STR = { type: 'STRING', nullable: true };
+const LIST = { type: 'ARRAY', items: { type: 'STRING' } };
+const RAW_SCHEMA = { type: 'ARRAY', items: S({ title: { type: 'STRING' }, funder: STR, url: STR, deadline_text: STR, amount: STR, text: STR }, ['title']) };
+const WRITEUP_SCHEMA = {
+  type: 'ARRAY',
+  items: S({
+    i: { type: 'INTEGER' }, relevant: { type: 'BOOLEAN' }, open: { type: 'BOOLEAN' }, title: STR, funder: STR, funding_range: STR,
+    amount_usd: { type: 'NUMBER', nullable: true }, deadline: STR, deadline_text: STR, sector: STR, geography: STR, countries: LIST,
+    fit: { type: 'STRING', enum: ['High', 'Medium', 'Medium - Low', 'Low', 'Not eligible'] }, eligible_as: STR, description: STR,
+    requirements: STR, strengths: LIST, weaknesses: LIST, why: STR, themes: LIST,
+  }, ['i', 'relevant', 'open', 'fit']),
+};
+const HEALTHY = /health|medic|disease|clinic|epidemi|diagnos|hospital|nutrition|maternal|vaccin|tubercul|malaria|hiv|pandemic|public service|social impact|development|lmic|africa|india|global south/i;
+const JUNK = /scholarship|fellowship|phd|master'?s|student|playwright|film|music|art(ist)?s? |restaurant|essay|photography|journalis|internship|conference|webinar/i;
+
 /* ---------- channels ---------- */
 function pageDigest(html, base) {
   const links = [];
@@ -75,7 +92,7 @@ Return a JSON array (empty if none) of {"title","funder","url","deadline_text":"
 PAGE TEXT:
 ${text}
 LINKS:
-${links}`);
+${links}`, { schema: RAW_SCHEMA });
   state.pages[src.id] = h;
   return { items: Array.isArray(out) ? out : [] };
 }
@@ -91,7 +108,8 @@ Prefer official funder pages. Include calls announced recently. Return ONLY a JS
 
 async function fromFeed(src) {
   const items = parseFeed(await fetchPage(src.url)).slice(0, 30);
-  return { items: items.map((i) => ({ title: i.title, url: i.url, funder: '', deadline_text: null, amount: null, text: (i.text || '').slice(0, 800) })) };
+  const keep = items.filter((i) => !JUNK.test(i.title) && HEALTHY.test(`${i.title} ${i.text || ''}`));
+  return { items: keep.map((i) => ({ title: i.title, url: i.url, funder: '', deadline_text: null, amount: null, text: (i.text || '').slice(0, 800) })), note: `${items.length} in feed, ${keep.length} look relevant` };
 }
 
 async function fromEu(src) {
@@ -116,7 +134,7 @@ async function fromEu(src) {
         amount: null,
         text: stripHtml(one(md.descriptionByte) || x.content || x.summary || '').slice(0, 1500),
       };
-    }).filter((i) => i.title && i.url && (!i.deadline_text || i.deadline_text >= today())),
+    }).filter((i) => i.title && i.url && (!i.deadline_text || i.deadline_text >= today()) && /health|medic|disease|clinic|epidemi|diagnos|pandemic|care/i.test(`${i.title} ${i.text}`)),
   };
 }
 
@@ -131,33 +149,60 @@ function unwrapBing(u) {
   }
 }
 const SKIP_HOSTS = /(linkedin|facebook|twitter|x\.com|youtube|instagram|reddit|wikipedia|indeed|glassdoor)\./i;
+function ddgParse(html) {
+  const out = [];
+  const re = /<a[^>]*class="result__a"[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/g;
+  let m;
+  while ((m = re.exec(html))) {
+    const next = html.indexOf('class="result__a"', re.lastIndex);
+    const snip = html.slice(re.lastIndex, next < 0 ? re.lastIndex + 3000 : next).match(/class="result__snippet"[^>]*>([\s\S]*?)<\/a>/);
+    m[3] = snip ? snip[1] : '';
+    let url = m[1].replace(/&amp;/g, '&');
+    try {
+      const u = new URL(url, 'https://duckduckgo.com');
+      url = u.searchParams.get('uddg') || u.href;
+    } catch {}
+    if (/duckduckgo\.com\/y\.js|ad_provider/.test(url)) continue; // ads
+    out.push({ title: stripHtml(m[2]), url, text: stripHtml(m[3] || '') });
+  }
+  return out;
+}
 async function fromWeb(src) {
   const queries = String(src.url).split(/\n|;/).map((q) => q.trim()).filter(Boolean);
   const seen = new Set();
   const items = [];
-  let ok = 0;
+  const raw = { ddg: 0, bing: 0, news: 0 };
   for (const q of queries) {
-    for (const base of ['https://www.bing.com/search?format=rss&count=20&q=', 'https://www.bing.com/news/search?format=rss&count=20&q=']) {
+    const enc = q.split(/\s+/).map(encodeURIComponent).join('+');
+    const engines = [
+      ['ddg', async () => ddgParse(await fetchPage(`https://html.duckduckgo.com/html/?q=${enc}`))],
+      ['bing', async () => parseFeed(await fetchPage(`https://www.bing.com/search?format=rss&count=20&q=${enc}`))],
+      ['news', async () => parseFeed(await fetchPage(`https://www.bing.com/news/search?format=rss&count=20&q=${enc}`))],
+    ];
+    const terms = [...words(q.replace(/\bOR\b/g, ' '))];
+    const need = Math.min(2, terms.length);
+    for (const [name, run] of engines) {
+      let hits = [];
       try {
-        const terms = [...words(q.replace(/\bOR\b/g, ' '))];
-        const need = Math.min(2, terms.length);
-        for (const i of parseFeed(await fetchPage(base + q.split(/\s+/).map(encodeURIComponent).join('+')))) {
-          const url = unwrapBing(i.url);
-          if (!url || seen.has(url) || SKIP_HOSTS.test(url)) continue;
-          // keep hits that mention the query's key words and look like funding (search engines pad with junk)
-          const hay = `${i.title} ${i.text || ''}`.toLowerCase();
-          if (terms.filter((t) => hay.includes(t)).length < need || !/(grant|fund|call|proposal|rfp|tender|prize|challenge|award|apply|applications)/.test(hay)) continue;
-          seen.add(url);
-          items.push({ title: i.title, url, funder: '', deadline_text: null, amount: null, text: (i.text || '').slice(0, 600), date: i.date });
-        }
-        ok++;
+        hits = await run();
       } catch (e) {
-        log('web search failed', q, e.message);
+        log('web search', name, 'failed:', e.message);
+      }
+      raw[name] += hits.length;
+      for (const i of hits) {
+        const url = unwrapBing(i.url);
+        if (!url || seen.has(url) || SKIP_HOSTS.test(url)) continue;
+        // keep hits that mention the query's key words and look like funding (search engines pad with junk)
+        const hay = `${i.title} ${i.text || ''}`.toLowerCase();
+        if (JUNK.test(i.title) || terms.filter((t) => hay.includes(t)).length < need || !/(grant|fund|call|proposal|rfp|tender|prize|challenge|award|apply|applications)/.test(hay)) continue;
+        seen.add(url);
+        items.push({ title: i.title, url, funder: '', deadline_text: null, amount: null, text: (i.text || '').slice(0, 600) });
       }
     }
   }
-  if (!ok) throw new Error('web search returned nothing (Bing may be blocking automated requests)');
-  return { items };
+  const note = `search hits: DuckDuckGo ${raw.ddg}, Bing ${raw.bing}, Bing News ${raw.news}; ${items.length} look like funding calls`;
+  if (!raw.ddg && !raw.bing && !raw.news) throw new Error(`web search returned nothing (${note})`);
+  return { items: items.slice(0, 25), note };
 }
 
 const CHANNELS = { scout_page: fromPage, scout_search: fromSearch, scout_feed: fromFeed, scout_eu: fromEu, scout_web: fromWeb };
@@ -213,7 +258,7 @@ For each item below, write it up the way the team's sheet does. Return a JSON ar
 - "themes": up to 4 short tags
 Return the JSON array only.
 ITEMS:
-${JSON.stringify(items)}`);
+${JSON.stringify(items)}`, { schema: WRITEUP_SCHEMA });
   return Array.isArray(out) ? out : [];
 }
 
@@ -276,7 +321,7 @@ async function main() {
         candidates.push(c);
         fresh++;
       }
-      await reportSource(src, 'ok', note || `${items.length} opportunities seen, ${fresh} new`, items.length);
+      await reportSource(src, 'ok', `${note ? note + ' · ' : ''}${items.length} seen, ${fresh} new`, items.length);
       log(src.id, items.length, 'seen', fresh, 'new', note || '');
     } catch (e) {
       const noGrounding = src.type === 'scout_search' && /quota|400|billing|not supported|tool|no model available/i.test(e.message);
