@@ -261,6 +261,7 @@ export const sb = {
     for (let i = 0; i < rows.length; i += 200)
       await sbFetch(table, { method: 'POST', headers: { prefer: 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(rows.slice(i, i + 200)) });
   },
+  remove: (table, id) => sbFetch(`${table}?id=eq.${encodeURIComponent(id)}`, { method: 'DELETE', headers: { prefer: 'return=minimal' } }),
   patch: (table, id, row) => sbFetch(`${table}?id=eq.${encodeURIComponent(id)}`, { method: 'PATCH', headers: { prefer: 'return=minimal' }, body: JSON.stringify(row) }),
 };
 

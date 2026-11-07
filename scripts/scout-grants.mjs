@@ -139,9 +139,14 @@ async function fromWeb(src) {
   for (const q of queries) {
     for (const base of ['https://www.bing.com/search?format=rss&count=20&q=', 'https://www.bing.com/news/search?format=rss&count=20&q=']) {
       try {
-        for (const i of parseFeed(await fetchPage(base + encodeURIComponent(q)))) {
+        const terms = [...words(q.replace(/\bOR\b/g, ' '))];
+        const need = Math.min(2, terms.length);
+        for (const i of parseFeed(await fetchPage(base + q.split(/\s+/).map(encodeURIComponent).join('+')))) {
           const url = unwrapBing(i.url);
           if (!url || seen.has(url) || SKIP_HOSTS.test(url)) continue;
+          // keep hits that mention the query's key words and look like funding (search engines pad with junk)
+          const hay = `${i.title} ${i.text || ''}`.toLowerCase();
+          if (terms.filter((t) => hay.includes(t)).length < need || !/(grant|fund|call|proposal|rfp|tender|prize|challenge|award|apply|applications)/.test(hay)) continue;
           seen.add(url);
           items.push({ title: i.title, url, funder: '', deadline_text: null, amount: null, text: (i.text || '').slice(0, 600), date: i.date });
         }
@@ -226,8 +231,21 @@ async function main() {
     tracking = (await sb.select('grant_tracking', 'select=grant_id,status')) || [];
   } else existing = readJson('grants.json', { grants: [] }).grants || [];
 
+  // tidy: drop scout finds that duplicate something the team already added (and nobody has picked up)
+  if (HAS_SB) {
+    const team = existing.filter((g) => g.curated);
+    const touched = new Set(tracking.map((t) => t.grant_id));
+    for (const g of existing.filter((g) => String(g.source_id || '').startsWith('scout') && !g.curated && !touched.has(g.id))) {
+      if (!isDuplicate(g, team)) continue;
+      await sb.remove('grants', g.id);
+      rejected.add(g.id);
+      existing = existing.filter((x) => x.id !== g.id);
+      log('removed duplicate of a team entry:', g.title);
+    }
+  }
+
   // 1. collect candidates (searches first: they find the most, then pages, feeds, EU)
-  const order = { scout_search: 0, scout_web: 1, scout_page: 2, scout_eu: 3, scout_feed: 4 };
+  const order = { scout_search: 0, scout_page: 1, scout_eu: 2, scout_feed: 3, scout_web: 4 };
   let groundingOff = null;
   sources.sort((a, b) => order[a.type] - order[b.type]);
   const candidates = [];
@@ -312,6 +330,11 @@ async function main() {
           if (r.relevant === false || r.open === false || (r.deadline && r.deadline < today())) {
             rejected.add(b.id);
             log(' -', r.relevant === false ? 'not relevant' : 'closed', '|', b.title);
+            continue;
+          }
+          if (isDuplicate({ title: r.title || b.title, funder: r.funder || b.funder, url: b.url }, existing)) {
+            rejected.add(b.id);
+            log(' = already tracked |', r.title || b.title);
             continue;
           }
           const fit = FITS.find((f) => f.toLowerCase() === String(r.fit || '').toLowerCase()) || null;
