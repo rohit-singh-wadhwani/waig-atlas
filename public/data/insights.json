@@ -1,5 +1,5 @@
 {
- "updated_at": "2026-11-08T04:12:31.588Z",
+ "updated_at": "2026-11-08T07:25:14.098Z",
  "insights": [
   {
    "id": "9b807fe45fb20e46",
@@ -198,6 +198,22 @@
    "countries": [],
    "diseases": [
     "tuberculosis"
+   ]
+  },
+  {
+   "id": "d335dd893081fb0a",
+   "title": "Time-series forecasting of mRDT-positive malaria counts in Tanzania's lake zone: a comparative evaluation of statistical and machine-learning models using routine surveillance data, 2018-2025.",
+   "summary": "This study compares statistical and machine-learning models for time-series forecasting of malaria counts using routine surveillance data in Tanzania.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/42995647/",
+   "published_at": "2026-11-06T00:00:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [
+    "TZA"
+   ],
+   "diseases": [
+    "malaria"
    ]
   },
   {
