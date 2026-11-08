@@ -122,7 +122,7 @@
   "kind": "news",
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-08T19:04:11.008Z",
+  "last_run": "2026-11-08T21:54:13.238Z",
   "last_status": "ok",
   "last_message": "1 recent items, 0 new",
   "item_count": 1
@@ -138,7 +138,7 @@
   "kind": "outbreak",
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-08T19:04:04.720Z",
+  "last_run": "2026-11-08T21:54:14.425Z",
   "last_status": "ok",
   "last_message": "10 recent items, 0 new",
   "item_count": 10
@@ -154,7 +154,7 @@
   "kind": "news",
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-08T19:03:59.853Z",
+  "last_run": "2026-11-08T21:54:13.628Z",
   "last_status": "ok",
   "last_message": "30 recent items, 0 new",
   "item_count": 30
@@ -170,7 +170,7 @@
   "kind": "research",
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-08T19:04:09.446Z",
+  "last_run": "2026-11-08T21:54:11.839Z",
   "last_status": "ok",
   "last_message": "25 recent items, 0 new",
   "item_count": 25
@@ -186,7 +186,7 @@
   "kind": "research",
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-08T19:04:02.958Z",
+  "last_run": "2026-11-08T21:54:07.799Z",
   "last_status": "ok",
   "last_message": "25 recent items, 0 new",
   "item_count": 25
@@ -202,7 +202,7 @@
   "kind": "social",
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-08T19:04:09.888Z",
+  "last_run": "2026-11-08T21:54:12.742Z",
   "last_status": "ok",
   "last_message": "15 recent items, 0 new",
   "item_count": 15
@@ -218,7 +218,7 @@
   "kind": "social",
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-08T19:04:06.050Z",
+  "last_run": "2026-11-08T21:54:08.160Z",
   "last_status": "skipped",
   "last_message": "Skipped: Gemini web search needs a paid (billing-enabled) key; set repo variable GEMINI_SEARCH=1 to turn on",
   "item_count": 0
@@ -234,7 +234,7 @@
   "kind": "tender",
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-08T19:04:06.365Z",
+  "last_run": "2026-11-08T21:54:09.097Z",
   "last_status": "skipped",
   "last_message": "Skipped: Gemini web search needs a paid (billing-enabled) key; set repo variable GEMINI_SEARCH=1 to turn on",
   "item_count": 0
@@ -346,7 +346,7 @@
   "kind": "tender",
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-08T19:04:05.251Z",
+  "last_run": "2026-11-08T21:54:15.044Z",
   "last_status": "ok",
   "last_message": "40 recent items, 0 new",
   "item_count": 40
