@@ -1,5 +1,5 @@
 {
- "updated_at": "2026-11-08T10:03:19.729Z",
+ "updated_at": "2026-11-08T13:13:45.315Z",
  "insights": [
   {
    "id": "9b807fe45fb20e46",
@@ -199,6 +199,108 @@
    "diseases": [
     "tuberculosis"
    ]
+  },
+  {
+   "id": "b0f522f4cd81f2a3",
+   "title": "Procurement of Gumboots for Cholera outbreak",
+   "summary": "Procurement of gumboots in Zambia to support cholera outbreak response activities.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00479997",
+   "published_at": "2026-11-07T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "ZMB"
+   ],
+   "diseases": [
+    "cholera"
+   ]
+  },
+  {
+   "id": "ec7a8872db7a2124",
+   "title": "Procurement of Liquid Chlorine and Granular",
+   "summary": "Procurement of liquid chlorine and granular disinfectants in Zambia for water sanitation and outbreak response.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00480002",
+   "published_at": "2026-11-07T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "ZMB"
+   ],
+   "diseases": [
+    "cholera"
+   ]
+  },
+  {
+   "id": "f09cf2e452432736",
+   "title": "Procurement of 1 No. Binocular Light Microscope with a digital camera for Disease Surveillance Lab and 50 No. Gas-Powered Flame Burners for Singeing of slaughtered animals in Abattoirs",
+   "summary": "Procurement of a binocular light microscope with a digital camera for a disease surveillance lab in Nigeria.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00480044",
+   "published_at": "2026-11-07T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "NGA"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "8f57bbc537c6f036",
+   "title": "Procurement of Medical Facility Equipment for Equipping 31 Upgraded Primary Healthcare Centers (PHCs) In Edo State",
+   "summary": "Procurement of medical facility equipment for upgraded primary healthcare centers in Edo State, Nigeria.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00480054",
+   "published_at": "2026-11-07T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "NGA"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "31a29f89604b1d14",
+   "title": "Procurement of Medical Facility Equipment for Equipping 31 Upgraded Primary Healthcare Centers (PHCs) In Edo State",
+   "summary": "Procurement of medical facility equipment for upgraded primary healthcare centers in Edo State, Nigeria.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00480060",
+   "published_at": "2026-11-07T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "NGA"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "dc5d0169aae95b7d",
+   "title": "Procurement of Medical Facility Equipment for Equipping 31 Upgraded Primary Healthcare Centers (PHCs) In Edo State",
+   "summary": "Procurement of medical facility equipment for upgraded primary healthcare centers in Edo State, Nigeria.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00480058",
+   "published_at": "2026-11-07T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "NGA"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "3e7e33ee33107a74",
+   "title": "Procurement of Medical Facility Equipment for Equipping 31 Upgraded Primary Healthcare Centers (PHCs) In Edo State",
+   "summary": "Procurement of medical facility equipment for upgraded primary healthcare centers in Edo State, Nigeria.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00480057",
+   "published_at": "2026-11-07T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "NGA"
+   ],
+   "diseases": []
   },
   {
    "id": "d335dd893081fb0a",
