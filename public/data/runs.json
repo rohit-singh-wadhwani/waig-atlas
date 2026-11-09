@@ -1,6 +1,12 @@
 {
  "runs": [
   {
+   "job": "health",
+   "at": "2026-11-09T01:55:01.260Z",
+   "ok": true,
+   "message": "6 indicators"
+  },
+  {
    "job": "insights",
    "at": "2026-11-09T01:30:41.660Z",
    "ok": true,
