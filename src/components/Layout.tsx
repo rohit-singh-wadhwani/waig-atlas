@@ -17,6 +17,7 @@ const NAV: { to: string; label: string; icon: IconName; group?: string }[] = [
   { to: '/projects', label: 'Projects', icon: 'folder', group: 'Project Dashboards' },
   { to: '/templates', label: 'Milestone Templates', icon: 'layers', group: 'Project Dashboards' },
   { to: '/context', label: 'Org Context', icon: 'building', group: 'Settings' },
+  { to: '/people', label: 'People', icon: 'users', group: 'Settings' },
 ];
 
 export function Sidebar() {

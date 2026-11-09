@@ -13,7 +13,7 @@ import { DEMO, db, loadGrants } from '../lib/store';
 import { FIT_OPTIONS, fitScore, parseCountries, parseDeadline, pipelineId } from '../lib/pipeline';
 import { useWorld, NO_COUNTRIES } from '../lib/world';
 import { daysUntil, fmtDate, fmtTime, fmtUsd, relDays, scoreTone } from '../lib/format';
-import { GRANT_STAGES, TEAM, personName } from '../lib/team';
+import { GRANT_STAGES, peopleOptions, personName, usePeople } from '../lib/team';
 import type { Country, Grant, GrantTracking } from '../lib/types';
 
 type Tracked = GrantTracking & { id: string };
@@ -349,6 +349,7 @@ function GrantDrawer({ grant, tracking, countries, onClose }: { grant: Grant | n
 
 function GrantDrawerBody({ grant, t, tracking, save, tone, countries, onClose }: any) {
   const me = useMe();
+  const people = usePeople();
   const [editing, setEditing] = useState(false);
   const [notes, setNotes] = useState(grant.notes || '');
   useEffect(() => setNotes(grant.notes || ''), [grant.id, grant.notes]);
@@ -456,7 +457,7 @@ function GrantDrawerBody({ grant, t, tracking, save, tone, countries, onClose }:
         <CardHeader title="Pursuit" subtitle="Assign a POC, set the status, and tick stages as they happen" />
         <div className="grid md:grid-cols-2 gap-4 mb-4">
           <Field label="POC">
-            <Select value={t.assignee || ''} onChange={(v) => save({ assignee: v || null, status: v && t.status === 'watching' ? 'pursuing' : t.status })} placeholder="Unassigned" options={TEAM.map((p) => ({ value: p.email, label: `${p.name} · ${p.team}` }))} />
+            <Select value={t.assignee || ''} onChange={(v) => save({ assignee: v || null, status: v && t.status === 'watching' ? 'pursuing' : t.status })} placeholder="Unassigned" options={peopleOptions(people, t.assignee, true)} />
           </Field>
           <Field label="Status">
             <Select value={t.status} onChange={(v) => save({ status: v as GrantTracking['status'] })} options={STATUS.map((s) => ({ value: s.value, label: s.label }))} />

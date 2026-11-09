@@ -110,7 +110,7 @@ function ChartView({ kind, title, data }: { kind: string; title: string; data: s
 const ChartBlock = createReactBlockSpec(
   {
     type: 'chart',
-    propSchema: { kind: { default: 'bar', values: ['bar', 'line', 'pie'] as const }, title: { default: 'Chart title' }, data: { default: 'Label,Value\nA,10\nB,20\nC,15' } },
+    propSchema: { kind: { default: 'bar', values: ['bar', 'line', 'pie'] as const }, title: { default: '' }, data: { default: 'Label,Value' } },
     content: 'none',
   },
   { render: (props: any) => <ChartRender {...props} /> }
@@ -121,7 +121,13 @@ function ChartRender({ block, editor }: any) {
       const [d, setD] = useState({ kind: block.props.kind as string, title: block.props.title, data: block.props.data });
       return (
         <div className="w-full rounded-xl border border-gray-100 bg-white p-3 group/chart relative" contentEditable={false}>
-          <ChartView kind={block.props.kind} title={block.props.title} data={block.props.data} />
+          {String(block.props.data || '').trim().split('\n').length < 2 ? (
+            <button type="button" disabled={!editor.isEditable} onClick={() => { setD({ kind: block.props.kind, title: block.props.title, data: block.props.data }); setOpen(true); }} className="w-full py-8 text-sm text-gray-500 hover:text-brand-700">
+              Empty {block.props.kind === 'pie' ? 'donut' : block.props.kind} chart · click to add your data
+            </button>
+          ) : (
+            <ChartView kind={block.props.kind} title={block.props.title} data={block.props.data} />
+          )}
           {editor.isEditable && (
             <button type="button" onClick={() => { setD({ kind: block.props.kind, title: block.props.title, data: block.props.data }); setOpen(true); }} className="absolute top-2 right-2 opacity-0 group-hover/chart:opacity-100 transition-opacity text-xs px-2.5 py-1 rounded-lg border border-gray-200 bg-white hover:bg-gray-50">
               Edit chart
@@ -157,9 +163,9 @@ const TEMPLATES: { title: string; subtext: string; aliases: string[]; block: any
   { title: 'Flowchart', subtext: 'Boxes and arrows (Mermaid)', aliases: ['mermaid', 'diagram', 'flow'], block: { type: 'mermaid', props: { code: 'flowchart LR\n  A[Input] --> B[Process] --> C[Output]' } } },
   { title: 'Timeline / Gantt', subtext: 'Tasks over time (Mermaid)', aliases: ['gantt', 'timeline', 'plan'], block: { type: 'mermaid', props: { code: 'gantt\n  dateFormat YYYY-MM-DD\n  axisFormat %b %y\n  section Work\n  Task one :a1, 2026-11-10, 21d\n  Task two :after a1, 14d' } } },
   { title: 'Sequence diagram', subtext: 'Who calls whom (Mermaid)', aliases: ['sequence', 'api'], block: { type: 'mermaid', props: { code: 'sequenceDiagram\n  participant App\n  participant API\n  App->>API: request\n  API-->>App: response' } } },
-  { title: 'Bar chart', subtext: 'Compare values', aliases: ['chart', 'graph', 'bar'], block: { type: 'chart', props: { kind: 'bar', title: 'Bar chart', data: 'Label,Value\nA,10\nB,20\nC,15' } } },
-  { title: 'Line chart', subtext: 'Trend over time', aliases: ['chart', 'graph', 'line', 'trend'], block: { type: 'chart', props: { kind: 'line', title: 'Trend', data: 'Month,Actual,Target\nJan,10,12\nFeb,14,15\nMar,18,18' } } },
-  { title: 'Donut chart', subtext: 'Share of a whole', aliases: ['chart', 'pie', 'donut'], block: { type: 'chart', props: { kind: 'pie', title: 'Split', data: 'Part,Share\nA,50\nB,30\nC,20' } } },
+  { title: 'Bar chart', subtext: 'Compare values', aliases: ['chart', 'graph', 'bar'], block: { type: 'chart', props: { kind: 'bar', title: '', data: 'Label,Value' } } },
+  { title: 'Line chart', subtext: 'Trend over time', aliases: ['chart', 'graph', 'line', 'trend'], block: { type: 'chart', props: { kind: 'line', title: '', data: 'Period,Value' } } },
+  { title: 'Donut chart', subtext: 'Share of a whole', aliases: ['chart', 'pie', 'donut'], block: { type: 'chart', props: { kind: 'pie', title: '', data: 'Part,Share' } } },
 ];
 
 function tableTemplate(title: string, aliases: string[], rows: string[][]) {

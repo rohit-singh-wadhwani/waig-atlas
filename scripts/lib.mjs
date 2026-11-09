@@ -102,6 +102,7 @@ const deadModels = new Set(); // model or model:search that is missing / out of 
 export const geminiStatus = { calls: 0, ok: 0, lastError: null, models: [] };
 let models = null;
 let qualityModels = null;
+let searchModels = null;
 
 const BASE = 'https://generativelanguage.googleapis.com/v1beta';
 
@@ -122,6 +123,8 @@ async function discoverModels() {
     models = ranked.length ? ranked.slice(0, 5) : fallback;
     // for careful writing: full Flash first, then the lite models
     qualityModels = [...ranked.filter((n) => !/lite/.test(n) && !/preview/.test(n)).slice(0, 2), ...models];
+    // Google Search grounding: Gemini 2.5 Flash / Flash-Lite include 500 free searches a day on the free tier; Gemini 3 has none
+    searchModels = [...new Set([...ranked.filter((n) => /^gemini-2\.5-flash(-lite)?$/.test(n)), ...models])];
   } catch (e) {
     models = fallback;
   }
@@ -146,7 +149,7 @@ export async function gemini(prompt, { json = true, search = false, temperature 
   if (!HAS_GEMINI) throw new Error('GEMINI_API_KEY not set');
   if (Date.now() - STARTED > BUDGET_MS) throw new Error('Gemini time budget for this run used up');
   const base = await discoverModels();
-  const list = quality && qualityModels ? qualityModels : base;
+  const list = search && searchModels ? searchModels : quality && qualityModels ? qualityModels : base;
   const body = {
     contents: [{ role: 'user', parts: [{ text: prompt }] }],
     generationConfig: { temperature, ...(json && !search ? { responseMimeType: 'application/json', ...(schema ? { responseSchema: schema } : {}) } : {}) },
@@ -186,7 +189,7 @@ export async function gemini(prompt, { json = true, search = false, temperature 
         const q = quotaInfo(j);
         note(new Error(`Gemini ${model}${search ? ' (search)' : ''} quota: ${q.msg}`));
         if (search && /plan and billing/i.test(q.msg)) {
-          for (const m of list) deadModels.add(m + ':search'); // no search quota on this key at all
+          deadModels.add(key); // this model has no search quota on this key; try the next one
           break;
         }
         if (q.daily || attempt === 2) {
@@ -323,17 +326,15 @@ export function recordRun(job, ok, message) {
 }
 
 export async function orgContext() {
+  // Lives in Supabase (Org Context page). No built-in fallback: scoring without it is flagged in the run log.
   if (HAS_SB) {
     try {
       const rows = await sb.select('org_context', 'select=content_md&id=eq.main');
       if (rows?.[0]?.content_md) return rows[0].content_md;
     } catch {}
   }
-  try {
-    return fs.readFileSync(path.join(ROOT, 'config', 'org-context.md'), 'utf8');
-  } catch {
-    return 'Wadhwani AI Global builds AI for public health in low- and middle-income countries.';
-  }
+  log('WARNING: Org Context page is empty; fit ratings use the team examples only');
+  return '(The Org Context page is empty.)';
 }
 
 export function chunk(arr, n) {

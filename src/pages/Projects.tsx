@@ -8,7 +8,7 @@ import { db } from '../lib/store';
 import { createProject, milestoneProgress } from '../lib/projects';
 import { useWorld, NO_COUNTRIES } from '../lib/world';
 import { daysUntil, fmtDate } from '../lib/format';
-import { personName, TEAM } from '../lib/team';
+import { peopleOptions, personName, usePeople } from '../lib/team';
 import type { MilestoneTemplate, Project, ProjectMilestone, Task } from '../lib/types';
 import { placeLabel } from './Grants';
 
@@ -105,6 +105,7 @@ function NewProject({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [country, setCountry] = useState('');
   const [funder, setFunder] = useState('');
   const [lead, setLead] = useState(me.email);
+  const people = usePeople();
   const [tpl, setTpl] = useState('');
   const [busy, setBusy] = useState(false);
   const save = async () => {
@@ -125,7 +126,7 @@ function NewProject({ open, onClose }: { open: boolean; onClose: () => void }) {
         <Field label="Funder"><TextInput className="w-full" value={funder} onChange={(e) => setFunder(e.target.value)} /></Field>
       </div>
       <div className="grid grid-cols-2 gap-3">
-        <Field label="Lead"><Select value={lead} onChange={setLead} options={TEAM.map((p) => ({ value: p.email, label: p.name }))} /></Field>
+        <Field label="Lead"><Select value={lead} onChange={setLead} placeholder="Choose" options={peopleOptions(people, lead)} /></Field>
         <Field label="Milestone template" hint="Edit templates under Milestone Templates"><Select value={tpl || templates.data[0]?.id || ''} onChange={setTpl} options={templates.data.map((t) => ({ value: t.id, label: t.name }))} /></Field>
       </div>
     </Modal>

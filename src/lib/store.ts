@@ -44,6 +44,7 @@ type Tables = {
   attachments: Attachment[];
   org_context: (OrgContext & { id: string })[];
   sources: Source[];
+  members: { id: string; email: string; name?: string | null; team?: string | null }[];
 };
 type TableName = keyof Tables;
 
@@ -86,6 +87,7 @@ async function demo(): Promise<Tables> {
         org_context: saved.org_context ?? seed.org_context ?? [],
         // source status always comes from the latest cron run; enabled flags can be overridden locally
         sources: mergeSources(sources, saved.sources),
+        members: saved.members ?? [],
       };
       demoState = t;
       return t;
@@ -230,15 +232,6 @@ export async function signInWithEmail(email: string): Promise<string | null> {
     options: { emailRedirectTo: window.location.origin + window.location.pathname },
   });
   return error ? error.message : null;
-}
-
-/** Import rows from the team's pipeline sheet (server-side upsert into grants, tracking and comments). */
-export async function importPipeline(rows: any[], author: string): Promise<number> {
-  if (!supabase) throw new Error('Importing needs Supabase.');
-  const { data, error } = await supabase.rpc('import_pipeline', { rows, author });
-  if (error) throw error;
-  emit();
-  return Number(data) || 0;
 }
 
 export async function signOut() {

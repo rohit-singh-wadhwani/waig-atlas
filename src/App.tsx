@@ -14,6 +14,7 @@ import ProjectsPage from './pages/Projects';
 import ProjectDetail from './pages/ProjectDetail';
 import TemplatesPage from './pages/Templates';
 import OrgContextPage from './pages/OrgContext';
+import PeoplePage from './pages/People';
 import SignIn from './pages/SignIn';
 
 /** First-run defaults: templates and the source list. */
@@ -75,6 +76,7 @@ export default function App() {
             <Route path="/projects/:slug/:mid" element={<ProjectDetail />} />
             <Route path="/templates" element={<TemplatesPage />} />
             <Route path="/context" element={<OrgContextPage />} />
+            <Route path="/people" element={<PeoplePage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Shell>

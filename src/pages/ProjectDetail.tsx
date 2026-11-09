@@ -11,7 +11,7 @@ import { db, uid } from '../lib/store';
 import { addMilestone, milestoneProgress, teamProgress } from '../lib/projects';
 import { useWorld, NO_COUNTRIES } from '../lib/world';
 import { daysUntil, fmtDate, fmtTime, relDays } from '../lib/format';
-import { TEAM, TEAMS, personName } from '../lib/team';
+import { NEW_TEAM, peopleOptions, personName, pickTeam, teamOptions, usePeople } from '../lib/team';
 import type { MilestoneTemplate, Page, Project, ProjectMilestone, Task } from '../lib/types';
 import { PROJECT_STATUS } from './Projects';
 import { placeLabel } from './Grants';
@@ -211,6 +211,7 @@ function Overview({ project, milestones, tasks, onSelect }: { project: Project; 
 }
 
 function MilestoneView({ project, m, page, tasks, me }: { project: Project; m: ProjectMilestone; page?: Page; tasks: Task[]; me: string }) {
+  const people = usePeople();
   const save = (patch: Partial<ProjectMilestone>) => db.upsert('project_milestones', { ...m, ...patch } as any);
   const pageId = React.useRef(page?.id || uid('pg'));
   const savePage = async ({ json, md }: { json: any[]; md: string }) => {
@@ -225,8 +226,8 @@ function MilestoneView({ project, m, page, tasks, me }: { project: Project; m: P
         <CardHeader title={m.name} subtitle="Milestone tracking" />
         <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))' }}>
           <Field label="Status"><Select value={m.status} onChange={(v) => save({ status: v as ProjectMilestone['status'], progress: v === 'done' ? 100 : m.progress })} options={MS_STATUS.map((s) => ({ value: s.value, label: s.label }))} /></Field>
-          <Field label="Owner"><Select value={m.owner || ''} onChange={(v) => save({ owner: v })} placeholder="Unassigned" options={TEAM.map((p) => ({ value: p.email, label: p.name }))} /></Field>
-          <Field label="Team"><Select value={m.team || ''} onChange={(v) => save({ team: v })} placeholder="—" options={TEAMS.map((t) => ({ value: t, label: t }))} /></Field>
+          <Field label="Owner"><Select value={m.owner || ''} onChange={(v) => save({ owner: v })} placeholder="Unassigned" options={peopleOptions(people, m.owner)} /></Field>
+          <Field label="Team"><Select value={m.team || ''} onChange={(v) => { const t = pickTeam(v); if (t !== null) save({ team: t }); }} placeholder="—" options={[...teamOptions(people, [m.team]), { value: NEW_TEAM, label: '+ New team…' }]} /></Field>
           <Field label="Start"><TextInput type="date" className="w-full" value={(m.start_date || '').slice(0, 10)} onChange={(e) => save({ start_date: e.target.value || null })} /></Field>
           <Field label="Target"><TextInput type="date" className="w-full" value={(m.target_date || '').slice(0, 10)} onChange={(e) => save({ target_date: e.target.value || null })} /></Field>
         </div>
@@ -303,17 +304,24 @@ export function slugId(h: string) {
 
 function TaskList({ project, tasks, milestones, milestoneId }: { project: Project; tasks: Task[]; milestones: ProjectMilestone[]; milestoneId?: string }) {
   const [title, setTitle] = useState('');
-  const [team, setTeam] = useState(TEAMS[0]);
+  const people = usePeople();
   const [filter, setFilter] = useState('');
+  const teams = teamOptions(people, tasks.map((t) => t.team));
+  const [team, setTeam] = useState('');
+  const addTeam = team || filter || teams[0]?.value || '';
   const add = async () => {
     if (!title.trim()) return;
-    await db.upsert('tasks', { id: uid('t'), project_id: project.id, milestone_id: milestoneId || null, title: title.trim(), team, status: 'todo' } as any);
+    await db.upsert('tasks', { id: uid('t'), project_id: project.id, milestone_id: milestoneId || null, title: title.trim(), team: addTeam, status: 'todo' } as any);
     setTitle('');
   };
   const list = tasks.filter((t) => !filter || t.team === filter).sort((a, b) => TASK_STATUS.findIndex((s) => s.value === a.status) - TASK_STATUS.findIndex((s) => s.value === b.status));
   return (
     <Card>
-      <CardHeader title="Tasks" subtitle={`${tasks.filter((t) => t.status !== 'done').length} open · ${tasks.length} total`} right={<Select className="w-[200px]" value={filter} onChange={setFilter} placeholder="All teams" options={TEAMS.map((t) => ({ value: t, label: t }))} />} />
+      <CardHeader
+        title="Tasks"
+        subtitle={`${list.filter((t) => t.status !== 'done').length} open · ${list.length} total${filter ? ` in ${filter} (${tasks.length} across all teams)` : ''}`}
+        right={<Select className="w-[220px]" value={filter} onChange={setFilter} placeholder={`All teams (${tasks.length})`} options={teamOptions([], tasks.map((t) => t.team)).map((o) => ({ ...o, label: `${o.label} (${tasks.filter((t) => t.team === o.value).length})` }))} />}
+      />
       <div className="overflow-x-auto">
         <table className="w-full text-[15px]">
           <tbody>
@@ -324,7 +332,7 @@ function TaskList({ project, tasks, milestones, milestoneId }: { project: Projec
                   {!milestoneId && t.milestone_id && <div className="text-xs text-gray-500">{milestones.find((m) => m.id === t.milestone_id)?.name}</div>}
                 </td>
                 <td className="py-2.5 px-2 text-sm text-gray-600 whitespace-nowrap">{t.team}</td>
-                <td className="py-2.5 px-2 w-[170px]"><Select value={t.owner || ''} onChange={(v) => db.upsert('tasks', { ...t, owner: v } as any)} placeholder="Unassigned" options={TEAM.map((p) => ({ value: p.email, label: p.name }))} className="[&_select]:h-9 [&_select]:text-sm" /></td>
+                <td className="py-2.5 px-2 w-[170px]"><Select value={t.owner || ''} onChange={(v) => db.upsert('tasks', { ...t, owner: v } as any)} placeholder="Unassigned" options={peopleOptions(people, t.owner)} className="[&_select]:h-9 [&_select]:text-sm" /></td>
                 <td className="py-2.5 px-2 w-[150px]"><Select value={t.status} onChange={(v) => db.upsert('tasks', { ...t, status: v } as any)} options={TASK_STATUS.map((s) => ({ value: s.value, label: s.label }))} className="[&_select]:h-9 [&_select]:text-sm" /></td>
                 <td className="py-2.5 pl-2 w-[140px]"><TextInput type="date" value={(t.due || '').slice(0, 10)} onChange={(e) => db.upsert('tasks', { ...t, due: e.target.value || null } as any)} className="h-9 text-sm px-2 w-full" /></td>
                 <td className="py-2.5 pl-1 w-8"><button type="button" className="text-gray-300 hover:text-red-500" title="Delete task" onClick={() => db.remove('tasks', t.id)}><Icon name="trash" size={15} /></button></td>
@@ -333,10 +341,10 @@ function TaskList({ project, tasks, milestones, milestoneId }: { project: Projec
           </tbody>
         </table>
       </div>
-      {!list.length && <p className="text-sm text-gray-500 py-3">No tasks yet.</p>}
+      {!list.length && <p className="text-sm text-gray-500 py-3">{filter && tasks.length ? `No tasks for ${filter}.` : 'No tasks yet.'}</p>}
       <div className="flex flex-wrap gap-2 mt-4">
         <TextInput className="flex-1 min-w-[220px]" placeholder="Add a task…" value={title} onChange={(e) => setTitle(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && add()} />
-        <Select className="w-[200px]" value={team} onChange={setTeam} options={TEAMS.map((t) => ({ value: t, label: t }))} />
+        <Select className="w-[200px]" value={addTeam} onChange={(v) => { const t = pickTeam(v); if (t !== null) setTeam(t); }} placeholder="Team" options={[...teamOptions(people, tasks.map((t) => t.team), [addTeam]), { value: NEW_TEAM, label: '+ New team…' }]} />
         <Button variant="primary" icon="plus" onClick={add}>Add</Button>
       </div>
     </Card>
@@ -394,6 +402,7 @@ function ConfigureMilestones({ open, onClose, project, milestones }: { open: boo
 }
 
 function EditProject({ open, onClose, project, save }: { open: boolean; onClose: () => void; project: Project; save: (p: Partial<Project>) => Promise<any> }) {
+  const people = usePeople();
   const world = useWorld();
   const [p, setP] = useState<Project>(project);
   const [lt, setLt] = useState('');
@@ -406,7 +415,7 @@ function EditProject({ open, onClose, project, save }: { open: boolean; onClose:
       <Field label="Summary"><TextInput className="w-full" value={p.summary} onChange={(e) => setP({ ...p, summary: e.target.value })} /></Field>
       <div className="grid grid-cols-2 gap-3">
         <Field label="Status"><Select value={p.status} onChange={(v) => setP({ ...p, status: v as Project['status'] })} options={PROJECT_STATUS.map((s) => ({ value: s.value, label: s.label }))} /></Field>
-        <Field label="Lead"><Select value={p.lead || ''} onChange={(v) => setP({ ...p, lead: v })} options={TEAM.map((x) => ({ value: x.email, label: x.name }))} /></Field>
+        <Field label="Lead"><Select value={p.lead || ''} onChange={(v) => setP({ ...p, lead: v })} options={peopleOptions(people, p.lead)} /></Field>
         <Field label="Start"><TextInput type="date" className="w-full" value={(p.start_date || '').slice(0, 10)} onChange={(e) => setP({ ...p, start_date: e.target.value })} /></Field>
         <Field label="End"><TextInput type="date" className="w-full" value={(p.end_date || '').slice(0, 10)} onChange={(e) => setP({ ...p, end_date: e.target.value })} /></Field>
         <Field label="Country"><Select value={p.countries[0] || ''} onChange={(v) => setP({ ...p, countries: v ? [v] : [] })} placeholder="—" options={(world?.countries || []).map((c) => ({ value: c.iso3, label: c.name }))} /></Field>

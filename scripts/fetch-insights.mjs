@@ -66,7 +66,6 @@ ${raw}`);
     }
     case 'gemini_search': {
       if (!HAS_GEMINI) throw new Error('needs Gemini');
-      if (!process.env.GEMINI_SEARCH) throw Object.assign(new Error('Skipped: Gemini web search needs a paid (billing-enabled) key; set repo variable GEMINI_SEARCH=1 to turn on'), { skip: true });
       const out = await gemini(`Today is ${today()}. Search the web: ${src.url}
 Return ONLY a JSON array (max 12) of {"title","url":"original source URL","date":"YYYY-MM-DD","text":"1-2 sentence summary"} from the last 14 days.`, { search: true });
       return (Array.isArray(out) ? out : []).map((o) => ({ ...o, date: toIso(o.date), kind }));
