@@ -1,5 +1,5 @@
 {
- "updated_at": "2026-11-09T10:16:44.046Z",
+ "updated_at": "2026-11-09T11:25:05.522Z",
  "insights": [
   {
    "id": "9b807fe45fb20e46",
@@ -301,6 +301,49 @@
     "NGA"
    ],
    "diseases": []
+  },
+  {
+   "id": "630039af68f65dd3",
+   "title": "Ebola disease caused by Bundibugyo virus, Democratic Republic of the Congo, Kenya and Nigeria",
+   "summary": "An ongoing Bundibugyo virus disease outbreak in the Democratic Republic of the Congo has resulted in over 10,000 confirmed cases and high community mortality. Regional readiness and cross-border surveillance remain critical.",
+   "url": "https://www.who.int/emergencies/disease-outbreak-news/item/2026-DON625",
+   "published_at": "2026-11-06T20:42:12.000Z",
+   "source_id": "who-don",
+   "source_name": "WHO Disease Outbreak News",
+   "kind": "outbreak",
+   "countries": [
+    "COD",
+    "KEN",
+    "NGA"
+   ],
+   "diseases": [
+    "Ebola",
+    "Bundibugyo virus disease"
+   ]
+  },
+  {
+   "id": "6a7ad021443a42f4",
+   "title": "Yellow fever - WHO African Region",
+   "summary": "Yellow fever transmission persists across several countries in the WHO African Region, driven by occupational exposures and uneven vaccination coverage. Response activities include enhanced surveillance and targeted vaccination campaigns.",
+   "url": "https://www.who.int/emergencies/disease-outbreak-news/item/2026-DON624",
+   "published_at": "2026-11-06T19:00:00.000Z",
+   "source_id": "who-don",
+   "source_name": "WHO Disease Outbreak News",
+   "kind": "outbreak",
+   "countries": [
+    "BFA",
+    "CMR",
+    "CAF",
+    "CIV",
+    "GHA",
+    "GIN",
+    "LBR",
+    "NGA",
+    "TGO"
+   ],
+   "diseases": [
+    "Yellow fever"
+   ]
   },
   {
    "id": "d335dd893081fb0a",
@@ -642,6 +685,23 @@
    "countries": [],
    "diseases": [
     "Ebola"
+   ]
+  },
+  {
+   "id": "ca09b35066135374",
+   "title": "Shamonda virus in human - France",
+   "summary": "France reported the first documented human infection with Shamonda virus, presenting as severe encephalitis in an immunocompromised patient who subsequently died. Investigations into the route of transmission are ongoing.",
+   "url": "https://www.who.int/emergencies/disease-outbreak-news/item/2026-DON623",
+   "published_at": "2026-11-02T19:00:00.000Z",
+   "source_id": "who-don",
+   "source_name": "WHO Disease Outbreak News",
+   "kind": "outbreak",
+   "countries": [
+    "FRA"
+   ],
+   "diseases": [
+    "Shamonda virus",
+    "Encephalitis"
    ]
   },
   {
