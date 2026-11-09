@@ -2,9 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom';
 import type { Session } from '@supabase/supabase-js';
 import { MeContext, Shell } from './components/Layout';
-import { db, dataUrl, DEMO, meFromSession, supabase } from './lib/store';
-import { DEFAULT_TEMPLATES } from './lib/defaults';
-import type { MilestoneTemplate, Source } from './lib/types';
+import { DEMO, meFromSession, supabase } from './lib/store';
 import OverviewPage from './pages/Overview';
 import GrantsPage from './pages/Grants';
 import HealthPage from './pages/Health';
@@ -17,28 +15,12 @@ import OrgContextPage from './pages/OrgContext';
 import PeoplePage from './pages/People';
 import SignIn from './pages/SignIn';
 
-/** First-run defaults: templates and the source list. */
-async function bootstrap() {
-  try {
-    const tpls = await db.list<MilestoneTemplate>('milestone_templates');
-    if (!tpls.length) for (const t of DEFAULT_TEMPLATES) await db.upsert('milestone_templates', t as any);
-    const srcs = await db.list<Source>('sources');
-    if (!srcs.length) {
-      const r = await fetch(dataUrl('sources.json'));
-      if (r.ok) for (const s of (await r.json()) as Source[]) await db.upsert('sources', s as any);
-    }
-  } catch (e) {
-    console.warn('bootstrap skipped', e);
-  }
-}
-
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [ready, setReady] = useState(DEMO);
 
   useEffect(() => {
     if (!supabase) {
-      bootstrap();
       return;
     }
     supabase.auth.getSession().then(({ data }) => {
@@ -52,7 +34,6 @@ export default function App() {
   const me = meFromSession(session);
   useEffect(() => {
     if (me && !me.demo) {
-      bootstrap();
       if (window.location.search.includes('code=')) window.history.replaceState(null, '', window.location.pathname + window.location.hash);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

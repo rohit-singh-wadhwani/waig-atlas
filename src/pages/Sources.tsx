@@ -55,15 +55,6 @@ export default function SourcesPage() {
         <KpiCard icon="clock" tint="gray" label="Last run" value={timeAgo(lastRun)} foot={fmtTime(lastRun)} />
       </div>
 
-      {DEMO && (
-        <div className="mb-6 flex gap-3 items-start bg-amber-50 border border-amber-200 text-amber-900 rounded-2xl px-5 py-4 text-[15px]">
-          <Icon name="alert" size={20} className="mt-0.5 shrink-0" />
-          <div>
-            Demo mode: switching a source on or off here only changes this browser. The scheduled jobs read{' '}
-            <ExtLink href={`https://github.com/${REPO}/blob/main/config/sources.json`}>config/sources.json</ExtLink> until Supabase is connected; after that they read this table.
-          </div>
-        </div>
-      )}
 
       <Card pad={false}>
         <div className="p-6 pb-3">
@@ -83,6 +74,7 @@ export default function SourcesPage() {
                 <th className="font-medium px-3 py-3">Status</th>
                 <th className="font-medium px-3 py-3 text-right">Items</th>
                 <th className="font-medium px-3 py-3">Message</th>
+                <th className="w-8" />
               </tr>
             </thead>
             <tbody>
@@ -114,6 +106,11 @@ export default function SourcesPage() {
                   </td>
                   <td className="px-3 py-3 text-right tabular-nums">{s.item_count ?? '—'}</td>
                   <td className="px-3 py-3 text-sm text-gray-500 max-w-[320px] truncate" title={s.last_message || ''}>{s.last_message || s.notes || ''}</td>
+                  <td className="pl-1 pr-4 py-3 w-8">
+                    <button type="button" className="text-gray-300 hover:text-red-500" title="Delete source" onClick={() => window.confirm(`Delete "${s.name}"? The scheduled jobs stop using it.`) && db.remove('sources', s.id)}>
+                      <Icon name="trash" size={15} />
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>

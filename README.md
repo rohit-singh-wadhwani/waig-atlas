@@ -45,7 +45,7 @@ flowchart LR
 3. **Supabase auth:** Authentication → URL Configuration → Site URL and Redirect URLs = the Pages URL above.
 4. Run **Actions → Refresh data and deploy → Run workflow** once to fetch everything.
 
-Schema: [`supabase/schema.sql`](supabase/schema.sql). Sources: [`config/sources.json`](config/sources.json) (copied into Supabase on the first run; edit them in the app afterwards).
+Schema: [`supabase/schema.sql`](supabase/schema.sql). Sources, people, templates and org context live in Supabase and are edited in the app (copied into Supabase on the first run; edit them in the app afterwards).
 
 ## Local development
 

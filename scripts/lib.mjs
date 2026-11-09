@@ -277,26 +277,11 @@ export const sb = {
 const SOURCE_COLS = ['id', 'name', 'category', 'type', 'url', 'enabled', 'notes', 'kind', 'unit', 'display_name'];
 const normSource = (s) => Object.fromEntries(SOURCE_COLS.map((k) => [k, s[k] ?? (k === 'enabled' ? true : null)]));
 
+/** Sources live in Supabase only (edited on the Sources & Status page); nothing is re-added from code. */
 export async function loadSources(category) {
-  const config = JSON.parse(fs.readFileSync(path.join(ROOT, 'config', 'sources.json'), 'utf8')).map(normSource);
-  let all = config;
-  if (HAS_SB) {
-    try {
-      const rows = await sb.select('sources');
-      if (rows?.length) {
-        // add any new sources from config that the table doesn't have yet
-        const ids = new Set(rows.map((r) => r.id));
-        const missing = config.filter((c) => !ids.has(c.id));
-        if (missing.length) await sb.upsert('sources', missing);
-        all = [...rows, ...missing];
-      } else {
-        await sb.upsert('sources', config);
-      }
-    } catch (e) {
-      log('sources table unavailable, using config:', e.message);
-    }
-  }
-  return all.filter((s) => s.category === category);
+  if (!HAS_SB) throw new Error('Sources are stored in Supabase; set SUPABASE_SERVICE_ROLE_KEY');
+  const rows = (await sb.select('sources')) || [];
+  return rows.map(normSource).filter((s) => s.category === category);
 }
 
 export async function reportSource(s, status, message, count) {
