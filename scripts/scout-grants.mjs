@@ -331,7 +331,7 @@ async function main() {
       await reportSource(src, 'ok', `${note ? note + ' · ' : ''}${items.length} seen, ${fresh} new`, items.length);
       log(src.id, items.length, 'seen', fresh, 'new', note || '');
     } catch (e) {
-      const noGrounding = src.type === 'scout_search' && /quota|400|billing|not supported|tool|no model available/i.test(e.message);
+      const noGrounding = src.type === 'scout_search' && /quota|400|404|billing|not supported|not available|tool|no model available/i.test(e.message);
       if (noGrounding) groundingOff = 'Gemini Google Search needs billing enabled on the Gemini key (free tier has no search quota). The free "web search" sources cover this meanwhile.';
       const msg = noGrounding ? groundingOff : e.message;
       await reportSource(src, 'error', msg, 0);
