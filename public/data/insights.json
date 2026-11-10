@@ -1,5 +1,5 @@
 {
- "updated_at": "2026-11-10T10:13:33.209Z",
+ "updated_at": "2026-11-10T13:27:46.751Z",
  "insights": [
   {
    "id": "9b807fe45fb20e46",
@@ -276,6 +276,122 @@
    "source_name": "WHO on YouTube",
    "kind": "social",
    "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "52bfcead77b44860",
+   "title": "TECHNICAL ASSISTANCE FOR VILLAGE ACTORS (HDW, TPK, KADER POSYANDU AND VILLAGE TPPS) WITH INTEGRATED BASIC MODULES IN 2025",
+   "summary": "Contract award for technical assistance focused on nutrition and early childhood development in Indonesia.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00480413",
+   "published_at": "2026-11-09T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "IDN"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "a9f376e2c6b67795",
+   "title": "Acquisition des réactifs et consommables de laboratoires pour le Laboratoire Central Vétérinaire de Diagnostics (LCVD) et l’Institut de Recherche et de Biologie Appliquée de Guinée (IRBAG) de la santé animale.",
+   "summary": "Contract award for laboratory reagents and consumables for veterinary diagnostics and applied biology in Guinea.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00480342",
+   "published_at": "2026-11-09T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "GIN"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "e6924b801a5932ad",
+   "title": "Construction of One 5 Seat Latrine with hand Washing facility at West Gojam Zone Womberima Woreda Womberima Health Center by Womberma woreda Finance Office.",
+   "summary": "Contract award for constructing a latrine with handwashing facilities at a health center in Ethiopia.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00480207",
+   "published_at": "2026-11-09T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "ETH"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "f400548647dbb3b5",
+   "title": "Construction of One  5 Seat Latrine with hand Washing facility at West Gojam Zone Womberima Woreda,Wogedad Health Center by Womberma woreda Finance Office.",
+   "summary": "Contract award for constructing another latrine with handwashing facilities at a health center in Ethiopia.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00480196",
+   "published_at": "2026-11-09T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "ETH"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "4be25d0f13745d3e",
+   "title": "Acquisition en urgence de dispositifs de prélèvement ISWAB et HEMASURE pour la collecte et le transport des échantillons biologiques destinés au diagnostic du virus Ebola dans les provinces de l’Ituri et du Nord-Kivu",
+   "summary": "Invitation for bids to acquire biological sample collection and transport devices for Ebola diagnosis in the Democratic Republic of Congo.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00480287",
+   "published_at": "2026-11-09T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "COD"
+   ],
+   "diseases": [
+    "Ebola"
+   ]
+  },
+  {
+   "id": "eab91bf763e03d9e",
+   "title": "Sélection directe du Fournisseur PHATKIN pour l'acquisition des médicaments et Kits PCI en appui à la continuité de soins dans les ZS des DPS touchées par la MVE dans les DPS  de la Tshopo et Haut Uélé",
+   "summary": "Contract award for pharmaceuticals and infection prevention control kits to support care continuity during an Ebola outbreak in the Democratic Republic of Congo.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00480310",
+   "published_at": "2026-11-09T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "COD"
+   ],
+   "diseases": [
+    "Ebola"
+   ]
+  },
+  {
+   "id": "903d2ac4cdc9b0db",
+   "title": "Acquisition 3 ambulances médicalisées pour la province de l'Ituri",
+   "summary": "Contract award for the acquisition of three medical ambulances for Ituri province in the Democratic Republic of Congo.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00480277",
+   "published_at": "2026-11-09T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "COD"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "e7066ecd74b1538b",
+   "title": "Printing of Infection Prevention and Control Waste Management IEC Materials",
+   "summary": "Contract award for printing infection prevention and control waste management materials in Zambia.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00480327",
+   "published_at": "2026-11-09T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "ZMB"
+   ],
    "diseases": []
   },
   {
