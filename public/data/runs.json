@@ -1,6 +1,12 @@
 {
  "runs": [
   {
+   "job": "health",
+   "at": "2026-11-10T01:49:59.658Z",
+   "ok": true,
+   "message": "6 indicators"
+  },
+  {
    "job": "insights",
    "at": "2026-11-10T01:26:11.884Z",
    "ok": true,
@@ -353,12 +359,6 @@
    "at": "2026-11-06T12:33:13.282Z",
    "ok": true,
    "message": "28 new calls added (40 candidates), 28 tracked · Gemini 4/29 calls ok (last error: Gemini gemini-3.6-flash quota: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/)"
-  },
-  {
-   "job": "insights",
-   "at": "2026-11-06T12:23:45.149Z",
-   "ok": true,
-   "message": "69 new insights (106 candidates), 69 kept · Gemini 6/30 calls ok (last error: Gemini gemini-3.6-flash 503)"
   }
  ]
 }
