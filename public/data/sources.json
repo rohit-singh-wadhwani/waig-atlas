@@ -10,7 +10,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-10T03:42:52.485Z",
+  "last_run": "2026-11-10T14:30:45.193Z",
   "last_status": "ok",
   "last_message": "60 items, 0 new",
   "item_count": 60
@@ -26,7 +26,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-10T03:42:55.468Z",
+  "last_run": "2026-11-10T14:30:46.881Z",
   "last_status": "ok",
   "last_message": "60 items, 0 new",
   "item_count": 60
@@ -42,7 +42,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-10T03:42:55.967Z",
+  "last_run": "2026-11-10T14:30:44.214Z",
   "last_status": "ok",
   "last_message": "2 items, 0 new",
   "item_count": 2
@@ -74,9 +74,9 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-10T03:42:54.405Z",
+  "last_run": "2026-11-10T14:30:46.521Z",
   "last_status": "ok",
-  "last_message": "20 items, 0 new",
+  "last_message": "20 items, 2 new",
   "item_count": 20
  },
  {
