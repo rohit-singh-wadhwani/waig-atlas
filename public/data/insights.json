@@ -1,5 +1,5 @@
 {
- "updated_at": "2026-11-10T16:09:15.650Z",
+ "updated_at": "2026-11-10T19:18:11.211Z",
  "insights": [
   {
    "id": "9b807fe45fb20e46",
@@ -199,6 +199,18 @@
    "diseases": [
     "tuberculosis"
    ]
+  },
+  {
+   "id": "21042cdeedf2fa8e",
+   "title": "When deaths go uncounted: WHO flags dangerous blind spots in Africa’s health data",
+   "summary": "A new WHO report highlights critical gaps in Africa's health information systems that hinder the detection of emerging health threats. Improving data quality is essential for effective public health interventions.",
+   "url": "https://news.un.org/feed/view/en/story/2026/11/1168772",
+   "published_at": "2026-11-10T12:00:00.000Z",
+   "source_id": "un-news-health",
+   "source_name": "UN News: health",
+   "kind": "news",
+   "countries": [],
+   "diseases": []
   },
   {
    "id": "4e0f46633e4967a9",
