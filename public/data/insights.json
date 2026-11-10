@@ -1,5 +1,5 @@
 {
- "updated_at": "2026-11-10T07:33:22.677Z",
+ "updated_at": "2026-11-10T10:13:33.209Z",
  "insights": [
   {
    "id": "9b807fe45fb20e46",
@@ -199,6 +199,72 @@
    "diseases": [
     "tuberculosis"
    ]
+  },
+  {
+   "id": "4e0f46633e4967a9",
+   "title": "Together for Science & Health - How do misinformation & disinformation shape public health response?",
+   "summary": "Officials discuss the impact of health misinformation on public health responses, drawing on lessons from Thailand.",
+   "url": "https://www.youtube.com/shorts/zK4Jnja-sMk",
+   "published_at": "2026-11-10T08:57:09.000Z",
+   "source_id": "who-youtube",
+   "source_name": "WHO on YouTube",
+   "kind": "social",
+   "countries": [
+    "THA"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "adf6bca70dccbf20",
+   "title": "Together for Science & Health - How can civil society counter misinformation on climate and health?",
+   "summary": "Brazilian health officials discuss how civil society can counter misinformation regarding climate and health.",
+   "url": "https://www.youtube.com/shorts/AHEPRRzfJv4",
+   "published_at": "2026-11-10T08:55:10.000Z",
+   "source_id": "who-youtube",
+   "source_name": "WHO on YouTube",
+   "kind": "social",
+   "countries": [
+    "BRA"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "57e810c78a51676f",
+   "title": "Together for Science & Health - What turns science into impact?",
+   "summary": "WHO experts examine strategies to translate scientific evidence into measurable public health impact.",
+   "url": "https://www.youtube.com/shorts/YWyVHnmVIpc",
+   "published_at": "2026-11-10T08:53:30.000Z",
+   "source_id": "who-youtube",
+   "source_name": "WHO on YouTube",
+   "kind": "social",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "8dc7648ab73bfaff",
+   "title": "Together for Science & Health - Why is protecting scientific integrity a public health imperative?",
+   "summary": "Public health leaders highlight the importance of protecting scientific integrity to strengthen trust in health data.",
+   "url": "https://www.youtube.com/shorts/8UmJ6wp2NPo",
+   "published_at": "2026-11-10T08:53:26.000Z",
+   "source_id": "who-youtube",
+   "source_name": "WHO on YouTube",
+   "kind": "social",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "02386afe6e220e94",
+   "title": "Together for Science & Health - Strengthening countries response to misinformation & disinformation?",
+   "summary": "Diplomats discuss international cooperation and national experiences for strengthening responses to health misinformation.",
+   "url": "https://www.youtube.com/shorts/NAkNKKMkIzo",
+   "published_at": "2026-11-10T08:53:12.000Z",
+   "source_id": "who-youtube",
+   "source_name": "WHO on YouTube",
+   "kind": "social",
+   "countries": [
+    "FRA"
+   ],
+   "diseases": []
   },
   {
    "id": "bf3248da1395569e",
