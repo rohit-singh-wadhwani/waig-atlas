@@ -38,8 +38,15 @@ async function collect(src) {
         await sleep(5000);
         sum = await getJson(`${base}/esummary.fcgi?db=pubmed&retmode=json&id=${ids.join(',')}`);
       }
+      // Journal issue dates are often months in the future ("2027 Mar"). Use when the paper actually appeared:
+      // the date it was added to PubMed, else its online (e-pub) date, never later than today.
+      const realDate = (r) => {
+        const entrez = (r.history || []).find((h) => h.pubstatus === 'entrez' || h.pubstatus === 'pubmed')?.date;
+        const pick = [entrez, r.epubdate, r.sortpubdate, r.pubdate].map((d) => toIso(d)).find((d) => d && d <= new Date().toISOString());
+        return pick || new Date().toISOString();
+      };
       return ids.map((id) => sum.result?.[id]).filter(Boolean).map((r) => ({
-        title: r.title, url: `https://pubmed.ncbi.nlm.nih.gov/${r.uid}/`, date: toIso(r.sortpubdate || r.pubdate), text: `${r.fulljournalname || r.source}. ${(r.authors || []).slice(0, 3).map((a) => a.name).join(', ')}`, kind: 'research',
+        title: r.title, url: `https://pubmed.ncbi.nlm.nih.gov/${r.uid}/`, date: realDate(r), text: `${r.fulljournalname || r.source}. ${(r.authors || []).slice(0, 3).map((a) => a.name).join(', ')}`, kind: 'research',
       }));
     }
     case 'worldbank': {
@@ -86,7 +93,9 @@ ITEMS: ${JSON.stringify(items)}`);
 
 async function main() {
   const sources = (await loadSources('insights')).filter((s) => s.enabled);
-  const prev = readJson('insights.json', { insights: [] }).insights || [];
+  // no item may carry a date in the future (older runs stored PubMed journal-issue dates)
+  const nowIso = new Date().toISOString();
+  const prev = (readJson('insights.json', { insights: [] }).insights || []).map((i) => (i.published_at > nowIso ? { ...i, published_at: i.fetched_at && i.fetched_at <= nowIso ? i.fetched_at : nowIso.slice(0, 10) + 'T00:00:00.000Z' } : i));
   const known = new Set(prev.map((p) => p.id));
   const rejected = new Set(readJson('insights-rejected.json', { ids: [] }).ids);
   const fresh = [];
@@ -141,7 +150,7 @@ async function main() {
   for (const b of HAS_GEMINI ? uniq.slice(MAX_ENRICH, 200) : uniq.slice(0, 200)) added.push({ id: b.id, title: b.title, summary: (b.text || '').slice(0, 300), url: b.url, published_at: b.date, source_id: b.source_id, source_name: b.source_name, kind: b.kind, countries: [], diseases: [] });
 
   const cutoff = Date.now() - KEEP_DAYS * 86400000;
-  const all = [...added, ...prev].filter((i) => +new Date(i.published_at) >= cutoff).sort((a, b) => b.published_at.localeCompare(a.published_at)).slice(0, 2000);
+  const all = [...added.map((i) => (i.published_at > nowIso ? { ...i, published_at: nowIso } : i)), ...prev].filter((i) => +new Date(i.published_at) >= cutoff).sort((a, b) => b.published_at.localeCompare(a.published_at)).slice(0, 2000);
   writeJson('insights.json', { updated_at: new Date().toISOString(), insights: all });
   writeJson('insights-rejected.json', { ids: Array.from(rejected).slice(-8000) });
   const msg = `${added.length} new insights (${uniq.length} candidates), ${all.length} kept${HAS_GEMINI ? ` · Gemini ${geminiStatus.ok}/${geminiStatus.calls} calls ok${geminiStatus.lastError ? ` (last error: ${geminiStatus.lastError})` : ''}` : ''}`;
