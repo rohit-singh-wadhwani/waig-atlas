@@ -89,6 +89,8 @@ async function demo(): Promise<Tables> {
         sources: mergeSources(sources, saved.sources),
         members: saved.members ?? [],
       };
+      // tables added later (TB module etc.) keep whatever this browser saved
+      for (const k of Object.keys(saved)) if (!(k in t)) (t as any)[k] = (saved as any)[k];
       demoState = t;
       return t;
     })();
