@@ -2,6 +2,18 @@
  "runs": [
   {
    "job": "grants",
+   "at": "2026-11-11T03:32:22.686Z",
+   "ok": true,
+   "message": "0 new calls added (6 candidates), 88 tracked · Gemini 1/1 calls ok"
+  },
+  {
+   "job": "scout",
+   "at": "2026-11-11T03:32:05.566Z",
+   "ok": true,
+   "message": "4 new opportunities written up (1 rated High/Medium) from 12 candidates (0 queued for the next run) · Gemini 7/15 calls ok (last error: Gemini network error: fetch failed)"
+  },
+  {
+   "job": "grants",
    "at": "2026-11-11T02:28:02.194Z",
    "ok": true,
    "message": "0 new calls added (8 candidates), 84 tracked · Gemini 2/2 calls ok"
@@ -347,18 +359,6 @@
    "at": "2026-11-07T19:05:21.953Z",
    "ok": true,
    "message": "0 new insights (0 candidates), 90 kept · Gemini 0/0 calls ok"
-  },
-  {
-   "job": "insights",
-   "at": "2026-11-07T15:54:20.334Z",
-   "ok": true,
-   "message": "0 new insights (0 candidates), 90 kept · Gemini 0/0 calls ok"
-  },
-  {
-   "job": "grants",
-   "at": "2026-11-07T14:24:29.858Z",
-   "ok": true,
-   "message": "1 new calls added (33 candidates), 54 tracked · Gemini 9/10 calls ok (last error: Gemini gemini-flash-lite-latest 503)"
   }
  ]
 }
