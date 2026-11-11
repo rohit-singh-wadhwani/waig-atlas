@@ -34,19 +34,9 @@ export interface Grant {
   updated_at?: string | null;
 }
 
-export interface StageMilestone {
-  key: string;
-  label: string;
-  target?: string | null; // ISO date
-  done_at?: string | null;
-  note?: string;
-}
-
 export interface GrantTracking {
   grant_id: ID;
   assignee?: string | null; // email or name
-  stage: string; // key of current stage
-  milestones: StageMilestone[];
   status: 'watching' | 'pursuing' | 'submitted' | 'won' | 'lost' | 'dropped';
   updated_at?: string;
 }
@@ -150,11 +140,9 @@ export interface CheckpointTask {
   done: boolean;
 }
 
-/** A row in milestone_checkpoints. */
-export interface Checkpoint {
+/** Fields shared by milestone_checkpoints and grant_checkpoints. */
+export interface CheckpointBase {
   id: ID;
-  milestone_id: ID;
-  project_id: ID;
   position: number;
   title: string;
   target_date?: string | null;
@@ -163,6 +151,17 @@ export interface Checkpoint {
   notes?: string | null;
   tasks: CheckpointTask[];
   updated_at?: string;
+}
+
+/** A row in milestone_checkpoints. */
+export interface Checkpoint extends CheckpointBase {
+  milestone_id: ID;
+  project_id: ID;
+}
+
+/** A row in grant_checkpoints. */
+export interface GrantCheckpoint extends CheckpointBase {
+  grant_id: ID;
 }
 
 export interface MilestoneTemplate {

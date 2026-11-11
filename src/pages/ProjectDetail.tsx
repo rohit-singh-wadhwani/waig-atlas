@@ -246,7 +246,7 @@ function MilestoneView({ project, m, checkpoints, moot, page, me }: { project: P
       </Card>
 
       <Card>
-        <Checkpoints m={m} items={checkpoints} onProgress={(p) => save({ progress: p })} />
+        <Checkpoints items={checkpoints} table="milestone_checkpoints" base={{ milestone_id: m.id, project_id: m.project_id }} progress={m.progress} onProgress={(p) => save({ progress: p })} hint="Break this milestone into checkpoints with dates, an owner and what needs doing." />
       </Card>
 
       <Card>

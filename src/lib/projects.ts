@@ -1,5 +1,5 @@
 import { db, uid } from './store';
-import type { Checkpoint, FlowStatus, MilestoneTemplate, Page, Project, ProjectMilestone, TemplateCheckpoint, TemplateMilestone } from './types';
+import type { Checkpoint, CheckpointBase, FlowStatus, MilestoneTemplate, Page, Project, ProjectMilestone, TemplateCheckpoint, TemplateMilestone } from './types';
 
 export function slugify(s: string) {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || uid('p');
@@ -25,13 +25,13 @@ export function templateCheckpoints(m: TemplateMilestone): TemplateCheckpoint[] 
 }
 
 /** 0-1 completion of one checkpoint: a completion date means done; otherwise the share of tasks ticked. */
-export function checkpointDone(c: Checkpoint) {
+export function checkpointDone(c: CheckpointBase) {
   if (c.completed_on) return 1;
   return c.tasks.length ? c.tasks.filter((t) => t.done).length / c.tasks.length : 0;
 }
 
 /** Milestone progress (%) from its checkpoints, or null if it has none. */
-export function checkpointProgress(cps: Checkpoint[]) {
+export function checkpointProgress(cps: CheckpointBase[]) {
   if (!cps.length) return null;
   return Math.round((cps.reduce((s, c) => s + checkpointDone(c), 0) / cps.length) * 100);
 }
