@@ -120,7 +120,7 @@ export const db = {
     const t = await demo();
     let rows = ((t as any)[table] ||= []) as Row[];
     if (match) rows = rows.filter((r) => Object.entries(match).every(([k, v]) => r[k] === v));
-    return rows as unknown as T[];
+    return [...rows] as unknown as T[]; // a fresh array so views re-render after saves
   },
   async upsert<T extends Row>(table: TableName, row: T): Promise<T> {
     if (supabase) {
