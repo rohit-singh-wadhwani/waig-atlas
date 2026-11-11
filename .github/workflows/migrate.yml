@@ -14,3 +14,4 @@ jobs:
       - run: node scripts/migrations/2026-11-milestones.mjs
         env:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_URL: https://sfjcioilzidqskzmqpog.supabase.co
