@@ -14,6 +14,7 @@ const NAV: { to: string; label: string; icon: IconName; group?: string }[] = [
   { to: '/health', label: 'Health Map', icon: 'globe', group: 'Market View' },
   { to: '/insights', label: 'Latest Insights', icon: 'newspaper', group: 'Market View' },
   { to: '/sources', label: 'Sources & Status', icon: 'rss', group: 'Market View' },
+  { to: '/tb', label: 'TB Surveillance', icon: 'activity', group: 'Disease Surveillance' },
   { to: '/projects', label: 'Projects', icon: 'folder', group: 'Project Dashboards' },
   { to: '/templates', label: 'Milestone Templates', icon: 'layers', group: 'Project Dashboards' },
   { to: '/context', label: 'Org Context', icon: 'building', group: 'Settings' },

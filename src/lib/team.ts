@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { db } from './store';
 
 /** People come from the `members` table: everyone who signs in is added automatically; names and teams are edited on the People page. */
-export type Member = { id: string; email: string; name?: string | null; team?: string | null };
+export type Member = { id: string; email: string; name?: string | null; team?: string | null; role?: string | null; district?: string | null };
 
 let PEOPLE: Member[] = [];
 let loading: Promise<Member[]> | null = null;

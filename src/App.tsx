@@ -13,6 +13,7 @@ import ProjectDetail from './pages/ProjectDetail';
 import TemplatesPage from './pages/Templates';
 import OrgContextPage from './pages/OrgContext';
 import PeoplePage from './pages/People';
+import TbPage from './pages/tb/TbPage';
 import SignIn from './pages/SignIn';
 
 export default function App() {
@@ -50,6 +51,7 @@ export default function App() {
             <Route path="/" element={<OverviewPage />} />
             <Route path="/grants" element={<GrantsPage />} />
             <Route path="/health" element={<HealthPage />} />
+            <Route path="/tb" element={<TbPage />} />
             <Route path="/insights" element={<InsightsPage />} />
             <Route path="/sources" element={<SourcesPage />} />
             <Route path="/projects" element={<ProjectsPage />} />

@@ -116,7 +116,7 @@ export const db = {
       return (data || []) as T[];
     }
     const t = await demo();
-    let rows = t[table] as unknown as Row[];
+    let rows = ((t as any)[table] ||= []) as Row[];
     if (match) rows = rows.filter((r) => Object.entries(match).every(([k, v]) => r[k] === v));
     return rows as unknown as T[];
   },
@@ -131,7 +131,7 @@ export const db = {
       return data as T;
     }
     const t = await demo();
-    const rows = t[table] as unknown as Row[];
+    const rows = ((t as any)[table] ||= []) as Row[];
     const i = rows.findIndex((r) => r.id === row.id);
     if (i >= 0) rows[i] = { ...rows[i], ...row };
     else rows.push(row);
@@ -150,7 +150,7 @@ export const db = {
       return;
     }
     const t = await demo();
-    (t as any)[table] = (t[table] as unknown as Row[]).filter((r) => r.id !== id);
+    (t as any)[table] = (((t as any)[table] || []) as Row[]).filter((r) => r.id !== id);
     lsSet(t);
     emit();
   },

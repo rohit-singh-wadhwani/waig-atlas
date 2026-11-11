@@ -6,13 +6,14 @@ on:
   workflow_dispatch:
     inputs:
       jobs:
-        description: "Data jobs to run first (comma list: scout,grants,insights,health or none)"
-        default: "scout,grants,insights,health"
+        description: "Data jobs to run first (comma list: scout,grants,insights,health,tb or none)"
+        default: "scout,grants,insights,health,tb"
   schedule:
     - cron: "17 */3 * * *"   # insights every 3 hours
     - cron: "41 1,13 * * *"  # grants every 12 hours (07:11 and 19:11 IST)
     - cron: "53 0 * * *"     # health datasets daily (06:23 IST)
     - cron: "29 2 * * *"     # grant scout daily (07:59 IST)
+    - cron: "7 3 * * 1"      # TB surveillance data + AI brief, Mondays (08:37 IST)
 
 permissions:
   contents: write
@@ -43,6 +44,7 @@ jobs:
             "schedule:41 1,13 * * *") J="grants" ;;
             "schedule:53 0 * * *") J="health" ;;
             "schedule:29 2 * * *") J="scout,grants" ;;
+            "schedule:7 3 * * 1") J="tb" ;;
             workflow_dispatch:*) J="${{ github.event.inputs.jobs }}" ;;
             *) J="none" ;;
           esac
@@ -69,6 +71,29 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_SEARCH: ${{ vars.GEMINI_SEARCH }}
+      - name: Set up Python (TB)
+        if: contains(steps.pick.outputs.jobs, 'tb')
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: TB surveillance data
+        if: contains(steps.pick.outputs.jobs, 'tb')
+        timeout-minutes: 30
+        continue-on-error: true
+        run: |
+          pip install -q requests numpy rasterio shapely h3 scipy
+          python scripts/tb/build_tb.py
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      - name: TB weekly AI brief
+        if: contains(steps.pick.outputs.jobs, 'tb')
+        timeout-minutes: 15
+        continue-on-error: true
+        run: node scripts/tb/brief.mjs
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_BUDGET_MIN: 12
       - name: Grant scout
         timeout-minutes: 25
         continue-on-error: true

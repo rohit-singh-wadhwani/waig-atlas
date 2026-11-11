@@ -3,10 +3,14 @@ import { PageHeader } from '../components/Layout';
 import { Avatar, Button, Card, CardHeader, TextInput } from '../components/ui';
 import { ALLOWED_DOMAIN, db } from '../lib/store';
 import { loadPeople, Member, usePeople } from '../lib/team';
+import { useData } from '../lib/hooks';
+import { tbList, TbPlaybook } from '../lib/tb';
 
 /** Everyone who signs in appears here automatically. Add people who haven't signed in yet so they can be assigned. */
 export default function PeoplePage() {
   const people = usePeople();
+  const playbooks = useData(() => tbList<TbPlaybook>('tb_playbooks'), [], []);
+  const roles = Array.from(new Set(playbooks.data.flatMap((p) => p.steps.map((s) => s.role)))).sort();
   const [email, setEmail] = useState('');
   const [err, setErr] = useState('');
   const save = async (m: Member, patch: Partial<Member>) => {
@@ -23,7 +27,7 @@ export default function PeoplePage() {
   };
   return (
     <>
-      <PageHeader title="People" subtitle="Everyone who signs in is added automatically. Set names and teams here; they appear in every owner, POC and team picker." />
+      <PageHeader title="People" subtitle="Everyone who signs in is added automatically. Set names, teams, and for TB work a role and district: tasks from playbooks go to the person holding that role." />
       <Card>
         <CardHeader title={`${people.length} people`} subtitle="Changes save when you leave a field" />
         <div className="overflow-x-auto">
@@ -33,6 +37,8 @@ export default function PeoplePage() {
                 <th className="py-2 pr-3 font-medium">Person</th>
                 <th className="py-2 px-2 font-medium">Name</th>
                 <th className="py-2 px-2 font-medium">Team</th>
+                <th className="py-2 px-2 font-medium">Role (for TB tasks)</th>
+                <th className="py-2 px-2 font-medium">District</th>
               </tr>
             </thead>
             <tbody>
@@ -42,6 +48,7 @@ export default function PeoplePage() {
             </tbody>
           </table>
         </div>
+        <datalist id="tb-role-options">{roles.map((r) => <option key={r} value={r} />)}</datalist>
         <div className="flex flex-wrap gap-2 mt-4">
           <TextInput className="flex-1 min-w-[240px]" placeholder={`Add someone who hasn't signed in yet: name@${ALLOWED_DOMAIN}`} value={email} onChange={(e) => setEmail(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && add()} />
           <Button variant="primary" icon="plus" onClick={add} disabled={!email.trim()}>Add person</Button>
@@ -55,10 +62,14 @@ export default function PeoplePage() {
 function Row({ m, save }: { m: Member; save: (m: Member, p: Partial<Member>) => Promise<void> }) {
   const [name, setName] = useState(m.name || '');
   const [team, setTeam] = useState(m.team || '');
+  const [role, setRole] = useState(m.role || '');
+  const [district, setDistrict] = useState(m.district || '');
   React.useEffect(() => {
     setName(m.name || '');
     setTeam(m.team || '');
-  }, [m.name, m.team]);
+    setRole(m.role || '');
+    setDistrict(m.district || '');
+  }, [m.name, m.team, m.role, m.district]);
   return (
     <tr className="border-b border-gray-100">
       <td className="py-2.5 pr-3">
@@ -72,6 +83,12 @@ function Row({ m, save }: { m: Member; save: (m: Member, p: Partial<Member>) => 
       </td>
       <td className="py-2.5 px-2 min-w-[180px]">
         <TextInput className="w-full h-9 text-sm" placeholder="e.g. Product & Tech" value={team} onChange={(e) => setTeam(e.target.value)} onBlur={() => team !== (m.team || '') && save(m, { team: team.trim() || null })} />
+      </td>
+      <td className="py-2.5 px-2 min-w-[200px]">
+        <TextInput className="w-full h-9 text-sm" list="tb-role-options" placeholder="e.g. District TB coordinator" value={role} onChange={(e) => setRole(e.target.value)} onBlur={() => role !== (m.role || '') && save(m, { role: role.trim() || null })} />
+      </td>
+      <td className="py-2.5 px-2 min-w-[160px]">
+        <TextInput className="w-full h-9 text-sm" placeholder="e.g. Accra Metropolitan" value={district} onChange={(e) => setDistrict(e.target.value)} onBlur={() => district !== (m.district || '') && save(m, { district: district.trim() || null })} />
       </td>
     </tr>
   );
