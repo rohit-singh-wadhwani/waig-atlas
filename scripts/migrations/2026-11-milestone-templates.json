@@ -1,0 +1,697 @@
+{
+ "tpl_health_ai": [
+  {
+   "key": "grant-application",
+   "name": "Grant Application",
+   "description": "Win the funding. Track the call, the proposal and each review round.",
+   "statuses": [
+    {
+     "key": "internal_alignment",
+     "label": "Internal alignment",
+     "kind": "active"
+    },
+    {
+     "key": "proposal_done",
+     "label": "Proposal done",
+     "kind": "active"
+    },
+    {
+     "key": "application_done",
+     "label": "Application done",
+     "kind": "active"
+    },
+    {
+     "key": "under_review",
+     "label": "Under review",
+     "kind": "active"
+    },
+    {
+     "key": "won",
+     "label": "Grant won",
+     "kind": "done"
+    },
+    {
+     "key": "lost",
+     "label": "Grant lost",
+     "kind": "lost"
+    }
+   ],
+   "checkpoints": [
+    {
+     "key": "call-and-fit",
+     "title": "Call and fit",
+     "parallel": false,
+     "subtasks": [
+      {
+       "key": "call-summary",
+       "title": "Call summary"
+      },
+      {
+       "key": "eligibility-and-fit",
+       "title": "Eligibility and fit"
+      }
+     ]
+    },
+    {
+     "key": "proposal",
+     "title": "Proposal",
+     "parallel": false,
+     "subtasks": [
+      {
+       "key": "proposal-and-attachments",
+       "title": "Proposal and attachments"
+      }
+     ]
+    },
+    {
+     "key": "submission",
+     "title": "Submission",
+     "parallel": false,
+     "subtasks": [
+      {
+       "key": "submission-checklist",
+       "title": "Submission checklist"
+      }
+     ]
+    },
+    {
+     "key": "review-and-outcome",
+     "title": "Review and outcome",
+     "parallel": false,
+     "subtasks": [
+      {
+       "key": "reviewer-feedback",
+       "title": "Reviewer feedback"
+      }
+     ]
+    }
+   ],
+   "sections": [
+    {
+     "key": "call-and-fit",
+     "title": "Call and fit"
+    },
+    {
+     "key": "proposal",
+     "title": "Proposal"
+    },
+    {
+     "key": "submission",
+     "title": "Submission"
+    },
+    {
+     "key": "review-and-outcome",
+     "title": "Review and outcome"
+    }
+   ]
+  },
+  {
+   "key": "requirement-context",
+   "name": "Requirement Context",
+   "description": "Everything the solution must answer to: ground reality, evidence, funder, organisation, contract and regulation.",
+   "statuses": [
+    {
+     "key": "not_started",
+     "label": "Not started",
+     "kind": "todo"
+    },
+    {
+     "key": "in_progress",
+     "label": "In progress",
+     "kind": "active"
+    },
+    {
+     "key": "blocked",
+     "label": "Blocked",
+     "kind": "blocked"
+    },
+    {
+     "key": "done",
+     "label": "Done",
+     "kind": "done"
+    }
+   ],
+   "checkpoints": [
+    {
+     "key": "ground-insights",
+     "title": "Ground insights",
+     "parallel": false,
+     "subtasks": [
+      {
+       "key": "ground-insights",
+       "title": "Ground Insights"
+      },
+      {
+       "key": "similar-solutions-and-interventions-globally",
+       "title": "Similar Solutions and Interventions Globally"
+      }
+     ]
+    },
+    {
+     "key": "evidence",
+     "title": "Evidence",
+     "parallel": true,
+     "subtasks": [
+      {
+       "key": "research-literature-and-evidence",
+       "title": "Research, Literature and Evidence"
+      }
+     ]
+    },
+    {
+     "key": "funder-and-organisation-requirements",
+     "title": "Funder and organisation requirements",
+     "parallel": false,
+     "subtasks": [
+      {
+       "key": "funding-requirements",
+       "title": "Funding Requirements"
+      },
+      {
+       "key": "organisation-requirements",
+       "title": "Organisation Requirements"
+      },
+      {
+       "key": "fund-contract-requirements",
+       "title": "Fund Contract Requirements"
+      }
+     ]
+    },
+    {
+     "key": "regulatory",
+     "title": "Regulatory",
+     "parallel": false,
+     "subtasks": [
+      {
+       "key": "regulatory-limitations-and-acceptance-criteria",
+       "title": "Regulatory Limitations and Acceptance Criteria"
+      }
+     ]
+    }
+   ],
+   "sections": [
+    {
+     "key": "ground-insights",
+     "title": "Ground insights"
+    },
+    {
+     "key": "evidence",
+     "title": "Evidence"
+    },
+    {
+     "key": "funder-and-organisation-requirements",
+     "title": "Funder and organisation requirements"
+    },
+    {
+     "key": "regulatory",
+     "title": "Regulatory"
+    }
+   ]
+  },
+  {
+   "key": "budget-financials",
+   "name": "Budget & Financials",
+   "description": "Expected vs actual: fund budget \u2192 WAIG contracted \u2192 WAIG spend \u2192 ground partners.",
+   "statuses": [
+    {
+     "key": "not_started",
+     "label": "Not started",
+     "kind": "todo"
+    },
+    {
+     "key": "in_progress",
+     "label": "In progress",
+     "kind": "active"
+    },
+    {
+     "key": "blocked",
+     "label": "Blocked",
+     "kind": "blocked"
+    },
+    {
+     "key": "done",
+     "label": "Done",
+     "kind": "done"
+    }
+   ],
+   "checkpoints": [
+    {
+     "key": "budget-plan",
+     "title": "Budget plan",
+     "parallel": false,
+     "subtasks": [
+      {
+       "key": "funds-flow",
+       "title": "Funds flow"
+      },
+      {
+       "key": "budget-by-line",
+       "title": "Budget by line"
+      }
+     ]
+    },
+    {
+     "key": "contract-and-partners",
+     "title": "Contract and partners",
+     "parallel": false,
+     "subtasks": [
+      {
+       "key": "p-l-for-this-contract",
+       "title": "P&L for this contract"
+      },
+      {
+       "key": "disbursements-to-partners",
+       "title": "Disbursements to partners"
+      }
+     ]
+    },
+    {
+     "key": "tracking",
+     "title": "Tracking",
+     "parallel": false,
+     "subtasks": [
+      {
+       "key": "expected-vs-actual",
+       "title": "Expected vs actual"
+      },
+      {
+       "key": "balance-sheet-capex-opex-investments",
+       "title": "Balance sheet: Capex, Opex, Investments"
+      }
+     ]
+    }
+   ],
+   "sections": [
+    {
+     "key": "budget-plan",
+     "title": "Budget plan"
+    },
+    {
+     "key": "contract-and-partners",
+     "title": "Contract and partners"
+    },
+    {
+     "key": "tracking",
+     "title": "Tracking"
+    }
+   ]
+  },
+  {
+   "key": "technical-implementation",
+   "name": "Technical Implementation",
+   "description": "Design and build.",
+   "statuses": [
+    {
+     "key": "not_started",
+     "label": "Not started",
+     "kind": "todo"
+    },
+    {
+     "key": "in_progress",
+     "label": "In progress",
+     "kind": "active"
+    },
+    {
+     "key": "blocked",
+     "label": "Blocked",
+     "kind": "blocked"
+    },
+    {
+     "key": "done",
+     "label": "Done",
+     "kind": "done"
+    }
+   ],
+   "checkpoints": [
+    {
+     "key": "design",
+     "title": "Design",
+     "parallel": false,
+     "subtasks": [
+      {
+       "key": "intro",
+       "title": "Intro"
+      },
+      {
+       "key": "system-architecture",
+       "title": "System Architecture"
+      },
+      {
+       "key": "model-architecture",
+       "title": "Model Architecture"
+      },
+      {
+       "key": "sequence-diagram",
+       "title": "Sequence Diagram"
+      },
+      {
+       "key": "api-contracts",
+       "title": "API Contracts"
+      }
+     ]
+    },
+    {
+     "key": "data",
+     "title": "Data",
+     "parallel": true,
+     "subtasks": [
+      {
+       "key": "datasets--database",
+       "title": "Datasets & Database"
+      },
+      {
+       "key": "data-annotation-plan",
+       "title": "Data Annotation Plan"
+      }
+     ]
+    },
+    {
+     "key": "build",
+     "title": "Build",
+     "parallel": false,
+     "subtasks": [
+      {
+       "key": "front-end-tasks-scope--timeline",
+       "title": "Front-end Tasks: Scope & Timeline"
+      },
+      {
+       "key": "back-end-tasks-scope--timeline",
+       "title": "Back-end Tasks: Scope & Timeline"
+      },
+      {
+       "key": "field-product--interface",
+       "title": "Field Product / Interface"
+      },
+      {
+       "key": "validation-product",
+       "title": "Validation Product"
+      }
+     ]
+    },
+    {
+     "key": "integrate-and-roll-out",
+     "title": "Integrate and roll out",
+     "parallel": false,
+     "subtasks": [
+      {
+       "key": "integration-testing",
+       "title": "Integration Testing"
+      },
+      {
+       "key": "risks",
+       "title": "Risks"
+      },
+      {
+       "key": "rollout-plan",
+       "title": "Rollout Plan"
+      }
+     ]
+    }
+   ],
+   "sections": [
+    {
+     "key": "design",
+     "title": "Design"
+    },
+    {
+     "key": "data",
+     "title": "Data"
+    },
+    {
+     "key": "build",
+     "title": "Build"
+    },
+    {
+     "key": "integrate-and-roll-out",
+     "title": "Integrate and roll out"
+    }
+   ]
+  },
+  {
+   "key": "adoption-mechanism",
+   "name": "Adoption Mechanism",
+   "description": "How the programme runs on the ground and reaches scale.",
+   "statuses": [
+    {
+     "key": "not_started",
+     "label": "Not started",
+     "kind": "todo"
+    },
+    {
+     "key": "in_progress",
+     "label": "In progress",
+     "kind": "active"
+    },
+    {
+     "key": "blocked",
+     "label": "Blocked",
+     "kind": "blocked"
+    },
+    {
+     "key": "done",
+     "label": "Done",
+     "kind": "done"
+    }
+   ],
+   "checkpoints": [
+    {
+     "key": "ground-design",
+     "title": "Ground design",
+     "parallel": false,
+     "subtasks": [
+      {
+       "key": "program-delivery-design-on-ground",
+       "title": "Program Delivery Design On-Ground"
+      },
+      {
+       "key": "user-personas-and-ground-realities",
+       "title": "User Personas and Ground Realities"
+      }
+     ]
+    },
+    {
+     "key": "rollout-plan",
+     "title": "Rollout plan",
+     "parallel": false,
+     "subtasks": [
+      {
+       "key": "funding-milestones--technical-rollout-plan",
+       "title": "Funding Milestones + Technical Rollout Plan"
+      }
+     ]
+    },
+    {
+     "key": "scale-up",
+     "title": "Scale-up",
+     "parallel": false,
+     "subtasks": [
+      {
+       "key": "scale-up-plan",
+       "title": "Scale-up Plan"
+      }
+     ]
+    }
+   ],
+   "sections": [
+    {
+     "key": "ground-design",
+     "title": "Ground design"
+    },
+    {
+     "key": "rollout-plan",
+     "title": "Rollout plan"
+    },
+    {
+     "key": "scale-up",
+     "title": "Scale-up"
+    }
+   ]
+  },
+  {
+   "key": "testing-qa",
+   "name": "Testing & QA",
+   "description": "Prove it works for users and is safe to deploy.",
+   "statuses": [
+    {
+     "key": "not_started",
+     "label": "Not started",
+     "kind": "todo"
+    },
+    {
+     "key": "in_progress",
+     "label": "In progress",
+     "kind": "active"
+    },
+    {
+     "key": "blocked",
+     "label": "Blocked",
+     "kind": "blocked"
+    },
+    {
+     "key": "done",
+     "label": "Done",
+     "kind": "done"
+    }
+   ],
+   "checkpoints": [
+    {
+     "key": "uat",
+     "title": "UAT",
+     "parallel": false,
+     "subtasks": [
+      {
+       "key": "uat",
+       "title": "UAT"
+      }
+     ]
+    },
+    {
+     "key": "uxt",
+     "title": "UXT",
+     "parallel": true,
+     "subtasks": [
+      {
+       "key": "uxt",
+       "title": "UXT"
+      }
+     ]
+    },
+    {
+     "key": "validation--qa-workflow",
+     "title": "Validation / QA workflow",
+     "parallel": false,
+     "subtasks": [
+      {
+       "key": "validation--qa-workflow",
+       "title": "Validation / QA Workflow"
+      }
+     ]
+    }
+   ],
+   "sections": [
+    {
+     "key": "uat",
+     "title": "UAT"
+    },
+    {
+     "key": "uxt",
+     "title": "UXT"
+    },
+    {
+     "key": "validation--qa-workflow",
+     "title": "Validation / QA workflow"
+    }
+   ]
+  }
+ ],
+ "tpl_grant_only": [
+  {
+   "key": "grant-application",
+   "name": "Grant Application",
+   "statuses": [
+    {
+     "key": "internal_alignment",
+     "label": "Internal alignment",
+     "kind": "active"
+    },
+    {
+     "key": "proposal_done",
+     "label": "Proposal done",
+     "kind": "active"
+    },
+    {
+     "key": "application_done",
+     "label": "Application done",
+     "kind": "active"
+    },
+    {
+     "key": "under_review",
+     "label": "Under review",
+     "kind": "active"
+    },
+    {
+     "key": "won",
+     "label": "Grant won",
+     "kind": "done"
+    },
+    {
+     "key": "lost",
+     "label": "Grant lost",
+     "kind": "lost"
+    }
+   ],
+   "checkpoints": [
+    {
+     "key": "call-and-fit",
+     "title": "Call and fit",
+     "parallel": false,
+     "subtasks": [
+      {
+       "key": "call-summary",
+       "title": "Call summary"
+      },
+      {
+       "key": "eligibility-and-fit",
+       "title": "Eligibility and fit"
+      }
+     ]
+    },
+    {
+     "key": "partners-and-budget",
+     "title": "Partners and budget",
+     "parallel": false,
+     "subtasks": [
+      {
+       "key": "partners",
+       "title": "Partners"
+      },
+      {
+       "key": "budget-outline",
+       "title": "Budget outline"
+      }
+     ]
+    },
+    {
+     "key": "submission",
+     "title": "Submission",
+     "parallel": false,
+     "subtasks": [
+      {
+       "key": "submission-checklist",
+       "title": "Submission checklist"
+      }
+     ]
+    },
+    {
+     "key": "review-and-outcome",
+     "title": "Review and outcome",
+     "parallel": false,
+     "subtasks": [
+      {
+       "key": "reviewer-feedback",
+       "title": "Reviewer feedback"
+      }
+     ]
+    }
+   ],
+   "sections": [
+    {
+     "key": "call-and-fit",
+     "title": "Call and fit"
+    },
+    {
+     "key": "partners-and-budget",
+     "title": "Partners and budget"
+    },
+    {
+     "key": "submission",
+     "title": "Submission"
+    },
+    {
+     "key": "review-and-outcome",
+     "title": "Review and outcome"
+    }
+   ]
+  }
+ ]
+}
