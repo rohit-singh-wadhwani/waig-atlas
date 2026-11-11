@@ -210,7 +210,7 @@ export function SectionLabel({ children }: { children: React.ReactNode }) {
 
 export function ExtLink({ href, children, className = '' }: { href: string; children: React.ReactNode; className?: string }) {
   return (
-    <a href={href} target="_blank" rel="noreferrer" className={cx('text-brand-700 hover:underline inline-flex items-center gap-1 max-w-full break-words', className)}>
+    <a href={href} target="_blank" rel="noreferrer" className={cx('text-brand-700 hover:underline inline-flex items-center gap-1 max-w-full [overflow-wrap:anywhere]', className)}>
       {children}
       <Icon name="external" size={13} />
     </a>

@@ -137,7 +137,7 @@ def map_travel_time():
         try:
             ds = rasterio.open(path)
             ds.read(1)  # make sure the whole file is readable
-            source(f'Malaria Atlas Project: motorised travel time to healthcare ({cov})', url.split('&subset')[0], True)
+            source('Malaria Atlas Project: motorised travel time to healthcare', url.split('&subset')[0], True, f'coverage {cov}')
             return ds
         except Exception as e:
             log('travel-time raster unreadable, retrying', e)
