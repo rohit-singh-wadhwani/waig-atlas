@@ -127,32 +127,57 @@ def map_travel_time():
     cov = sorted(pick)[-1]
     url = (f'https://data.malariaatlas.org/geoserver/Accessibility/ows?service=WCS&version=2.0.1&request=GetCoverage&coverageId={cov}'
            f'&subset=Lat(4.4,11.3)&subset=Long(-3.4,1.3)&format=image/tiff')
-    data = get(url, timeout=300).content
-    if data[:2] not in (b'II', b'MM'):
-        raise RuntimeError('WCS did not return a GeoTIFF: ' + data[:200].decode('utf8', 'ignore'))
-    mem = MemoryFile(data)
-    source(f'Malaria Atlas Project: motorised travel time to healthcare ({cov})', url.split('&subset')[0], True)
-    return mem.open()
+    path = '/tmp/gha_travel.tif'
+    for attempt in range(3):
+        with S.get(url, stream=True, timeout=300) as r:
+            r.raise_for_status()
+            with open(path, 'wb') as f:
+                for chunk in r.iter_content(1 << 20):
+                    f.write(chunk)
+        try:
+            ds = rasterio.open(path)
+            ds.read(1)  # make sure the whole file is readable
+            source(f'Malaria Atlas Project: motorised travel time to healthcare ({cov})', url.split('&subset')[0], True)
+            return ds
+        except Exception as e:
+            log('travel-time raster unreadable, retrying', e)
+            time.sleep(10)
+    raise RuntimeError('travel-time raster download was incomplete three times')
+
+
+MIRRORS = ['https://overpass-api.de/api/interpreter', 'https://overpass.private.coffee/api/interpreter',
+           'https://maps.mail.ru/osm/tools/overpass/api/interpreter', 'https://overpass.kumi.systems/api/interpreter']
 
 
 def overpass(q, label):
-    for url in ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter']:
-        try:
-            r = S.post(url, data={'data': q}, timeout=300)
-            r.raise_for_status()
-            els = r.json()['elements']
-            source(f'OpenStreetMap: {label} ({len(els)})', url, True)
-            return els
-        except Exception as e:
-            log('overpass failed', url, e)
-    source(f'OpenStreetMap: {label}', 'https://overpass-api.de', False, 'all Overpass mirrors failed')
-    return []
+    for attempt in range(2):
+        for url in MIRRORS:
+            try:
+                r = S.post(url, data={'data': q}, timeout=300)
+                r.raise_for_status()
+                els = r.json()['elements']
+                source(f'OpenStreetMap: {label} ({len(els)})', url, True)
+                return els
+            except Exception as e:
+                log('overpass failed', url, str(e)[:120])
+        time.sleep(30)
+    return None  # caller falls back to the last good pull
 
 
 def osm_points():
     area = 'area["ISO3166-1"="GH"][admin_level=2]->.a;'
     fac = overpass(f'[out:json][timeout:240];{area}(nwr["amenity"~"^(hospital|clinic|doctors|health_post)$"](area.a);nwr["healthcare"~"^(hospital|clinic|centre|laboratory|doctor)$"](area.a););out center tags;', 'health facilities')
     sites = overpass(f'[out:json][timeout:240];{area}(nwr["amenity"="marketplace"](area.a);nwr["amenity"="bus_station"](area.a);nwr["amenity"="prison"](area.a);nwr["landuse"="quarry"](area.a);nwr["industrial"="mine"](area.a);nwr["man_made"="mineshaft"](area.a););out center tags;', 'congregate sites')
+    previous = lambda f: json.load(open(os.path.join(OUT, f)))['features'] if os.path.exists(os.path.join(OUT, f)) else []
+    if fac is None:
+        old = previous('facilities.geojson')
+        source('OpenStreetMap: health facilities', MIRRORS[0], bool(old), f'Overpass unavailable; reused last good pull ({len(old)} facilities)' if old else 'Overpass unavailable and no earlier pull')
+        fac = [{'lon': f['geometry']['coordinates'][0], 'lat': f['geometry']['coordinates'][1], 'tags': {'amenity': f['properties']['kind'], 'name': f['properties']['name'], **({'healthcare': 'laboratory'} if f['properties'].get('lab') else {})}} for f in old]
+    if sites is None:
+        old = previous('sites.geojson')
+        rev = {'market': ('amenity', 'marketplace'), 'transport hub': ('amenity', 'bus_station'), 'prison': ('amenity', 'prison'), 'mine / quarry': ('landuse', 'quarry')}
+        source('OpenStreetMap: congregate sites', MIRRORS[0], bool(old), f'Overpass unavailable; reused last good pull ({len(old)} sites)' if old else 'Overpass unavailable and no earlier pull')
+        sites = [{'lon': f['geometry']['coordinates'][0], 'lat': f['geometry']['coordinates'][1], 'tags': {rev[f['properties']['kind']][0]: rev[f['properties']['kind']][1], 'name': f['properties']['name']}} for f in old]
 
     def pt(e):
         if 'lat' in e:
@@ -302,6 +327,8 @@ def main():
     fac_km = cKDTree(fac_xy).query(cell_xy)[0] if facilities else np.full(len(clon), np.nan)
     if tt is not None:
         band = tt.read(1).astype('float32')
+        if not np.isfinite(band).any():
+            raise RuntimeError('travel-time raster empty')
         rows, cols = rasterio.transform.rowcol(tt.transform, clon, clat)
         rows, cols = np.clip(rows, 0, band.shape[0] - 1), np.clip(cols, 0, band.shape[1] - 1)
         minutes = band[rows, cols]
