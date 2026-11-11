@@ -3,13 +3,22 @@ on:
   push:
     branches: [tb-dev]
 jobs:
-  probe:
+  build:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
       - run: pip install -q requests numpy rasterio shapely h3 scipy
-      - run: python scripts/tb/probe.py
+      - run: python scripts/tb/build_tb.py
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      - if: always()
+        run: ls -la public/data/tb/ && head -c 3000 public/data/tb/meta.json 2>/dev/null; cat public/data/tb/meta-error.json 2>/dev/null | head -c 3000
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tb-data
+          path: public/data/tb/
