@@ -3,12 +3,13 @@ import { Badge, Button, Card, CardHeader, ExtLink, Field, Modal, TextArea, TextI
 import Icon from '../../components/Icon';
 import { useMe } from '../../components/Layout';
 import { fmtTime } from '../../lib/format';
-import { tbSave, TbParam, TbPlaybook, TbStep } from '../../lib/tb';
+import { fmtInt, tbSave, TbMeta, TbParam, TbPlaybook, TbStep } from '../../lib/tb';
 import type { TbData } from './TbPage';
 
 export default function Evidence({ data }: { data: TbData }) {
   const { dist, params, playbooks, cities } = data;
   const meta = dist.data.meta;
+  const dhims2 = dist.data.dhims2;
   const groups = useMemo(() => {
     const g: Record<string, TbParam[]> = {};
     for (const p of params.data) (g[p.grp] ||= []).push(p);
@@ -21,33 +22,48 @@ export default function Evidence({ data }: { data: TbData }) {
     <div className="space-y-6">
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <Card className="min-w-0">
-          <CardHeader title="Data feeds" subtitle={meta ? `Last weekly run ${fmtTime(meta.updated_at)}${meta.access_basis ? ` · access from ${meta.access_basis}` : ''}` : 'Not run yet'} />
-          <ul className="space-y-2.5">
-            {(meta?.sources || []).map((s, i) => (
-              <li key={i} className="flex gap-2.5 text-[15px]">
-                <Icon name={s.ok ? 'checkCircle' : 'alert'} size={17} className={cx('mt-0.5 shrink-0', s.ok ? 'text-green-600' : 'text-red-600')} />
-                <span className="min-w-0">
-                  <ExtLink href={s.url}>{s.name}</ExtLink>
-                  {s.note && <span className="block text-xs text-gray-500">{s.note}</span>}
-                </span>
-              </li>
-            ))}
+          <CardHeader title="Ghana's own TB data" subtitle="What turns estimates into measured gaps. Private to signed-in team members; never published." right={<Button variant="primary" icon="upload" onClick={() => setUploading(true)}>Upload notifications</Button>} />
+          <ul className="space-y-3 text-[15px]">
+            <Conn ok={!!dhims2?.connected} title="DHIMS2 (GHS DHIS2): monthly district TB numbers"
+              text={dhims2?.connected ? `${dhims2.message}. ${dhims2.districts_matched} of ${dhims2.districts_total} districts matched${dhims2.months?.length ? `, ${dhims2.months[0]} to ${dhims2.months[1]}` : ''}.` : `${dhims2?.message || 'Not connected.'} Needs a read-only DHIMS2 account from the NTP / GHS PPME, added as GitHub secrets DHIMS2_URL, DHIMS2_USERNAME and DHIMS2_PASSWORD.`} />
+            <Conn ok={dist.data.notifiedDistricts > 0} title="District notifications loaded"
+              text={dist.data.notifiedDistricts ? `${dist.data.notifiedDistricts} districts, ${dist.data.notifRows} rows (DHIMS2 and uploads).` : 'None yet. Upload from an NTP report while DHIMS2 access is pending.'} />
+            <Conn ok={data.results.data.length > 0} title="Campaign results"
+              text={data.results.data.length ? `${data.results.data.length} reports from ${new Set(data.results.data.map((r) => r.campaign_id)).size} campaigns.` : "None yet. Add Aurum's past screening results as campaigns to set local yields."} />
+            <Conn ok={false} optional title="GeneXpert results (GxAlert / ASPECT)" text="Optional, pilot scale in Ghana. Would give test positivity by site in near real time." />
           </ul>
-          <p className="text-xs text-gray-500 mt-4">Private inputs: {meta?.private || '—'}. Phone-based mobility (GSS/Telecel/Flowminder), DHIMS2 and TB e-Tracker data need a data-sharing agreement; upload them below when you have them.</p>
         </Card>
         <Card className="min-w-0">
-          <CardHeader title="Your data" subtitle="Private to signed-in team members; used at the next weekly model run" right={<Button variant="primary" icon="upload" onClick={() => setUploading(true)}>Upload notifications</Button>} />
-          <ul className="text-[15px] space-y-2 text-gray-700">
-            <li><b>District notifications</b> (NTP / DHIMS2 / partner reports): turn the modelled detection gap into a measured one.</li>
-            <li><b>Campaign results</b> (Campaigns tab): every report recalibrates the district estimate and measures how the cough AI and X-ray AI perform against GeneXpert.</li>
-            <li><b>Cities</b>: {cities.data.map((c) => c.name).join(', ') || 'none'}. Edit below.</li>
-          </ul>
+          <CardHeader title="Method" subtitle="How the numbers on these pages are made" />
+          <ol className="list-decimal pl-5 space-y-2 text-[15px] text-gray-700">
+            <li><b>Expected cases.</b> WHO's {meta?.national?.year} estimate for Ghana ({fmtInt(meta?.national?.incidence)} cases). WHO attributes {attrText(meta)} to risk factors{meta?.method?.attributable_year ? ` (${meta.method.attributable_year})` : ''}. Each part is split across districts by population × the region's rate of that risk factor (DHS); alcohol, diabetes and the rest are split by population.</li>
+            <li><b>Notified.</b> DHIMS2 or uploaded district notifications: the latest 12 months, annualised if fewer.</li>
+            <li><b>Missed</b> = expected − notified. Without district notifications, Ghana's national detection rate ({meta?.national ? `${Math.round(meta.national.cdr * 100)}%` : '—'}) is applied to every district.</li>
+            <li><b>Far from care</b> = more than {meta?.method?.far_minutes ?? 60} minutes' walk to the nearest health facility (Malaria Atlas Project, on the WorldPop 100 m population grid).</li>
+            <li><b>Screening sites.</b> OpenStreetMap markets, lorry stations, prisons and mines, with people living within {meta?.method?.catchment_km ?? 1} km. Cases nearby = those people × the district's expected rate.</li>
+            <li><b>Expected yield.</b> Published screening yields by setting (below). Community and market screening use the general-population yield scaled to the district.</li>
+          </ol>
         </Card>
       </div>
 
+      <Card className="min-w-0">
+        <CardHeader title="Open data feeds" subtitle={meta ? `Last weekly run ${fmtTime(meta.updated_at)}` : 'Not run yet'} />
+        <ul className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-2.5">
+          {(meta?.sources || []).map((s, i) => (
+            <li key={i} className="flex gap-2.5 text-[15px] min-w-0">
+              <Icon name={s.ok ? 'checkCircle' : 'alert'} size={17} className={cx('mt-0.5 shrink-0', s.ok ? 'text-green-600' : 'text-red-600')} />
+              <span className="min-w-0">
+                <ExtLink href={s.url}>{s.name}</ExtLink>
+                {s.note && <span className="block text-xs text-gray-500 [overflow-wrap:anywhere]">{s.note}</span>}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </Card>
+
       <Card pad={false}>
         <div className="p-6 pb-2">
-          <CardHeader title="Evidence and model parameters" subtitle='Every number the model uses. "Evidence" means the value was checked against the cited source; "Assumption" means it needs local data or verification. Edits apply at the next weekly run.' />
+          <CardHeader title="Evidence and rules" subtitle='"Evidence" values come from the cited study. "Rule" values are the team’s choices for picking an approach; change them here and the ranking updates straight away.' />
         </div>
         {Object.entries(groups).map(([g, list]) => (
           <div key={g} className="border-t border-gray-100">
@@ -111,7 +127,7 @@ function ParamRow({ p }: { p: TbParam }) {
         <TextInput className="w-24 h-9 text-sm text-right" value={v} onChange={(e) => setV(e.target.value)} onBlur={save} onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()} />
         <span className="text-sm text-gray-500 ml-2">{p.unit}</span>
       </td>
-      <td className="px-3 py-3"><Badge className={p.status === 'evidence' ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-800'}>{p.status === 'evidence' ? 'Evidence' : 'Assumption'}</Badge></td>
+      <td className="px-3 py-3"><Badge className={p.status === 'evidence' ? 'bg-green-50 text-green-700' : p.status === 'policy' ? 'bg-sky-50 text-sky-700' : 'bg-amber-50 text-amber-800'}>{p.status === 'evidence' ? 'Evidence' : p.status === 'policy' ? 'Rule' : 'Unverified'}</Badge></td>
       <td className="px-3 pr-6 py-3 text-sm min-w-[220px]">{p.source_url ? <ExtLink href={p.source_url}>{p.source_title || 'Source'}</ExtLink> : <span className="text-gray-400">{p.source_title || 'No source yet'}</span>}</td>
     </tr>
   );
@@ -139,7 +155,7 @@ function UploadNotifications({ data, onClose }: { data: TbData; onClose: () => v
   return (
     <Modal open onClose={onClose} title="Upload district TB notifications" footer={done != null ? <Button variant="primary" onClick={onClose}>Close</Button> : <><Button onClick={onClose}>Cancel</Button><Button variant="primary" onClick={save} disabled={!ok.length}>Save {ok.length} rows</Button></>}>
       {done != null ? (
-        <p className="text-[15px]">Saved {done} rows. The detection gap updates at the next weekly model run.</p>
+        <p className="text-[15px]">Saved {done} rows. Reload the page to see the measured gaps.</p>
       ) : (
         <>
           <p className="text-sm text-gray-600">Paste from a spreadsheet: <b>district, period, notified</b> and optionally <b>bacteriologically confirmed</b>. Period can be a year (2025), month (2025-07) or quarter (2025-Q3).</p>
@@ -210,4 +226,20 @@ function CitiesCard({ data }: { data: TbData }) {
       </div>
     </Card>
   );
+}
+
+function Conn({ ok, title, text, optional }: { ok: boolean; title: string; text: string; optional?: boolean }) {
+  return (
+    <li className="flex gap-3">
+      <Icon name={ok ? 'checkCircle' : optional ? 'clock' : 'alert'} size={18} className={cx('mt-0.5 shrink-0', ok ? 'text-green-600' : optional ? 'text-gray-400' : 'text-amber-600')} />
+      <span className="min-w-0"><span className="block font-medium text-gray-900">{title}</span><span className="block text-sm text-gray-600">{text}</span></span>
+    </li>
+  );
+}
+
+function attrText(meta: TbMeta | null) {
+  const a = meta?.method?.attributable;
+  if (!a || !Object.keys(a).length) return 'no cases (risk-factor data unavailable this run)';
+  const names: Record<string, string> = { hiv: 'HIV', und: 'undernourishment', smk: 'smoking', alc: 'alcohol', dia: 'diabetes' };
+  return Object.entries(a).sort((x, y) => y[1] - x[1]).map(([k, v]) => `${fmtInt(v)} to ${names[k] || k}`).join(', ');
 }

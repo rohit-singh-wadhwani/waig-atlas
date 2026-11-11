@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 
-/** Sequential orange ramp for TB burden (light -> dark). Blind spots use a red hatch on top. */
+/** Sequential orange ramp for TB burden (light -> dark). */
 export const TB_RAMP = ['#fef0d9', '#fdd49e', '#fdbb84', '#fc8d59', '#e34a33', '#b30000'];
-export const BLIND_RED = '#c81e1e';
+export const SITE_COLORS: Record<string, string> = { market: '#7c3aed', 'transport hub': '#0891b2', prison: '#111827', 'mine / quarry': '#a16207' };
 const BASEMAP = 'https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png';
 
 export function breaksFor(values: number[], classes = 6) {
@@ -20,24 +20,6 @@ function stepExpr(prop: string, breaks: number[]) {
   return e;
 }
 
-function hatchImage() {
-  const size = 10;
-  const c = document.createElement('canvas');
-  c.width = c.height = size;
-  const g = c.getContext('2d')!;
-  g.strokeStyle = BLIND_RED;
-  g.lineWidth = 2;
-  g.beginPath();
-  g.moveTo(0, size);
-  g.lineTo(size, 0);
-  g.moveTo(-size / 2, size / 2);
-  g.lineTo(size / 2, -size / 2);
-  g.moveTo(size / 2, size * 1.5);
-  g.lineTo(size * 1.5, size / 2);
-  g.stroke();
-  return g.getImageData(0, 0, size, size);
-}
-
 export type TbMapProps = {
   districts?: any | null; // FeatureCollection
   hexes?: any | null;
@@ -45,10 +27,8 @@ export type TbMapProps = {
   sites?: any | null;
   metric: string;
   breaks: number[];
-  blindThreshold?: number | null; // hatch districts with blind >= this
   selectedId?: string | null;
-  flows?: { lon: number; lat: number; share: number; name: string }[];
-  flowFrom?: [number, number] | null;
+  highlight?: [number, number] | null; // ring around a chosen venue
   onSelect?: (props: any) => void;
   onSelectHex?: (props: any) => void;
   selectedHexes?: string[];
@@ -57,7 +37,7 @@ export type TbMapProps = {
   height?: number;
 };
 
-/** MapLibre map for the TB pages: district choropleth, city hexagons, facilities, congregate sites, blind-spot hatching and travel links. */
+/** MapLibre map for the TB pages: district choropleth, city hexagons, health facilities and screening venues. */
 export default function TbMap(p: TbMapProps) {
   const ref = useRef<HTMLDivElement>(null);
   const map = useRef<any>(null);
@@ -83,19 +63,17 @@ export default function TbMap(p: TbMapProps) {
     m.addControl(new ml.NavigationControl({ showCompass: false }), 'top-right');
     const popup = new ml.Popup({ closeButton: false, closeOnClick: false, maxWidth: '300px', className: 'tb-tip' });
     m.on('load', () => {
-      m.addImage('hatch', hatchImage(), { pixelRatio: 2 });
       const empty = { type: 'FeatureCollection', features: [] };
-      for (const id of ['districts', 'hexes', 'facilities', 'sites', 'flows']) m.addSource(id, { type: 'geojson', data: empty, ...(id === 'districts' || id === 'hexes' ? { promoteId: id === 'districts' ? 'id' : 'h3' } : {}) });
+      for (const id of ['districts', 'hexes', 'facilities', 'sites', 'highlight']) m.addSource(id, { type: 'geojson', data: empty, ...(id === 'districts' || id === 'hexes' ? { promoteId: id === 'districts' ? 'id' : 'h3' } : {}) });
       m.addLayer({ id: 'd-fill', type: 'fill', source: 'districts', paint: { 'fill-color': TB_RAMP[1], 'fill-opacity': 0.72 } });
-      m.addLayer({ id: 'd-hatch', type: 'fill', source: 'districts', paint: { 'fill-pattern': 'hatch', 'fill-opacity': 0.9 }, filter: ['==', ['get', 'id'], '__none__'] });
       m.addLayer({ id: 'd-line', type: 'line', source: 'districts', paint: { 'line-color': '#ffffff', 'line-width': 0.6 } });
       m.addLayer({ id: 'd-sel', type: 'line', source: 'districts', paint: { 'line-color': '#0f172a', 'line-width': 2.5 }, filter: ['==', ['get', 'id'], ''] });
       m.addLayer({ id: 'h-fill', type: 'fill', source: 'hexes', paint: { 'fill-color': TB_RAMP[1], 'fill-opacity': 0.78 } });
       m.addLayer({ id: 'h-line', type: 'line', source: 'hexes', paint: { 'line-color': '#ffffff', 'line-width': 0.4 } });
       m.addLayer({ id: 'h-sel', type: 'line', source: 'hexes', paint: { 'line-color': '#0f172a', 'line-width': 2 }, filter: ['in', ['get', 'h3'], ['literal', []]] });
-      m.addLayer({ id: 'flows', type: 'line', source: 'flows', layout: { 'line-cap': 'round' }, paint: { 'line-color': '#1e3a8a', 'line-opacity': 0.75, 'line-width': ['interpolate', ['linear'], ['get', 'share'], 0, 1.5, 0.3, 6], 'line-dasharray': [2, 1.5] } });
-      m.addLayer({ id: 'sites', type: 'circle', source: 'sites', paint: { 'circle-radius': 4, 'circle-color': ['match', ['get', 'kind'], 'market', '#7c3aed', 'transport hub', '#0891b2', 'prison', '#111827', '#a16207'], 'circle-stroke-color': '#fff', 'circle-stroke-width': 1.5 } });
-      m.addLayer({ id: 'facilities', type: 'circle', source: 'facilities', paint: { 'circle-radius': ['match', ['get', 'kind'], 'hospital', 5, 3.5], 'circle-color': ['match', ['get', 'kind'], 'hospital', '#1d4ed8', '#60a5fa'], 'circle-stroke-color': '#fff', 'circle-stroke-width': 1.2 } });
+      m.addLayer({ id: 'facilities', type: 'circle', source: 'facilities', paint: { 'circle-radius': ['match', ['get', 'kind'], 'hospital', 4.5, 3], 'circle-color': ['match', ['get', 'kind'], 'hospital', '#1d4ed8', '#60a5fa'], 'circle-stroke-color': '#fff', 'circle-stroke-width': 1 } });
+      m.addLayer({ id: 'sites', type: 'circle', source: 'sites', paint: { 'circle-radius': ['interpolate', ['linear'], ['coalesce', ['get', 'pop_1km'], 0], 0, 4, 20000, 6, 80000, 10], 'circle-color': ['match', ['get', 'kind'], 'market', SITE_COLORS.market, 'transport hub', SITE_COLORS['transport hub'], 'prison', SITE_COLORS.prison, SITE_COLORS['mine / quarry']], 'circle-stroke-color': '#fff', 'circle-stroke-width': 2 } });
+      m.addLayer({ id: 'highlight', type: 'circle', source: 'highlight', paint: { 'circle-radius': 16, 'circle-color': 'rgba(0,0,0,0)', 'circle-stroke-color': '#0f172a', 'circle-stroke-width': 3 } });
       setReady(true);
     });
     const layerOf: Record<string, 'district' | 'hex' | 'facility' | 'site'> = { facilities: 'facility', sites: 'site', 'h-fill': 'hex', 'd-fill': 'district' };
@@ -136,14 +114,10 @@ export default function TbMap(p: TbMapProps) {
     const target = p.hexes?.features?.length ? 'h-fill' : 'd-fill';
     m.setPaintProperty(target, 'fill-color', stepExpr(p.metric, p.breaks));
     m.setPaintProperty('d-fill', 'fill-opacity', p.hexes?.features?.length ? 0.15 : 0.72);
-    m.setFilter('d-hatch', p.blindThreshold != null ? ['>=', ['coalesce', ['get', 'blind'], 0], p.blindThreshold] : ['==', ['get', 'id'], '__none__']);
     m.setFilter('d-sel', ['==', ['get', 'id'], p.selectedId || '']);
     m.setFilter('h-sel', ['in', ['get', 'h3'], ['literal', p.selectedHexes || []]]);
-    const flows = p.flowFrom && p.flows?.length
-      ? { type: 'FeatureCollection', features: p.flows.map((f) => ({ type: 'Feature', properties: { share: f.share, name: f.name }, geometry: { type: 'LineString', coordinates: [p.flowFrom, [f.lon, f.lat]] } })) }
-      : { type: 'FeatureCollection', features: [] };
-    m.getSource('flows').setData(flows);
-  }, [ready, p.metric, p.breaks, p.blindThreshold, p.selectedId, p.selectedHexes, p.flows, p.flowFrom, p.hexes]);
+    m.getSource('highlight').setData({ type: 'FeatureCollection', features: p.highlight ? [{ type: 'Feature', properties: {}, geometry: { type: 'Point', coordinates: p.highlight } }] : [] });
+  }, [ready, p.metric, p.breaks, p.selectedId, p.selectedHexes, p.highlight, p.hexes]);
 
   useEffect(() => {
     const m = map.current;
@@ -154,7 +128,7 @@ export default function TbMap(p: TbMapProps) {
   return <div ref={ref} className="w-full rounded-xl overflow-hidden border border-gray-100" style={{ height: p.height || 520 }} />;
 }
 
-export function TbLegend({ title, breaks, fmt, blind }: { title: string; breaks: number[]; fmt: (v: number) => string; blind?: boolean }) {
+export function TbLegend({ title, breaks, fmt, sites }: { title: string; breaks: number[]; fmt: (v: number) => string; sites?: boolean }) {
   const labels = breaks.length ? [`< ${fmt(breaks[0])}`, ...breaks.slice(0, -1).map((b, i) => `${fmt(b)}–${fmt(breaks[i + 1])}`), `> ${fmt(breaks[breaks.length - 1])}`] : [];
   return (
     <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-gray-600 mt-3">
@@ -165,12 +139,9 @@ export function TbLegend({ title, breaks, fmt, blind }: { title: string; breaks:
           {l}
         </span>
       ))}
-      {blind && (
-        <span className="inline-flex items-center gap-1.5">
-          <span className="w-3.5 h-3.5 rounded-sm border" style={{ borderColor: BLIND_RED, background: `repeating-linear-gradient(135deg, ${BLIND_RED} 0 2px, transparent 2px 5px)` }} />
-          Blind spot: little or no visibility
-        </span>
-      )}
+      {sites && Object.entries(SITE_COLORS).map(([k, c]) => (
+        <span key={k} className="inline-flex items-center gap-1.5"><span className="w-3 h-3 rounded-full border-2 border-white shadow" style={{ background: c }} />{k}</span>
+      ))}
     </div>
   );
 }

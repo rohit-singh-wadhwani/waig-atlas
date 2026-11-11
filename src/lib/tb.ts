@@ -1,17 +1,22 @@
-import { db, dataUrl, supabase, uid } from './store';
+import { db, dataUrl, uid } from './store';
 
 /* ---------- types ---------- */
+/** Where a number comes from. Shown next to every figure. */
+export type Basis = 'reported' | 'measured' | 'estimated';
+
 export type TbDistrict = {
-  id: string; name: string; region: string; pop: number; area_km2: number; density: number; rwi: number; minutes: number; pct_far: number;
-  facilities: number; hospitals: number; labs: number; markets: number; hubs: number; prisons: number; mines: number;
-  hiv: number | null; thin: number | null; smoke: number | null; m_risk: number; m_density: number; m_poverty: number;
-  expected: number; cdr: number; hidden: number; hidden_100k: number; prev_adult: number; blind: number; priority: number; rank: number;
-  flows: { id: string; name: string; share: number; lon: number; lat: number }[]; lon: number; lat: number;
-  // private overlay (uploaded notifications, campaign calibration)
-  notified?: number | null; gap?: number | null; calibration?: number | null; private?: boolean;
+  id: string; name: string; region: string; pop: number; area_km2: number; density: number; rwi: number;
+  minutes: number; pct_far: number; walk_min: number | null; walk_far: number | null; walk_far_pop: number | null;
+  facilities: number; hospitals: number; labs: number; fac_100k: number; markets: number; hubs: number; prisons: number; mines: number;
+  hiv: number | null; thin: number | null; smoke: number | null;
+  expected: number; expected_100k: number; parts: Partial<Record<'hiv' | 'und' | 'smk' | 'alc' | 'dia' | 'other', number>>; lon: number; lat: number;
+  // joined in the app (members only): district notifications and campaign results
+  notified: number | null; notified_basis: string | null; detection: number | null; missed: number; missed_100k: number;
+  screened: number; confirmed: number; rank: number; approach: ApproachKey;
 };
-export type TbHex = { h3: string; city: string; district: string; pop: number; density: number; rwi: number; facility_km: number; hospital_km: number; minutes: number; sites: string[]; expected: number; hidden: number; hidden_100k: number; score: number };
-export type TbParam = { id: string; grp: string; label: string; value: number; unit?: string; description?: string; source_title?: string; source_url?: string; status: 'evidence' | 'assumption'; updated_at?: string; updated_by?: string };
+export type TbHex = { h3: string; city: string; district: string; district_id: string; pop: number; density: number; rwi: number; facility_km: number; minutes: number | null; walk_min: number | null; expected: number; expected_km2: number };
+export type TbSite = { kind: 'market' | 'transport hub' | 'prison' | 'mine / quarry'; name: string; district: string | null; district_id: string | null; pop_1km: number; expected_1km: number | null; facility_km: number; hospital_km: number; minutes: number | null; walk_min: number | null; lon: number; lat: number };
+export type TbParam = { id: string; grp: string; label: string; value: number; unit?: string; description?: string; source_title?: string; source_url?: string; status: 'evidence' | 'assumption' | 'policy'; updated_at?: string; updated_by?: string };
 export type TbStep = { key: string; title: string; role: string; due_days: number; detail?: string };
 export type TbPlaybook = { id: string; name: string; trigger?: string; description?: string; setting?: string; steps: TbStep[]; source_title?: string; source_url?: string; enabled: boolean };
 export type TbCampaign = {
@@ -30,11 +35,13 @@ export type TbTask = {
 };
 export type TbCity = { id: string; name: string; lat: number; lon: number; radius_km: number; h3_res: number; city_partner?: string | null; enabled: boolean };
 export type TbMeta = {
-  updated_at: string; access_basis?: string; private?: string; error?: string;
+  updated_at: string; access_basis?: string; error?: string;
   sources: { name: string; url: string; ok: boolean; note?: string; at: string }[];
-  national?: { year: number; incidence: number; notified: number; cdr: number; pop: number };
+  method?: { far_minutes: number; catchment_km: number; attributable_year: number | null; attributable: Record<string, number>; unattributed: number; population_scale: number };
+  national?: { year: number; incidence: number; incidence_lo?: number | null; incidence_hi?: number | null; notified: number; cdr: number; pop: number; tbhiv_pct?: number | null };
   counts?: { districts: number; facilities: number; sites: number; hexagons: number };
 };
+export type Dhims2Status = { checked_at: string; connected: boolean; configured?: boolean; message: string; items?: { key: string; name: string }[]; districts_matched?: number; districts_total?: number; unmatched?: string[]; months?: string[] };
 
 /* ---------- loading ---------- */
 const json = async (f: string) => {
@@ -44,61 +51,117 @@ const json = async (f: string) => {
 };
 
 export async function loadTbPublic() {
-  const [districts, meta, national] = await Promise.all([json('districts.geojson').catch(() => null), json('meta.json').catch(() => null), json('national.json').catch(() => null)]);
-  return { districts, meta: meta as TbMeta | null, national: national as { years: any[]; latest: any } | null };
+  const [districts, meta, national, dhims2] = await Promise.all([json('districts.geojson').catch(() => null), json('meta.json').catch(() => null), json('national.json').catch(() => null), json('dhims2.json').catch(() => null)]);
+  return { districts, meta: meta as TbMeta | null, national: national as { years: any[]; latest: any } | null, dhims2: dhims2 as Dhims2Status | null };
 }
 export const loadTbLayers = async () => {
   const [facilities, sites, cities] = await Promise.all([json('facilities.geojson').catch(() => null), json('sites.geojson').catch(() => null), json('cities.geojson').catch(() => null)]);
-  return { facilities, sites, cities };
+  return { facilities, sites, cities, siteList: (sites?.features || []).map((f: any) => ({ ...f.properties, lon: f.geometry.coordinates[0], lat: f.geometry.coordinates[1] })) as TbSite[] };
 };
 
-/** Districts with private estimates (uploaded notifications, campaign calibration) merged over the open-data model. */
-export async function loadTbDistricts(): Promise<{ geo: any | null; list: TbDistrict[]; meta: TbMeta | null; national: any; hasPrivate: boolean }> {
-  const { districts, meta, national } = await loadTbPublic();
-  if (!districts) return { geo: null, list: [], meta, national, hasPrivate: false };
-  let est: any[] = [];
-  if (supabase) {
-    try {
-      est = await db.list<any>('tb_estimates' as any);
-    } catch {}
+type NotifRow = { district_id: string; period: string; notified: number | null; source?: string | null };
+
+/** Annual notifications per district from monthly, quarterly or yearly rows: the latest 12 months, else the latest year. */
+export function annualNotified(rows: NotifRow[]) {
+  const by = new Map<string, NotifRow[]>();
+  for (const r of rows) if (r.notified != null) by.set(r.district_id, [...(by.get(r.district_id) || []), r]);
+  const out = new Map<string, { value: number; basis: string }>();
+  by.forEach((list, id) => {
+    const months = list.filter((r) => /^\d{4}-\d{2}$/.test(r.period)).sort((a, b) => b.period.localeCompare(a.period)).slice(0, 12);
+    if (months.length >= 6) {
+      const sum = months.reduce((s, r) => s + Number(r.notified), 0);
+      out.set(id, { value: (sum * 12) / months.length, basis: `${months.length} months to ${months[0].period}${months.length < 12 ? ', annualised' : ''}` });
+      return;
+    }
+    const quarters = list.filter((r) => /^\d{4}-?Q[1-4]$/i.test(r.period)).sort((a, b) => b.period.localeCompare(a.period)).slice(0, 4);
+    if (quarters.length >= 2) {
+      const sum = quarters.reduce((s, r) => s + Number(r.notified), 0);
+      out.set(id, { value: (sum * 4) / quarters.length, basis: `${quarters.length} quarters to ${quarters[0].period}${quarters.length < 4 ? ', annualised' : ''}` });
+      return;
+    }
+    const years = list.filter((r) => /^\d{4}$/.test(r.period)).sort((a, b) => b.period.localeCompare(a.period));
+    if (years.length) out.set(id, { value: Number(years[0].notified), basis: `year ${years[0].period}` });
+  });
+  return out;
+}
+
+/* ---------- prioritisation: transparent rules, no hand-set weights ---------- */
+export type ApproachKey = 'detection_gap' | 'outreach' | 'facility';
+export const APPROACH: Record<ApproachKey, { label: string; short: string; cls: string; setting: string; playbook: string; who: string; how: string }> = {
+  detection_gap: {
+    label: 'Find out why cases are not being notified', short: 'Detection gap', cls: 'bg-red-50 text-red-700', setting: 'facility', playbook: 'detection_gap',
+    who: 'WHO Module 2 (2021) and NTP data review practice',
+    how: 'Far fewer cases are notified than expected. Check presumptive TB registers, GeneXpert use and missing reports at the main facilities before screening more people.',
+  },
+  outreach: {
+    label: 'Mobile X-ray outreach to remote communities', short: 'Remote outreach', cls: 'bg-amber-50 text-amber-800', setting: 'outreach', playbook: 'acf_community',
+    who: 'WHO Module 2 (2021), 2.2: people with structural risk factors, including poor access to care',
+    how: 'Many people live more than an hour on foot from a health facility, so cases go undiagnosed. Take chest X-ray with AI reading and sputum collection to them.',
+  },
+  facility: {
+    label: 'Screen clinic attendees and household contacts', short: 'Clinics + contacts', cls: 'bg-brand-50 text-brand-700', setting: 'facility', playbook: 'acf_community',
+    who: 'WHO Module 2 (2021), 2.4 household contacts and 2.7 people attending health care',
+    how: 'Most people can reach care. Screen adults attending clinics with X-ray + AI, and trace the household contacts of every notified case.',
+  },
+};
+
+export type TbRules = { walkFarShare: number | null; lowDetection: number | null };
+export const rulesFrom = (P: Record<string, number>): TbRules => ({ walkFarShare: P.rule_walk_far_share ?? null, lowDetection: P.rule_low_detection ?? null });
+
+export function approachOf(d: Pick<TbDistrict, 'detection' | 'walk_far'>, r: TbRules): ApproachKey {
+  if (d.detection != null && r.lowDetection != null && d.detection < r.lowDetection) return 'detection_gap';
+  if (d.walk_far != null && r.walkFarShare != null && d.walk_far >= r.walkFarShare) return 'outreach';
+  return 'facility';
+}
+
+/** Public district data joined with members-only notifications and campaign results, ranked by missed cases. */
+export async function loadTbDistricts(): Promise<{ geo: any | null; list: TbDistrict[]; meta: TbMeta | null; national: any; dhims2: Dhims2Status | null; notifiedDistricts: number; notifRows: number }> {
+  const { districts, meta, national, dhims2 } = await loadTbPublic();
+  if (!districts) return { geo: null, list: [], meta, national, dhims2, notifiedDistricts: 0, notifRows: 0 };
+  const [notif, camps, results] = await Promise.all([tbList<NotifRow>('tb_notifications'), tbList<TbCampaign>('tb_campaigns'), tbList<TbResult>('tb_campaign_results')]);
+  const annual = annualNotified(notif);
+  const campDistrict = new Map(camps.map((c) => [c.id, c.district_id]));
+  const yieldBy = new Map<string, { s: number; c: number }>();
+  for (const r of results) {
+    const did = campDistrict.get(r.campaign_id);
+    if (!did) continue;
+    const y = yieldBy.get(did) || { s: 0, c: 0 };
+    y.s += Number(r.screened) || 0;
+    y.c += Number(r.confirmed) || 0;
+    yieldBy.set(did, y);
   }
-  const byId = new Map(est.map((e) => [e.district_id, e]));
-  let hasPrivate = false;
+  const cdr = meta?.national?.cdr ?? null;
   for (const f of districts.features) {
-    const e = byId.get(f.properties.id);
-    if (!e) continue;
     const pr = f.properties;
-    if (e.notified != null || (e.calibration && Math.abs(e.calibration - 1) > 1e-6)) hasPrivate = true;
-    Object.assign(pr, {
-      expected: e.expected ?? pr.expected, hidden: e.hidden ?? pr.hidden, notified: e.notified, gap: e.gap, calibration: e.calibration,
-      blind: e.blind_spot ?? pr.blind, priority: e.priority ?? pr.priority, rank: e.rank ?? pr.rank, private: true,
-    });
-    pr.hidden_100k = pr.pop ? (pr.hidden / pr.pop) * 1e5 : pr.hidden_100k;
+    const a = annual.get(pr.id);
+    pr.notified = a ? a.value : null;
+    pr.notified_basis = a ? a.basis : null;
+    pr.detection = a && pr.expected ? a.value / pr.expected : null;
+    pr.missed = a ? Math.max(pr.expected - a.value, 0) : cdr != null ? pr.expected * (1 - cdr) : pr.expected;
+    pr.missed_100k = pr.pop ? (pr.missed / pr.pop) * 1e5 : 0;
+    const y = yieldBy.get(pr.id);
+    pr.screened = y?.s || 0;
+    pr.confirmed = y?.c || 0;
   }
-  return { geo: districts, list: districts.features.map((f: any) => f.properties as TbDistrict), meta, national, hasPrivate };
+  const list = districts.features.map((f: any) => f.properties as TbDistrict).sort((a: TbDistrict, b: TbDistrict) => b.missed - a.missed);
+  list.forEach((d: TbDistrict, i: number) => (d.rank = i + 1));
+  return { geo: districts, list, meta, national, dhims2, notifiedDistricts: annual.size, notifRows: notif.length };
 }
 
 export const tbList = <T,>(table: string): Promise<T[]> => db.list<T>(table as any).then((r) => r || []).catch(() => [] as T[]);
 export const tbSave = <T extends { id: string }>(table: string, row: T) => db.upsert(table as any, row as any);
 export const tbRemove = (table: string, id: string) => db.remove(table as any, id);
 
-/* ---------- metrics shown on the map ---------- */
-export const METRICS: { key: keyof TbDistrict & string; label: string; fmt: (v: number) => string; help: string }[] = [
-  { key: 'priority', label: 'Priority', fmt: (v) => v.toFixed(0), help: 'Where to act first: hidden cases (count and rate) plus blind-spot score.' },
-  { key: 'hidden', label: 'Hidden cases', fmt: (v) => Math.round(v).toLocaleString('en-GB'), help: 'Estimated people with TB each year who are not diagnosed or notified.' },
-  { key: 'hidden_100k', label: 'Hidden per 100k', fmt: (v) => v.toFixed(0), help: 'Hidden cases per 100,000 people.' },
-  { key: 'expected', label: 'Expected cases', fmt: (v) => Math.round(v).toLocaleString('en-GB'), help: "District share of WHO's national incidence, weighted by risk factors, crowding and poverty." },
-  { key: 'blind', label: 'Blind spots', fmt: (v) => v.toFixed(0), help: 'Little or no visibility: far from care, few facilities, no data.' },
-  { key: 'minutes', label: 'Travel time to care', fmt: (v) => `${v.toFixed(0)} min`, help: 'Population-weighted travel time to the nearest health facility.' },
-];
-
-/** Prevalence (fraction) to expect in a campaign, by setting. */
-export function expectedPositivity(setting: string | null | undefined, d: TbDistrict | undefined, params: Record<string, number>) {
-  const sens = params.cxr_cad_sensitivity ?? 0.9;
+/** Share of people screened expected to have TB, by setting. Key populations use published screening yields;
+ *  community and clinic screening use the general-population yield scaled by the district's expected rate vs Ghana's. */
+export function expectedPositivity(setting: string | null | undefined, d: TbDistrict | undefined, params: Record<string, number>, nationalRate?: number | null) {
   const bySetting: Record<string, string> = { prison: 'prev_prison', mine: 'prev_miners', contacts: 'prev_contacts', plhiv: 'prev_plhiv' };
   const key = setting ? bySetting[setting] : undefined;
-  const prev = key && params[key] != null ? params[key] / 100 : (d?.prev_adult ?? params.prev_general_ghana ?? 356) / 1e5;
-  return prev * sens;
+  if (key && params[key] != null) return params[key] / 100;
+  const base = params.prev_community_survey;
+  if (base == null) return null;
+  const ratio = d && nationalRate ? d.expected_100k / nationalRate : 1;
+  return (base / 100) * ratio;
 }
 
 export const SETTINGS = [

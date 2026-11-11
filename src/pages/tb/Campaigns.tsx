@@ -7,7 +7,8 @@ import { cascadeTotals, createCampaign, expectedPositivity, fmtInt, pct, SETTING
 import type { TbData } from './TbPage';
 
 const STATUS_CLS: Record<string, string> = { planned: 'bg-gray-100 text-gray-700', active: 'bg-brand-50 text-brand-700', done: 'bg-green-50 text-green-700', cancelled: 'bg-red-50 text-red-700' };
-const nns = (p: number) => (p > 0 ? Math.round(1 / p) : null);
+const nns = (p: number | null) => (p && p > 0 ? Math.round(1 / p) : null);
+const natRateOf = (data: TbData) => { const n = data.dist.data.meta?.national; return n ? (n.incidence / n.pop) * 1e5 : null; };
 
 export default function Campaigns({ data, onPlan }: { data: TbData; onPlan: (c: Partial<TbCampaign>) => void }) {
   const { campaigns, results, tasks, dist, P } = data;
@@ -23,7 +24,7 @@ export default function Campaigns({ data, onPlan }: { data: TbData; onPlan: (c: 
   const predicted = campaigns.data.reduce((s, c) => {
     const t = cascadeTotals(byCampaign[c.id] || []);
     const d = dist.data.list.find((x) => x.id === c.district_id);
-    return s + t.screened * expectedPositivity(c.setting, d, P);
+    return s + t.screened * (expectedPositivity(c.setting, d, P, natRateOf(data)) ?? 0);
   }, 0);
   const noCampaign = dist.data.list.filter((d) => !campaigns.data.some((c) => c.district_id === d.id)).sort((a, b) => a.rank - b.rank).slice(0, 6);
   const current = campaigns.data.find((c) => c.id === open) || null;
@@ -32,7 +33,7 @@ export default function Campaigns({ data, onPlan }: { data: TbData; onPlan: (c: 
     <div className="space-y-6">
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <Card className="xl:col-span-2 min-w-0">
-          <CardHeader title="What campaigns are teaching us" subtitle="Observed results against what the model expected; each report updates the district estimates at the next weekly run" right={<Button variant="primary" icon="plus" onClick={() => onPlan({ setting: 'community', playbook_id: 'acf_community' })}>New campaign</Button>} />
+          <CardHeader title="What campaigns are teaching us" subtitle="What screening actually found, against the published yield for each setting" right={<Button variant="primary" icon="plus" onClick={() => onPlan({ setting: 'community', playbook_id: 'acf_community' })}>New campaign</Button>} />
           {all.screened ? (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <Mini label="People screened" value={fmtInt(all.screened)} />
@@ -45,15 +46,15 @@ export default function Campaigns({ data, onPlan }: { data: TbData; onPlan: (c: 
               <Mini label="Cases the X-ray AI flagged" value={pct(all.cxr_flagged_confirmed, all.confirmed)} sub="share of confirmed (sensitivity, approx.)" />
             </div>
           ) : (
-            <p className="text-[15px] text-gray-600">No results reported yet. When teams enter campaign results, this shows how many people it took to find one case versus the model's expectation, and how well the cough AI (HeAR) and X-ray AI flags matched GeneXpert results.</p>
+            <p className="text-[15px] text-gray-600">No results reported yet. When teams enter campaign results, this shows how many people it took to find one case against the published yield, and how well the cough AI (HeAR) and X-ray AI flags matched GeneXpert results.</p>
           )}
         </Card>
         <Card className="min-w-0">
-          <CardHeader title="High-priority districts with no screening yet" subtitle="The model is least certain here; campaigns here teach it most" />
+          <CardHeader title="Top-ranked districts with no screening yet" subtitle="From the Where to act ranking" />
           <ul className="space-y-2">
             {noCampaign.map((d) => (
               <li key={d.id} className="flex items-center justify-between gap-2">
-                <span className="min-w-0"><span className="block truncate text-[15px]">{d.name}</span><span className="text-xs text-gray-500">rank {d.rank} · ≈{fmtInt(d.hidden)} hidden</span></span>
+                <span className="min-w-0"><span className="block truncate text-[15px]">{d.name}</span><span className="text-xs text-gray-500">rank {d.rank} · ≈{fmtInt(d.missed)} missed a year</span></span>
                 <Button className="shrink-0" onClick={() => onPlan({ district_id: d.id, district_name: d.name, setting: 'community', playbook_id: 'acf_community', name: `${d.name}: community case-finding` })}>Plan</Button>
               </li>
             ))}
@@ -124,7 +125,7 @@ function CampaignDetail({ c, data, rows, tasks, onDeleted }: { c: TbCampaign; da
   const [adding, setAdding] = useState(false);
   const t = cascadeTotals(rows);
   const d = data.dist.data.list.find((x) => x.id === c.district_id);
-  const exp = expectedPositivity(c.setting, d, data.P);
+  const exp = expectedPositivity(c.setting, d, data.P, natRateOf(data));
   const obs = t.screened ? t.confirmed / t.screened : 0;
   const max = Math.max(t.screened, 1);
   const today = new Date().toISOString().slice(0, 10);
@@ -163,7 +164,7 @@ function CampaignDetail({ c, data, rows, tasks, onDeleted }: { c: TbCampaign; da
             <Mini label="Preventive treatment started" value={fmtInt(t.tpt_started)} />
           </div>
         )}
-        {t.screened > 0 && <p className="text-xs text-gray-500 mt-3">Yield {obs > exp * 1.3 ? 'is well above' : obs < exp * 0.7 ? 'is well below' : 'is close to'} the model's expectation ({pct(obs, 1)} vs {pct(exp, 1)}); this feeds the district estimate.</p>}
+        {t.screened > 0 && exp != null && <p className="text-xs text-gray-500 mt-3">Yield {obs > exp * 1.3 ? 'is well above' : obs < exp * 0.7 ? 'is well below' : 'is close to'} the published yield for this setting ({pct(obs, 1)} vs {pct(exp, 1)}).</p>}
       </Card>
 
       <Card>
@@ -244,7 +245,7 @@ export function CampaignForm({ data, initial, me, onClose, onSaved }: { data: Tb
   const [busy, setBusy] = useState(false);
   const d = data.dist.data.list.find((x) => x.id === c.district_id);
   const pb = data.playbooks.data.find((p) => p.id === c.playbook_id);
-  const exp = expectedPositivity(c.setting, d, data.P);
+  const exp = expectedPositivity(c.setting, d, data.P, natRateOf(data));
   const districts = [...data.dist.data.list].sort((a, b) => a.name.localeCompare(b.name));
   const save = async () => {
     if (!c.name?.trim()) return;
@@ -268,8 +269,8 @@ export function CampaignForm({ data, initial, me, onClose, onSaved }: { data: Tb
         <Field label="People to screen (target)"><TextInput type="number" min={0} className="w-full" value={c.target_screened ?? ''} onChange={(e) => setC({ ...c, target_screened: e.target.value ? Number(e.target.value) : null })} /></Field>
       </div>
       <div className="rounded-xl bg-orange-50 text-orange-900 text-sm p-3">
-        Expected yield: about <b>1 confirmed case per {nns(exp) ?? '—'}</b> people screened with chest X-ray + AI ({SETTINGS.find((s) => s.value === c.setting)?.label || 'setting'}).
-        {c.target_screened ? <> At {fmtInt(c.target_screened)} screened, expect about <b>{(c.target_screened * exp).toFixed(0)}</b> cases.</> : null}
+        Expected yield: about <b>1 confirmed case per {nns(exp) ?? '—'}</b> people screened ({SETTINGS.find((s) => s.value === c.setting)?.label || 'setting'}).
+        {c.target_screened && exp != null ? <> At {fmtInt(c.target_screened)} screened, expect about <b>{(c.target_screened * exp).toFixed(0)}</b> cases.</> : null}
       </div>
       {pb && (
         <div className="text-sm">
