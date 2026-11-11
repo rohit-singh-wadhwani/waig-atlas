@@ -1,0 +1,15 @@
+name: TB pipeline (dev)
+on:
+  push:
+    branches: [tb-dev]
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -q requests numpy rasterio shapely h3 scipy
+      - run: python scripts/tb/probe.py
