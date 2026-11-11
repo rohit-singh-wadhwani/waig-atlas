@@ -48,6 +48,7 @@ async function main() {
     };
     const prompt = `You write the weekly TB case-finding brief for ${s.name} for Wadhwani AI Global, Aurum Institute and Ghana Health Service partners.
 Use ONLY the numbers in INPUT and EVIDENCE. Never invent figures, places, organisations or results. Say "modelled" for model outputs and "reported" for campaign or uploaded data. If campaigns or notifications are missing, say so plainly and say what data would fix it.
+Facility, market, prison and mine counts come from OpenStreetMap and are often incomplete in rural districts: write "mapped facilities" and never claim a district has no health facility.
 Write in plain English for a district health director, in Markdown, max ~450 words, with these sections:
 ## Situation (2-3 sentences with the key numbers)
 ## Where to act in the next 4 weeks (numbered, 3-5 items: place, why — cite drivers such as crowding, poverty, distance to care, prisons/mines/markets — and which playbook id to use; include expected people screened per case found when you can compute it as 1/(prev_general_ghana/100000 × cxr_cad_sensitivity × risk), otherwise omit)
