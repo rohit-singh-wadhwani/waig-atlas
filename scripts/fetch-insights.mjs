@@ -95,7 +95,8 @@ async function main() {
   const sources = (await loadSources('insights')).filter((s) => s.enabled);
   // no item may carry a date in the future (older runs stored PubMed journal-issue dates)
   const nowIso = new Date().toISOString();
-  const prev = (readJson('insights.json', { insights: [] }).insights || []).map((i) => (i.published_at > nowIso ? { ...i, published_at: i.fetched_at && i.fetched_at <= nowIso ? i.fetched_at : nowIso.slice(0, 10) + 'T00:00:00.000Z' } : i));
+  // future-dated items are dropped here and re-fetched below with their real dates
+  const prev = (readJson('insights.json', { insights: [] }).insights || []).filter((i) => !(i.published_at > nowIso));
   const known = new Set(prev.map((p) => p.id));
   const rejected = new Set(readJson('insights-rejected.json', { ids: [] }).ids);
   const fresh = [];
