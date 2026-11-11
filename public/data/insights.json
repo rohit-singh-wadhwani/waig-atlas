@@ -1,5 +1,5 @@
 {
- "updated_at": "2026-11-10T21:58:20.558Z",
+ "updated_at": "2026-11-11T01:26:41.949Z",
  "insights": [
   {
    "id": "9b807fe45fb20e46",
@@ -277,6 +277,22 @@
     "FRA"
    ],
    "diseases": []
+  },
+  {
+   "id": "9b2cc27d3a29cf94",
+   "title": "Tuberculosis exposure in a German childcare setting: contact investigation findings and considerations for preventive screening.",
+   "summary": "A study details tuberculosis exposure and contact investigation findings within a German childcare setting, discussing considerations for preventive screening.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/43007638/",
+   "published_at": "2026-11-10T00:00:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [
+    "DEU"
+   ],
+   "diseases": [
+    "Tuberculosis"
+   ]
   },
   {
    "id": "bf3248da1395569e",
