@@ -1,5 +1,5 @@
 {
- "updated_at": "2026-11-11T01:26:41.949Z",
+ "updated_at": "2026-11-11T04:17:23.408Z",
  "insights": [
   {
    "id": "9b807fe45fb20e46",
@@ -198,6 +198,38 @@
    "countries": [],
    "diseases": [
     "tuberculosis"
+   ]
+  },
+  {
+   "id": "b45d4234ff019531",
+   "title": "World News in Brief: Ending cholera by 2030 ‘within reach’, Haiti displacement and hunger, US human rights review rescheduled",
+   "summary": "The WHO stated that ending cholera as a public health threat by 2030 is achievable using currently available prevention and treatment tools.",
+   "url": "https://news.un.org/feed/view/en/story/2026/11/1168782",
+   "published_at": "2026-11-10T12:00:00.000Z",
+   "source_id": "un-news-health",
+   "source_name": "UN News: health",
+   "kind": "news",
+   "countries": [
+    "HTI"
+   ],
+   "diseases": [
+    "cholera"
+   ]
+  },
+  {
+   "id": "ff5c158c815776bf",
+   "title": "Ebola: IOM urges wider surveillance beyond formal routes in DR Congo",
+   "summary": "The IOM reported seventy-one confirmed Ebola cases along transit routes in the Democratic Republic of the Congo and urged expanded surveillance beyond formal checkpoints.",
+   "url": "https://news.un.org/feed/view/en/story/2026/11/1168781",
+   "published_at": "2026-11-10T12:00:00.000Z",
+   "source_id": "un-news-health",
+   "source_name": "UN News: health",
+   "kind": "outbreak",
+   "countries": [
+    "COD"
+   ],
+   "diseases": [
+    "Ebola"
    ]
   },
   {
