@@ -2,6 +2,9 @@ name: TB pipeline (dev)
 on:
   push:
     branches: [tb-dev]
+    paths: ['scripts/tb/**', '.github/workflows/tb-dev.yml']
+permissions:
+  contents: write
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -15,10 +18,11 @@ jobs:
       - run: python scripts/tb/build_tb.py
         env:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-      - if: always()
-        run: ls -la public/data/tb/ && head -c 3000 public/data/tb/meta.json 2>/dev/null; cat public/data/tb/meta-error.json 2>/dev/null | head -c 3000
-      - if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: tb-data
-          path: public/data/tb/
+      - name: Commit outputs to this branch
+        run: |
+          ls -la public/data/tb/
+          git config user.name "atlas-bot"
+          git config user.email "atlas-bot@users.noreply.github.com"
+          git add public/data/tb
+          git commit -m "tb data (dev) [skip ci]" || echo "no changes"
+          git push

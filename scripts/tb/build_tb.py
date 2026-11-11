@@ -441,9 +441,15 @@ def main():
         d['flows'] = [{'id': e['id'], 'name': e['name'], 'share': r2(x / tot, 3), 'lon': r2(e['lon'], 4), 'lat': r2(e['lat'], 4)} for x, e in sorted(w, key=lambda t: -t[0])[:5]]
 
     # ---------------- write public district file ----------------
+    def light(g):
+        # simplify (~200 m) and round to 4 decimals (~11 m) so the map file stays small
+        gj = mapping(g.simplify(0.002, preserve_topology=True))
+        rnd = lambda c: [rnd(x) for x in c] if isinstance(c[0], (list, tuple)) else [round(c[0], 4), round(c[1], 4)]
+        return {'type': gj['type'], 'coordinates': rnd(gj['coordinates'])}
+
     feats = []
     for d in dists:
-        feats.append({'type': 'Feature', 'geometry': mapping(d['geom']), 'properties': {
+        feats.append({'type': 'Feature', 'geometry': light(d['geom']), 'properties': {
             'id': d['id'], 'name': d['name'], 'region': d['region'], 'pop': round(d['pop']), 'area_km2': r2(d['area_km2'], 0), 'density': r2(d['density'], 0),
             'rwi': r2(d['rwi'], 3), 'minutes': r2(d['minutes'], 0), 'pct_far': r2(d['pct_far'], 3), 'facilities': d['facilities'], 'hospitals': d['hospitals'], 'labs': d['labs'],
             'markets': d['markets'], 'hubs': d['hubs'], 'prisons': d['prisons'], 'mines': d['mines'], 'hiv': r2(d['hiv'], 1), 'thin': r2(d['thin'], 1), 'smoke': r2(d['smoke'], 1),
