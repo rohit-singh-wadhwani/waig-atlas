@@ -1,0 +1,108 @@
+{
+ "updated_at": "2026-11-11T09:08:47.104052+00:00",
+ "sources": [
+  {
+   "name": "geoBoundaries Ghana ADM1 (2021, 16 units)",
+   "url": "https://github.com/wmgeolab/geoBoundaries/raw/9469f09/releaseData/gbOpen/GHA/ADM1/geoBoundaries-GHA-ADM1_simplified.geojson",
+   "ok": true,
+   "note": "Open Street Map",
+   "at": "2026-11-11T09:08:47.104052+00:00"
+  },
+  {
+   "name": "geoBoundaries Ghana ADM2 (2019, 260 units)",
+   "url": "https://github.com/wmgeolab/geoBoundaries/raw/9469f09/releaseData/gbOpen/GHA/ADM2/geoBoundaries-GHA-ADM2_simplified.geojson",
+   "ok": true,
+   "note": "USAID Ghana HPNO, Ghana Statistical Service",
+   "at": "2026-11-11T09:08:47.104052+00:00"
+  },
+  {
+   "name": "WHO Global TB Programme: Ghana estimates and notifications (latest 2024)",
+   "url": "https://www.who.int/teams/global-programme-on-tuberculosis-and-lung-health/data",
+   "ok": true,
+   "note": "",
+   "at": "2026-11-11T09:08:47.104052+00:00"
+  },
+  {
+   "name": "DHS Program API: Ghana DHS 2022 (thinness, smoking) and 2014 (HIV), by region",
+   "url": "https://api.dhsprogram.com",
+   "ok": true,
+   "note": "18 regions",
+   "at": "2026-11-11T09:08:47.104052+00:00"
+  },
+  {
+   "name": "OpenStreetMap: health facilities (1340)",
+   "url": "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
+   "ok": true,
+   "note": "",
+   "at": "2026-11-11T09:08:47.104052+00:00"
+  },
+  {
+   "name": "OpenStreetMap: congregate sites (1471)",
+   "url": "https://overpass-api.de/api/interpreter",
+   "ok": true,
+   "note": "",
+   "at": "2026-11-11T09:08:47.104052+00:00"
+  },
+  {
+   "name": "Meta Relative Wealth Index, Ghana (19849 tiles)",
+   "url": "https://data.humdata.org/dataset/76f2a2ea-ba50-40f5-b79c-db95d668b843/resource/4e783c8b-4c8c-463c-9a24-c51b32d71ae8/download/gha_relative_wealth_index.csv",
+   "ok": true,
+   "note": "",
+   "at": "2026-11-11T09:08:47.104052+00:00"
+  },
+  {
+   "name": "Malaria Atlas Project: motorised travel time to healthcare",
+   "url": "https://data.malariaatlas.org/geoserver/Accessibility/ows?service=WCS&version=2.0.1&request=GetCoverage&coverageId=Accessibility__202001_Global_Motorized_Travel_Time_to_Healthcare",
+   "ok": true,
+   "note": "coverage Accessibility__202001_Global_Motorized_Travel_Time_to_Healthcare",
+   "at": "2026-11-11T09:08:47.104052+00:00"
+  },
+  {
+   "name": "WorldPop constrained population 2020 (100 m, UN-adjusted)",
+   "url": "https://data.worldpop.org/GIS/Population/Global_2000_2020_Constrained/2020/maxar_v1/GHA/gha_ppp_2020_UNadj_constrained.tif",
+   "ok": true,
+   "note": "",
+   "at": "2026-11-11T09:08:47.104052+00:00"
+  }
+ ],
+ "access_basis": "MAP motorised travel time to healthcare",
+ "private": "0 districts with uploaded notifications, 0 with campaign results",
+ "national": {
+  "year": 2024,
+  "incidence": 43000.0,
+  "notified": 20009.0,
+  "cdr": 0.465,
+  "pop": 34427413.0
+ },
+ "parameters": {
+  "prev_general_ghana": 356.0,
+  "prev_prison": 3.6,
+  "prev_miners": 2.3,
+  "prev_contacts": 2.2,
+  "prev_plhiv": 8.6,
+  "prev_community_survey": 0.7,
+  "rr_hiv": 16.0,
+  "rr_undernutrition": 3.2,
+  "rr_smoking": 1.6,
+  "beta_density": 0.05,
+  "beta_poverty": 0.25,
+  "access_halflife_min": 120.0,
+  "congregate_rr": 1.05,
+  "cxr_cad_sensitivity": 0.9,
+  "hear_sensitivity": 0.75,
+  "calibration_prior_cases": 5.0,
+  "gravity_gamma": 2.0,
+  "w_blind_access": 0.5,
+  "w_blind_facilities": 0.25,
+  "w_blind_nodata": 0.25,
+  "w_priority_hidden": 0.5,
+  "w_priority_rate": 0.3,
+  "w_priority_blind": 0.2
+ },
+ "counts": {
+  "districts": 260,
+  "facilities": 1333,
+  "sites": 1471,
+  "hexagons": 4044
+ }
+}
