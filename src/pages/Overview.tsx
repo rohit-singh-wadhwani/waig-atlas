@@ -12,6 +12,7 @@ import { daysUntil, fmtDate, fmtTime, fmtUsd, scoreTone } from '../lib/format';
 import { personName } from '../lib/team';
 import type { GrantTracking, Project, ProjectMilestone } from '../lib/types';
 import { KINDS } from './Insights';
+import { isDone, statusOf } from '../lib/projects';
 
 export default function OverviewPage() {
   const nav = useNavigate();
@@ -61,7 +62,7 @@ export default function OverviewPage() {
         if (c)
           out.push({
             id: 'p' + p.id + iso, kind: 'Our project', lng: c.lng - 1.5, lat: c.lat + 1.5, size: 8, color: '#6250d6', label: p.name, sub: `${c.name}${p.funder ? ` · ${p.funder}` : ''}`,
-            items: pm.map((m) => ({ label: m.name, href: `#/projects/${p.slug}/${m.id}`, meta: m.status === 'done' ? 'done' : `${m.progress}%${m.target_date ? ` · due ${fmtDate(m.target_date, { day: 'numeric', month: 'short' })}` : ''}` })),
+            items: pm.map((m) => ({ label: m.name, href: `#/projects/${p.slug}/${m.id}`, meta: isDone(m) ? statusOf(m).label : `${m.progress}%${m.target_date ? ` · due ${fmtDate(m.target_date, { day: 'numeric', month: 'short' })}` : ''}` })),
             href: `#/projects/${p.slug}`, cta: 'Open project',
           });
       }

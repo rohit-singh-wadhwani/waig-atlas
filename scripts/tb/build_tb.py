@@ -75,8 +75,8 @@ def sb(path, method='GET', body=None, prefer=None):
 def norm_region(s):
     s = re.sub(r'^\.+', '', s or '').lower()
     s = re.sub(r'\((pre|post) 20\d\d\)', '', s)
-    s = s.replace('region', '').replace('-', ' ')
-    return re.sub(r'\s+', ' ', s).strip()
+    s = s.replace('region', '')
+    return re.sub(r'[^a-z]', '', s)  # "North East", "Northeast" and "North-East" all match
 
 
 def km_xy(lon, lat, lat0):
@@ -137,7 +137,7 @@ def map_travel_time():
         try:
             ds = rasterio.open(path)
             ds.read(1)  # make sure the whole file is readable
-            source(f'Malaria Atlas Project: motorised travel time to healthcare ({cov})', url.split('&subset')[0], True)
+            source('Malaria Atlas Project: motorised travel time to healthcare', url.split('&subset')[0], True, f'coverage {cov}')
             return ds
         except Exception as e:
             log('travel-time raster unreadable, retrying', e)

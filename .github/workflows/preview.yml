@@ -24,6 +24,10 @@ jobs:
           { npm ls @blocknote/core @blocknote/react @blocknote/mantine @mantine/core prosemirror-view 2>&1; } | tee -a build.log
           { REACT_APP_SUPABASE_URL= REACT_APP_SUPABASE_ANON_KEY= CI=false TSC_COMPILE_ON_ERROR=true npm run build 2>&1; echo "BUILD_EXIT=$?"; } | tee -a build.log
           exit 0
+      - name: Vendor the CDN map library for offline tests
+        run: |
+          mkdir -p build/vendor && cd /tmp && npm pack maplibre-gl@5.0.0 --silent && tar xzf maplibre-gl-5.0.0.tgz
+          cp package/dist/maplibre-gl.js package/dist/maplibre-gl.css "$GITHUB_WORKSPACE/build/vendor/" || true
       - name: Publish build output to the preview-build branch
         run: |
           mkdir -p out && cp build.log out/ && (cp -r build/. out/ 2>/dev/null || true)

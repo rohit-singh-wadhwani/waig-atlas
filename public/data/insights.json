@@ -1,205 +1,6 @@
 {
- "updated_at": "2026-11-11T07:37:53.043Z",
+ "updated_at": "2026-11-11T10:27:46.581Z",
  "insights": [
-  {
-   "id": "9b807fe45fb20e46",
-   "title": "Aptamer-CRISPR/Cas as a tool in point-of-care testing of infectious diseases.",
-   "summary": "This review discusses Aptamer-CRISPR/Cas systems as emerging tools for point-of-care diagnostic testing of infectious diseases.",
-   "url": "https://pubmed.ncbi.nlm.nih.gov/42892010/",
-   "published_at": "2027-03-01T00:00:00.000Z",
-   "source_id": "pubmed-ai-tb-malaria-dengue",
-   "source_name": "PubMed: AI for TB, malaria, dengue",
-   "kind": "research",
-   "countries": [],
-   "diseases": []
-  },
-  {
-   "id": "f80291815f84cb19",
-   "title": "Local adaptation of a chest radiograph AI model for pulmonary tuberculosis triage in Uzbekistan: Pooled and site-stratified internal validation and exploratory workstation integration.",
-   "summary": "This study validates a chest radiograph AI model adapted for pulmonary tuberculosis triage in clinical workflows in Uzbekistan.",
-   "url": "https://pubmed.ncbi.nlm.nih.gov/42784986/",
-   "published_at": "2026-12-01T00:00:00.000Z",
-   "source_id": "pubmed-ai-tb-malaria-dengue",
-   "source_name": "PubMed: AI for TB, malaria, dengue",
-   "kind": "research",
-   "countries": [
-    "UZB"
-   ],
-   "diseases": [
-    "tuberculosis"
-   ]
-  },
-  {
-   "id": "439bb1e457896072",
-   "title": "Advances in mosquito gut microbiota: Mechanisms of regulating pathogen transmission and applications in vector control.",
-   "summary": "The authors review mosquito gut microbiota interactions that influence pathogen transmission and potential novel vector control applications.",
-   "url": "https://pubmed.ncbi.nlm.nih.gov/42717435/",
-   "published_at": "2026-12-01T00:00:00.000Z",
-   "source_id": "pubmed-ai-tb-malaria-dengue",
-   "source_name": "PubMed: AI for TB, malaria, dengue",
-   "kind": "research",
-   "countries": [],
-   "diseases": [
-    "malaria",
-    "dengue"
-   ]
-  },
-  {
-   "id": "fb6bae4cdd5bddcb",
-   "title": "Free energy perturbation and machine learning-assisted identification of novel molecules for the Mycobacterium tuberculosis KasA protein: a fragment-based drug design approach.",
-   "summary": "Machine learning and free energy calculations were used to identify novel drug candidate fragments targeting the Mycobacterium tuberculosis KasA protein.",
-   "url": "https://pubmed.ncbi.nlm.nih.gov/42693318/",
-   "published_at": "2026-12-01T00:00:00.000Z",
-   "source_id": "pubmed-ai-tb-malaria-dengue",
-   "source_name": "PubMed: AI for TB, malaria, dengue",
-   "kind": "research",
-   "countries": [],
-   "diseases": [
-    "tuberculosis"
-   ]
-  },
-  {
-   "id": "e10cd4d06ff0568f",
-   "title": "Machine learning approaches to identify rare fungal and tuberculous infections in hospitalized patients.",
-   "summary": "Machine learning models were developed to aid clinical identification of tuberculous and rare fungal infections in hospitalized patients.",
-   "url": "https://pubmed.ncbi.nlm.nih.gov/42691871/",
-   "published_at": "2026-12-01T00:00:00.000Z",
-   "source_id": "pubmed-ai-tb-malaria-dengue",
-   "source_name": "PubMed: AI for TB, malaria, dengue",
-   "kind": "research",
-   "countries": [],
-   "diseases": [
-    "tuberculosis"
-   ]
-  },
-  {
-   "id": "1309bcf3ae1e2938",
-   "title": "Hybrid probabilistic forecasting of under-five malaria admissions in Ghana: A Gaussian process regression with Holt-Winters smoothing.",
-   "summary": "A hybrid probabilistic model combining Gaussian process regression and Holt-Winters smoothing was evaluated for forecasting under-five malaria admissions in Ghana.",
-   "url": "https://pubmed.ncbi.nlm.nih.gov/42685512/",
-   "published_at": "2026-12-01T00:00:00.000Z",
-   "source_id": "pubmed-ai-tb-malaria-dengue",
-   "source_name": "PubMed: AI for TB, malaria, dengue",
-   "kind": "research",
-   "countries": [
-    "GHA"
-   ],
-   "diseases": [
-    "malaria"
-   ]
-  },
-  {
-   "id": "cf4b4a470a8b44ce",
-   "title": "A YOLOv8-based dual-validation study against nine experienced microscopists for detection of intraerythrocytic Plasmodium species and cellular mimics on Giemsa-stained thin films in an Indonesian endemic setting.",
-   "summary": "A YOLOv8 object detection model was validated against nine microscopists for identifying Plasmodium species on Giemsa-stained blood smears in Indonesia.",
-   "url": "https://pubmed.ncbi.nlm.nih.gov/42607623/",
-   "published_at": "2026-12-01T00:00:00.000Z",
-   "source_id": "pubmed-ai-tb-malaria-dengue",
-   "source_name": "PubMed: AI for TB, malaria, dengue",
-   "kind": "research",
-   "countries": [
-    "IDN"
-   ],
-   "diseases": [
-    "malaria"
-   ]
-  },
-  {
-   "id": "09daa8fde2796d30",
-   "title": "Early-stage anthelmintic discovery: Integrating phenotype, target and mechanism.",
-   "summary": "The review examines integrated screening strategies combining phenotypic, target, and mechanistic approaches for early anthelmintic drug discovery.",
-   "url": "https://pubmed.ncbi.nlm.nih.gov/42600712/",
-   "published_at": "2026-12-01T00:00:00.000Z",
-   "source_id": "pubmed-ai-tb-malaria-dengue",
-   "source_name": "PubMed: AI for TB, malaria, dengue",
-   "kind": "research",
-   "countries": [],
-   "diseases": []
-  },
-  {
-   "id": "f028e213df2ac36e",
-   "title": "Therapeutic approaches against dengue virus: current status of vaccines, antivirals, and monoclonal antibodies.",
-   "summary": "The paper provides an overview of current progress and pipelines for dengue vaccines, direct-acting antivirals, and therapeutic monoclonal antibodies.",
-   "url": "https://pubmed.ncbi.nlm.nih.gov/42253092/",
-   "published_at": "2026-12-01T00:00:00.000Z",
-   "source_id": "pubmed-ai-tb-malaria-dengue",
-   "source_name": "PubMed: AI for TB, malaria, dengue",
-   "kind": "research",
-   "countries": [],
-   "diseases": [
-    "dengue"
-   ]
-  },
-  {
-   "id": "6f9c4ac7f1b9504f",
-   "title": "Exploring anti-dengue activity with atomic-weighted vectors, class balancing and machine learning.",
-   "summary": "Machine learning models utilizing atomic-weighted vectors and class balancing techniques were applied to discover compounds with anti-dengue activity.",
-   "url": "https://pubmed.ncbi.nlm.nih.gov/42105140/",
-   "published_at": "2026-12-01T00:00:00.000Z",
-   "source_id": "pubmed-ai-tb-malaria-dengue",
-   "source_name": "PubMed: AI for TB, malaria, dengue",
-   "kind": "research",
-   "countries": [],
-   "diseases": [
-    "dengue"
-   ]
-  },
-  {
-   "id": "937c6b67b43d7d17",
-   "title": "Construction of a diagnostic model for tuberculosis based on long non-coding RNA.",
-   "summary": "Researchers constructed a diagnostic prediction model for tuberculosis based on long non-coding RNA expression profiles.",
-   "url": "https://pubmed.ncbi.nlm.nih.gov/41543364/",
-   "published_at": "2026-12-01T00:00:00.000Z",
-   "source_id": "pubmed-ai-tb-malaria-dengue",
-   "source_name": "PubMed: AI for TB, malaria, dengue",
-   "kind": "research",
-   "countries": [],
-   "diseases": [
-    "tuberculosis"
-   ]
-  },
-  {
-   "id": "21a82cfa14dc6dac",
-   "title": "Deep learning diagnosis model of spinal tuberculosis based on CT bone window gradient attention mechanism: multi-center study.",
-   "summary": "A multi-center study validated a deep learning model using gradient attention mechanisms on CT scans to diagnose spinal tuberculosis.",
-   "url": "https://pubmed.ncbi.nlm.nih.gov/41459642/",
-   "published_at": "2026-12-01T00:00:00.000Z",
-   "source_id": "pubmed-ai-tb-malaria-dengue",
-   "source_name": "PubMed: AI for TB, malaria, dengue",
-   "kind": "research",
-   "countries": [],
-   "diseases": [
-    "tuberculosis"
-   ]
-  },
-  {
-   "id": "c078ed3c1dcf4cb8",
-   "title": "Smartphone-Enabled Cough Detection in Severely Exacerbated COPD: An Exploratory Pilot Study.",
-   "summary": "An exploratory pilot study evaluates smartphone-based acoustic analysis for detecting coughs in patients experiencing severe COPD exacerbations.",
-   "url": "https://pubmed.ncbi.nlm.nih.gov/41558973/",
-   "published_at": "2026-12-01T00:00:00.000Z",
-   "source_id": "pubmed-cough-acoustics",
-   "source_name": "PubMed: cough acoustics",
-   "kind": "research",
-   "countries": [],
-   "diseases": [
-    "COPD"
-   ]
-  },
-  {
-   "id": "7e19243b7d04a648",
-   "title": "Global freshwater resistomes reveal environmental signatures associated with the burden of drug-resistant tuberculosis.",
-   "summary": "Research analyzes global freshwater resistomes to identify environmental markers associated with drug-resistant tuberculosis burdens.",
-   "url": "https://pubmed.ncbi.nlm.nih.gov/42692396/",
-   "published_at": "2026-11-15T00:00:00.000Z",
-   "source_id": "pubmed-ai-tb-malaria-dengue",
-   "source_name": "PubMed: AI for TB, malaria, dengue",
-   "kind": "research",
-   "countries": [],
-   "diseases": [
-    "tuberculosis"
-   ]
-  },
   {
    "id": "b45d4234ff019531",
    "title": "World News in Brief: Ending cholera by 2030 ‘within reach’, Haiti displacement and hunger, US human rights review rescheduled",
@@ -1209,6 +1010,18 @@
    ]
   },
   {
+   "id": "9b807fe45fb20e46",
+   "title": "Aptamer-CRISPR/Cas as a tool in point-of-care testing of infectious diseases.",
+   "summary": "This study reviews the integration of aptamer-CRISPR/Cas systems for point-of-care infectious disease diagnostics, which is relevant for field testing tools.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/42892010/",
+   "published_at": "2026-10-18T05:37:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [],
+   "diseases": []
+  },
+  {
    "id": "ecd347bfbe79950f",
    "title": "WHO scales up Ebola readiness in 22 countries across three continents",
    "summary": "WHO is expanding Ebola readiness and response capacity across 22 countries affected by ongoing regional conflict and population displacement.",
@@ -1486,6 +1299,22 @@
    ]
   },
   {
+   "id": "f80291815f84cb19",
+   "title": "Local adaptation of a chest radiograph AI model for pulmonary tuberculosis triage in Uzbekistan: Pooled and site-stratified internal validation and exploratory workstation integration.",
+   "summary": "Researchers evaluated the local adaptation and validation of a chest X-ray AI model for tuberculosis triage in clinical settings in Uzbekistan.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/42784986/",
+   "published_at": "2026-09-24T23:52:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [
+    "UZB"
+   ],
+   "diseases": [
+    "tuberculosis"
+   ]
+  },
+  {
    "id": "d2812079b55c7a46",
    "title": "Recurrent Plasmodium falciparum Malaria after Delayed Hemolysis Induced by Artemether-Lumefantrine.",
    "summary": "A case study documented recurrent Plasmodium falciparum malaria following delayed hemolysis induced by artemether-lumefantrine treatment.",
@@ -1530,6 +1359,18 @@
    ]
   },
   {
+   "id": "439bb1e457896072",
+   "title": "Advances in mosquito gut microbiota: Mechanisms of regulating pathogen transmission and applications in vector control.",
+   "summary": "This review examines how mosquito gut microbiota regulate pathogen transmission, offering insights for vector control strategies.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/42717435/",
+   "published_at": "2026-09-10T05:36:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [],
+   "diseases": []
+  },
+  {
    "id": "6650390daced5d7f",
    "title": "Environmental and epidemiological drivers of dengue forecasting across heterogeneous transmission settings in Brazil and Panama.",
    "summary": "A study evaluated environmental and epidemiological drivers to improve dengue predictive modeling across different transmission settings in Brazil and Panama.",
@@ -1544,6 +1385,64 @@
    ],
    "diseases": [
     "Dengue"
+   ]
+  },
+  {
+   "id": "fb6bae4cdd5bddcb",
+   "title": "Free energy perturbation and machine learning-assisted identification of novel molecules for the Mycobacterium tuberculosis KasA protein: a fragment-based drug design approach.",
+   "summary": "A machine learning and free energy perturbation approach was used to identify novel drug candidate molecules targeting the Mycobacterium tuberculosis KasA protein.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/42693318/",
+   "published_at": "2026-09-04T05:36:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [],
+   "diseases": [
+    "tuberculosis"
+   ]
+  },
+  {
+   "id": "e10cd4d06ff0568f",
+   "title": "Machine learning approaches to identify rare fungal and tuberculous infections in hospitalized patients.",
+   "summary": "The study demonstrates machine learning methods to help identify rare fungal and tuberculous infections among hospitalized patients.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/42691871/",
+   "published_at": "2026-09-03T23:36:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [],
+   "diseases": [
+    "tuberculosis"
+   ]
+  },
+  {
+   "id": "7e19243b7d04a648",
+   "title": "Global freshwater resistomes reveal environmental signatures associated with the burden of drug-resistant tuberculosis.",
+   "summary": "An analysis of global freshwater resistomes explores environmental signatures linked to the burden of drug-resistant tuberculosis.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/42692396/",
+   "published_at": "2026-09-03T23:36:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [],
+   "diseases": [
+    "tuberculosis"
+   ]
+  },
+  {
+   "id": "1309bcf3ae1e2938",
+   "title": "Hybrid probabilistic forecasting of under-five malaria admissions in Ghana: A Gaussian process regression with Holt-Winters smoothing.",
+   "summary": "A hybrid probabilistic forecasting model using Gaussian process regression and Holt-Winters smoothing was developed to predict under-five malaria admissions in Ghana.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/42685512/",
+   "published_at": "2026-09-03T01:19:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [
+    "GHA"
+   ],
+   "diseases": [
+    "malaria"
    ]
   },
   {
@@ -1629,6 +1528,22 @@
    "kind": "research",
    "countries": [],
    "diseases": []
+  },
+  {
+   "id": "cf4b4a470a8b44ce",
+   "title": "A YOLOv8-based dual-validation study against nine experienced microscopists for detection of intraerythrocytic Plasmodium species and cellular mimics on Giemsa-stained thin films in an Indonesian endemic setting.",
+   "summary": "Researchers evaluated a YOLOv8-based computer vision model against human microscopists for detecting Plasmodium species on blood films in Indonesia.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/42607623/",
+   "published_at": "2026-08-17T23:39:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [
+    "IDN"
+   ],
+   "diseases": [
+    "malaria"
+   ]
   },
   {
    "id": "a07a0ff572a06871",

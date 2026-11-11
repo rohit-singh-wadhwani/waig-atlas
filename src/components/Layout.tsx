@@ -14,6 +14,7 @@ const NAV: { to: string; label: string; icon: IconName; group?: string }[] = [
   { to: '/health', label: 'Health Map', icon: 'globe', group: 'Market View' },
   { to: '/insights', label: 'Latest Insights', icon: 'newspaper', group: 'Market View' },
   { to: '/sources', label: 'Sources & Status', icon: 'rss', group: 'Market View' },
+  { to: '/tb', label: 'TB Surveillance', icon: 'activity', group: 'Disease Surveillance' },
   { to: '/projects', label: 'Projects', icon: 'folder', group: 'Project Dashboards' },
   { to: '/templates', label: 'Milestone Templates', icon: 'layers', group: 'Project Dashboards' },
   { to: '/context', label: 'Org Context', icon: 'building', group: 'Settings' },
@@ -81,7 +82,7 @@ export function Sidebar() {
         )}
       </div>
       {nav}
-      <div className="border-t border-gray-200 px-4 py-4">
+      <div className="border-t border-gray-200 px-4 py-4 min-w-0 overflow-hidden">
         <div className={cx('flex items-center gap-3', collapsed && 'justify-center')}>
           <Avatar name={me.name} size={collapsed ? 36 : 46} />
           {!collapsed && (
@@ -95,13 +96,17 @@ export function Sidebar() {
           )}
         </div>
         {!collapsed && (
-          <p className="text-[13px] text-gray-500 mt-3 leading-relaxed flex gap-1.5">
+          <p className="text-[13px] text-gray-500 mt-3 leading-relaxed flex gap-1.5 min-w-0">
             <Icon name="bars" size={15} className="mt-0.5 shrink-0" />
-            <span>
+            <span className="min-w-0 break-words">
               {DEMO
                 ? 'Demo mode: your edits are saved in this browser only. Feeds refresh on schedule.'
                 : 'Signed in. Edits are shared with the team. Feeds refresh on schedule.'}
-              {process.env.REACT_APP_BUILD && <span className="block text-gray-400 mt-1">Build {process.env.REACT_APP_BUILD}</span>}
+              {process.env.REACT_APP_BUILD && (
+                <span className="block text-gray-400 mt-1 truncate" title={`Build ${process.env.REACT_APP_BUILD}`}>
+                  Build {process.env.REACT_APP_BUILD.replace(/^(\d+)-([0-9a-f]{7})[0-9a-f]*$/, '$1 · $2')}
+                </span>
+              )}
             </span>
           </p>
         )}
@@ -118,11 +123,11 @@ export function Sidebar() {
       <button type="button" className="lg:hidden fixed top-3 left-3 z-40 w-10 h-10 rounded-xl bg-white border border-gray-200 flex items-center justify-center shadow-card" onClick={() => setMobileOpen(true)} aria-label="Open menu">
         <Icon name="menu" />
       </button>
-      <aside className={cx('hidden lg:block shrink-0 bg-white border-r border-gray-200 h-screen sticky top-0', collapsed ? 'w-[84px]' : 'w-[300px]')}>{body}</aside>
+      <aside className={cx('hidden lg:block shrink-0 bg-white border-r border-gray-200 h-screen sticky top-0 overflow-x-hidden', collapsed ? 'w-[84px]' : 'w-[300px]')}>{body}</aside>
       {mobileOpen && (
         <div className="lg:hidden fixed inset-0 z-50">
           <div className="absolute inset-0 bg-gray-900/30" onClick={() => setMobileOpen(false)} />
-          <aside className="relative w-[290px] h-full bg-white shadow-xl">{body}</aside>
+          <aside className="relative w-[290px] max-w-[85vw] h-full bg-white shadow-xl overflow-x-hidden">{body}</aside>
         </div>
       )}
     </>

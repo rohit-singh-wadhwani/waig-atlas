@@ -9,8 +9,9 @@ import { createProject, milestoneProgress } from '../lib/projects';
 import { useWorld, NO_COUNTRIES } from '../lib/world';
 import { daysUntil, fmtDate } from '../lib/format';
 import { peopleOptions, personName, usePeople } from '../lib/team';
-import type { MilestoneTemplate, Project, ProjectMilestone, Task } from '../lib/types';
+import type { Checkpoint, MilestoneTemplate, Project, ProjectMilestone } from '../lib/types';
 import { placeLabel } from './Grants';
+import { isDone } from '../lib/projects';
 
 export const PROJECT_STATUS: { value: Project['status']; label: string; cls: string }[] = [
   { value: 'idea', label: 'Idea', cls: 'bg-gray-100 text-gray-700' },
@@ -25,7 +26,7 @@ export default function ProjectsPage() {
   const countries = world?.countries ?? NO_COUNTRIES;
   const projects = useData(() => db.list<Project>('projects'), [], []);
   const milestones = useData(() => db.list<ProjectMilestone>('project_milestones'), [], []);
-  const tasks = useData(() => db.list<Task>('tasks'), [], []);
+  const checkpoints = useData(() => db.list<Checkpoint>('milestone_checkpoints'), [], []);
   const [creating, setCreating] = useState(false);
 
   const msOf = (id: string) => milestones.data.filter((m) => m.project_id === id).sort((a, b) => a.order - b.order);
@@ -39,8 +40,8 @@ export default function ProjectsPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <KpiCard icon="folder" label="Projects" value={projects.data.length} foot={`${projects.data.filter((p) => p.status === 'active').length} active`} />
         <KpiCard icon="calendar" tint="orange" label="Milestones due in 30 days" value={upcoming.length} foot={upcoming[0] ? `next: ${upcoming[0].name}, ${fmtDate(upcoming[0].target_date)}` : undefined} />
-        <KpiCard icon="checkCircle" tint="green" label="Milestones done" value={`${milestones.data.filter((m) => m.status === 'done').length} / ${milestones.data.length}`} />
-        <KpiCard icon="clipboard" tint="purple" label="Open tasks" value={tasks.data.filter((t) => t.status !== 'done').length} foot={`${tasks.data.filter((t) => t.status === 'blocked').length} blocked`} />
+        <KpiCard icon="checkCircle" tint="green" label="Milestones done" value={`${milestones.data.filter((m) => isDone(m)).length} / ${milestones.data.length}`} />
+        <KpiCard icon="clipboard" tint="purple" label="Open checkpoints" value={checkpoints.data.filter((c) => !c.completed_on).length} foot={`${checkpoints.data.length} across all milestones`} />
       </div>
 
       {projects.data.length === 0 && !projects.loading ? (
@@ -66,7 +67,7 @@ export default function ProjectsPage() {
                     <span className="inline-flex items-center gap-1"><Icon name="user" size={15} />{personName(p.lead)}</span>
                   </div>
                   <div className="mt-5">
-                    <div className="flex justify-between text-sm mb-1.5"><span className="text-gray-600">{ms.filter((m) => m.status === 'done').length} of {ms.length} milestones</span><span className="font-medium tabular-nums">{pr}%</span></div>
+                    <div className="flex justify-between text-sm mb-1.5"><span className="text-gray-600">{ms.filter((m) => isDone(m)).length} of {ms.length} milestones</span><span className="font-medium tabular-nums">{pr}%</span></div>
                     <Progress value={pr} />
                   </div>
                   {next && (

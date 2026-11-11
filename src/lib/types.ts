@@ -34,19 +34,9 @@ export interface Grant {
   updated_at?: string | null;
 }
 
-export interface StageMilestone {
-  key: string;
-  label: string;
-  target?: string | null; // ISO date
-  done_at?: string | null;
-  note?: string;
-}
-
 export interface GrantTracking {
   grant_id: ID;
   assignee?: string | null; // email or name
-  stage: string; // key of current stage
-  milestones: StageMilestone[];
   status: 'watching' | 'pursuing' | 'submitted' | 'won' | 'lost' | 'dropped';
   updated_at?: string;
 }
@@ -122,12 +112,56 @@ export interface TemplateSection {
   title: string;
 }
 
+/** One step in a milestone's status flow; `kind` drives colour, progress and the "lost" warning. */
+export interface FlowStatus {
+  key: string;
+  label: string;
+  kind: 'todo' | 'active' | 'blocked' | 'done' | 'lost';
+}
+
+/** Template checkpoint: a title and an optional list of tasks. */
+export interface TemplateCheckpoint {
+  title: string;
+  tasks: string[];
+}
+
 export interface TemplateMilestone {
   key: string;
   name: string;
   description?: string;
-  sections: TemplateSection[];
-  stages?: { key: string; label: string }[]; // optional sub-checkpoints
+  statuses?: FlowStatus[];
+  checkpoints?: TemplateCheckpoint[];
+  sections?: TemplateSection[]; // older templates only
+}
+
+export interface CheckpointTask {
+  id: string;
+  title: string;
+  done: boolean;
+}
+
+/** Fields shared by milestone_checkpoints and grant_checkpoints. */
+export interface CheckpointBase {
+  id: ID;
+  position: number;
+  title: string;
+  target_date?: string | null;
+  completed_on?: string | null;
+  owner?: string | null;
+  notes?: string | null;
+  tasks: CheckpointTask[];
+  updated_at?: string;
+}
+
+/** A row in milestone_checkpoints. */
+export interface Checkpoint extends CheckpointBase {
+  milestone_id: ID;
+  project_id: ID;
+}
+
+/** A row in grant_checkpoints. */
+export interface GrantCheckpoint extends CheckpointBase {
+  grant_id: ID;
 }
 
 export interface MilestoneTemplate {
@@ -151,6 +185,9 @@ export interface Project {
   end_date?: string | null;
   template_id?: ID;
   links: { title: string; url: string; kind: 'dashboard' | 'document' | 'repo' | 'link' }[];
+  grant_amount?: number | null;
+  contracted_amount?: number | null;
+  currency?: string | null;
   created_at?: string;
 }
 
@@ -160,13 +197,13 @@ export interface ProjectMilestone {
   key: string;
   name: string;
   order: number;
-  status: 'not_started' | 'in_progress' | 'done' | 'blocked';
+  status: string; // a key from `flow`
   start_date?: string | null;
   target_date?: string | null;
   owner?: string;
   team?: string;
   progress: number; // 0-100
-  stages?: StageMilestone[];
+  flow?: FlowStatus[] | null;
 }
 
 export interface Page {
@@ -178,18 +215,6 @@ export interface Page {
   content_json?: any[] | null;
   updated_at: string;
   updated_by?: string;
-}
-
-export interface Task {
-  id: ID;
-  project_id: ID;
-  milestone_id?: ID | null;
-  title: string;
-  team: string;
-  owner?: string;
-  status: 'todo' | 'in_progress' | 'done' | 'blocked';
-  due?: string | null;
-  url?: string;
 }
 
 export interface OrgContext {

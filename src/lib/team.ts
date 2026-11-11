@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { db } from './store';
 
 /** People come from the `members` table: everyone who signs in is added automatically; names and teams are edited on the People page. */
-export type Member = { id: string; email: string; name?: string | null; team?: string | null };
+export type Member = { id: string; email: string; name?: string | null; team?: string | null; role?: string | null; district?: string | null };
 
 let PEOPLE: Member[] = [];
 let loading: Promise<Member[]> | null = null;
@@ -66,9 +66,3 @@ export function personName(v?: string | null) {
   return p ? displayName(p) : v.includes('@') ? v.split('@')[0] : v;
 }
 
-export const GRANT_STAGES = [
-  { key: 'submission', label: 'Submission' },
-  { key: 'review1', label: 'Review 1' },
-  { key: 'review2', label: 'Review 2' },
-  { key: 'grant', label: 'Grant' },
-];

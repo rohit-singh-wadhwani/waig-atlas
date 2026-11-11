@@ -99,7 +99,7 @@ const BUDGET_MS = Number(process.env.GEMINI_BUDGET_MIN || 14) * 60000; // stop c
 let lastCall = 0;
 let spacing = 6500; // ms between calls; grows when per-minute limits bite
 const deadModels = new Set(); // model or model:search that is missing / out of daily quota
-export const geminiStatus = { calls: 0, ok: 0, lastError: null, models: [] };
+export const geminiStatus = { calls: 0, ok: 0, lastError: null, models: [], lastModel: null };
 let models = null;
 let qualityModels = null;
 let searchModels = null;
@@ -214,6 +214,7 @@ export async function gemini(prompt, { json = true, search = false, temperature 
       }
       const text = (j.candidates?.[0]?.content?.parts || []).map((p) => p.text || '').join('');
       geminiStatus.ok++;
+      geminiStatus.lastModel = model;
       if (!json) return text;
       return parseJsonLoose(text);
     }

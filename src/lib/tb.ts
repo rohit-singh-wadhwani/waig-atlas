@@ -78,7 +78,7 @@ export async function loadTbDistricts(): Promise<{ geo: any | null; list: TbDist
   return { geo: districts, list: districts.features.map((f: any) => f.properties as TbDistrict), meta, national, hasPrivate };
 }
 
-export const tbList = <T,>(table: string) => db.list<T>(table as any);
+export const tbList = <T,>(table: string): Promise<T[]> => db.list<T>(table as any).then((r) => r || []).catch(() => [] as T[]);
 export const tbSave = <T extends { id: string }>(table: string, row: T) => db.upsert(table as any, row as any);
 export const tbRemove = (table: string, id: string) => db.remove(table as any, id);
 

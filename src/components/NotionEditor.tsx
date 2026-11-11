@@ -246,12 +246,170 @@ async function toMarkdown(editor: Editor, doc: any[]) {
 
 export type EditorSave = { json: any[]; md: string };
 
+/* ------------------------------------------------------------------ */
+/* Paste: Google Docs / Word HTML cleaned so tables, lists and          */
+/* formatting land as they look; pastes inside a table cell stay there  */
+/* ------------------------------------------------------------------ */
+
+const BLOCK_TAGS = new Set(['P', 'DIV', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'UL', 'OL', 'LI', 'BLOCKQUOTE', 'TABLE']);
+
+function unwrap(el: Element) {
+  const parent = el.parentNode;
+  if (!parent) return;
+  while (el.firstChild) parent.insertBefore(el.firstChild, el);
+  parent.removeChild(el);
+}
+
+/** Inline HTML of a block element's contents, with nested blocks turned into line breaks (and list items into bullets). */
+function inlineOf(node: Node): string[] {
+  const out: string[] = [];
+  let line = '';
+  const push = () => {
+    if (line.trim()) out.push(line.trim());
+    line = '';
+  };
+  node.childNodes.forEach((ch) => {
+    if (ch.nodeType === 3) line += (ch.textContent || '').replace(/[<>&]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c] as string));
+    else if (ch.nodeType === 1) {
+      const el = ch as Element;
+      if (el.tagName === 'BR') push();
+      else if (el.tagName === 'UL' || el.tagName === 'OL') {
+        push();
+        Array.from(el.children).forEach((li, i) => inlineOf(li).forEach((l, k) => out.push(k ? l : `${el.tagName === 'OL' ? `${i + 1}.` : '•'} ${l}`)));
+      } else if (BLOCK_TAGS.has(el.tagName)) {
+        push();
+        out.push(...inlineOf(el));
+      } else line += (el as HTMLElement).outerHTML;
+    }
+  });
+  push();
+  return out;
+}
+
+export function cleanPastedHtml(html: string): string {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  doc.querySelectorAll('meta, style, script, title, colgroup, col').forEach((e) => e.remove());
+  doc.querySelectorAll('b[id^="docs-internal-guid"]').forEach(unwrap);
+  // Google Docs puts formatting on spans
+  doc.querySelectorAll('span').forEach((sp) => {
+    const st = (sp.getAttribute('style') || '').toLowerCase();
+    let html = sp.innerHTML;
+    if (/font-weight:\s*(bold|[6-9]00)/.test(st)) html = `<strong>${html}</strong>`;
+    if (/font-style:\s*italic/.test(st)) html = `<em>${html}</em>`;
+    if (/text-decoration[^;]*underline/.test(st)) html = `<u>${html}</u>`;
+    if (/text-decoration[^;]*line-through/.test(st)) html = `<s>${html}</s>`;
+    const tpl = doc.createElement('template');
+    tpl.innerHTML = html;
+    sp.replaceWith(tpl.content);
+  });
+  // a cell holds one line of inline content: merge its blocks with line breaks
+  doc.querySelectorAll('td, th').forEach((cell) => {
+    const lines = inlineOf(cell);
+    cell.innerHTML = lines.join('<br>'); // inline only: a <p> here would be read as a block and pushed out of the table
+  });
+  // list items: unwrap their paragraphs so they don't become empty bullets followed by text
+  doc.querySelectorAll('li').forEach((li) => {
+    Array.from(li.children).filter((c) => c.tagName === 'P').forEach((p, i) => {
+      if (i > 0) p.before(doc.createElement('br'));
+      unwrap(p);
+    });
+  });
+  // wrappers around tables and stray empty paragraphs
+  doc.querySelectorAll('div').forEach((d) => d.querySelector('table') && unwrap(d));
+  doc.querySelectorAll('p').forEach((p) => !p.textContent?.trim() && !p.querySelector('img') && p.closest('td,th') === null && p.remove());
+  return doc.body.innerHTML;
+}
+
+function tableMatrix(html: string): string[][] | null {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const t = doc.querySelector('table');
+  if (!t) return null;
+  const rows = Array.from(t.querySelectorAll('tr')).map((tr) => Array.from(tr.querySelectorAll('td, th')).map((c) => inlineOf(c).map((l) => l.replace(/<[^>]+>/g, '')).join(' · ')));
+  return rows.length && rows.some((r) => r.length) ? rows : null;
+}
+
+/** Returns true when it handled the paste. */
+function handlePaste(editor: any, e: ClipboardEvent): boolean {
+  const cd = e.clipboardData;
+  if (!cd || cd.types.includes('blocknote/html') || cd.types.includes('Files')) return false;
+  const html = cd.getData('text/html');
+  const text = cd.getData('text/plain');
+  const tt = editor._tiptapEditor;
+  const view = tt?.view;
+  if (!view) return false;
+  // a URL pasted over selected text links that text
+  const url = (text || '').trim();
+  if (!view.state.selection.empty && /^(https?:\/\/|mailto:)\S+$/i.test(url)) {
+    tt.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+    e.preventDefault();
+    return true;
+  }
+  const $from = view.state.selection.$from;
+  let cellDepth = -1;
+  for (let d = $from.depth; d > 0; d--) if (/^table(Cell|Header)$/.test($from.node(d).type.name)) { cellDepth = d; break; }
+
+  if (cellDepth > 0) {
+    const grid = html ? tableMatrix(html) : null;
+    if (grid && (grid.length > 1 || grid[0].length > 1)) {
+      // paste a table into a table: fill cells from the current one, adding rows/columns as needed
+      const col = $from.index(cellDepth - 1);
+      const row = $from.index(cellDepth - 2);
+      const block = editor.getTextCursorPosition().block;
+      if (block?.type === 'table') {
+        const rows = block.content.rows.map((r: any) => ({ cells: [...r.cells] }));
+        const width = Math.max(rows[0]?.cells.length || 0, col + Math.max(...grid.map((r) => r.length)));
+        while (rows.length < row + grid.length) rows.push({ cells: [] });
+        rows.forEach((r: any) => { while (r.cells.length < width) r.cells.push(''); });
+        grid.forEach((r, i) => r.forEach((v, j) => (rows[row + i].cells[col + j] = v)));
+        const widths = [...(block.content.columnWidths || [])];
+        while (widths.length < width) widths.push(undefined);
+        editor.updateBlock(block, { content: { type: 'tableContent', columnWidths: widths, rows } });
+        e.preventDefault();
+        return true;
+      }
+    }
+    // anything else: keep it inside this cell, one line per line
+    const lines = (text || (html ? inlineOf(new DOMParser().parseFromString(html, 'text/html').body).join('\n').replace(/<[^>]+>/g, '') : '')).split(/\r?\n/).map((l) => l.replace(/\t/g, '  ')).filter((l, i, a) => l.trim() || (i > 0 && i < a.length - 1));
+    const nodes: any[] = [];
+    lines.forEach((l, i) => {
+      if (i) nodes.push({ type: 'hardBreak' });
+      if (l) nodes.push({ type: 'text', text: l });
+    });
+    if (nodes.length) tt.commands.insertContent(nodes);
+    e.preventDefault();
+    return true;
+  }
+
+  if (html && /<(table|ul|ol|li|b id="docs-internal|span[^>]+style)/i.test(html)) {
+    view.pasteHTML(cleanPastedHtml(html));
+    e.preventDefault();
+    return true;
+  }
+  return false;
+}
+
 export default function NotionEditor({ json, md, onSave, editable = true }: { json?: any[] | null; md?: string; onSave: (v: EditorSave) => void | Promise<void>; editable?: boolean }) {
   const editor = useCreateBlockNote({ schema, initialContent: json && json.length ? (json as any) : undefined }) as unknown as Editor;
   const [ready, setReady] = useState(!!(json && json.length) || !md);
   const [saving, setSaving] = useState<'idle' | 'saving' | 'saved'>('idle');
   const timer = useRef<any>(null);
   const loadedMd = useRef(false);
+  const wrap = useRef<HTMLDivElement>(null);
+
+  // Our paste handling runs first (capture phase); anything we don't handle falls through to BlockNote.
+  useEffect(() => {
+    const el = wrap.current;
+    if (!el) return;
+    const onPaste = (e: ClipboardEvent) => {
+      try {
+        if (handlePaste(editor, e)) e.stopPropagation();
+      } catch (err) {
+        console.warn('paste fallback', err);
+      }
+    };
+    el.addEventListener('paste', onPaste, true);
+    return () => el.removeEventListener('paste', onPaste, true);
+  }, [editor]);
 
   // Legacy pages only have markdown: convert once on first open.
   useEffect(() => {
@@ -296,17 +454,18 @@ export default function NotionEditor({ json, md, onSave, editable = true }: { js
   };
 
   return (
-    <div className="atlas-editor">
+    <div className="atlas-editor" ref={wrap}>
       {editable && (
-        <div className="sticky top-0 z-20 -mx-1 mb-3 px-1 py-2 bg-white/95 backdrop-blur border-b border-gray-100 flex flex-wrap items-center gap-1.5">
+        <div className="sticky top-0 z-20 -mx-1 mb-3 px-1 py-2 bg-white/95 backdrop-blur border-b border-gray-100 flex flex-nowrap items-center gap-1.5 overflow-x-auto">
           <ToolButton label="Table" icon={TABLE_ICON} onClick={() => insert({ type: 'table', content: { type: 'tableContent', rows: [['', '', ''], ['', '', ''], ['', '', '']].map((cells) => ({ cells })) } })} />
           <ToolButton label="Checklist" icon={CHECK_ICON} onClick={() => insert({ type: 'checkListItem', content: '' })} />
           <ToolButton label="Heading" icon={H_ICON} onClick={() => insert({ type: 'heading', props: { level: 2 }, content: '' })} />
           <ToolMenu label="Chart" icon={CHART_ICON} items={TEMPLATES.filter((t) => t.block.type === 'chart')} onPick={(t) => insert(t.block)} />
           <ToolMenu label="Diagram" icon={FLOW_ICON} items={TEMPLATES.filter((t) => t.block.type === 'mermaid')} onPick={(t) => insert(t.block)} />
           <ToolMenu label="Templates" icon={TPL_ICON} items={TABLE_TEMPLATES} onPick={(t) => insert(t.block)} />
-          <span className="ml-auto text-xs text-gray-400 pl-2">
-            {saving === 'saving' ? 'Saving…' : saving === 'saved' ? 'Saved ✓' : 'Tip: type / anywhere for more'}
+          {/* fixed width so the toolbar never changes size while saving (that shifted the text under a selection) */}
+          <span className="ml-auto text-xs text-gray-400 pl-2 w-[150px] shrink-0 text-right whitespace-nowrap">
+            {saving === 'saving' ? 'Saving…' : saving === 'saved' ? 'Saved ✓' : 'Type / for more'}
           </span>
         </div>
       )}

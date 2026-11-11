@@ -17,7 +17,7 @@ export function CardHeader({ title, subtitle, right }: { title: React.ReactNode;
         <h3 className="text-[17px] font-semibold text-gray-900">{title}</h3>
         {subtitle && <p className="text-sm text-gray-500 mt-1">{subtitle}</p>}
       </div>
-      {right && <div className="flex items-center gap-2 shrink-0">{right}</div>}
+      {right && <div className="flex flex-wrap items-center gap-2 shrink-0 max-w-full min-w-0">{right}</div>}
     </div>
   );
 }
@@ -210,7 +210,7 @@ export function SectionLabel({ children }: { children: React.ReactNode }) {
 
 export function ExtLink({ href, children, className = '' }: { href: string; children: React.ReactNode; className?: string }) {
   return (
-    <a href={href} target="_blank" rel="noreferrer" className={cx('text-brand-700 hover:underline inline-flex items-center gap-1', className)}>
+    <a href={href} target="_blank" rel="noreferrer" className={cx('text-brand-700 hover:underline inline-flex items-center gap-1 max-w-full [overflow-wrap:anywhere]', className)}>
       {children}
       <Icon name="external" size={13} />
     </a>

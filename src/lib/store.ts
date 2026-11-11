@@ -1,7 +1,7 @@
 import { createClient, SupabaseClient, Session } from '@supabase/supabase-js';
 import type {
   Attachment, Comment, Grant, GrantTracking, HealthData, Insight, MilestoneTemplate, OrgContext, Page,
-  Project, ProjectMilestone, Source, Task,
+  Project, ProjectMilestone, Source, Checkpoint, GrantCheckpoint,
 } from './types';
 
 const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL || '';
@@ -37,7 +37,8 @@ type Tables = {
   projects: Project[];
   project_milestones: ProjectMilestone[];
   pages: Page[];
-  tasks: Task[];
+  milestone_checkpoints: Checkpoint[];
+  grant_checkpoints: GrantCheckpoint[];
   milestone_templates: MilestoneTemplate[];
   grant_tracking: (GrantTracking & { id: string })[];
   comments: Comment[];
@@ -79,7 +80,8 @@ async function demo(): Promise<Tables> {
         projects: saved.projects ?? seed.projects ?? [],
         project_milestones: saved.project_milestones ?? seed.project_milestones ?? [],
         pages: saved.pages ?? seed.pages ?? [],
-        tasks: saved.tasks ?? seed.tasks ?? [],
+        milestone_checkpoints: saved.milestone_checkpoints ?? (seed as any).milestone_checkpoints ?? [],
+        grant_checkpoints: saved.grant_checkpoints ?? [],
         milestone_templates: saved.milestone_templates ?? seed.milestone_templates ?? [],
         grant_tracking: saved.grant_tracking ?? seed.grant_tracking ?? [],
         comments: saved.comments ?? seed.comments ?? [],
@@ -89,6 +91,8 @@ async function demo(): Promise<Tables> {
         sources: mergeSources(sources, saved.sources),
         members: saved.members ?? [],
       };
+      // tables added later (TB module etc.) keep whatever this browser saved
+      for (const k of Object.keys(saved)) if (!(k in t)) (t as any)[k] = (saved as any)[k];
       demoState = t;
       return t;
     })();
@@ -116,9 +120,9 @@ export const db = {
       return (data || []) as T[];
     }
     const t = await demo();
-    let rows = t[table] as unknown as Row[];
+    let rows = ((t as any)[table] ||= []) as Row[];
     if (match) rows = rows.filter((r) => Object.entries(match).every(([k, v]) => r[k] === v));
-    return rows as unknown as T[];
+    return [...rows] as unknown as T[]; // a fresh array so views re-render after saves
   },
   async upsert<T extends Row>(table: TableName, row: T): Promise<T> {
     if (supabase) {
@@ -131,7 +135,7 @@ export const db = {
       return data as T;
     }
     const t = await demo();
-    const rows = t[table] as unknown as Row[];
+    const rows = ((t as any)[table] ||= []) as Row[];
     const i = rows.findIndex((r) => r.id === row.id);
     if (i >= 0) rows[i] = { ...rows[i], ...row };
     else rows.push(row);
@@ -150,7 +154,7 @@ export const db = {
       return;
     }
     const t = await demo();
-    (t as any)[table] = (t[table] as unknown as Row[]).filter((r) => r.id !== id);
+    (t as any)[table] = (((t as any)[table] || []) as Row[]).filter((r) => r.id !== id);
     lsSet(t);
     emit();
   },
