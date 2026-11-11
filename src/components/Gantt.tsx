@@ -2,13 +2,9 @@ import React from 'react';
 import type { ProjectMilestone } from '../lib/types';
 import { fmtDate } from '../lib/format';
 import { cx } from './ui';
+import { statusOf } from '../lib/projects';
 
-const STATUS_CLS: Record<string, string> = {
-  done: 'bg-green-600',
-  in_progress: 'bg-brand-500',
-  blocked: 'bg-red-500',
-  not_started: 'bg-gray-300',
-};
+const KIND_BAR: Record<string, string> = { todo: 'bg-gray-300', active: 'bg-brand-500', blocked: 'bg-amber-400', done: 'bg-green-600', lost: 'bg-red-400' };
 
 export default function Gantt({ milestones, onSelect, selectedId }: { milestones: ProjectMilestone[]; onSelect?: (id: string) => void; selectedId?: string }) {
   const dated = milestones.filter((m) => m.start_date || m.target_date);
@@ -55,11 +51,11 @@ export default function Gantt({ milestones, onSelect, selectedId }: { milestones
                 ))}
                 {s !== null && e !== null && (
                   <span
-                    className={cx('absolute top-1 h-5 rounded-md overflow-hidden', STATUS_CLS[m.status] || STATUS_CLS.not_started)}
+                    className={cx('absolute top-1 h-5 rounded-md overflow-hidden', KIND_BAR[statusOf(m).kind])}
                     style={{ left: `${pct(s)}%`, width: `${Math.max(1.2, pct(e) - pct(s))}%` }}
                     title={`${m.name}: ${fmtDate(m.start_date)} → ${fmtDate(m.target_date)}`}
                   >
-                    {m.status !== 'done' && m.progress > 0 && <span className="absolute inset-y-0 left-0 bg-black/15" style={{ width: `${m.progress}%` }} />}
+                    {statusOf(m).kind !== 'done' && m.progress > 0 && <span className="absolute inset-y-0 left-0 bg-black/15" style={{ width: `${m.progress}%` }} />}
                   </span>
                 )}
                 <span className="absolute top-0 bottom-0 border-l-2 border-red-400" style={{ left: `${today}%` }} />

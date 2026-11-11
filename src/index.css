@@ -61,3 +61,10 @@ body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', 
 
 /* TB map tooltip */
 .tb-tip .maplibregl-popup-content { padding: 8px 10px; border-radius: 10px; font-size: 13px; line-height: 1.45; color: #111827; box-shadow: 0 6px 20px rgba(0,0,0,.12); }
+
+/* Editor: links look like links; clear selection colour */
+.atlas-editor .bn-editor a, .atlas-editor .bn-inline-content a { color: #1d4ed8; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 2px; cursor: pointer; }
+.atlas-editor .bn-editor a:hover { color: #1e3a8a; }
+.atlas-editor .bn-editor ::selection { background: #bfdbfe; }
+.atlas-editor .bn-editor { -webkit-user-select: text; user-select: text; }
+.atlas-editor .bn-editor table td p, .atlas-editor .bn-editor table th p { white-space: pre-wrap; }

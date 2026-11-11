@@ -1,35 +1,41 @@
 import React, { useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { PageHeader, useMe } from '../components/Layout';
-import { Badge, Button, Card, CardHeader, Empty, ExtLink, Field, IconButton, KpiCard, Modal, Progress, Select, TextInput, cx } from '../components/ui';
+import { Badge, Button, Card, CardHeader, Empty, Field, IconButton, KpiCard, Modal, Select, TextInput, cx } from '../components/ui';
 import Icon from '../components/Icon';
 import Gantt from '../components/Gantt';
-import Stepper from '../components/Stepper';
+import Checkpoints, { StatusBadge, StatusFlow } from '../components/Checkpoints';
 import { Attachments, Comments } from '../components/Collab';
 import { useData, useLocalPref } from '../lib/hooks';
 import { db, uid } from '../lib/store';
-import { addMilestone, milestoneProgress, teamProgress } from '../lib/projects';
+import { addMilestone, isDone, KIND_DOT, lostBefore, milestoneProgress, statusOf } from '../lib/projects';
 import { useWorld, NO_COUNTRIES } from '../lib/world';
 import { daysUntil, fmtDate, fmtTime, relDays } from '../lib/format';
 import { NEW_TEAM, peopleOptions, personName, pickTeam, teamOptions, usePeople } from '../lib/team';
-import type { MilestoneTemplate, Page, Project, ProjectMilestone, Task } from '../lib/types';
+import type { MilestoneTemplate, Page, Project, ProjectMilestone } from '../lib/types';
 import { PROJECT_STATUS } from './Projects';
 import { placeLabel } from './Grants';
 
 const NotionEditor = React.lazy(() => import('../components/NotionEditor'));
 
-const MS_STATUS: { value: ProjectMilestone['status']; label: string; dot: string }[] = [
-  { value: 'not_started', label: 'Not started', dot: 'bg-gray-300' },
-  { value: 'in_progress', label: 'In progress', dot: 'bg-brand-500' },
-  { value: 'blocked', label: 'Blocked', dot: 'bg-red-500' },
-  { value: 'done', label: 'Done', dot: 'bg-green-600' },
-];
-const TASK_STATUS: { value: Task['status']; label: string; cls: string }[] = [
-  { value: 'todo', label: 'To do', cls: 'bg-gray-100 text-gray-700' },
-  { value: 'in_progress', label: 'In progress', cls: 'bg-brand-50 text-brand-700' },
-  { value: 'blocked', label: 'Blocked', cls: 'bg-red-50 text-red-700' },
-  { value: 'done', label: 'Done', cls: 'bg-green-50 text-green-700' },
-];
+export const CURRENCIES = ['USD', 'EUR', 'GBP', 'GHS', 'INR', 'KES', 'NGN', 'ZAR', 'CHF', 'CAD'];
+export function money(v?: number | null, cur?: string | null) {
+  if (v == null || !isFinite(Number(v))) return '—';
+  try {
+    return new Intl.NumberFormat('en-GB', { style: 'currency', currency: cur || 'USD', notation: Number(v) >= 1e6 ? 'compact' : 'standard', maximumFractionDigits: Number(v) >= 1e6 ? 2 : 0 }).format(Number(v));
+  } catch {
+    return `${cur || ''} ${Number(v).toLocaleString('en-GB')}`;
+  }
+}
+/** Sub-tasks across a project's milestones. */
+function subtaskCounts(ms: ProjectMilestone[]) {
+  let open = 0, total = 0;
+  for (const m of ms) for (const c of m.checkpoints || []) {
+    if (c.subtasks.length) { total += c.subtasks.length; open += c.subtasks.filter((s) => !s.done_at).length; }
+    else { total++; if (!c.done_at) open++; }
+  }
+  return { open, total };
+}
 
 export default function ProjectDetail() {
   const { slug, mid } = useParams();
@@ -42,7 +48,6 @@ export default function ProjectDetail() {
   const pid = project?.id || '';
   const ms = useData(() => (pid ? db.list<ProjectMilestone>('project_milestones', { project_id: pid }) : Promise.resolve([])), [pid], []);
   const pages = useData(() => (pid ? db.list<Page>('pages', { project_id: pid }) : Promise.resolve([])), [pid], []);
-  const tasks = useData(() => (pid ? db.list<Task>('tasks', { project_id: pid }) : Promise.resolve([])), [pid], []);
   const [configuring, setConfiguring] = useState(false);
   const [editingProject, setEditingProject] = useState(false);
   const [railOnly, setRailOnly] = useLocalPref('milestone-panel-collapsed', false);
@@ -54,8 +59,9 @@ export default function ProjectDetail() {
   if (!project) return <Card><Empty icon="folder" title="Project not found"><Link to="/projects" className="text-brand-700">Back to projects</Link></Empty></Card>;
 
   const pr = milestoneProgress(milestones);
-  const next = milestones.find((m) => m.status !== 'done' && m.target_date);
-  const openTasks = tasks.data.filter((t) => t.status !== 'done');
+  const next = milestones.find((m) => !isDone(m) && statusOf(m).kind !== 'lost' && m.target_date);
+  const subs = subtaskCounts(milestones);
+  const lostM = milestones.find((m) => statusOf(m).kind === 'lost');
   const st = PROJECT_STATUS.find((s) => s.value === project.status) || PROJECT_STATUS[0];
   const saveProject = (patch: Partial<Project>) => db.upsert('projects', { ...project, ...patch } as any);
 
@@ -80,10 +86,10 @@ export default function ProjectDetail() {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
-        <KpiCard icon="activity" label="Overall progress" value={`${pr}%`} foot={`${milestones.filter((m) => m.status === 'done').length} of ${milestones.length} milestones done`} />
+        <KpiCard icon="activity" label="Overall progress" value={`${pr}%`} foot={`${milestones.filter(isDone).length} of ${milestones.length} milestones · ${subs.open} sub-tasks open`} />
         <KpiCard icon="calendar" tint="orange" label="Next deadline" value={next ? fmtDate(next.target_date, { day: 'numeric', month: 'short' }) : '—'} foot={next ? `${next.name} · ${relDays(next.target_date)}` : undefined} onClick={() => next && nav(`/projects/${project.slug}/${next.id}`)} />
-        <KpiCard icon="clipboard" tint="purple" label="Open tasks" value={openTasks.length} foot={`${tasks.data.filter((t) => t.status === 'blocked').length} blocked`} />
-        <KpiCard icon="users" tint="blue" label="Teams involved" value={new Set(tasks.data.map((t) => t.team)).size} />
+        <KpiCard icon="coins" tint="purple" label="Grant amount" value={<span className="text-[22px]">{money(project.grant_amount, project.currency)}</span>} foot={project.funder || 'Total award'} onClick={() => setEditingProject(true)} />
+        <KpiCard icon="dollar" tint="blue" label="Contracted to us" value={<span className="text-[22px]">{money(project.contracted_amount, project.currency)}</span>} foot={project.grant_amount && project.contracted_amount ? `${Math.round((project.contracted_amount / project.grant_amount) * 100)}% of the grant` : 'Our share of the award'} onClick={() => setEditingProject(true)} />
         <KpiCard icon="user" tint="green" label="Lead" value={<span className="text-[20px]">{personName(project.lead)}</span>} />
         <KpiCard icon="clock" tint="gray" label="Timeline" value={<span className="text-[20px]">{fmtDate(project.end_date, { month: 'short', year: 'numeric' })}</span>} foot={`from ${fmtDate(project.start_date)}`} />
       </div>
@@ -98,12 +104,13 @@ export default function ProjectDetail() {
                 <Icon name="dashboard" size={19} />
               </Link>
               {milestones.map((m, i) => {
-                const s = MS_STATUS.find((x) => x.value === m.status) || MS_STATUS[0];
+                const s = statusOf(m);
                 const sel = current?.id === m.id;
+                const moot = lostBefore(milestones, m);
                 return (
-                  <Link key={m.id} to={`/projects/${project.slug}/${m.id}`} title={`${i + 1}. ${m.name} · ${s.label}`} className={cx('relative w-11 h-11 rounded-xl flex items-center justify-center text-[15px] font-semibold', sel ? 'bg-brand-50 text-brand-700 ring-1 ring-brand-200' : 'text-gray-700 hover:bg-gray-50')}>
+                  <Link key={m.id} to={`/projects/${project.slug}/${m.id}`} title={`${i + 1}. ${m.name} · ${s.label}${moot ? ' · may not be needed (grant lost)' : ''}`} className={cx('relative w-11 h-11 rounded-xl flex items-center justify-center text-[15px] font-semibold', sel ? 'bg-brand-50 text-brand-700 ring-1 ring-brand-200' : moot ? 'text-gray-400 hover:bg-gray-50' : 'text-gray-700 hover:bg-gray-50')}>
                     {i + 1}
-                    <span className={cx('absolute top-1.5 right-1.5 w-2 h-2 rounded-full ring-2 ring-white', s.dot)} />
+                    <span className={cx('absolute top-1.5 right-1.5 w-2 h-2 rounded-full ring-2 ring-white', moot ? 'bg-red-600' : KIND_DOT[s.kind])} />
                   </Link>
                 );
               })}
@@ -125,16 +132,18 @@ export default function ProjectDetail() {
               <Icon name="dashboard" size={18} /> Overview
             </Link>
             {milestones.map((m, i) => {
-              const s = MS_STATUS.find((x) => x.value === m.status) || MS_STATUS[0];
-              const late = m.status !== 'done' && (daysUntil(m.target_date) ?? 1) < 0;
+              const s = statusOf(m);
+              const moot = lostBefore(milestones, m);
+              const late = !isDone(m) && !moot && (daysUntil(m.target_date) ?? 1) < 0;
               return (
-                <Link key={m.id} to={`/projects/${project.slug}/${m.id}`} className={cx('block rounded-xl px-3 py-2.5', current?.id === m.id ? 'bg-brand-50' : 'hover:bg-gray-50')}>
+                <Link key={m.id} to={`/projects/${project.slug}/${m.id}`} className={cx('block rounded-xl px-3 py-2.5', current?.id === m.id ? 'bg-brand-50' : 'hover:bg-gray-50')} title={moot ? `May not be needed: ${moot.name} was marked ${statusOf(moot).label}` : s.label}>
                   <div className="flex items-center gap-3">
-                    <span className={cx('w-2.5 h-2.5 rounded-full shrink-0', s.dot)} title={s.label} />
-                    <span className={cx('text-[15px] flex-1 leading-snug', current?.id === m.id ? 'text-brand-700 font-medium' : 'text-gray-800')}>{i + 1}. {m.name}</span>
+                    <span className={cx('w-2.5 h-2.5 rounded-full shrink-0', moot ? 'bg-red-600' : KIND_DOT[s.kind])} />
+                    <span className={cx('text-[15px] flex-1 leading-snug', current?.id === m.id ? 'text-brand-700 font-medium' : moot ? 'text-gray-400' : 'text-gray-800')}>{i + 1}. {m.name}</span>
                   </div>
                   <div className="flex items-center gap-2 mt-1.5 pl-5">
-                    <div className="h-1.5 flex-1 rounded-full bg-gray-100 overflow-hidden"><div className="h-full bg-brand-500" style={{ width: `${m.status === 'done' ? 100 : m.progress}%` }} /></div>
+                    <span className="text-[11px] text-gray-500 truncate max-w-[110px]">{moot ? 'may not be needed' : s.label}</span>
+                    <div className="h-1.5 flex-1 rounded-full bg-gray-100 overflow-hidden"><div className={cx('h-full', s.kind === 'lost' ? 'bg-red-400' : 'bg-brand-500')} style={{ width: `${isDone(m) ? 100 : m.progress}%` }} /></div>
                     <span className={cx('text-xs tabular-nums', late ? 'text-red-600' : 'text-gray-500')}>{m.target_date ? fmtDate(m.target_date, { day: 'numeric', month: 'short' }) : ''}</span>
                   </div>
                 </Link>
@@ -146,9 +155,9 @@ export default function ProjectDetail() {
 
         <div className="space-y-6 min-w-0">
           {!current ? (
-            <Overview project={project} milestones={milestones} tasks={tasks.data} onSelect={(id) => nav(`/projects/${project.slug}/${id}`)} />
+            <Overview project={project} milestones={milestones} lost={lostM || null} onSelect={(id) => nav(`/projects/${project.slug}/${id}`)} />
           ) : (
-            <MilestoneView key={current.id} project={project} m={current} page={pages.data.find((p) => p.milestone_id === current.id)} tasks={tasks.data.filter((t) => t.milestone_id === current.id)} me={me.email} />
+            <MilestoneView key={current.id} project={project} m={current} moot={lostBefore(milestones, current)} page={pages.data.find((p) => p.milestone_id === current.id)} me={me.email} />
           )}
         </div>
       </div>
@@ -159,58 +168,57 @@ export default function ProjectDetail() {
   );
 }
 
-function Overview({ project, milestones, tasks, onSelect }: { project: Project; milestones: ProjectMilestone[]; tasks: Task[]; onSelect: (id: string) => void }) {
-  const teams = teamProgress(tasks);
+function Overview({ project, milestones, lost, onSelect }: { project: Project; milestones: ProjectMilestone[]; lost: ProjectMilestone | null; onSelect: (id: string) => void }) {
   return (
     <>
+      {lost && (
+        <div className="rounded-2xl border border-red-200 bg-red-50 text-red-900 px-5 py-4 text-[15px] flex gap-3">
+          <span className="w-2.5 h-2.5 rounded-full bg-red-600 mt-1.5 shrink-0" />
+          <span><b>{lost.name}</b> is marked <b>{statusOf(lost).label}</b>. Milestones after it are marked with a red dot: they may not need to be filled in.</span>
+        </div>
+      )}
       <Card>
         <CardHeader title="Milestone timeline" subtitle="Bars run from start to target date; the darker share is progress. Click a row to open it." />
         <Gantt milestones={milestones} onSelect={onSelect} />
       </Card>
-      <div className="grid grid-cols-1 2xl:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader title="Progress by team" subtitle="Share of each team's tasks that are done" />
-          {teams.length ? (
-            <ul className="space-y-4">
-              {teams.map((t) => (
-                <li key={t.team}>
-                  <div className="flex justify-between text-[15px] mb-1.5">
-                    <span className="text-gray-800 font-medium">{t.team}</span>
-                    <span className="text-gray-500 tabular-nums">{t.done}/{t.total} done{t.blocked ? ` · ${t.blocked} blocked` : ''} · <span className="text-gray-900 font-medium">{t.pct}%</span></span>
+      <Card>
+        <CardHeader title="Milestones and checkpoints" subtitle="Status, checkpoints done and owner. Click a milestone to work on it." />
+        <ul className="divide-y divide-gray-100">
+          {milestones.map((m) => {
+            const cps = m.checkpoints || [];
+            const moot = lostBefore(milestones, m);
+            return (
+              <li key={m.id}>
+                <button type="button" onClick={() => onSelect(m.id)} className="w-full text-left py-3 hover:bg-gray-50 rounded-lg px-2">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                    <span className={cx('w-2.5 h-2.5 rounded-full shrink-0', moot ? 'bg-red-600' : KIND_DOT[statusOf(m).kind])} />
+                    <span className={cx('flex-1 min-w-[160px] text-[15px]', moot ? 'text-gray-400' : 'text-gray-800')}>{m.name}</span>
+                    <StatusBadge m={m} />
+                    <span className="text-sm text-gray-500 w-28 truncate">{personName(m.owner)}</span>
+                    <span className="text-sm text-gray-500 w-20 text-right tabular-nums">{fmtDate(m.target_date, { day: 'numeric', month: 'short' })}</span>
                   </div>
-                  <Progress value={t.pct} />
-                </li>
-              ))}
-            </ul>
-          ) : <Empty icon="users" title="No tasks yet" />}
-        </Card>
-        <Card>
-          <CardHeader title="Milestones" subtitle="Status, owner and dates" />
-          <ul className="divide-y divide-gray-100">
-            {milestones.map((m) => {
-              const s = MS_STATUS.find((x) => x.value === m.status) || MS_STATUS[0];
-              return (
-                <li key={m.id}>
-                  <button type="button" onClick={() => onSelect(m.id)} className="w-full text-left py-2.5 flex items-center gap-3 hover:bg-gray-50 rounded-lg px-1">
-                    <span className={cx('w-2.5 h-2.5 rounded-full', s.dot)} />
-                    <span className="flex-1 text-[15px] text-gray-800">{m.name}</span>
-                    <span className="text-sm text-gray-500 w-32 truncate">{personName(m.owner)}</span>
-                    <span className="text-sm text-gray-500 w-24 text-right">{fmtDate(m.target_date, { day: 'numeric', month: 'short', year: '2-digit' })}</span>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </Card>
-      </div>
-      <TaskList project={project} tasks={tasks} milestones={milestones} />
+                  {cps.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-2 pl-5">
+                      {cps.map((c) => {
+                        const done = c.subtasks.length ? c.subtasks.every((x) => x.done_at) : !!c.done_at;
+                        const n = c.subtasks.filter((x) => x.done_at).length;
+                        return <span key={c.key} className={cx('text-xs rounded-md px-2 py-0.5 border', done ? 'bg-green-50 border-green-200 text-green-800' : n ? 'bg-brand-50 border-brand-200 text-brand-800' : 'bg-white border-gray-200 text-gray-600')}>{done ? '✓ ' : ''}{c.title}{c.subtasks.length ? ` ${n}/${c.subtasks.length}` : ''}</span>;
+                      })}
+                    </div>
+                  )}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      </Card>
       <Attachments entityType="project" entityId={project.id} title="Project attachments" subtitle="Dashboards, proposals, contracts, decks, data folders" />
       <Comments entityType="project" entityId={project.id} title="Project discussion" />
     </>
   );
 }
 
-function MilestoneView({ project, m, page, tasks, me }: { project: Project; m: ProjectMilestone; page?: Page; tasks: Task[]; me: string }) {
+function MilestoneView({ project, m, moot, page, me }: { project: Project; m: ProjectMilestone; moot: ProjectMilestone | null; page?: Page; me: string }) {
   const people = usePeople();
   const save = (patch: Partial<ProjectMilestone>) => db.upsert('project_milestones', { ...m, ...patch } as any);
   const pageId = React.useRef(page?.id || uid('pg'));
@@ -222,25 +230,34 @@ function MilestoneView({ project, m, page, tasks, me }: { project: Project; m: P
 
   return (
     <>
+      {moot && (
+        <div className="rounded-2xl border border-red-200 bg-red-50 text-red-900 px-5 py-4 text-[15px] flex gap-3">
+          <span className="w-2.5 h-2.5 rounded-full bg-red-600 mt-1.5 shrink-0" />
+          <span><b>{moot.name}</b> was marked <b>{statusOf(moot).label}</b>, so this milestone may not be needed. You can still fill it in.</span>
+        </div>
+      )}
       <Card>
-        <CardHeader title={m.name} subtitle="Milestone tracking" />
+        <CardHeader title={m.name} subtitle="Status, owner and dates" />
+        <div className="mb-5">
+          <div className="text-sm mb-2 text-gray-600">Status</div>
+          <StatusFlow m={m} onChange={(k) => save({ status: k })} />
+        </div>
         <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))' }}>
-          <Field label="Status"><Select value={m.status} onChange={(v) => save({ status: v as ProjectMilestone['status'], progress: v === 'done' ? 100 : m.progress })} options={MS_STATUS.map((s) => ({ value: s.value, label: s.label }))} /></Field>
           <Field label="Owner"><Select value={m.owner || ''} onChange={(v) => save({ owner: v })} placeholder="Unassigned" options={peopleOptions(people, m.owner)} /></Field>
           <Field label="Team"><Select value={m.team || ''} onChange={(v) => { const t = pickTeam(v); if (t !== null) save({ team: t }); }} placeholder="—" options={[...teamOptions(people, [m.team]), { value: NEW_TEAM, label: '+ New team…' }]} /></Field>
           <Field label="Start"><TextInput type="date" className="w-full" value={(m.start_date || '').slice(0, 10)} onChange={(e) => save({ start_date: e.target.value || null })} /></Field>
           <Field label="Target"><TextInput type="date" className="w-full" value={(m.target_date || '').slice(0, 10)} onChange={(e) => save({ target_date: e.target.value || null })} /></Field>
         </div>
-        <div className="mt-5">
-          <div className="text-sm mb-1.5 text-gray-600">Progress (%)</div>
-          <ProgressSlider value={m.status === 'done' ? 100 : m.progress} onCommit={(v) => save({ progress: v, status: v === 100 ? 'done' : m.status === 'done' || (m.status === 'not_started' && v > 0) ? 'in_progress' : m.status })} />
-        </div>
-        {m.stages?.length ? (
+        {!(m.checkpoints && m.checkpoints.length) && (
           <div className="mt-5">
-            <div className="text-[13px] font-medium tracking-wider uppercase text-gray-500 mb-2">Checkpoints</div>
-            <Stepper stages={m.stages} onChange={(stages) => save({ stages, progress: Math.round((stages.filter((s) => s.done_at).length / stages.length) * 100) })} />
+            <div className="text-sm mb-1.5 text-gray-600">Progress (%) <span className="text-gray-400">· add checkpoints below and progress is calculated for you</span></div>
+            <ProgressSlider value={isDone(m) ? 100 : m.progress} onCommit={(v) => save({ progress: v })} />
           </div>
-        ) : null}
+        )}
+      </Card>
+
+      <Card>
+        <Checkpoints m={m} onSave={save} />
       </Card>
 
       <Card>
@@ -262,7 +279,6 @@ function MilestoneView({ project, m, page, tasks, me }: { project: Project; m: P
         </div>
       </Card>
 
-      <TaskList project={project} tasks={tasks} milestones={[m]} milestoneId={m.id} />
       <Attachments entityType="milestone" entityId={m.id} />
       <Comments entityType="milestone" entityId={m.id} />
     </>
@@ -300,55 +316,6 @@ function ProgressSlider({ value, onCommit }: { value: number; onCommit: (v: numb
 
 export function slugId(h: string) {
   return 'h-' + h.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-}
-
-function TaskList({ project, tasks, milestones, milestoneId }: { project: Project; tasks: Task[]; milestones: ProjectMilestone[]; milestoneId?: string }) {
-  const [title, setTitle] = useState('');
-  const people = usePeople();
-  const [filter, setFilter] = useState('');
-  const teams = teamOptions(people, tasks.map((t) => t.team));
-  const [team, setTeam] = useState('');
-  const addTeam = team || filter || teams[0]?.value || '';
-  const add = async () => {
-    if (!title.trim()) return;
-    await db.upsert('tasks', { id: uid('t'), project_id: project.id, milestone_id: milestoneId || null, title: title.trim(), team: addTeam, status: 'todo' } as any);
-    setTitle('');
-  };
-  const list = tasks.filter((t) => !filter || t.team === filter).sort((a, b) => TASK_STATUS.findIndex((s) => s.value === a.status) - TASK_STATUS.findIndex((s) => s.value === b.status));
-  return (
-    <Card>
-      <CardHeader
-        title="Tasks"
-        subtitle={`${list.filter((t) => t.status !== 'done').length} open · ${list.length} total${filter ? ` in ${filter} (${tasks.length} across all teams)` : ''}`}
-        right={<Select className="w-[220px]" value={filter} onChange={setFilter} placeholder={`All teams (${tasks.length})`} options={teamOptions([], tasks.map((t) => t.team)).map((o) => ({ ...o, label: `${o.label} (${tasks.filter((t) => t.team === o.value).length})` }))} />}
-      />
-      <div className="overflow-x-auto">
-        <table className="w-full text-[15px]">
-          <tbody>
-            {list.map((t) => (
-              <tr key={t.id} className="border-b border-gray-100">
-                <td className="py-2.5 pr-3">
-                  <div className="text-gray-900">{t.url ? <ExtLink href={t.url}>{t.title}</ExtLink> : t.title}</div>
-                  {!milestoneId && t.milestone_id && <div className="text-xs text-gray-500">{milestones.find((m) => m.id === t.milestone_id)?.name}</div>}
-                </td>
-                <td className="py-2.5 px-2 text-sm text-gray-600 whitespace-nowrap">{t.team}</td>
-                <td className="py-2.5 px-2 w-[170px]"><Select value={t.owner || ''} onChange={(v) => db.upsert('tasks', { ...t, owner: v } as any)} placeholder="Unassigned" options={peopleOptions(people, t.owner)} className="[&_select]:h-9 [&_select]:text-sm" /></td>
-                <td className="py-2.5 px-2 w-[150px]"><Select value={t.status} onChange={(v) => db.upsert('tasks', { ...t, status: v } as any)} options={TASK_STATUS.map((s) => ({ value: s.value, label: s.label }))} className="[&_select]:h-9 [&_select]:text-sm" /></td>
-                <td className="py-2.5 pl-2 w-[140px]"><TextInput type="date" value={(t.due || '').slice(0, 10)} onChange={(e) => db.upsert('tasks', { ...t, due: e.target.value || null } as any)} className="h-9 text-sm px-2 w-full" /></td>
-                <td className="py-2.5 pl-1 w-8"><button type="button" className="text-gray-300 hover:text-red-500" title="Delete task" onClick={() => db.remove('tasks', t.id)}><Icon name="trash" size={15} /></button></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      {!list.length && <p className="text-sm text-gray-500 py-3">{filter && tasks.length ? `No tasks for ${filter}.` : 'No tasks yet.'}</p>}
-      <div className="flex flex-wrap gap-2 mt-4">
-        <TextInput className="flex-1 min-w-[220px]" placeholder="Add a task…" value={title} onChange={(e) => setTitle(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && add()} />
-        <Select className="w-[200px]" value={addTeam} onChange={(v) => { const t = pickTeam(v); if (t !== null) setTeam(t); }} placeholder="Team" options={[...teamOptions(people, tasks.map((t) => t.team), [addTeam]), { value: NEW_TEAM, label: '+ New team…' }]} />
-        <Button variant="primary" icon="plus" onClick={add}>Add</Button>
-      </div>
-    </Card>
-  );
 }
 
 function ConfigureMilestones({ open, onClose, project, milestones }: { open: boolean; onClose: () => void; project: Project; milestones: ProjectMilestone[] }) {
@@ -420,6 +387,9 @@ function EditProject({ open, onClose, project, save }: { open: boolean; onClose:
         <Field label="End"><TextInput type="date" className="w-full" value={(p.end_date || '').slice(0, 10)} onChange={(e) => setP({ ...p, end_date: e.target.value })} /></Field>
         <Field label="Country"><Select value={p.countries[0] || ''} onChange={(v) => setP({ ...p, countries: v ? [v] : [] })} placeholder="—" options={(world?.countries || []).map((c) => ({ value: c.iso3, label: c.name }))} /></Field>
         <Field label="Funder"><TextInput className="w-full" value={p.funder || ''} onChange={(e) => setP({ ...p, funder: e.target.value })} /></Field>
+        <Field label="Grant amount" hint="Total award from the funder"><TextInput className="w-full" inputMode="decimal" placeholder="e.g. 1500000" value={p.grant_amount ?? ''} onChange={(e) => setP({ ...p, grant_amount: e.target.value === '' ? null : Number(e.target.value.replace(/[^0-9.]/g, '')) })} /></Field>
+        <Field label="Contracted amount" hint="Our share under the contract"><TextInput className="w-full" inputMode="decimal" placeholder="e.g. 450000" value={p.contracted_amount ?? ''} onChange={(e) => setP({ ...p, contracted_amount: e.target.value === '' ? null : Number(e.target.value.replace(/[^0-9.]/g, '')) })} /></Field>
+        <Field label="Currency"><Select value={p.currency || 'USD'} onChange={(v) => setP({ ...p, currency: v })} options={CURRENCIES.map((c) => ({ value: c, label: c }))} /></Field>
       </div>
       <Field label="Dashboard and document links">
         <ul className="space-y-1 mb-2">

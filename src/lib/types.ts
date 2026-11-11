@@ -122,12 +122,46 @@ export interface TemplateSection {
   title: string;
 }
 
+/** One step in a milestone's status flow; `kind` drives colour, progress and the "lost" warning. */
+export interface FlowStatus {
+  key: string;
+  label: string;
+  kind: 'todo' | 'active' | 'blocked' | 'done' | 'lost';
+}
+
+export interface TemplateCheckpoint {
+  key: string;
+  title: string;
+  parallel?: boolean; // runs alongside the previous checkpoint
+  subtasks: { key: string; title: string }[];
+}
+
 export interface TemplateMilestone {
   key: string;
   name: string;
   description?: string;
-  sections: TemplateSection[];
-  stages?: { key: string; label: string }[]; // optional sub-checkpoints
+  statuses?: FlowStatus[];
+  checkpoints?: TemplateCheckpoint[];
+  sections: TemplateSection[]; // page headings (kept in sync with checkpoints)
+  stages?: { key: string; label: string }[]; // legacy
+}
+
+export interface Subtask {
+  key: string;
+  title: string;
+  done_at?: string | null;
+  owner?: string | null;
+  due?: string | null;
+}
+
+export interface Checkpoint {
+  key: string;
+  title: string;
+  parallel?: boolean;
+  target?: string | null;
+  done_at?: string | null;
+  owner?: string | null;
+  subtasks: Subtask[];
 }
 
 export interface MilestoneTemplate {
@@ -151,6 +185,9 @@ export interface Project {
   end_date?: string | null;
   template_id?: ID;
   links: { title: string; url: string; kind: 'dashboard' | 'document' | 'repo' | 'link' }[];
+  grant_amount?: number | null;
+  contracted_amount?: number | null;
+  currency?: string | null;
   created_at?: string;
 }
 
@@ -160,13 +197,15 @@ export interface ProjectMilestone {
   key: string;
   name: string;
   order: number;
-  status: 'not_started' | 'in_progress' | 'done' | 'blocked';
+  status: string; // a key from `flow`
   start_date?: string | null;
   target_date?: string | null;
   owner?: string;
   team?: string;
   progress: number; // 0-100
-  stages?: StageMilestone[];
+  stages?: StageMilestone[]; // legacy
+  flow?: FlowStatus[] | null;
+  checkpoints?: Checkpoint[] | null;
 }
 
 export interface Page {
