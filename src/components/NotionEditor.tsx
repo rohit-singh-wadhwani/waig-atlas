@@ -302,10 +302,10 @@ export function cleanPastedHtml(html: string): string {
     tpl.innerHTML = html;
     sp.replaceWith(tpl.content);
   });
-  // a cell holds one paragraph: merge its blocks with line breaks
+  // a cell holds one line of inline content: merge its blocks with line breaks
   doc.querySelectorAll('td, th').forEach((cell) => {
     const lines = inlineOf(cell);
-    cell.innerHTML = `<p>${lines.join('<br>')}</p>`;
+    cell.innerHTML = lines.join('<br>'); // inline only: a <p> here would be read as a block and pushed out of the table
   });
   // list items: unwrap their paragraphs so they don't become empty bullets followed by text
   doc.querySelectorAll('li').forEach((li) => {
