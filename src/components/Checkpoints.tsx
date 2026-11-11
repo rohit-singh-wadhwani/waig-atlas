@@ -4,7 +4,7 @@ import Icon from './Icon';
 import { db, uid } from '../lib/store';
 import { checkpointDone, checkpointProgress, KIND_BADGE, statusOf } from '../lib/projects';
 import { peopleOptions, usePeople } from '../lib/team';
-import type { Checkpoint, CheckpointTask, ProjectMilestone } from '../lib/types';
+import type { CheckpointBase, CheckpointTask, ProjectMilestone } from '../lib/types';
 
 export function StatusBadge({ m }: { m: ProjectMilestone }) {
   const s = statusOf(m);
@@ -13,13 +13,24 @@ export function StatusBadge({ m }: { m: ProjectMilestone }) {
 
 const today = () => new Date().toISOString().slice(0, 10);
 
+type Row = CheckpointBase & Record<string, any>;
+
 /**
  * Checkpoint builder: a horizontal row of cards. Each card has a title, target and completion dates,
  * an owner, a note on what has to be done, and an optional list of tasks.
+ * Used for project milestones (milestone_checkpoints) and grants (grant_checkpoints).
  */
-export default function Checkpoints({ m, items, onProgress }: { m: ProjectMilestone; items: Checkpoint[]; onProgress: (p: number) => void }) {
+export default function Checkpoints({ items, table, base, progress, onProgress, suggestions = [], hint }: {
+  items: Row[];
+  table: 'milestone_checkpoints' | 'grant_checkpoints';
+  base: Record<string, string>; // e.g. { milestone_id, project_id } or { grant_id }
+  progress?: number;
+  onProgress?: (p: number) => void;
+  suggestions?: string[];
+  hint?: string;
+}) {
   const people = usePeople();
-  const [list, setList] = useState<Checkpoint[]>(() => [...items].sort((a, b) => a.position - b.position));
+  const [list, setList] = useState<Row[]>(() => [...items].sort((a, b) => a.position - b.position));
   const pending = useRef(0);
   const scroller = useRef<HTMLDivElement>(null);
   const incoming = JSON.stringify([...items].sort((a, b) => a.position - b.position));
@@ -27,24 +38,24 @@ export default function Checkpoints({ m, items, onProgress }: { m: ProjectMilest
     if (!pending.current) setList(JSON.parse(incoming));
   }, [incoming]);
 
-  const persist = async (next: Checkpoint[], changed: Checkpoint[], removed?: string) => {
+  const persist = async (next: Row[], changed: Row[], removed?: string) => {
     setList(next);
     pending.current++;
     try {
-      if (removed) await db.remove('milestone_checkpoints', removed);
-      for (const c of changed) await db.upsert('milestone_checkpoints', { ...c, updated_at: new Date().toISOString() } as any);
+      if (removed) await db.remove(table, removed);
+      for (const c of changed) await db.upsert(table, { ...c, updated_at: new Date().toISOString() } as any);
       const p = checkpointProgress(next);
-      if (p !== null && p !== m.progress) onProgress(p);
+      if (onProgress && p !== null && p !== progress) onProgress(p);
     } finally {
       pending.current--;
     }
   };
-  const update = (id: string, patch: Partial<Checkpoint>) => {
+  const update = (id: string, patch: Partial<Row>) => {
     const next = list.map((c) => (c.id === id ? { ...c, ...patch } : c));
     persist(next, next.filter((c) => c.id === id));
   };
-  const add = () => {
-    const c: Checkpoint = { id: uid('cp'), milestone_id: m.id, project_id: m.project_id, position: list.length, title: `Checkpoint ${list.length + 1}`, target_date: null, completed_on: null, owner: null, notes: null, tasks: [] };
+  const add = (title?: string) => {
+    const c: Row = { ...base, id: uid('cp'), position: list.length, title: title || `Checkpoint ${list.length + 1}`, target_date: null, completed_on: null, owner: null, notes: null, tasks: [] };
     persist([...list, c], [c]);
     setTimeout(() => scroller.current?.scrollTo({ left: scroller.current.scrollWidth, behavior: 'smooth' }), 50);
   };
@@ -70,12 +81,22 @@ export default function Checkpoints({ m, items, onProgress }: { m: ProjectMilest
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <div>
           <h3 className="text-[17px] font-semibold text-gray-900">Checkpoints</h3>
-          <p className="text-sm text-gray-500 mt-0.5">{list.length ? `${complete} of ${list.length} complete · ${pct}%` : 'Break this milestone into checkpoints with dates, an owner and what needs doing.'}</p>
+          <p className="text-sm text-gray-500 mt-0.5">{list.length ? `${complete} of ${list.length} complete · ${pct}%` : hint || 'Break this into checkpoints with dates, an owner and what needs doing.'}</p>
         </div>
-        <button type="button" onClick={add} className="inline-flex items-center gap-1.5 h-10 px-4 rounded-xl border border-gray-200 bg-white text-[15px] text-gray-800 hover:bg-gray-50">
+        <button type="button" onClick={() => add()} className="inline-flex items-center gap-1.5 h-10 px-4 rounded-xl border border-gray-200 bg-white text-[15px] text-gray-800 hover:bg-gray-50">
           <Icon name="plus" size={16} />Add checkpoint
         </button>
       </div>
+
+      {!list.length && suggestions.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 text-sm">
+          <span className="text-gray-500">Quick add:</span>
+          {suggestions.map((t) => (
+            <button key={t} type="button" onClick={() => add(t)} className="rounded-lg border border-dashed border-gray-300 px-3 py-1.5 text-gray-700 hover:border-brand-300 hover:text-brand-700">+ {t}</button>
+          ))}
+          <button type="button" onClick={async () => { const rows = suggestions.map((t, i) => ({ ...base, id: uid('cp'), position: i, title: t, target_date: null, completed_on: null, owner: null, notes: null, tasks: [] } as Row)); await persist(rows, rows); }} className="text-brand-700 hover:underline px-1">Add all</button>
+        </div>
+      )}
 
       {list.length > 0 && (
         <div ref={scroller} className="flex gap-4 overflow-x-auto pb-3 -mx-1 px-1 snap-x snap-mandatory">
@@ -89,7 +110,7 @@ export default function Checkpoints({ m, items, onProgress }: { m: ProjectMilest
 }
 
 function CheckpointCard({ c, n, first, last, people, onChange, onMove, onRemove }: {
-  c: Checkpoint; n: number; first: boolean; last: boolean; people: any[]; onChange: (p: Partial<Checkpoint>) => void; onMove: (d: -1 | 1) => void; onRemove: () => void;
+  c: Row; n: number; first: boolean; last: boolean; people: any[]; onChange: (p: Partial<Row>) => void; onMove: (d: -1 | 1) => void; onRemove: () => void;
 }) {
   const [title, setTitle] = useState(c.title);
   const [notes, setNotes] = useState(c.notes || '');

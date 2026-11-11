@@ -66,9 +66,3 @@ export function personName(v?: string | null) {
   return p ? displayName(p) : v.includes('@') ? v.split('@')[0] : v;
 }
 
-export const GRANT_STAGES = [
-  { key: 'submission', label: 'Submission' },
-  { key: 'review1', label: 'Review 1' },
-  { key: 'review2', label: 'Review 2' },
-  { key: 'grant', label: 'Grant' },
-];

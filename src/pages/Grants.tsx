@@ -5,7 +5,7 @@ import { Badge, Button, Card, CardHeader, Drawer, Empty, ExtLink, Field, KpiCard
 import { FilterBar, Filters, defaultFilters, inWindow, matchesPlace } from '../components/Filters';
 import WorldMap, { MapPoint } from '../components/WorldMap';
 import ChartCard from '../components/ChartCard';
-import Stepper from '../components/Stepper';
+import Checkpoints from '../components/Checkpoints';
 import { Attachments, Comments } from '../components/Collab';
 import Icon from '../components/Icon';
 import { useData } from '../lib/hooks';
@@ -13,8 +13,9 @@ import { DEMO, db, loadGrants } from '../lib/store';
 import { FIT_OPTIONS, fitScore, parseCountries, parseDeadline, pipelineId } from '../lib/pipeline';
 import { useWorld, NO_COUNTRIES } from '../lib/world';
 import { daysUntil, fmtDate, fmtTime, fmtUsd, relDays, scoreTone } from '../lib/format';
-import { GRANT_STAGES, peopleOptions, personName, usePeople } from '../lib/team';
-import type { Country, Grant, GrantTracking } from '../lib/types';
+import { peopleOptions, personName, usePeople } from '../lib/team';
+import type { Country, Grant, GrantCheckpoint, GrantTracking } from '../lib/types';
+import { checkpointDone } from '../lib/projects';
 
 type Tracked = GrantTracking & { id: string };
 const STATUS: { value: GrantTracking['status']; label: string; cls: string }[] = [
@@ -60,8 +61,7 @@ function FitBadge({ g }: { g: Grant }) {
 
 export function newTracking(g: Grant): Tracked {
   return {
-    id: g.id, grant_id: g.id, assignee: null, stage: 'submission', status: 'watching',
-    milestones: GRANT_STAGES.map((s) => ({ key: s.key, label: s.label, target: s.key === 'submission' ? g.deadline || null : null, done_at: null })),
+    id: g.id, grant_id: g.id, assignee: null, status: 'watching',
   };
 }
 
@@ -77,6 +77,7 @@ export default function GrantsPage() {
   const countries = world?.countries ?? NO_COUNTRIES;
   const feed = useData(loadGrants, [], { items: [], updated_at: null });
   const tracking = useData(() => db.list<Tracked>('grant_tracking'), [], []);
+  const gcps = useData(() => db.list<GrantCheckpoint>('grant_checkpoints'), [], []);
   const [f, setF] = useState<Filters>({ ...defaultFilters, range: 'all' });
   const [q, setQ] = useState('');
   const [status, setStatus] = useState('active');
@@ -287,7 +288,8 @@ export default function GrantsPage() {
               {filtered.map((g) => {
                 const t = tMap.get(g.id);
                 const st = statusOf(t?.status);
-                const stageIdx = t ? t.milestones.findIndex((m) => !m.done_at) : 0;
+                const cps = gcps.data.filter((c) => c.grant_id === g.id).sort((a, b) => a.position - b.position);
+                const nextCp = cps.find((c) => !checkpointDone(c));
                 const d = daysUntil(g.deadline);
                 return (
                   <tr key={g.id} className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer" onClick={() => setOpenId(g.id)}>
@@ -308,7 +310,7 @@ export default function GrantsPage() {
                     <td className="px-3 py-3 text-sm whitespace-nowrap">{personName(t?.assignee)}</td>
                     <td className="px-3 py-3 whitespace-nowrap">
                       <Badge className={st.cls}>{st.label}</Badge>
-                      {t && t.status !== 'watching' && <div className="text-xs text-gray-500 mt-1">{stageIdx < 0 ? 'All stages done' : GRANT_STAGES[stageIdx]?.label}</div>}
+                      {cps.length > 0 && <div className="text-xs text-gray-500 mt-1 max-w-[180px] truncate" title={nextCp?.title}>{nextCp ? `Next: ${nextCp.title}${nextCp.target_date ? ` · ${fmtDate(nextCp.target_date)}` : ''}` : 'All checkpoints done'}</div>}
                     </td>
                   </tr>
                 );
@@ -319,7 +321,7 @@ export default function GrantsPage() {
         </div>
       </Card>
 
-      <GrantDrawer grant={selected} tracking={selected ? tMap.get(selected.id) : undefined} countries={countries} onClose={() => setOpenId(null)} />
+      <GrantDrawer grant={selected} tracking={selected ? tMap.get(selected.id) : undefined} checkpoints={selected ? gcps.data.filter((c) => c.grant_id === selected.id) : []} countries={countries} onClose={() => setOpenId(null)} />
       {adding && <GrantForm countries={countries} onClose={() => setAdding(false)} onSaved={(id) => { setAdding(false); setView('pipeline'); setOpenId(id); }} />}
     </>
   );
@@ -339,15 +341,15 @@ function ScoreRing({ score }: { score?: number | null }) {
   );
 }
 
-function GrantDrawer({ grant, tracking, countries, onClose }: { grant: Grant | null; tracking?: Tracked; countries: Country[]; onClose: () => void }) {
+function GrantDrawer({ grant, tracking, checkpoints, countries, onClose }: { grant: Grant | null; tracking?: Tracked; checkpoints: GrantCheckpoint[]; countries: Country[]; onClose: () => void }) {
   if (!grant) return null;
   const t = tracking || newTracking(grant);
   const save = (patch: Partial<Tracked>) => db.upsert<Tracked>('grant_tracking', { ...t, ...patch, updated_at: new Date().toISOString() });
   const tone = scoreTone(grant.score);
-  return <GrantDrawerBody grant={grant} t={t} tracking={tracking} save={save} tone={tone} countries={countries} onClose={onClose} />;
+  return <GrantDrawerBody grant={grant} t={t} tracking={tracking} checkpoints={checkpoints} save={save} tone={tone} countries={countries} onClose={onClose} />;
 }
 
-function GrantDrawerBody({ grant, t, tracking, save, tone, countries, onClose }: any) {
+function GrantDrawerBody({ grant, t, tracking, checkpoints, save, tone, countries, onClose }: any) {
   const me = useMe();
   const people = usePeople();
   const [editing, setEditing] = useState(false);
@@ -409,7 +411,7 @@ function GrantDrawerBody({ grant, t, tracking, save, tone, countries, onClose }:
         )}
         {grant.themes?.length ? (
           <div className="flex flex-wrap gap-1.5 mt-4">
-            {grant.themes.map((th) => (
+            {grant.themes.map((th: string) => (
               <Badge key={th} className="bg-gray-100 text-gray-700">{th}</Badge>
             ))}
           </div>
@@ -435,7 +437,7 @@ function GrantDrawerBody({ grant, t, tracking, save, tone, countries, onClose }:
             <div>
               <SectionLabel>Strengths</SectionLabel>
               <ul className="mt-2 space-y-1.5">
-                {(grant.strengths || []).map((s) => (
+                {(grant.strengths || []).map((s: string) => (
                   <li key={s} className="flex gap-2 text-[15px] text-gray-700"><Icon name="checkCircle" size={17} className="text-green-600 mt-0.5 shrink-0" />{s}</li>
                 ))}
               </ul>
@@ -443,7 +445,7 @@ function GrantDrawerBody({ grant, t, tracking, save, tone, countries, onClose }:
             <div>
               <SectionLabel>Weaknesses / gaps</SectionLabel>
               <ul className="mt-2 space-y-1.5">
-                {(grant.weaknesses || []).map((s) => (
+                {(grant.weaknesses || []).map((s: string) => (
                   <li key={s} className="flex gap-2 text-[15px] text-gray-700"><Icon name="alert" size={17} className="text-amber-600 mt-0.5 shrink-0" />{s}</li>
                 ))}
               </ul>
@@ -454,7 +456,7 @@ function GrantDrawerBody({ grant, t, tracking, save, tone, countries, onClose }:
       )}
 
       <Card>
-        <CardHeader title="Pursuit" subtitle="Assign a POC, set the status, and tick stages as they happen" />
+        <CardHeader title="Pursuit" subtitle="Assign a POC, set the status, and plan the checkpoints to the decision" />
         <div className="grid md:grid-cols-2 gap-4 mb-4">
           <Field label="POC">
             <Select value={t.assignee || ''} onChange={(v) => save({ assignee: v || null, status: v && t.status === 'watching' ? 'pursuing' : t.status })} placeholder="Unassigned" options={peopleOptions(people, t.assignee, true)} />
@@ -463,9 +465,16 @@ function GrantDrawerBody({ grant, t, tracking, save, tone, countries, onClose }:
             <Select value={t.status} onChange={(v) => save({ status: v as GrantTracking['status'] })} options={STATUS.map((s) => ({ value: s.value, label: s.label }))} />
           </Field>
         </div>
-        <SectionLabel>Milestones</SectionLabel>
-        <div className="mt-2">
-          <Stepper stages={t.milestones} onChange={(m) => save({ milestones: m, stage: m.find((x) => !x.done_at)?.key || 'grant' })} />
+        <div className="border-t border-gray-100 pt-4">
+          <Checkpoints
+            key={grant.id}
+            items={checkpoints}
+            table="grant_checkpoints"
+            base={{ grant_id: grant.id }}
+            onProgress={() => { if (!tracking) save({ status: t.status === 'watching' ? 'pursuing' : t.status }); }}
+            suggestions={['Concept note', 'Full proposal', 'Submission', 'Review', 'Decision']}
+            hint="Add checkpoints with a target date, owner and what needs doing — e.g. concept note, proposal, submission, review."
+          />
         </div>
         {!tracking && <p className="text-xs text-gray-500 mt-3">Nothing saved yet. Any change above starts tracking this call.</p>}
       </Card>
