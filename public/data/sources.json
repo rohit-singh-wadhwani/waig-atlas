@@ -122,7 +122,7 @@
   "kind": "news",
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-11T04:17:16.047Z",
+  "last_run": "2026-11-11T07:37:10.264Z",
   "last_status": "ok",
   "last_message": "1 recent items, 0 new",
   "item_count": 1
@@ -138,7 +138,7 @@
   "kind": "outbreak",
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-11T04:16:40.824Z",
+  "last_run": "2026-11-11T07:37:08.411Z",
   "last_status": "ok",
   "last_message": "13 recent items, 0 new",
   "item_count": 13
@@ -154,9 +154,9 @@
   "kind": "news",
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-11T04:17:15.160Z",
+  "last_run": "2026-11-11T07:37:09.351Z",
   "last_status": "ok",
-  "last_message": "30 recent items, 2 new",
+  "last_message": "30 recent items, 0 new",
   "item_count": 30
  },
  {
@@ -170,7 +170,7 @@
   "kind": "research",
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-11T04:17:18.551Z",
+  "last_run": "2026-11-11T07:37:52.219Z",
   "last_status": "ok",
   "last_message": "25 recent items, 0 new",
   "item_count": 25
@@ -186,7 +186,7 @@
   "kind": "research",
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-11T04:17:21.289Z",
+  "last_run": "2026-11-11T07:37:46.946Z",
   "last_status": "ok",
   "last_message": "25 recent items, 0 new",
   "item_count": 25
@@ -202,9 +202,9 @@
   "kind": "social",
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-11T04:17:21.768Z",
+  "last_run": "2026-11-11T07:37:47.887Z",
   "last_status": "error",
-  "last_message": "HTTP 500 Internal Server Error for https://www.youtube.com/feeds/videos.xml?channel_id=UC07-dOwgza1IguKA86jqxNA",
+  "last_message": "HTTP 404 Not Found for https://www.youtube.com/feeds/videos.xml?channel_id=UC07-dOwgza1IguKA86jqxNA",
   "item_count": 0
  },
  {
@@ -218,9 +218,9 @@
   "kind": "social",
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-11T04:17:14.378Z",
+  "last_run": "2026-11-11T07:37:49.911Z",
   "last_status": "error",
-  "last_message": "Gemini model gemini-2.5-flash-lite not available",
+  "last_message": "Gemini failed: no model available",
   "item_count": 0
  },
  {
@@ -234,9 +234,9 @@
   "kind": "tender",
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-11T04:17:19.216Z",
+  "last_run": "2026-11-11T07:37:43.861Z",
   "last_status": "error",
-  "last_message": "Gemini failed: no model available",
+  "last_message": "Gemini model gemini-2.5-flash-lite not available",
   "item_count": 0
  },
  {
@@ -346,7 +346,7 @@
   "kind": "tender",
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-11T04:16:39.152Z",
+  "last_run": "2026-11-11T07:37:49.108Z",
   "last_status": "ok",
   "last_message": "40 recent items, 0 new",
   "item_count": 40
