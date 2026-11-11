@@ -5,7 +5,7 @@ import { APPROACH, ApproachKey, approachOf, expectedPositivity, fmtInt, rulesFro
 import { BasisTag, esc, Figure, kmFmt, PartsBar, pctFmt } from './common';
 import type { TbData } from './TbPage';
 
-type Metric = 'missed_100k' | 'walk_far';
+type Metric = 'missed' | 'walk_far';
 
 export default function WhereToAct({ data, onPlan, goData }: { data: TbData; onPlan: (c: Partial<TbCampaign>) => void; goData: () => void }) {
   const { dist, layers, campaigns, P } = data;
@@ -13,7 +13,7 @@ export default function WhereToAct({ data, onPlan, goData }: { data: TbData; onP
   const nat = dist.data.meta?.national;
   const natRate = nat ? (nat.incidence / nat.pop) * 1e5 : null;
   const list = useMemo(() => dist.data.list.map((d) => ({ ...d, approach: approachOf(d, rules) })), [dist.data.list, rules.walkFarShare, rules.lowDetection]); // eslint-disable-line react-hooks/exhaustive-deps
-  const [metric, setMetric] = useState<Metric>('missed_100k');
+  const [metric, setMetric] = useState<Metric>('missed');
   const [region, setRegion] = useState('');
   const [appr, setAppr] = useState('');
   const [all, setAll] = useState(false);
@@ -24,6 +24,7 @@ export default function WhereToAct({ data, onPlan, goData }: { data: TbData; onP
   const breaks = useMemo(() => breaksFor(list.map((d) => Number(d[metric] ?? NaN))), [list, metric]);
   const fmt = metric === 'walk_far' ? (v: number) => pctFmt(v) : (v: number) => fmtInt(v);
   const connected = dist.data.notifiedDistricts > 0;
+  const rateRange = useMemo(() => { const r = list.map((d) => d.expected_100k).filter((x) => isFinite(x)); return r.length ? [Math.min(...r), Math.max(...r)] : [0, 0]; }, [list]);
   const keySites = useMemo(() => layers.data.siteList.filter((s) => s.kind === 'prison' || s.kind === 'mine / quarry').sort((a, b) => (a.kind === b.kind ? b.pop_1km - a.pop_1km : a.kind === 'prison' ? -1 : 1)), [layers.data.siteList]);
   const counts = useMemo(() => {
     const c: Record<string, number> = {};
@@ -77,11 +78,12 @@ export default function WhereToAct({ data, onPlan, goData }: { data: TbData; onP
         <Card className="min-w-0">
           <CardHeader
             title="Missed TB cases by district"
-            subtitle={metric === 'missed_100k' ? 'Missed cases a year per 100,000 people. Click a district for the full picture.' : 'Share of people more than one hour on foot from the nearest health facility (Malaria Atlas Project).'}
-            right={<Segmented size="sm" value={metric} onChange={setMetric} options={[{ value: 'missed_100k', label: 'Missed per 100k' }, { value: 'walk_far', label: 'Far from care' }]} />}
+            subtitle={metric === 'missed' ? 'Missed cases a year in each district. Click a district for the full picture.' : 'Share of people more than one hour on foot from the nearest health facility (Malaria Atlas Project).'}
+            right={<Segmented size="sm" value={metric} onChange={setMetric} options={[{ value: 'missed', label: 'Missed cases' }, { value: 'walk_far', label: 'Far from care' }]} />}
           />
+          {!connected && <p className="text-xs text-gray-500 mb-3">Rates per person differ little between districts today ({fmtInt(rateRange[0])} to {fmtInt(rateRange[1])} expected per 100,000) because risk-factor surveys are regional. District notifications will show the real differences.</p>}
           <TbMap districts={geo} metric={metric} breaks={breaks} selectedId={sel?.id} onSelect={(pr) => setSelId(pr.id)} tooltip={tip} height={600} />
-          <TbLegend title={metric === 'missed_100k' ? 'Missed per 100k' : 'Over 1 h walk'} breaks={breaks} fmt={fmt} />
+          <TbLegend title={metric === 'missed' ? 'Missed a year' : 'Over 1 h walk'} breaks={breaks} fmt={fmt} />
         </Card>
 
         <Card className="min-w-0" pad={false}>
