@@ -1,5 +1,5 @@
 import { db, uid } from './store';
-import type { Checkpoint, FlowStatus, MilestoneTemplate, Page, Project, ProjectMilestone, Task, TemplateMilestone } from './types';
+import type { Checkpoint, FlowStatus, MilestoneTemplate, Page, Project, ProjectMilestone, TemplateCheckpoint, TemplateMilestone } from './types';
 
 export function slugify(s: string) {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || uid('p');
@@ -18,27 +18,27 @@ export const KIND_DOT: Record<FlowStatus['kind'], string> = { todo: 'bg-gray-300
 export const KIND_BADGE: Record<FlowStatus['kind'], string> = { todo: 'bg-gray-100 text-gray-700', active: 'bg-brand-50 text-brand-700', blocked: 'bg-amber-50 text-amber-800', done: 'bg-green-50 text-green-700', lost: 'bg-red-50 text-red-700' };
 export const isDone = (m: ProjectMilestone) => statusOf(m).kind === 'done';
 
-/** Checkpoints a template milestone starts with (older templates: sections become checkpoints, max 4). */
-export function templateCheckpoints(m: TemplateMilestone): Checkpoint[] {
-  const src = m.checkpoints && m.checkpoints.length ? m.checkpoints : m.sections.slice(0, 4).map((s) => ({ key: s.key, title: s.title, subtasks: [] }));
-  return src.map((c) => ({ key: c.key, title: c.title, parallel: !!c.parallel, target: null, done_at: null, owner: null, subtasks: c.subtasks.map((t) => ({ key: t.key, title: t.title, done_at: null, owner: null, due: null })) }));
+/** A template milestone's checkpoints (older templates: first 4 sections, no tasks). */
+export function templateCheckpoints(m: TemplateMilestone): TemplateCheckpoint[] {
+  if (m.checkpoints && m.checkpoints.length) return m.checkpoints.map((c) => ({ title: c.title, tasks: c.tasks || [] }));
+  return (m.sections || []).slice(0, 4).map((s) => ({ title: s.title, tasks: [] }));
 }
 
-/** Progress from checkpoints: each sub-task counts once; a checkpoint without sub-tasks counts once. */
+/** 0-1 completion of one checkpoint: a completion date means done; otherwise the share of tasks ticked. */
+export function checkpointDone(c: Checkpoint) {
+  if (c.completed_on) return 1;
+  return c.tasks.length ? c.tasks.filter((t) => t.done).length / c.tasks.length : 0;
+}
+
+/** Milestone progress (%) from its checkpoints, or null if it has none. */
 export function checkpointProgress(cps: Checkpoint[]) {
-  const units = cps.reduce((n, c) => n + (c.subtasks.length || 1), 0);
-  if (!units) return null;
-  const done = cps.reduce((n, c) => n + (c.subtasks.length ? c.subtasks.filter((s) => s.done_at).length : c.done_at ? 1 : 0), 0);
-  return Math.round((done / units) * 100);
+  if (!cps.length) return null;
+  return Math.round((cps.reduce((s, c) => s + checkpointDone(c), 0) / cps.length) * 100);
 }
 
 export function pageSkeleton(m: TemplateMilestone): string {
   const parts = [`${m.description || ''}`.trim()].filter(Boolean);
-  for (const c of templateCheckpoints(m)) {
-    parts.push(`## ${c.title}`);
-    if (c.subtasks.length) for (const t of c.subtasks) parts.push(`### ${t.title}\n\n_To fill._`);
-    else parts.push('_To fill._');
-  }
+  for (const c of templateCheckpoints(m)) parts.push(`## ${c.title}\n\n_To fill._`);
   return parts.join('\n\n');
 }
 
@@ -46,9 +46,14 @@ export async function addMilestone(projectId: string, m: TemplateMilestone, orde
   const flow = m.statuses && m.statuses.length ? m.statuses : FALLBACK_FLOW;
   const ms: ProjectMilestone = {
     id: uid('m'), project_id: projectId, key: m.key || slugify(m.name), name: m.name, order, status: flow[0].key, progress: 0,
-    start_date: null, target_date: null, flow, checkpoints: templateCheckpoints(m),
+    start_date: null, target_date: null, flow,
   };
   await db.upsert('project_milestones', ms as any);
+  let pos = 0;
+  for (const c of templateCheckpoints(m)) {
+    const row: Checkpoint = { id: uid('cp'), milestone_id: ms.id, project_id: projectId, position: pos++, title: c.title, target_date: null, completed_on: null, owner: null, notes: null, tasks: c.tasks.map((t) => ({ id: uid('t'), title: t, done: false })) };
+    await db.upsert('milestone_checkpoints', row as any);
+  }
   const page: Page = { id: uid('pg'), project_id: projectId, milestone_id: ms.id, title: m.name, content_md: pageSkeleton(m), updated_at: new Date().toISOString(), updated_by: by };
   await db.upsert('pages', page as any);
   return ms;
@@ -73,17 +78,4 @@ export function milestoneProgress(ms: ProjectMilestone[]) {
 /** Milestones after a lost one may not be needed. */
 export function lostBefore(ms: ProjectMilestone[], m: ProjectMilestone) {
   return ms.find((x) => x.order < m.order && statusOf(x).kind === 'lost') || null;
-}
-
-export function teamProgress(tasks: Task[]) {
-  const by = new Map<string, { done: number; total: number; blocked: number }>();
-  for (const t of tasks) {
-    const k = t.team || 'Unassigned';
-    const v = by.get(k) || { done: 0, total: 0, blocked: 0 };
-    v.total++;
-    if (t.status === 'done') v.done++;
-    if (t.status === 'blocked') v.blocked++;
-    by.set(k, v);
-  }
-  return Array.from(by.entries()).map(([team, v]) => ({ team, ...v, pct: v.total ? Math.round((v.done / v.total) * 100) : 0 }));
 }

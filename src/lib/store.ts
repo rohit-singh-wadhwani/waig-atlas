@@ -1,7 +1,7 @@
 import { createClient, SupabaseClient, Session } from '@supabase/supabase-js';
 import type {
   Attachment, Comment, Grant, GrantTracking, HealthData, Insight, MilestoneTemplate, OrgContext, Page,
-  Project, ProjectMilestone, Source, Task,
+  Project, ProjectMilestone, Source, Checkpoint,
 } from './types';
 
 const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL || '';
@@ -37,7 +37,7 @@ type Tables = {
   projects: Project[];
   project_milestones: ProjectMilestone[];
   pages: Page[];
-  tasks: Task[];
+  milestone_checkpoints: Checkpoint[];
   milestone_templates: MilestoneTemplate[];
   grant_tracking: (GrantTracking & { id: string })[];
   comments: Comment[];
@@ -79,7 +79,7 @@ async function demo(): Promise<Tables> {
         projects: saved.projects ?? seed.projects ?? [],
         project_milestones: saved.project_milestones ?? seed.project_milestones ?? [],
         pages: saved.pages ?? seed.pages ?? [],
-        tasks: saved.tasks ?? seed.tasks ?? [],
+        milestone_checkpoints: saved.milestone_checkpoints ?? (seed as any).milestone_checkpoints ?? [],
         milestone_templates: saved.milestone_templates ?? seed.milestone_templates ?? [],
         grant_tracking: saved.grant_tracking ?? seed.grant_tracking ?? [],
         comments: saved.comments ?? seed.comments ?? [],
