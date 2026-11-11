@@ -1,15 +1,23 @@
 """
-TB surveillance data pipeline (Ghana).
+TB surveillance data pipeline (Ghana). Real data only: nothing here is guessed or weighted by hand.
 
-Everything here is fetched from open sources on each run; model parameters, cities and playbooks
-are read from Supabase (edited in the app). Outputs:
-  public/data/tb/districts.geojson   district features + modelled burden (open data only)
-  public/data/tb/cities.geojson      H3 hexagons for each city in tb_cities
-  public/data/tb/facilities.geojson  OSM health facilities
-  public/data/tb/sites.geojson       OSM congregate sites (markets, transport hubs, prisons, mines)
-  public/data/tb/national.json       WHO estimates and notifications for Ghana
-  public/data/tb/meta.json           sources, run status, parameter snapshot
-  Supabase tb_estimates               private estimates using uploaded notifications + campaign results
+Inputs (all open, fetched every run):
+  WHO Global TB Programme   national incidence, notifications, and cases attributable to HIV, undernourishment,
+                            smoking, alcohol and diabetes (estimates_age_sex)
+  DHS Program API           regional HIV, thinness (BMI < 18.5) and tobacco use
+  WorldPop 2020 (100 m)     population, scaled to WHO's latest national population
+  Malaria Atlas Project     motorised travel time to the nearest health facility
+  OpenStreetMap             health facilities, markets, transport hubs, prisons, mines and quarries
+  Meta Relative Wealth Index
+  geoBoundaries             region and district boundaries
+
+Expected cases in a district = each WHO risk-factor share of national incidence, split across districts by
+population x the regional prevalence of that risk factor (DHS); the rest of incidence split by population.
+Alcohol and diabetes have no regional survey data, so they are split by population.
+
+Outputs (public, open data only): districts.geojson, cities.geojson, facilities.geojson, sites.geojson,
+national.json, meta.json under public/data/tb. District notifications (DHIMS2 or uploads) and campaign
+results stay in Supabase and are joined in the app for signed-in members.
 """
 import csv, io, json, math, os, re, sys, time, traceback
 from datetime import datetime, timezone
@@ -83,11 +91,6 @@ def km_xy(lon, lat, lat0):
     return np.c_[np.asarray(lon) * 111.32 * math.cos(math.radians(lat0)), np.asarray(lat) * 110.57]
 
 
-def haversine(lat1, lon1, lat2, lon2):
-    p = math.pi / 180
-    a = 0.5 - math.cos((lat2 - lat1) * p) / 2 + math.cos(lat1 * p) * math.cos(lat2 * p) * (1 - math.cos((lon2 - lon1) * p)) / 2
-    return 12742 * math.asin(math.sqrt(a))
-
 
 def r2(x, n=2):
     return None if x is None or (isinstance(x, float) and not math.isfinite(x)) else round(float(x), n)
@@ -118,16 +121,16 @@ def worldpop():
     return path
 
 
-def map_travel_time():
+def map_travel_time(mode='Motorized'):
     caps = get('https://data.malariaatlas.org/geoserver/Accessibility/ows?service=WCS&version=2.0.1&request=GetCapabilities').text
     ids = re.findall(r'<wcs:CoverageId>([^<]+)</wcs:CoverageId>', caps)
-    pick = [i for i in ids if 'Motorized' in i and 'Healthcare' in i and 'Travel_Time' in i] or [i for i in ids if 'Healthcare' in i]
+    pick = [i for i in ids if mode.lower() in i.lower() and 'healthcare' in i.lower() and 'travel_time' in i.lower()]
     if not pick:
-        raise RuntimeError('no healthcare travel-time coverage found')
+        raise RuntimeError(f'no {mode} healthcare travel-time coverage found')
     cov = sorted(pick)[-1]
     url = (f'https://data.malariaatlas.org/geoserver/Accessibility/ows?service=WCS&version=2.0.1&request=GetCoverage&coverageId={cov}'
            f'&subset=Lat(4.4,11.3)&subset=Long(-3.4,1.3)&format=image/tiff')
-    path = '/tmp/gha_travel.tif'
+    path = f'/tmp/gha_travel_{mode.lower()}.tif'
     for attempt in range(3):
         with S.get(url, stream=True, timeout=300) as r:
             r.raise_for_status()
@@ -137,7 +140,7 @@ def map_travel_time():
         try:
             ds = rasterio.open(path)
             ds.read(1)  # make sure the whole file is readable
-            source('Malaria Atlas Project: motorised travel time to healthcare', url.split('&subset')[0], True, f'coverage {cov}')
+            source(f'Malaria Atlas Project: {"walking" if mode == "Walking" else "motorised"} travel time to healthcare', url.split('&subset')[0], True, f'coverage {cov}')
             return ds
         except Exception as e:
             log('travel-time raster unreadable, retrying', e)
@@ -249,7 +252,7 @@ def dhs_regional():
         v['hiv'] = hiv.get(reg, hiv.get(parent_of.get(reg, ''), None))
         v['thin'] = np.nanmean([x for x in [v.get('thin_w'), v.get('thin_m')] if x is not None]) if (v.get('thin_w') or v.get('thin_m')) else None
         v['smoke'] = np.nanmean([x for x in [v.get('smoke_w'), v.get('smoke_m')] if x is not None]) if (v.get('smoke_w') is not None or v.get('smoke_m') is not None) else None
-    source('DHS Program API: Ghana DHS 2022 (thinness, smoking) and 2014 (HIV), by region', 'https://api.dhsprogram.com', True, f'{len(out)} regions')
+    source('DHS Program API: Ghana DHS 2022 (thinness, tobacco use) and 2014 (HIV), by region', 'https://api.dhsprogram.com', True, f'{len(out)} regions')
     return out
 
 
@@ -268,16 +271,35 @@ def who_tb():
                       'inc_num': f('e_inc_num'), 'tbhiv_pct': f('e_tbhiv_prct'), 'notified': f('c_newinc', n) if n else None})
     latest = [y for y in years if y['inc_num'] and y['notified']][-1]
     latest['cdr'] = latest['notified'] / latest['inc_num']
+    # cases attributable to risk factors (all ages, both sexes), latest year available
+    attr, attr_year = {}, None
+    try:
+        rows = table('estimates_age_sex')
+        rf_rows = [r for r in rows if r.get('measure') == 'inc' and r.get('unit') == 'num' and r.get('sex') in ('a', 'all') and r.get('risk_factor') not in (None, '', 'all')]
+        if rf_rows:
+            attr_year = max(int(r['year']) for r in rf_rows)
+            for rf in ('hiv', 'und', 'smk', 'alc', 'dia'):
+                cand = [r for r in rf_rows if int(r['year']) == attr_year and r['risk_factor'] == rf]
+                pick = next((r for ag in ('all', 'a', '15plus') for r in cand if r.get('age_group') == ag), None)
+                if pick and pick.get('best') not in (None, '', 'NA'):
+                    attr[rf] = float(pick['best'])
+        source(f'WHO: Ghana TB cases attributable to risk factors ({attr_year})', 'https://extranet.who.int/tme/generateCSV.asp?ds=estimates_age_sex', bool(attr), ', '.join(f'{k} {round(v):,}' for k, v in attr.items()))
+    except Exception as e:
+        source('WHO: Ghana TB cases attributable to risk factors', 'https://extranet.who.int/tme/generateCSV.asp?ds=estimates_age_sex', False, str(e)[:160])
+    latest['attributable'], latest['attributable_year'] = attr, attr_year
     source(f'WHO Global TB Programme: Ghana estimates and notifications (latest {latest["year"]})', 'https://www.who.int/teams/global-programme-on-tuberculosis-and-lung-health/data', True)
     return years, latest
 
 
 # ---------------- main build ----------------
+FAR_MIN = 60         # "far from care": more than 1 hour to the nearest facility by motor vehicle
+CATCHMENT_KM = 1.0   # people living within walking distance of a screening venue
+RF_SURVEY = {'hiv': 'hiv', 'und': 'thin', 'smk': 'smoke'}  # WHO risk factor -> DHS regional indicator
+
+
 def main():
-    params = {p['id']: float(p['value']) for p in sb('tb_parameters?select=id,value')}
     cities = sb('tb_cities?select=*&enabled=eq.true')
-    P = lambda k: params[k]
-    log('parameters', len(params), 'cities', [c['id'] for c in cities])
+    log('cities', [c['id'] for c in cities])
 
     adm1, adm2 = boundaries()
     years, nat = who_tb()
@@ -288,9 +310,28 @@ def main():
         tt = map_travel_time()
     except Exception as e:
         tt = None
-        source('Malaria Atlas Project: travel time to healthcare', 'https://data.malariaatlas.org', False, f'{e}; using straight-line distance to the nearest OSM facility')
+        source('Malaria Atlas Project: travel time to healthcare', 'https://data.malariaatlas.org', False, f'{e}; using straight-line distance to the nearest mapped facility at 30 km/h')
+    try:
+        walk = map_travel_time('Walking')
+        walk_band = walk.read(1).astype('float32')
+        walk_band[(walk_band < 0) | ~np.isfinite(walk_band)] = np.nan
+    except Exception as e:
+        walk, walk_band = None, None
+        source('Malaria Atlas Project: walking travel time to healthcare', 'https://data.malariaatlas.org', False, str(e)[:160])
+    tt_band = None
+    if tt is not None:
+        tt_band = tt.read(1).astype('float32')
+        tt_band[(tt_band < 0) | ~np.isfinite(tt_band)] = np.nan
+        if not np.isfinite(tt_band).any():
+            raise RuntimeError('travel-time raster empty')
 
-    # districts + regions
+    def minutes_at(lons, lats, ds=None, band=None):
+        ds, band = (ds, band) if ds is not None else (tt, tt_band)
+        rows, cols = rasterio.transform.rowcol(ds.transform, lons, lats)
+        rows, cols = np.clip(rows, 0, band.shape[0] - 1), np.clip(cols, 0, band.shape[1] - 1)
+        return band[rows, cols]
+
+    # districts and their regions
     regions = [(shape(f['geometry']), f['properties']['shapeName']) for f in adm1['features']]
     dists = []
     for i, f in enumerate(adm2['features']):
@@ -301,18 +342,18 @@ def main():
             reg = min(regions, key=lambda x: x[0].distance(c))[1]
         dists.append({'i': i, 'id': f['properties']['shapeID'], 'name': f['properties']['shapeName'], 'region': reg, 'geom': g, 'lon': c.x, 'lat': c.y})
 
-    # population on the 100 m grid; district sums
+    # population on the 100 m grid, scaled to WHO's latest national population
     with rasterio.open(worldpop()) as src:
         pop = src.read(1, masked=True).filled(0).astype('float32')
         pop[pop < 0] = 0
-        transform, crs = src.transform, src.crs
+        transform = src.transform
     labels = rasterize([(d['geom'], d['i'] + 1) for d in dists], out_shape=pop.shape, transform=transform, dtype='int16')
-    scale = (nat['pop'] or pop.sum()) / pop.sum()  # bring 2020 grid to WHO's latest population
+    scale = (nat['pop'] or pop.sum()) / pop.sum()
     pop *= scale
     dsum = np.bincount(labels.ravel(), weights=pop.ravel(), minlength=len(dists) + 1)
     log('population total', int(pop.sum()), 'scale', round(scale, 3))
 
-    # 1 km cells (10x10 blocks) for access and wealth
+    # 1 km cells for travel time and wealth
     H, W = (pop.shape[0] // 10) * 10, (pop.shape[1] // 10) * 10
     p1 = pop[:H, :W].reshape(H // 10, 10, W // 10, 10).sum(axis=(1, 3))
     lab1 = labels[5:H:10, 5:W:10][: p1.shape[0], : p1.shape[1]]
@@ -320,37 +361,34 @@ def main():
     xs, ys = rasterio.transform.xy(transform, rr * 10 + 5, cc * 10 + 5)
     clon, clat, cpop, clab = np.array(xs), np.array(ys), p1[rr, cc], lab1[rr, cc]
     lat0 = 7.9
-
-    # travel time (minutes) per 1 km cell
     fac_xy = km_xy([f['lon'] for f in facilities], [f['lat'] for f in facilities], lat0) if facilities else None
+    fac_tree = cKDTree(fac_xy) if facilities else None
+    hosp = [f for f in facilities if f['kind'] == 'hospital']
+    hosp_tree = cKDTree(km_xy([f['lon'] for f in hosp], [f['lat'] for f in hosp], lat0)) if hosp else None
     cell_xy = km_xy(clon, clat, lat0)
-    fac_km = cKDTree(fac_xy).query(cell_xy)[0] if facilities else np.full(len(clon), np.nan)
-    if tt is not None:
-        band = tt.read(1).astype('float32')
-        if not np.isfinite(band).any():
-            raise RuntimeError('travel-time raster empty')
-        rows, cols = rasterio.transform.rowcol(tt.transform, clon, clat)
-        rows, cols = np.clip(rows, 0, band.shape[0] - 1), np.clip(cols, 0, band.shape[1] - 1)
-        minutes = band[rows, cols]
-        minutes[(minutes < 0) | ~np.isfinite(minutes)] = np.nan
-        access_basis = 'MAP motorised travel time to healthcare'
+    if tt_band is not None:
+        minutes = minutes_at(clon, clat)
+        access_basis = 'Malaria Atlas Project motorised travel time to healthcare'
     else:
-        minutes = fac_km / 30 * 60  # 30 km/h straight-line proxy
-        access_basis = 'straight-line distance to nearest OSM facility at 30 km/h'
+        minutes = fac_tree.query(cell_xy)[0] / 30 * 60
+        access_basis = 'straight-line distance to the nearest mapped facility at 30 km/h'
     minutes = np.where(np.isnan(minutes), np.nanmedian(minutes), minutes)
-    A = 0.5 ** (minutes / P('access_halflife_min'))
-
-    # wealth per 1 km cell from the nearest RWI tile
+    walk_min = minutes_at(clon, clat, walk, walk_band) if walk_band is not None else np.full(len(clon), np.nan)
     rwi_xy = km_xy(rwi[:, 0], rwi[:, 1], lat0)
-    rwi_cell = rwi[cKDTree(rwi_xy).query(cell_xy)[1], 2]
+    rwi_tree = cKDTree(rwi_xy)
+    rwi_cell = rwi[rwi_tree.query(cell_xy)[1], 2]
 
     n = len(dists) + 1
     wsum = lambda v: np.bincount(clab, weights=cpop * v, minlength=n)
     cp = np.bincount(clab, weights=cpop, minlength=n)
     safe = np.where(cp > 0, cp, 1)
-    d_minutes, d_far, d_A, d_rwi = wsum(minutes) / safe, wsum((minutes > 60).astype(float)) / safe, wsum(A) / safe, wsum(rwi_cell) / safe
+    d_minutes, d_far, d_rwi = wsum(minutes) / safe, wsum((minutes > FAR_MIN).astype(float)) / safe, wsum(rwi_cell) / safe
+    has_walk = np.isfinite(walk_min)
+    wcp = np.bincount(clab, weights=cpop * has_walk, minlength=n)
+    d_walk_far = np.bincount(clab, weights=cpop * ((walk_min > FAR_MIN) & has_walk), minlength=n) / np.where(wcp > 0, wcp, 1)
+    d_walk_min = np.bincount(clab, weights=cpop * np.where(has_walk, walk_min, 0), minlength=n) / np.where(wcp > 0, wcp, 1)
 
-    # facilities + sites per district
+    # facilities and sites per district
     tree = STRtree([d['geom'] for d in dists])
 
     def which(lon, lat):
@@ -371,78 +409,72 @@ def main():
         dists[k]['hospitals'] += f['kind'] == 'hospital'
         dists[k]['labs'] += bool(f['lab'])
     kindkey = {'market': 'markets', 'transport hub': 'hubs', 'prison': 'prisons', 'mine / quarry': 'mines'}
-    for s in sites:
-        k = which(s['lon'], s['lat'])
-        s['district'] = dists[k]['name'] if k is not None else None
+    for s_ in sites:
+        k = which(s_['lon'], s_['lat'])
+        s_['k'] = k
         if k is not None:
-            dists[k][kindkey[s['kind']]] += 1
+            dists[k][kindkey[s_['kind']]] += 1
 
-    # model
-    total_area = sum(d['geom'].area for d in dists)
     for d in dists:
         i = d['i'] + 1
         d['pop'] = float(dsum[i])
-        # area in km2 from degrees (approximate at district latitude)
         d['area_km2'] = d['geom'].area * 111.32 * 110.57 * math.cos(math.radians(d['lat']))
         d['density'] = d['pop'] / max(d['area_km2'], 1)
-        d['minutes'], d['pct_far'], d['A'], d['rwi'] = float(d_minutes[i]), float(d_far[i]), float(d_A[i]), float(d_rwi[i])
+        d['minutes'], d['pct_far'], d['rwi'] = float(d_minutes[i]), float(d_far[i]), float(d_rwi[i])
+        d['walk_min'], d['walk_far'] = (float(d_walk_min[i]), float(d_walk_far[i])) if walk_band is not None and wcp[i] > 0 else (None, None)
         rf = dhs.get(norm_region(d['region']), {})
         d['hiv'], d['thin'], d['smoke'] = rf.get('hiv'), rf.get('thin'), rf.get('smoke')
-    ref_density = sum(d['pop'] for d in dists) / sum(d['area_km2'] for d in dists)
 
-    def m_spatial(density, rwi_v):
-        return math.exp(P('beta_density') * math.log2(max(density, 1) / ref_density)) * math.exp(-P('beta_poverty') * rwi_v)
-
-    for d in dists:
-        risk = 1 + (d['hiv'] or 0) / 100 * (P('rr_hiv') - 1) + (d['thin'] or 0) / 100 * (P('rr_undernutrition') - 1) + (d['smoke'] or 0) / 100 * (P('rr_smoking') - 1)
-        d['m_risk'], d['m_density'], d['m_poverty'] = risk, math.exp(P('beta_density') * math.log2(max(d['density'], 1) / ref_density)), math.exp(-P('beta_poverty') * d['rwi'])
-        d['M'] = risk * d['m_density'] * d['m_poverty']
+    # ---------- expected cases: WHO national incidence split by real risk-factor data ----------
     totpop = sum(d['pop'] for d in dists)
-    meanM = sum(d['pop'] * d['M'] for d in dists) / totpop
+    inc = nat['inc_num']
+    attr = dict(nat.get('attributable') or {})
+    tot_attr = sum(attr.values())
+    if tot_attr > inc:  # attributable fractions overlap; never attribute more than all incidence
+        attr = {k: v * inc / tot_attr for k, v in attr.items()}
+        tot_attr = inc
     for d in dists:
-        d['expected'] = nat['inc_num'] * d['pop'] * d['M'] / meanM / totpop
-    k = nat['notified'] / sum(d['expected'] * d['A'] for d in dists)
+        d['parts'] = {}
+    for rf, num in attr.items():
+        key = RF_SURVEY.get(rf)
+        vals = [d[key] for d in dists if key and d.get(key) is not None]
+        mean_prev = (sum(d['pop'] * d[key] for d in dists if key and d.get(key) is not None) / sum(d['pop'] for d in dists if key and d.get(key) is not None)) if vals else None
+        w = [d['pop'] * ((d[key] if d.get(key) is not None else mean_prev) if key and mean_prev else 1.0) for d in dists]
+        tw = sum(w) or 1
+        for d, wi in zip(dists, w):
+            d['parts'][rf] = num * wi / tw
+    rest = inc - tot_attr
     for d in dists:
-        d['cdr'] = min(0.95, k * d['A'])
-        d['notified_model'] = d['expected'] * d['cdr']
-        d['hidden'] = d['expected'] - d['notified_model']
-        d['hidden_100k'] = d['hidden'] / max(d['pop'], 1) * 1e5
-        d['prev_adult'] = P('prev_general_ghana') * d['M'] / meanM  # per 100k adults
+        d['parts']['other'] = rest * d['pop'] / totpop
+        d['expected'] = sum(d['parts'].values())
+        d['rate'] = d['expected'] / max(d['pop'], 1)
 
-    fpc = np.array([d['facilities'] / max(d['pop'], 1) * 1e4 for d in dists])
-    f90 = np.percentile(fpc, 90) or 1
+    # ---------- sites: people within 1 km, expected cases among them, nearest care ----------
+    cell_h = abs(transform.e) * 110.57
+    cell_w = transform.a * 111.32 * math.cos(math.radians(lat0))
+    ry, rx = int(math.ceil(CATCHMENT_KM / cell_h)), int(math.ceil(CATCHMENT_KM / cell_w))
+    yy, xx = np.mgrid[-ry:ry + 1, -rx:rx + 1]
+    disk = (yy * cell_h) ** 2 + (xx * cell_w) ** 2 <= CATCHMENT_KM ** 2
+    site_xy = km_xy([s_['lon'] for s_ in sites], [s_['lat'] for s_ in sites], lat0) if sites else np.zeros((0, 2))
+    site_fac = fac_tree.query(site_xy)[0] if fac_tree is not None and len(sites) else np.full(len(sites), np.nan)
+    site_hosp = hosp_tree.query(site_xy)[0] if hosp_tree is not None and len(sites) else np.full(len(sites), np.nan)
+    site_min = minutes_at([s_['lon'] for s_ in sites], [s_['lat'] for s_ in sites]) if tt_band is not None and sites else site_fac / 30 * 60
+    site_walk = minutes_at([s_['lon'] for s_ in sites], [s_['lat'] for s_ in sites], walk, walk_band) if walk_band is not None and sites else np.full(len(sites), np.nan)
+    for j, s_ in enumerate(sites):
+        s_['walk_min'] = float(site_walk[j]) if np.isfinite(site_walk[j]) else None
+        r, c = rasterio.transform.rowcol(transform, s_['lon'], s_['lat'])
+        r0, c0 = r - ry, c - rx
+        win = pop[max(r0, 0):r + ry + 1, max(c0, 0):c + rx + 1]
+        m = disk[max(0, -r0):max(0, -r0) + win.shape[0], max(0, -c0):max(0, -c0) + win.shape[1]]
+        s_['pop_1km'] = float((win * m).sum()) if win.size else 0.0
+        d = dists[s_['k']] if s_['k'] is not None else None
+        s_['district'], s_['district_id'] = (d['name'], d['id']) if d else (None, None)
+        s_['expected_1km'] = s_['pop_1km'] * d['rate'] if d else None
+        s_['facility_km'], s_['hospital_km'] = float(site_fac[j]), float(site_hosp[j])
+        s_['minutes'] = float(site_min[j]) if np.isfinite(site_min[j]) else None
 
-    def scores(nodata_flags):
-        wa, wf, wn = P('w_blind_access'), P('w_blind_facilities'), P('w_blind_nodata')
-        blind = [(wa * d['pct_far'] + wf * (1 - min(1, fpc[j] / f90)) + wn * nodata_flags[j]) / (wa + wf + wn) * 100 for j, d in enumerate(dists)]
-        hid = np.log1p([max(d['hidden'], 0) for d in dists])
-        rate = np.array([max(d['hidden_100k'], 0) for d in dists])
-        mm = lambda a: (a - a.min()) / (a.max() - a.min() or 1)
-        wh, wr, wb = P('w_priority_hidden'), P('w_priority_rate'), P('w_priority_blind')
-        pri = (wh * mm(np.array(hid)) + wr * mm(rate) + wb * np.array(blind) / 100) / (wh + wr + wb) * 100
-        return blind, pri
-
-    blind, pri = scores([1] * len(dists))
-    order = np.argsort(-pri)
-    for rank, j in enumerate(order):
-        dists[j]['rank'] = rank + 1
-    for j, d in enumerate(dists):
-        d['blind'], d['priority'] = blind[j], float(pri[j])
-
-    # modelled mobility (gravity) between district centroids
-    for d in dists:
-        w = []
-        for e in dists:
-            if e is d:
-                continue
-            dist = max(haversine(d['lat'], d['lon'], e['lat'], e['lon']), 5)
-            w.append((e['pop'] / dist ** P('gravity_gamma'), e))
-        tot = sum(x for x, _ in w) or 1
-        d['flows'] = [{'id': e['id'], 'name': e['name'], 'share': r2(x / tot, 3), 'lon': r2(e['lon'], 4), 'lat': r2(e['lat'], 4)} for x, e in sorted(w, key=lambda t: -t[0])[:5]]
-
-    # ---------------- write public district file ----------------
+    # ---------------- write public files ----------------
     def light(g):
-        # simplify (~200 m) and round to 4 decimals (~11 m) so the map file stays small
         gj = mapping(g.simplify(0.002, preserve_topology=True))
         rnd = lambda c: [rnd(x) for x in c] if isinstance(c[0], (list, tuple)) else [round(c[0], 4), round(c[1], 4)]
         return {'type': gj['type'], 'coordinates': rnd(gj['coordinates'])}
@@ -451,28 +483,26 @@ def main():
     for d in dists:
         feats.append({'type': 'Feature', 'geometry': light(d['geom']), 'properties': {
             'id': d['id'], 'name': d['name'], 'region': d['region'], 'pop': round(d['pop']), 'area_km2': r2(d['area_km2'], 0), 'density': r2(d['density'], 0),
-            'rwi': r2(d['rwi'], 3), 'minutes': r2(d['minutes'], 0), 'pct_far': r2(d['pct_far'], 3), 'facilities': d['facilities'], 'hospitals': d['hospitals'], 'labs': d['labs'],
-            'markets': d['markets'], 'hubs': d['hubs'], 'prisons': d['prisons'], 'mines': d['mines'], 'hiv': r2(d['hiv'], 1), 'thin': r2(d['thin'], 1), 'smoke': r2(d['smoke'], 1),
-            'm_risk': r2(d['m_risk'], 3), 'm_density': r2(d['m_density'], 3), 'm_poverty': r2(d['m_poverty'], 3), 'expected': r2(d['expected'], 1), 'cdr': r2(d['cdr'], 3),
-            'hidden': r2(d['hidden'], 1), 'hidden_100k': r2(d['hidden_100k'], 1), 'prev_adult': r2(d['prev_adult'], 0), 'blind': r2(d['blind'], 1), 'priority': r2(d['priority'], 1),
-            'rank': d['rank'], 'flows': d['flows'], 'lon': r2(d['lon'], 4), 'lat': r2(d['lat'], 4)}})
+            'rwi': r2(d['rwi'], 3), 'minutes': r2(d['minutes'], 0), 'pct_far': r2(d['pct_far'], 3),
+            'walk_min': r2(d['walk_min'], 0), 'walk_far': r2(d['walk_far'], 3), 'walk_far_pop': round(d['walk_far'] * d['pop']) if d['walk_far'] is not None else None,
+            'facilities': d['facilities'], 'hospitals': d['hospitals'], 'labs': d['labs'], 'fac_100k': r2(d['facilities'] / max(d['pop'], 1) * 1e5, 2),
+            'markets': d['markets'], 'hubs': d['hubs'], 'prisons': d['prisons'], 'mines': d['mines'],
+            'hiv': r2(d['hiv'], 1), 'thin': r2(d['thin'], 1), 'smoke': r2(d['smoke'], 1),
+            'expected': r2(d['expected'], 1), 'expected_100k': r2(d['rate'] * 1e5, 1), 'parts': {k: r2(v, 1) for k, v in d['parts'].items()},
+            'lon': r2(d['lon'], 4), 'lat': r2(d['lat'], 4)}})
     json.dump({'type': 'FeatureCollection', 'features': feats}, open(os.path.join(OUT, 'districts.geojson'), 'w'), separators=(',', ':'))
 
     json.dump({'type': 'FeatureCollection', 'features': [{'type': 'Feature', 'geometry': {'type': 'Point', 'coordinates': [r2(f['lon'], 5), r2(f['lat'], 5)]},
                'properties': {'kind': f['kind'], 'name': f['name'], 'lab': f['lab'], 'district': f.get('district')}} for f in facilities]},
               open(os.path.join(OUT, 'facilities.geojson'), 'w'), separators=(',', ':'))
-    json.dump({'type': 'FeatureCollection', 'features': [{'type': 'Feature', 'geometry': {'type': 'Point', 'coordinates': [r2(s['lon'], 5), r2(s['lat'], 5)]},
-               'properties': {'kind': s['kind'], 'name': s['name'], 'district': s.get('district')}} for s in sites]},
+    json.dump({'type': 'FeatureCollection', 'features': [{'type': 'Feature', 'geometry': {'type': 'Point', 'coordinates': [r2(s_['lon'], 5), r2(s_['lat'], 5)]},
+               'properties': {'kind': s_['kind'], 'name': s_['name'], 'district': s_['district'], 'district_id': s_['district_id'], 'pop_1km': round(s_['pop_1km']),
+                              'expected_1km': r2(s_['expected_1km'], 1), 'facility_km': r2(s_['facility_km'], 2), 'hospital_km': r2(s_['hospital_km'], 2),
+                              'minutes': r2(s_['minutes'], 0), 'walk_min': r2(s_['walk_min'], 0)}} for s_ in sites]},
               open(os.path.join(OUT, 'sites.geojson'), 'w'), separators=(',', ':'))
 
-    # ---------------- city hexagons ----------------
+    # ---------------- city hexagons: people and expected cases ----------------
     hex_feats = []
-    site_xy = km_xy([s['lon'] for s in sites], [s['lat'] for s in sites], lat0) if sites else None
-    site_tree = cKDTree(site_xy) if sites else None
-    fac_tree = cKDTree(fac_xy) if facilities else None
-    hosp = [f for f in facilities if f['kind'] == 'hospital']
-    hosp_tree = cKDTree(km_xy([f['lon'] for f in hosp], [f['lat'] for f in hosp], lat0)) if hosp else None
-    rwi_tree = cKDTree(rwi_xy)
     for city in cities:
         lat_c, lon_c, rad, res = float(city['lat']), float(city['lon']), float(city['radius_km']), int(city['h3_res'])
         dlat, dlon = rad / 110.57, rad / (111.32 * math.cos(math.radians(lat_c)))
@@ -493,114 +523,39 @@ def main():
         cells = list(agg)
         if not cells:
             continue
-        centers = np.array([h3.cell_to_latlng(c) for c in cells])  # (lat, lon)
+        centers = np.array([h3.cell_to_latlng(c) for c in cells])
         cxy = km_xy(centers[:, 1], centers[:, 0], lat0)
         hex_area = h3.average_hexagon_area(res, unit='km^2')
         rwi_h = rwi[rwi_tree.query(cxy)[1], 2]
         fac_d = fac_tree.query(cxy)[0] if fac_tree is not None else np.full(len(cells), np.nan)
-        hosp_d = hosp_tree.query(cxy)[0] if hosp_tree is not None else np.full(len(cells), np.nan)
-        near_sites = [site_tree.query_ball_point(p, 1.0) for p in cxy] if site_tree is not None else [[] for _ in cells]
-        if tt is not None:
-            rows, cols = rasterio.transform.rowcol(tt.transform, centers[:, 1], centers[:, 0])
-            band = tt.read(1)
-            mins = band[np.clip(rows, 0, band.shape[0] - 1), np.clip(cols, 0, band.shape[1] - 1)].astype(float)
-            mins[mins < 0] = np.nan
-        else:
-            mins = fac_d / 30 * 60
-        rows_out = []
+        mins = minutes_at(centers[:, 1], centers[:, 0]) if tt_band is not None else fac_d / 30 * 60
+        wmins = minutes_at(centers[:, 1], centers[:, 0], walk, walk_band) if walk_band is not None else np.full(len(cells), np.nan)
+        kept = 0
         for j, cell in enumerate(cells):
             pv, labs_ = agg[cell]
             dl = max(labs_, key=labs_.get) - 1
             if dl < 0:
                 continue
             d = dists[dl]
-            dens = pv / hex_area
-            n_sites = min(len(near_sites[j]), 3)
-            m_h = m_spatial(dens, rwi_h[j]) * (P('congregate_rr') ** n_sites)
-            m_d = d['m_density'] * d['m_poverty']
-            exp_h = d['expected'] / max(d['pop'], 1) * pv * (m_h / m_d)
-            a_h = 0.5 ** ((mins[j] if np.isfinite(mins[j]) else d['minutes']) / P('access_halflife_min'))
-            hid_h = exp_h * (1 - min(0.95, k * a_h))
-            kinds = sorted({sites[s]['kind'] for s in near_sites[j]}) if near_sites[j] else []
-            rows_out.append([cell, pv, dens, rwi_h[j], fac_d[j], hosp_d[j], mins[j], kinds, exp_h, hid_h, d['name']])
-        hid_vals = np.array([r[9] / max(r[1], 1) * 1e5 for r in rows_out])
-        ranks = hid_vals.argsort().argsort() / max(len(hid_vals) - 1, 1) * 100
-        for r, pct in zip(rows_out, ranks):
-            ring = [[r2(lng, 5), r2(lat, 5)] for lat, lng in h3.cell_to_boundary(r[0])]
+            ring = [[r2(lng, 5), r2(lat, 5)] for lat, lng in h3.cell_to_boundary(cell)]
             ring.append(ring[0])
             hex_feats.append({'type': 'Feature', 'geometry': {'type': 'Polygon', 'coordinates': [ring]}, 'properties': {
-                'h3': r[0], 'city': city['id'], 'district': r[10], 'pop': round(r[1]), 'density': r2(r[2], 0), 'rwi': r2(r[3], 3), 'facility_km': r2(r[4], 2),
-                'hospital_km': r2(r[5], 2), 'minutes': r2(r[6], 0), 'sites': r[7], 'expected': r2(r[8], 2), 'hidden': r2(r[9], 2),
-                'hidden_100k': r2(r[9] / max(r[1], 1) * 1e5, 1), 'score': r2(pct, 1)}})
-        log('city', city['id'], len(rows_out), 'hexagons')
+                'h3': cell, 'city': city['id'], 'district': d['name'], 'district_id': d['id'], 'pop': round(pv), 'density': r2(pv / hex_area, 0), 'rwi': r2(rwi_h[j], 3),
+                'facility_km': r2(fac_d[j], 2), 'minutes': r2(mins[j], 0) if np.isfinite(mins[j]) else None,
+                'walk_min': r2(wmins[j], 0) if np.isfinite(wmins[j]) else None,
+                'expected': r2(pv * d['rate'], 2), 'expected_km2': r2(pv * d['rate'] / hex_area, 2)}})
+            kept += 1
+        log('city', city['id'], kept, 'hexagons')
     json.dump({'type': 'FeatureCollection', 'features': hex_feats}, open(os.path.join(OUT, 'cities.geojson'), 'w'), separators=(',', ':'))
 
     json.dump({'years': years, 'latest': nat}, open(os.path.join(OUT, 'national.json'), 'w'), indent=1)
-
-    # ---------------- private estimates (uploaded notifications + campaign results) ----------------
-    private_note = ''
-    try:
-        notif = sb('tb_notifications?select=district_id,period,notified')
-        camps = {c['id']: c for c in sb('tb_campaigns?select=id,district_id,setting')}
-        res = sb('tb_campaign_results?select=campaign_id,screened,confirmed')
-        by_d = {}
-        for row in notif:
-            m = re.match(r'(\d{4})', str(row['period']))
-            if not m or row.get('notified') is None:
-                continue
-            by_d.setdefault(row['district_id'], {}).setdefault(int(m.group(1)), []).append((row['period'], row['notified']))
-        annual = {}
-        for did, yrs in by_d.items():
-            y = max(yrs)
-            vals = yrs[y]
-            months = [p for p, _ in vals if re.match(r'^\d{4}-\d{2}$', str(p))]
-            quarters = [p for p, _ in vals if re.match(r'^\d{4}-?Q[1-4]$', str(p), re.I)]
-            tot = sum(v for _, v in vals)
-            annual[did] = tot * 12 / len(months) if months and len(months) == len(vals) else tot * 4 / len(quarters) if quarters and len(quarters) == len(vals) else tot
-        camp_sum = {}
-        for r in res:
-            c = camps.get(r['campaign_id'])
-            if not c or not c.get('district_id') or c.get('setting') not in ('community', 'outreach', None):
-                continue
-            s = camp_sum.setdefault(c['district_id'], [0, 0])
-            s[0] += r.get('screened') or 0
-            s[1] += r.get('confirmed') or 0
-        nodata = [0 if (d['id'] in annual or d['id'] in camp_sum) else 1 for d in dists]
-        blind_p, _ = scores(nodata)
-        rows = []
-        for j, d in enumerate(dists):
-            calib = 1.0
-            drivers = {'risk_factors': r2(d['m_risk'], 3), 'crowding': r2(d['m_density'], 3), 'poverty': r2(d['m_poverty'], 3), 'access': r2(d['A'] / (sum(x['A'] * x['pop'] for x in dists) / totpop), 3)}
-            if d['id'] in camp_sum:
-                scr, conf = camp_sum[d['id']]
-                pred = scr * d['prev_adult'] / 1e5 * P('cxr_cad_sensitivity')
-                calib = (conf + P('calibration_prior_cases')) / (pred + P('calibration_prior_cases'))
-                drivers['campaign'] = {'screened': scr, 'confirmed': conf, 'predicted': r2(pred, 1)}
-            exp_c = d['expected'] * calib
-            obs = annual.get(d['id'])
-            notified = obs if obs is not None else d['notified_model']
-            hidden = max(exp_c - notified, 0)
-            rows.append({'district_id': d['id'], 'district_name': d['name'], 'region': d['region'], 'expected': r2(exp_c, 1), 'notified': r2(notified, 1) if obs is not None else None,
-                         'gap': r2(exp_c - obs, 1) if obs is not None else None, 'hidden': r2(hidden, 1), 'calibration': r2(calib, 3), 'blind_spot': r2(blind_p[j], 1),
-                         'priority': None, 'rank': None, 'drivers': drivers, 'updated_at': NOW})
-        hid = np.log1p([r['hidden'] for r in rows])
-        rate = np.array([r['hidden'] / max(dists[j]['pop'], 1) * 1e5 for j, r in enumerate(rows)])
-        mm = lambda a: (a - a.min()) / (a.max() - a.min() or 1)
-        wh, wr, wb = P('w_priority_hidden'), P('w_priority_rate'), P('w_priority_blind')
-        pri_p = (wh * mm(np.array(hid)) + wr * mm(rate) + wb * np.array(blind_p) / 100) / (wh + wr + wb) * 100
-        for rank, j in enumerate(np.argsort(-pri_p)):
-            rows[j]['priority'], rows[j]['rank'] = r2(pri_p[j], 1), rank + 1
-        for i in range(0, len(rows), 100):
-            sb('tb_estimates', 'POST', rows[i:i + 100], prefer='resolution=merge-duplicates,return=minimal')
-        private_note = f'{len(annual)} districts with uploaded notifications, {len(camp_sum)} with campaign results'
-        log('private estimates written', private_note)
-    except Exception as e:
-        private_note = f'failed: {e}'
-        log('private estimates failed', e)
-
-    json.dump({'updated_at': NOW, 'sources': SOURCES, 'access_basis': access_basis, 'private': private_note,
-               'national': {'year': nat['year'], 'incidence': nat['inc_num'], 'notified': nat['notified'], 'cdr': r2(nat['cdr'], 3), 'pop': nat['pop']},
-               'parameters': params, 'counts': {'districts': len(dists), 'facilities': len(facilities), 'sites': len(sites), 'hexagons': len(hex_feats)}},
+    json.dump({'updated_at': NOW, 'sources': SOURCES, 'access_basis': access_basis,
+               'method': {'far_minutes': FAR_MIN, 'catchment_km': CATCHMENT_KM, 'attributable_year': nat.get('attributable_year'),
+                          'attributable': {k: r2(v, 0) for k, v in attr.items()}, 'unattributed': r2(rest, 0), 'population_scale': r2(scale, 3)},
+               'national': {'year': nat['year'], 'incidence': nat['inc_num'], 'incidence_lo': (nat.get('inc_100k_lo') or 0) * nat['pop'] / 1e5 if nat.get('inc_100k_lo') else None,
+                            'incidence_hi': (nat.get('inc_100k_hi') or 0) * nat['pop'] / 1e5 if nat.get('inc_100k_hi') else None,
+                            'notified': nat['notified'], 'cdr': r2(nat['cdr'], 3), 'pop': nat['pop'], 'tbhiv_pct': nat.get('tbhiv_pct')},
+               'counts': {'districts': len(dists), 'facilities': len(facilities), 'sites': len(sites), 'hexagons': len(hex_feats)}},
               open(os.path.join(OUT, 'meta.json'), 'w'), indent=1)
     log('done', len(dists), 'districts', len(hex_feats), 'hexagons')
 

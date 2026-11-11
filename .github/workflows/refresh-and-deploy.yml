@@ -85,6 +85,18 @@ jobs:
           python scripts/tb/build_tb.py
         env:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      - name: DHIMS2 district notifications (skips until credentials are set)
+        if: contains(steps.pick.outputs.jobs, 'tb')
+        timeout-minutes: 10
+        continue-on-error: true
+        run: node scripts/tb/dhims2.mjs
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          DHIMS2_URL: ${{ secrets.DHIMS2_URL }}
+          DHIMS2_USERNAME: ${{ secrets.DHIMS2_USERNAME }}
+          DHIMS2_PASSWORD: ${{ secrets.DHIMS2_PASSWORD }}
+          DHIMS2_TOKEN: ${{ secrets.DHIMS2_TOKEN }}
+          DHIMS2_DX: ${{ secrets.DHIMS2_DX }}
       - name: TB weekly AI brief
         if: contains(steps.pick.outputs.jobs, 'tb')
         timeout-minutes: 15

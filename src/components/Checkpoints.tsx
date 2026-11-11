@@ -204,14 +204,65 @@ function CheckpointCard({ c, n, first, last, people, onChange, onMove, onRemove 
   );
 }
 
+const URL_RE = /(https?:\/\/[^\s]+)/g;
+
+/** Short label for a pasted link: Linear issues show their key and title, other links their site and last path part. */
+function linkLabel(url: string) {
+  try {
+    const u = new URL(url);
+    const parts = u.pathname.split('/').filter(Boolean);
+    if (u.hostname.endsWith('linear.app')) {
+      const i = parts.indexOf('issue');
+      if (i >= 0 && parts[i + 1]) return `${parts[i + 1]}${parts[i + 2] ? ' · ' + decodeURIComponent(parts[i + 2]).replace(/-/g, ' ') : ''}`;
+      const j = parts.findIndex((p) => p === 'project' || p === 'document');
+      if (j >= 0 && parts[j + 1]) return `Linear ${parts[j]} · ${decodeURIComponent(parts[j + 1]).replace(/-[0-9a-f]{8,}$/i, '').replace(/-/g, ' ')}`;
+    }
+    const host = u.hostname.replace(/^www\./, '');
+    const last = parts[parts.length - 1];
+    return last ? `${host} · ${decodeURIComponent(last).slice(0, 40)}` : host;
+  } catch {
+    return url;
+  }
+}
+
+/** Task text with links turned into clickable links. */
+function TaskText({ text }: { text: string }) {
+  const bits = text.split(URL_RE);
+  return (
+    <>
+      {bits.map((b, i) =>
+        /^https?:\/\//.test(b) ? (
+          <a key={i} href={b} target="_blank" rel="noreferrer" title={b} onClick={(e) => e.stopPropagation()} className="text-blue-700 underline decoration-blue-300 underline-offset-2 hover:decoration-blue-700 [overflow-wrap:anywhere]">
+            {linkLabel(b)}
+          </a>
+        ) : (
+          <span key={i}>{b}</span>
+        ),
+      )}
+    </>
+  );
+}
+
 function TaskRow({ t, onChange, onRemove }: { t: CheckpointTask; onChange: (p: Partial<CheckpointTask>) => void; onRemove: () => void }) {
   const [v, setV] = useState(t.title);
+  const [editing, setEditing] = useState(false);
   useEffect(() => setV(t.title), [t.title]);
+  const commit = () => {
+    setEditing(false);
+    if (v.trim() && v !== t.title) onChange({ title: v.trim() });
+    else setV(t.title);
+  };
   return (
-    <li className="group flex items-center gap-2">
-      <input type="checkbox" checked={t.done} onChange={(e) => onChange({ done: e.target.checked })} aria-label={`Done: ${t.title}`} className="shrink-0" />
-      <input value={v} onChange={(e) => setV(e.target.value)} onBlur={() => v.trim() && v !== t.title && onChange({ title: v.trim() })} onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()} className={cx('flex-1 min-w-0 text-sm bg-transparent rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-brand-200', t.done ? 'line-through text-gray-400' : 'text-gray-800')} aria-label="Task" />
-      <button type="button" onClick={onRemove} className="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 focus:opacity-100" title="Remove task"><Icon name="x" size={14} /></button>
+    <li className="group flex items-start gap-2">
+      <input type="checkbox" checked={t.done} onChange={(e) => onChange({ done: e.target.checked })} aria-label={`Done: ${t.title}`} className="shrink-0 mt-1.5" />
+      {editing ? (
+        <input autoFocus value={v} onChange={(e) => setV(e.target.value)} onBlur={commit} onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); if (e.key === 'Escape') { setV(t.title); setEditing(false); } }} className="flex-1 min-w-0 text-sm bg-white rounded px-1 py-0.5 ring-2 ring-brand-200 focus:outline-none text-gray-800" aria-label="Edit task" />
+      ) : (
+        <div role="button" tabIndex={0} onClick={() => setEditing(true)} onKeyDown={(e) => e.key === 'Enter' && setEditing(true)} title="Click to edit" className={cx('flex-1 min-w-0 text-sm rounded px-1 py-0.5 cursor-text hover:bg-gray-50 [overflow-wrap:anywhere]', t.done ? 'line-through text-gray-400' : 'text-gray-800')}>
+          <TaskText text={t.title} />
+        </div>
+      )}
+      <button type="button" onClick={onRemove} className="mt-1 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 focus:opacity-100" title="Remove task"><Icon name="x" size={14} /></button>
     </li>
   );
 }

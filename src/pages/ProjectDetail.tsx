@@ -229,10 +229,9 @@ function MilestoneView({ project, m, checkpoints, moot, page, me }: { project: P
         </div>
       )}
       <Card>
-        <CardHeader title={m.name} subtitle="Status, owner and dates" right={<StatusBadge m={m} />} />
-        <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))' }}>
+        <CardHeader title={m.name} subtitle="Status, team and dates" right={<StatusBadge m={m} />} />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <Field label="Status"><Select value={statusOf(m).key} onChange={(v) => save({ status: v })} options={flowOf(m).map((s) => ({ value: s.key, label: s.label }))} /></Field>
-          <Field label="Owner"><Select value={m.owner || ''} onChange={(v) => save({ owner: v })} placeholder="Unassigned" options={peopleOptions(people, m.owner)} /></Field>
           <Field label="Team"><Select value={m.team || ''} onChange={(v) => { const t = pickTeam(v); if (t !== null) save({ team: t }); }} placeholder="—" options={[...teamOptions(people, [m.team]), { value: NEW_TEAM, label: '+ New team…' }]} /></Field>
           <Field label="Start"><TextInput type="date" className="w-full" value={(m.start_date || '').slice(0, 10)} onChange={(e) => save({ start_date: e.target.value || null })} /></Field>
           <Field label="Target"><TextInput type="date" className="w-full" value={(m.target_date || '').slice(0, 10)} onChange={(e) => save({ target_date: e.target.value || null })} /></Field>

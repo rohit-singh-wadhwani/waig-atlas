@@ -1,64 +1,100 @@
-// Weekly TB brief: Gemini writes a short, grounded action brief for Ghana and each city from the pipeline outputs,
-// private estimates, campaigns, results, tasks and the evidence table. Numbers must come from the inputs only.
+// Weekly TB brief: Gemini writes a short, grounded action brief for Ghana and each city from the same data the
+// TB pages show (public pipeline files + members-only notifications, campaigns and results). Numbers must come
+// from the inputs only; every figure is labelled reported, measured or estimated.
 import fs from 'node:fs';
 import path from 'node:path';
 import { HAS_GEMINI, HAS_SB, gemini, geminiStatus, log, sb, today } from '../lib.mjs';
 
 const OUT = path.join(path.dirname(new URL(import.meta.url).pathname), '..', '..', 'public', 'data', 'tb');
 const read = (f) => JSON.parse(fs.readFileSync(path.join(OUT, f), 'utf8'));
-const r1 = (x) => (x == null ? null : Math.round(x * 10) / 10);
+const r0 = (x) => (x == null ? null : Math.round(x));
+const r2 = (x) => (x == null ? null : Math.round(x * 100) / 100);
+const km = (a, b) => Math.hypot((a.lat - b.lat) * 110.57, (a.lon - b.lon) * 111.32 * Math.cos((a.lat * Math.PI) / 180));
+
+// same rules as src/lib/tb.ts
+function annual(rows) {
+  const by = new Map();
+  for (const r of rows) if (r.notified != null) by.set(r.district_id, [...(by.get(r.district_id) || []), r]);
+  const out = new Map();
+  for (const [id, list] of by) {
+    const m = list.filter((r) => /^\d{4}-\d{2}$/.test(r.period)).sort((a, b) => b.period.localeCompare(a.period)).slice(0, 12);
+    if (m.length >= 6) { out.set(id, (m.reduce((s, r) => s + Number(r.notified), 0) * 12) / m.length); continue; }
+    const q = list.filter((r) => /^\d{4}-?Q[1-4]$/i.test(r.period)).sort((a, b) => b.period.localeCompare(a.period)).slice(0, 4);
+    if (q.length >= 2) { out.set(id, (q.reduce((s, r) => s + Number(r.notified), 0) * 4) / q.length); continue; }
+    const y = list.filter((r) => /^\d{4}$/.test(r.period)).sort((a, b) => b.period.localeCompare(a.period));
+    if (y.length) out.set(id, Number(y[0].notified));
+  }
+  return out;
+}
+const approach = (d, P) =>
+  d.detection != null && P.rule_low_detection != null && d.detection < P.rule_low_detection ? 'detection_gap'
+    : d.walk_far != null && P.rule_walk_far_share != null && d.walk_far >= P.rule_walk_far_share ? 'remote_outreach'
+    : 'clinics_and_contacts';
 
 async function main() {
   if (!HAS_GEMINI || !HAS_SB) throw new Error('needs GEMINI_API_KEY and SUPABASE_SERVICE_ROLE_KEY');
-  const districts = read('districts.geojson').features.map((f) => f.properties);
-  const hexes = read('cities.geojson').features.map((f) => f.properties);
   const meta = read('meta.json');
-  const [est, campaigns, results, tasks, params, playbooks, cities] = await Promise.all([
-    sb.select('tb_estimates', 'select=*'), sb.select('tb_campaigns', 'select=*'), sb.select('tb_campaign_results', 'select=*'),
-    sb.select('tb_tasks', 'select=status,due,role,campaign_id'), sb.select('tb_parameters', 'select=id,label,value,unit,status'),
-    sb.select('tb_playbooks', 'select=id,name,trigger&enabled=eq.true'), sb.select('tb_cities', 'select=*&enabled=eq.true'),
+  const nat = meta.national;
+  const districts = read('districts.geojson').features.map((f) => f.properties);
+  const sites = read('sites.geojson').features.map((f) => ({ ...f.properties, lon: f.geometry.coordinates[0], lat: f.geometry.coordinates[1] }));
+  const [notif, campaigns, results, tasks, params, cities] = await Promise.all([
+    sb.select('tb_notifications', 'select=district_id,period,notified'), sb.select('tb_campaigns', 'select=*'), sb.select('tb_campaign_results', 'select=*'),
+    sb.select('tb_tasks', 'select=status,due,campaign_id'), sb.select('tb_parameters', 'select=id,label,value,unit,status'), sb.select('tb_cities', 'select=*&enabled=eq.true'),
   ]);
-  const estBy = new Map(est.map((e) => [e.district_id, e]));
-  const merged = districts.map((d) => ({ ...d, ...(estBy.get(d.id) ? { expected: estBy.get(d.id).expected, hidden: estBy.get(d.id).hidden, notified_uploaded: estBy.get(d.id).notified, gap: estBy.get(d.id).gap, calibration: estBy.get(d.id).calibration, blind: estBy.get(d.id).blind_spot, priority: estBy.get(d.id).priority, rank: estBy.get(d.id).rank } : {}) }));
-  const brief = (d) => ({ district: d.name, region: d.region, rank: d.rank, pop: Math.round(d.pop), expected: r1(d.expected), hidden: r1(d.hidden), hidden_per_100k: r1(d.hidden_100k), notified_uploaded: d.notified_uploaded ?? null, blind_spot: r1(d.blind), travel_min: d.minutes, pct_over_1h: d.pct_far, crowding_x: d.m_density, poverty_x: d.m_poverty, risk_factors_x: d.m_risk, prisons: d.prisons, mines: d.mines, markets: d.markets, transport_hubs: d.hubs, facilities: d.facilities, campaign_calibration: d.calibration ?? null });
-  const sum = (rows, k) => rows.reduce((s, r) => s + (r[k] || 0), 0);
+  const P = Object.fromEntries(params.map((p) => [p.id, Number(p.value)]));
+  const ann = annual(notif);
+  for (const d of districts) {
+    d.notified = ann.has(d.id) ? ann.get(d.id) : null;
+    d.detection = d.notified != null ? d.notified / d.expected : null;
+    d.missed = d.notified != null ? Math.max(d.expected - d.notified, 0) : d.expected * (1 - nat.cdr);
+    d.approach = approach(d, P);
+  }
+  districts.sort((a, b) => b.missed - a.missed);
+  const row = (d, i) => ({
+    rank: i + 1, district: d.name, region: d.region, people: d.pop, expected_cases_estimated: r0(d.expected), notified_reported: d.notified != null ? r0(d.notified) : 'not connected',
+    missed_estimated: r0(d.missed), share_over_1h_walk_measured: r2(d.walk_far), mapped_facilities: d.facilities, prisons: d.prisons, mines_quarries: d.mines, approach: d.approach,
+  });
+  const sum = (rows, k) => rows.reduce((s, r) => s + (Number(r[k]) || 0), 0);
   const campSummary = campaigns.map((c) => {
     const rs = results.filter((r) => r.campaign_id === c.id);
     const ts = tasks.filter((t) => t.campaign_id === c.id);
-    return { name: c.name, district: c.district_name, city: c.city, setting: c.setting, status: c.status, start: c.start_date, screened: sum(rs, 'screened'), confirmed: sum(rs, 'confirmed'), started_treatment: sum(rs, 'started_treatment'), cough_flagged: sum(rs, 'cough_flagged'), cough_flagged_confirmed: sum(rs, 'cough_flagged_confirmed'), cxr_flagged: sum(rs, 'cxr_flagged'), cxr_flagged_confirmed: sum(rs, 'cxr_flagged_confirmed'), predicted_positivity: c.predicted_positivity, tasks_open: ts.filter((t) => t.status !== 'done').length, tasks_overdue: ts.filter((t) => t.status !== 'done' && t.due && t.due < today()).length };
+    return { name: c.name, district: c.district_name, city: c.city, setting: c.setting, status: c.status, start: c.start_date, screened: sum(rs, 'screened'), confirmed: sum(rs, 'confirmed'), started_treatment: sum(rs, 'started_treatment'), cough_ai_flagged: sum(rs, 'cough_flagged'), cough_ai_flagged_confirmed: sum(rs, 'cough_flagged_confirmed'), xray_ai_flagged: sum(rs, 'cxr_flagged'), xray_ai_flagged_confirmed: sum(rs, 'cxr_flagged_confirmed'), tasks_open: ts.filter((t) => t.status !== 'done').length, tasks_overdue: ts.filter((t) => t.status !== 'done' && t.due && t.due < today()).length };
   });
-  const evidence = params.map((p) => `${p.id}: ${p.label} = ${p.value} ${p.unit || ''} [${p.status}]`).join('\n');
+  const yields = params.filter((p) => p.status === 'evidence').map((p) => `${p.label}: ${p.value} ${p.unit || ''}`).join('\n');
 
-  const scopes = [{ name: 'Ghana', districts: merged, hexes: [] }];
-  for (const c of cities) {
-    const ch = hexes.filter((h) => h.city === c.id);
-    const names = new Set(ch.map((h) => h.district));
-    scopes.push({ name: c.name.split(' (')[0], city: c, districts: merged.filter((d) => names.has(d.name)), hexes: ch });
-  }
-
+  const scopes = [{ name: 'Ghana' }, ...cities.map((c) => ({ name: c.name.split(' (')[0], city: c }))];
   for (const s of scopes) {
-    const top = [...s.districts].sort((a, b) => a.rank - b.rank).slice(0, s.city ? 8 : 12).map(brief);
-    const blind = [...s.districts].sort((a, b) => b.blind - a.blind).slice(0, 5).map((d) => ({ district: d.name, blind_spot: r1(d.blind), travel_min: d.minutes, pct_over_1h: d.pct_far, facilities: d.facilities }));
-    const topHex = [...s.hexes].sort((a, b) => b.hidden - a.hidden).slice(0, 10).map((h) => ({ district: h.district, pop: h.pop, density: h.density, rwi: h.rwi, facility_km: h.facility_km, nearby: h.sites, hidden: h.hidden }));
-    const camps = campSummary.filter((c) => !s.city || c.city === s.city.id || s.districts.some((d) => d.name === c.district));
+    let ds = districts, venues = [];
+    if (s.city) {
+      const inCity = sites.filter((x) => km(x, s.city) <= s.city.radius_km);
+      const ids = new Set(inCity.map((x) => x.district_id));
+      ds = districts.filter((d) => ids.has(d.id));
+      const kept = [];
+      for (const v of inCity.filter((x) => x.kind === 'market' || x.kind === 'transport hub').sort((a, b) => (b.expected_1km || 0) - (a.expected_1km || 0))) if (!kept.some((k) => km(k, v) < 0.6)) kept.push(v);
+      venues = kept.slice(0, 8).map((v) => ({ venue: v.name || `unnamed ${v.kind}`, type: v.kind, district: v.district, people_within_1km_measured: v.pop_1km, expected_cases_nearby_estimated: r0(v.expected_1km), nearest_facility_km: v.facility_km }));
+    }
+    const key = sites.filter((x) => (x.kind === 'prison' || x.kind === 'mine / quarry') && (!s.city || ds.some((d) => d.id === x.district_id))).sort((a, b) => b.pop_1km - a.pop_1km).slice(0, 8)
+      .map((x) => ({ site: x.name || `unnamed ${x.kind}`, type: x.kind, district: x.district, people_within_1km_measured: x.pop_1km }));
+    const camps = campSummary.filter((c) => !s.city || c.city === s.city.id || ds.some((d) => d.name === c.district));
     const input = {
-      scope: s.name, today: today(), national: meta.national, model_note: `Open-data model; access from ${meta.access_basis}; private inputs: ${meta.private}`,
-      priority_districts: top, blind_spots: blind, priority_hexagons_0_7km2: topHex, campaigns: camps, playbooks,
-      city_partner: s.city?.city_partner || null,
+      scope: s.name, today: today(), national_reported: { year: nat.year, expected_cases_who: nat.incidence, notified_who: nat.notified, detection_rate: nat.cdr },
+      district_notifications_connected: ann.size > 0, rules: { low_detection_ratio: P.rule_low_detection ?? null, far_walk_share: P.rule_walk_far_share ?? null },
+      priority_districts: ds.slice(0, s.city ? 8 : 12).map(row), key_population_sites: key, screening_venues: venues, campaigns: camps,
     };
     const prompt = `You write the weekly TB case-finding brief for ${s.name} for Wadhwani AI Global, Aurum Institute and Ghana Health Service partners.
-Use ONLY the numbers in INPUT and EVIDENCE. Never invent figures, places, organisations or results. Say "modelled" for model outputs and "reported" for campaign or uploaded data. If campaigns or notifications are missing, say so plainly and say what data would fix it.
-Facility, market, prison and mine counts come from OpenStreetMap and are often incomplete in rural districts: write "mapped facilities" and never claim a district has no health facility.
-Write in plain English for a district health director, in Markdown, max ~450 words, with these sections:
+Use ONLY the numbers in INPUT and EVIDENCE. Never invent figures, places, organisations or results. Keep each figure's label: "reported" (WHO, DHIMS2, campaign reports), "measured" (open datasets) or "estimated".
+If district_notifications_connected is false, say once that district "missed" figures apply the national detection rate, so they show where most cases are expected rather than where detection is weakest, and that DHIMS2 access would fix this.
+Map data comes from OpenStreetMap and misses sites: say "mapped" and never claim a place has no facility.
+Write in plain English for a district health director, in Markdown, max ~400 words, with these sections:
 ## Situation (2-3 sentences with the key numbers)
-## Where to act in the next 4 weeks (numbered, 3-5 items: place, why — cite drivers such as crowding, poverty, distance to care, prisons/mines/markets — and which playbook id to use; include expected people screened per case found when you can compute it as 1/(prev_general_ghana/100000 × cxr_cad_sensitivity × risk), otherwise omit)
-## Blind spots (where we have no picture, and the cheapest way to look)
-## What campaigns are telling us (observed vs expected yield; cough-AI and X-ray-AI confirmation rates; overdue tasks) — or "No campaign results yet"
-## Data to request (specific datasets/partners that would most improve the next brief)
+## Where to act in the next 4 weeks (numbered, 3-5 items: place, why, and the approach — detection_gap = review notification and testing at main facilities; remote_outreach = mobile X-ray to communities over an hour's walk from care; clinics_and_contacts = screen clinic attendees with X-ray + AI and trace household contacts. Use screening_venues for named places in cities.)
+## Key populations (prisons and mining sites to screen, with the published yields from EVIDENCE)
+## What our screening is telling us (observed yield vs published yield; cough-AI and X-ray-AI confirmation rates; overdue tasks) — or "No screening results yet"
+## Data to request (the one or two datasets that would most sharpen next week's brief)
 INPUT:
 ${JSON.stringify(input)}
-EVIDENCE (model parameters):
-${evidence}`;
+EVIDENCE (published screening yields):
+${yields}`;
     try {
       const md = await gemini(prompt, { json: false, quality: true, temperature: 0.2 });
       const text = typeof md === 'string' ? md.trim() : JSON.stringify(md);

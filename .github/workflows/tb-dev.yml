@@ -1,0 +1,55 @@
+name: TB pipeline (dev)
+on:
+  push:
+    branches: [tb-dev]
+    paths: ['scripts/tb/**', '.github/workflows/tb-dev.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: pip install -q requests numpy rasterio shapely h3 scipy
+      - run: python scripts/tb/build_tb.py
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      - name: DHIMS2 sync (skips when not configured)
+        run: node scripts/tb/dhims2.mjs
+        env:
+          SUPABASE_URL: https://sfjcioilzidqskzmqpog.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          DHIMS2_URL: ${{ secrets.DHIMS2_URL }}
+          DHIMS2_USERNAME: ${{ secrets.DHIMS2_USERNAME }}
+          DHIMS2_PASSWORD: ${{ secrets.DHIMS2_PASSWORD }}
+          DHIMS2_TOKEN: ${{ secrets.DHIMS2_TOKEN }}
+          DHIMS2_DX: ${{ secrets.DHIMS2_DX }}
+      - name: Summary
+        run: |
+          python - <<'PY'
+          import json, numpy as np
+          m = json.load(open('public/data/tb/meta.json')); print(json.dumps({k: m[k] for k in ('method', 'national', 'counts', 'access_basis')}, indent=1))
+          for s in m['sources']: print('SRC', s['ok'], s['name'], s.get('note', '')[:120])
+          d = [f['properties'] for f in json.load(open('public/data/tb/districts.geojson'))['features']]
+          wf = np.array([x['walk_far'] or 0 for x in d]); print('walk_far pct', np.percentile(wf, [10, 25, 50, 75, 90]).round(3), 'n>=.3', (wf >= .3).sum(), 'n>=.2', (wf >= .2).sum())
+          e = np.array([x['expected_100k'] for x in d]); print('exp_100k', np.percentile(e, [0, 25, 50, 75, 100]).round(1))
+          top = sorted(d, key=lambda x: -x['expected'])[:8]; print('top', [(x['name'], x['expected'], x['parts']) for x in top])
+          s = [f['properties'] for f in json.load(open('public/data/tb/sites.geojson'))['features']]
+          print('sites top', sorted([(x['pop_1km'], x['name'], x['kind'], x['district']) for x in s], reverse=True)[:8])
+          print(open('public/data/tb/dhims2.json').read())
+          PY
+      - name: Commit outputs to this branch
+        run: |
+          git config user.name "atlas-bot"
+          git config user.email "atlas-bot@users.noreply.github.com"
+          git add public/data/tb
+          git commit -m "tb data (dev) [skip ci]" || echo "no changes"
+          git push
