@@ -72,7 +72,7 @@ export default function CityScreening({ data, onPlan }: { data: TbData; onPlan: 
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 2xl:grid-cols-[minmax(0,1fr)_560px] gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_480px] gap-6 items-start">
         <Card className="min-w-0">
           <CardHeader
             title={`${c?.name || ''}`}
@@ -108,7 +108,7 @@ export default function CityScreening({ data, onPlan }: { data: TbData; onPlan: 
                     </span>
                     <span className="block text-xs text-gray-500">{s.kind === 'transport hub' ? 'Lorry station / bus terminal' : 'Market'} · {s.district} · {fmtInt(s.pop_1km)} people within 1 km</span>
                     <span className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-xs text-gray-600">
-                      <span>Nearest facility {kmFmt(s.facility_km)}{s.walk_min != null ? ` · ${fmtInt(s.walk_min)} min walk` : ''}</span>
+                      <span>Nearest facility {kmFmt(s.facility_km)}{s.walk_min != null ? ` · ${s.walk_min < 5 ? 'under 5' : fmtInt(s.walk_min)} min walk` : ''}</span>
                       {p != null && <span>≈1 case per {fmtInt(1 / p)} screened</span>}
                     </span>
                   </span>

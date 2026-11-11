@@ -128,7 +128,7 @@ function ParamRow({ p }: { p: TbParam }) {
         <span className="text-sm text-gray-500 ml-2">{p.unit}</span>
       </td>
       <td className="px-3 py-3"><Badge className={p.status === 'evidence' ? 'bg-green-50 text-green-700' : p.status === 'policy' ? 'bg-sky-50 text-sky-700' : 'bg-amber-50 text-amber-800'}>{p.status === 'evidence' ? 'Evidence' : p.status === 'policy' ? 'Rule' : 'Unverified'}</Badge></td>
-      <td className="px-3 pr-6 py-3 text-sm min-w-[220px]">{p.source_url ? <ExtLink href={p.source_url}>{p.source_title || 'Source'}</ExtLink> : <span className="text-gray-400">{p.source_title || 'No source yet'}</span>}</td>
+      <td className="px-3 pr-6 py-3 text-sm min-w-[220px]">{p.source_url ? <ExtLink href={p.source_url}>{p.source_title || 'Source'}</ExtLink> : <span className="text-gray-400">{p.source_title || (p.status === 'policy' ? 'Team choice' : 'No source yet')}</span>}</td>
     </tr>
   );
 }

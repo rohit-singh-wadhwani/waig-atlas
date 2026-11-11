@@ -74,7 +74,7 @@ export default function WhereToAct({ data, onPlan, goData }: { data: TbData; onP
         </div>
       )}
 
-      <div className="grid grid-cols-1 2xl:grid-cols-[minmax(0,1fr)_480px] gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_440px] gap-6 items-start">
         <Card className="min-w-0">
           <CardHeader
             title="Missed TB cases by district"
@@ -152,7 +152,7 @@ function KeyPopulations({ sites, P, onPlan }: { sites: TbSite[]; P: Record<strin
           <thead>
             <tr className="text-left text-sm text-gray-500 border-y border-gray-100 bg-gray-50/60">
               <th className="px-6 py-2.5 font-medium">Site</th><th className="px-3 py-2.5 font-medium">District</th>
-              <th className="px-3 py-2.5 font-medium text-right">People within 1 km <BasisTag b="measured" className="ml-1" /></th>
+              <th className="px-3 py-2.5 font-medium text-right">People living within 1 km <BasisTag b="measured" className="ml-1" /></th>
               <th className="px-3 py-2.5 font-medium text-right">Expected yield <BasisTag b="reported" className="ml-1" /></th>
               <th className="px-3 py-2.5 font-medium">Nearest facility</th><th className="px-6 py-2.5" />
             </tr>
