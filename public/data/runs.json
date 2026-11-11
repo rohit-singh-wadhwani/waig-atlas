@@ -1,6 +1,12 @@
 {
  "runs": [
   {
+   "job": "grants",
+   "at": "2026-11-11T14:34:42.539Z",
+   "ok": true,
+   "message": "0 new calls added (6 candidates), 88 tracked · Gemini 1/1 calls ok"
+  },
+  {
    "job": "insights",
    "at": "2026-11-11T13:32:54.466Z",
    "ok": true,
@@ -353,12 +359,6 @@
    "at": "2026-11-07T22:15:07.238Z",
    "ok": true,
    "message": "3 new opportunities written up (3 rated High/Medium) from 31 candidates (0 queued for the next run) · Gemini 16/28 calls ok (last error: Gemini gemini-flash-lite-latest 503)"
-  },
-  {
-   "job": "grants",
-   "at": "2026-11-07T22:02:08.362Z",
-   "ok": true,
-   "message": "0 new calls added (10 candidates), 80 tracked · Gemini 2/2 calls ok"
   }
  ]
 }
