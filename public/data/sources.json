@@ -250,7 +250,7 @@
   "kind": null,
   "unit": "per 100,000 population",
   "display_name": "TB incidence",
-  "last_run": "2026-11-10T01:49:47.285Z",
+  "last_run": "2026-11-11T01:48:17.056Z",
   "last_status": "ok",
   "last_message": "197 countries, 2000–2024",
   "item_count": 197
@@ -266,7 +266,7 @@
   "kind": null,
   "unit": "per 1,000 population at risk",
   "display_name": "Malaria incidence",
-  "last_run": "2026-11-10T01:49:56.969Z",
+  "last_run": "2026-11-11T01:48:37.702Z",
   "last_status": "ok",
   "last_message": "110 countries, 2000–2024",
   "item_count": 110
@@ -282,7 +282,7 @@
   "kind": null,
   "unit": "cases",
   "display_name": "Dengue reported cases",
-  "last_run": "2026-11-10T01:49:58.485Z",
+  "last_run": "2026-11-11T01:48:38.885Z",
   "last_status": "ok",
   "last_message": "127 countries, 2000–2025",
   "item_count": 127
@@ -298,7 +298,7 @@
   "kind": null,
   "unit": "cases",
   "display_name": "Cholera reported cases",
-  "last_run": "2026-11-10T01:49:41.599Z",
+  "last_run": "2026-11-11T01:48:33.447Z",
   "last_status": "ok",
   "last_message": "71 countries, 2011–2016",
   "item_count": 71
@@ -314,7 +314,7 @@
   "kind": null,
   "unit": "cases",
   "display_name": "Measles reported cases",
-  "last_run": "2026-11-10T01:49:52.503Z",
+  "last_run": "2026-11-11T01:48:24.082Z",
   "last_status": "ok",
   "last_message": "214 countries, 2000–2025",
   "item_count": 214
@@ -330,7 +330,7 @@
   "kind": null,
   "unit": "%",
   "display_name": "HIV prevalence, adults 15–49",
-  "last_run": "2026-11-10T01:49:37.133Z",
+  "last_run": "2026-11-11T01:48:29.436Z",
   "last_status": "ok",
   "last_message": "145 countries, 2000–2025",
   "item_count": 145
