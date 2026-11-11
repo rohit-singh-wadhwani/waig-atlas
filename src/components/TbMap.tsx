@@ -87,7 +87,7 @@ export default function TbMap(p: TbMapProps) {
       const empty = { type: 'FeatureCollection', features: [] };
       for (const id of ['districts', 'hexes', 'facilities', 'sites', 'flows']) m.addSource(id, { type: 'geojson', data: empty, ...(id === 'districts' || id === 'hexes' ? { promoteId: id === 'districts' ? 'id' : 'h3' } : {}) });
       m.addLayer({ id: 'd-fill', type: 'fill', source: 'districts', paint: { 'fill-color': TB_RAMP[1], 'fill-opacity': 0.72 } });
-      m.addLayer({ id: 'd-hatch', type: 'fill', source: 'districts', paint: { 'fill-pattern': 'hatch', 'fill-opacity': 0.9 }, filter: ['==', 1, 0] });
+      m.addLayer({ id: 'd-hatch', type: 'fill', source: 'districts', paint: { 'fill-pattern': 'hatch', 'fill-opacity': 0.9 }, filter: ['==', ['get', 'id'], '__none__'] });
       m.addLayer({ id: 'd-line', type: 'line', source: 'districts', paint: { 'line-color': '#ffffff', 'line-width': 0.6 } });
       m.addLayer({ id: 'd-sel', type: 'line', source: 'districts', paint: { 'line-color': '#0f172a', 'line-width': 2.5 }, filter: ['==', ['get', 'id'], ''] });
       m.addLayer({ id: 'h-fill', type: 'fill', source: 'hexes', paint: { 'fill-color': TB_RAMP[1], 'fill-opacity': 0.78 } });
@@ -136,7 +136,7 @@ export default function TbMap(p: TbMapProps) {
     const target = p.hexes?.features?.length ? 'h-fill' : 'd-fill';
     m.setPaintProperty(target, 'fill-color', stepExpr(p.metric, p.breaks));
     m.setPaintProperty('d-fill', 'fill-opacity', p.hexes?.features?.length ? 0.15 : 0.72);
-    m.setFilter('d-hatch', p.blindThreshold != null ? ['>=', ['coalesce', ['get', 'blind'], 0], p.blindThreshold] : ['==', 1, 0]);
+    m.setFilter('d-hatch', p.blindThreshold != null ? ['>=', ['coalesce', ['get', 'blind'], 0], p.blindThreshold] : ['==', ['get', 'id'], '__none__']);
     m.setFilter('d-sel', ['==', ['get', 'id'], p.selectedId || '']);
     m.setFilter('h-sel', ['in', ['get', 'h3'], ['literal', p.selectedHexes || []]]);
     const flows = p.flowFrom && p.flows?.length
