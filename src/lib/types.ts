@@ -129,11 +129,10 @@ export interface FlowStatus {
   kind: 'todo' | 'active' | 'blocked' | 'done' | 'lost';
 }
 
+/** Template checkpoint: a title and an optional list of tasks. */
 export interface TemplateCheckpoint {
-  key: string;
   title: string;
-  parallel?: boolean; // runs alongside the previous checkpoint
-  subtasks: { key: string; title: string }[];
+  tasks: string[];
 }
 
 export interface TemplateMilestone {
@@ -142,26 +141,28 @@ export interface TemplateMilestone {
   description?: string;
   statuses?: FlowStatus[];
   checkpoints?: TemplateCheckpoint[];
-  sections: TemplateSection[]; // page headings (kept in sync with checkpoints)
-  stages?: { key: string; label: string }[]; // legacy
+  sections?: TemplateSection[]; // older templates only
 }
 
-export interface Subtask {
-  key: string;
+export interface CheckpointTask {
+  id: string;
   title: string;
-  done_at?: string | null;
-  owner?: string | null;
-  due?: string | null;
+  done: boolean;
 }
 
+/** A row in milestone_checkpoints. */
 export interface Checkpoint {
-  key: string;
+  id: ID;
+  milestone_id: ID;
+  project_id: ID;
+  position: number;
   title: string;
-  parallel?: boolean;
-  target?: string | null;
-  done_at?: string | null;
+  target_date?: string | null;
+  completed_on?: string | null;
   owner?: string | null;
-  subtasks: Subtask[];
+  notes?: string | null;
+  tasks: CheckpointTask[];
+  updated_at?: string;
 }
 
 export interface MilestoneTemplate {
@@ -203,9 +204,7 @@ export interface ProjectMilestone {
   owner?: string;
   team?: string;
   progress: number; // 0-100
-  stages?: StageMilestone[]; // legacy
   flow?: FlowStatus[] | null;
-  checkpoints?: Checkpoint[] | null;
 }
 
 export interface Page {
@@ -217,18 +216,6 @@ export interface Page {
   content_json?: any[] | null;
   updated_at: string;
   updated_by?: string;
-}
-
-export interface Task {
-  id: ID;
-  project_id: ID;
-  milestone_id?: ID | null;
-  title: string;
-  team: string;
-  owner?: string;
-  status: 'todo' | 'in_progress' | 'done' | 'blocked';
-  due?: string | null;
-  url?: string;
 }
 
 export interface OrgContext {

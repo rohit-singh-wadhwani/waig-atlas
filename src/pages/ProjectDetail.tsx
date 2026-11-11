@@ -4,15 +4,15 @@ import { PageHeader, useMe } from '../components/Layout';
 import { Badge, Button, Card, CardHeader, Empty, Field, IconButton, KpiCard, Modal, Select, TextInput, cx } from '../components/ui';
 import Icon from '../components/Icon';
 import Gantt from '../components/Gantt';
-import Checkpoints, { StatusBadge, StatusFlow } from '../components/Checkpoints';
+import Checkpoints, { StatusBadge } from '../components/Checkpoints';
 import { Attachments, Comments } from '../components/Collab';
 import { useData, useLocalPref } from '../lib/hooks';
 import { db, uid } from '../lib/store';
-import { addMilestone, isDone, KIND_DOT, lostBefore, milestoneProgress, statusOf } from '../lib/projects';
+import { addMilestone, checkpointDone, flowOf, isDone, KIND_DOT, lostBefore, milestoneProgress, statusOf } from '../lib/projects';
 import { useWorld, NO_COUNTRIES } from '../lib/world';
 import { daysUntil, fmtDate, fmtTime, relDays } from '../lib/format';
 import { NEW_TEAM, peopleOptions, personName, pickTeam, teamOptions, usePeople } from '../lib/team';
-import type { MilestoneTemplate, Page, Project, ProjectMilestone } from '../lib/types';
+import type { Checkpoint, MilestoneTemplate, Page, Project, ProjectMilestone } from '../lib/types';
 import { PROJECT_STATUS } from './Projects';
 import { placeLabel } from './Grants';
 
@@ -27,15 +27,7 @@ export function money(v?: number | null, cur?: string | null) {
     return `${cur || ''} ${Number(v).toLocaleString('en-GB')}`;
   }
 }
-/** Sub-tasks across a project's milestones. */
-function subtaskCounts(ms: ProjectMilestone[]) {
-  let open = 0, total = 0;
-  for (const m of ms) for (const c of m.checkpoints || []) {
-    if (c.subtasks.length) { total += c.subtasks.length; open += c.subtasks.filter((s) => !s.done_at).length; }
-    else { total++; if (!c.done_at) open++; }
-  }
-  return { open, total };
-}
+
 
 export default function ProjectDetail() {
   const { slug, mid } = useParams();
@@ -48,6 +40,7 @@ export default function ProjectDetail() {
   const pid = project?.id || '';
   const ms = useData(() => (pid ? db.list<ProjectMilestone>('project_milestones', { project_id: pid }) : Promise.resolve([])), [pid], []);
   const pages = useData(() => (pid ? db.list<Page>('pages', { project_id: pid }) : Promise.resolve([])), [pid], []);
+  const cps = useData(() => (pid ? db.list<Checkpoint>('milestone_checkpoints', { project_id: pid }) : Promise.resolve([])), [pid], []);
   const [configuring, setConfiguring] = useState(false);
   const [editingProject, setEditingProject] = useState(false);
   const [railOnly, setRailOnly] = useLocalPref('milestone-panel-collapsed', false);
@@ -60,7 +53,7 @@ export default function ProjectDetail() {
 
   const pr = milestoneProgress(milestones);
   const next = milestones.find((m) => !isDone(m) && statusOf(m).kind !== 'lost' && m.target_date);
-  const subs = subtaskCounts(milestones);
+  const openCps = cps.data.filter((c) => !c.completed_on).length;
   const lostM = milestones.find((m) => statusOf(m).kind === 'lost');
   const st = PROJECT_STATUS.find((s) => s.value === project.status) || PROJECT_STATUS[0];
   const saveProject = (patch: Partial<Project>) => db.upsert('projects', { ...project, ...patch } as any);
@@ -86,7 +79,7 @@ export default function ProjectDetail() {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
-        <KpiCard icon="activity" label="Overall progress" value={`${pr}%`} foot={`${milestones.filter(isDone).length} of ${milestones.length} milestones · ${subs.open} sub-tasks open`} />
+        <KpiCard icon="activity" label="Overall progress" value={`${pr}%`} foot={`${milestones.filter(isDone).length} of ${milestones.length} milestones · ${openCps} checkpoints open`} />
         <KpiCard icon="calendar" tint="orange" label="Next deadline" value={next ? fmtDate(next.target_date, { day: 'numeric', month: 'short' }) : '—'} foot={next ? `${next.name} · ${relDays(next.target_date)}` : undefined} onClick={() => next && nav(`/projects/${project.slug}/${next.id}`)} />
         <KpiCard icon="coins" tint="purple" label="Grant amount" value={<span className="text-[22px]">{money(project.grant_amount, project.currency)}</span>} foot={project.funder || 'Total award'} onClick={() => setEditingProject(true)} />
         <KpiCard icon="dollar" tint="blue" label="Contracted to us" value={<span className="text-[22px]">{money(project.contracted_amount, project.currency)}</span>} foot={project.grant_amount && project.contracted_amount ? `${Math.round((project.contracted_amount / project.grant_amount) * 100)}% of the grant` : 'Our share of the award'} onClick={() => setEditingProject(true)} />
@@ -155,9 +148,9 @@ export default function ProjectDetail() {
 
         <div className="space-y-6 min-w-0">
           {!current ? (
-            <Overview project={project} milestones={milestones} lost={lostM || null} onSelect={(id) => nav(`/projects/${project.slug}/${id}`)} />
+            <Overview project={project} milestones={milestones} checkpoints={cps.data} lost={lostM || null} onSelect={(id) => nav(`/projects/${project.slug}/${id}`)} />
           ) : (
-            <MilestoneView key={current.id} project={project} m={current} moot={lostBefore(milestones, current)} page={pages.data.find((p) => p.milestone_id === current.id)} me={me.email} />
+            <MilestoneView key={current.id} project={project} m={current} checkpoints={cps.data.filter((c) => c.milestone_id === current.id)} moot={lostBefore(milestones, current)} page={pages.data.find((p) => p.milestone_id === current.id)} me={me.email} />
           )}
         </div>
       </div>
@@ -168,7 +161,7 @@ export default function ProjectDetail() {
   );
 }
 
-function Overview({ project, milestones, lost, onSelect }: { project: Project; milestones: ProjectMilestone[]; lost: ProjectMilestone | null; onSelect: (id: string) => void }) {
+function Overview({ project, milestones, checkpoints, lost, onSelect }: { project: Project; milestones: ProjectMilestone[]; checkpoints: Checkpoint[]; lost: ProjectMilestone | null; onSelect: (id: string) => void }) {
   return (
     <>
       {lost && (
@@ -185,7 +178,7 @@ function Overview({ project, milestones, lost, onSelect }: { project: Project; m
         <CardHeader title="Milestones and checkpoints" subtitle="Status, checkpoints done and owner. Click a milestone to work on it." />
         <ul className="divide-y divide-gray-100">
           {milestones.map((m) => {
-            const cps = m.checkpoints || [];
+            const cps = checkpoints.filter((c) => c.milestone_id === m.id).sort((a, b) => a.position - b.position);
             const moot = lostBefore(milestones, m);
             return (
               <li key={m.id}>
@@ -200,9 +193,8 @@ function Overview({ project, milestones, lost, onSelect }: { project: Project; m
                   {cps.length > 0 && (
                     <div className="flex flex-wrap gap-1.5 mt-2 pl-5">
                       {cps.map((c) => {
-                        const done = c.subtasks.length ? c.subtasks.every((x) => x.done_at) : !!c.done_at;
-                        const n = c.subtasks.filter((x) => x.done_at).length;
-                        return <span key={c.key} className={cx('text-xs rounded-md px-2 py-0.5 border', done ? 'bg-green-50 border-green-200 text-green-800' : n ? 'bg-brand-50 border-brand-200 text-brand-800' : 'bg-white border-gray-200 text-gray-600')}>{done ? '✓ ' : ''}{c.title}{c.subtasks.length ? ` ${n}/${c.subtasks.length}` : ''}</span>;
+                        const f = checkpointDone(c);
+                        return <span key={c.id} className={cx('text-xs rounded-md px-2 py-0.5 border', f === 1 ? 'bg-green-50 border-green-200 text-green-800' : f ? 'bg-brand-50 border-brand-200 text-brand-800' : 'bg-white border-gray-200 text-gray-600')}>{f === 1 ? '✓ ' : ''}{c.title}{c.tasks.length ? ` ${c.tasks.filter((t) => t.done).length}/${c.tasks.length}` : ''}</span>;
                       })}
                     </div>
                   )}
@@ -218,7 +210,7 @@ function Overview({ project, milestones, lost, onSelect }: { project: Project; m
   );
 }
 
-function MilestoneView({ project, m, moot, page, me }: { project: Project; m: ProjectMilestone; moot: ProjectMilestone | null; page?: Page; me: string }) {
+function MilestoneView({ project, m, checkpoints, moot, page, me }: { project: Project; m: ProjectMilestone; checkpoints: Checkpoint[]; moot: ProjectMilestone | null; page?: Page; me: string }) {
   const people = usePeople();
   const save = (patch: Partial<ProjectMilestone>) => db.upsert('project_milestones', { ...m, ...patch } as any);
   const pageId = React.useRef(page?.id || uid('pg'));
@@ -237,18 +229,15 @@ function MilestoneView({ project, m, moot, page, me }: { project: Project; m: Pr
         </div>
       )}
       <Card>
-        <CardHeader title={m.name} subtitle="Status, owner and dates" />
-        <div className="mb-5">
-          <div className="text-sm mb-2 text-gray-600">Status</div>
-          <StatusFlow m={m} onChange={(k) => save({ status: k })} />
-        </div>
+        <CardHeader title={m.name} subtitle="Status, owner and dates" right={<StatusBadge m={m} />} />
         <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))' }}>
+          <Field label="Status"><Select value={statusOf(m).key} onChange={(v) => save({ status: v })} options={flowOf(m).map((s) => ({ value: s.key, label: s.label }))} /></Field>
           <Field label="Owner"><Select value={m.owner || ''} onChange={(v) => save({ owner: v })} placeholder="Unassigned" options={peopleOptions(people, m.owner)} /></Field>
           <Field label="Team"><Select value={m.team || ''} onChange={(v) => { const t = pickTeam(v); if (t !== null) save({ team: t }); }} placeholder="—" options={[...teamOptions(people, [m.team]), { value: NEW_TEAM, label: '+ New team…' }]} /></Field>
           <Field label="Start"><TextInput type="date" className="w-full" value={(m.start_date || '').slice(0, 10)} onChange={(e) => save({ start_date: e.target.value || null })} /></Field>
           <Field label="Target"><TextInput type="date" className="w-full" value={(m.target_date || '').slice(0, 10)} onChange={(e) => save({ target_date: e.target.value || null })} /></Field>
         </div>
-        {!(m.checkpoints && m.checkpoints.length) && (
+        {!checkpoints.length && (
           <div className="mt-5">
             <div className="text-sm mb-1.5 text-gray-600">Progress (%) <span className="text-gray-400">· add checkpoints below and progress is calculated for you</span></div>
             <ProgressSlider value={isDone(m) ? 100 : m.progress} onCommit={(v) => save({ progress: v })} />
@@ -257,7 +246,7 @@ function MilestoneView({ project, m, moot, page, me }: { project: Project; m: Pr
       </Card>
 
       <Card>
-        <Checkpoints m={m} onSave={save} />
+        <Checkpoints m={m} items={checkpoints} onProgress={(p) => save({ progress: p })} />
       </Card>
 
       <Card>

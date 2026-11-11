@@ -5,7 +5,7 @@ import Icon from '../components/Icon';
 import { useData } from '../lib/hooks';
 import { db, uid } from '../lib/store';
 import type { FlowStatus, MilestoneTemplate, TemplateCheckpoint, TemplateMilestone } from '../lib/types';
-import { FALLBACK_FLOW, KIND_BADGE } from '../lib/projects';
+import { FALLBACK_FLOW, KIND_BADGE, templateCheckpoints } from '../lib/projects';
 
 const key = (t: string) => t.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
@@ -42,14 +42,11 @@ const KINDS: { value: FlowStatus['kind']; label: string }[] = [
   { value: 'todo', label: 'Not started' }, { value: 'active', label: 'In progress' }, { value: 'blocked', label: 'Blocked' }, { value: 'done', label: 'Done / won' }, { value: 'lost', label: 'Lost / dropped' },
 ];
 function blankMilestone(n: number): TemplateMilestone {
-  return { key: `milestone-${n}`, name: `Milestone ${n}`, statuses: FALLBACK_FLOW, checkpoints: [{ key: 'checkpoint-1', title: 'Checkpoint 1', subtasks: [] }], sections: [{ key: 'checkpoint-1', title: 'Checkpoint 1' }] };
+  return { key: `milestone-${n}`, name: `Milestone ${n}`, statuses: FALLBACK_FLOW, checkpoints: [{ title: 'Checkpoint 1', tasks: [] }] };
 }
-/** Older templates: sections become checkpoints (max 4) and the old review steps are dropped. */
 function normalise(m: TemplateMilestone): TemplateMilestone {
-  const checkpoints = m.checkpoints && m.checkpoints.length ? m.checkpoints : m.sections.slice(0, 4).map((x) => ({ key: x.key, title: x.title, subtasks: [] }));
-  return { ...m, statuses: m.statuses && m.statuses.length ? m.statuses : FALLBACK_FLOW, checkpoints };
+  return { key: m.key, name: m.name, description: m.description, statuses: m.statuses && m.statuses.length ? m.statuses : FALLBACK_FLOW, checkpoints: templateCheckpoints(m) };
 }
-const withSections = (m: TemplateMilestone): TemplateMilestone => ({ ...m, sections: (m.checkpoints || []).map((c) => ({ key: c.key, title: c.title })) });
 
 function TemplateCard({ t, open, onToggle }: { t: MilestoneTemplate; open: boolean; onToggle: () => void }) {
   const [draft, setDraft] = useState<MilestoneTemplate>({ ...t, milestones: t.milestones.map(normalise) });
@@ -63,7 +60,8 @@ function TemplateCard({ t, open, onToggle }: { t: MilestoneTemplate; open: boole
     setDraft({ ...draft, milestones: ms });
   };
   const save = async () => {
-    await db.upsert('milestone_templates', { ...draft, milestones: draft.milestones.map(withSections) } as any);
+    const clean = draft.milestones.map((m) => ({ ...normalise(m), checkpoints: (m.checkpoints || []).filter((c) => c.title.trim()).map((c) => ({ title: c.title.trim(), tasks: c.tasks.map((t) => t.trim()).filter(Boolean) })) }));
+    await db.upsert('milestone_templates', { ...draft, milestones: clean } as any);
     onToggle();
   };
   const view = t.milestones.map(normalise);
@@ -89,9 +87,9 @@ function TemplateCard({ t, open, onToggle }: { t: MilestoneTemplate; open: boole
               </div>
               <ol className="mt-3 space-y-2 text-sm">
                 {(m.checkpoints || []).map((c, k) => (
-                  <li key={c.key}>
-                    <div className="text-gray-800"><span className="text-gray-400 tabular-nums">{k + 1}.</span> {c.title}{c.parallel && <span className="ml-1.5 text-[11px] text-brand-700 bg-brand-50 rounded px-1.5">parallel</span>}</div>
-                    {c.subtasks.length > 0 && <ul className="pl-5 text-xs text-gray-500 list-disc">{c.subtasks.map((x) => <li key={x.key}>{x.title}</li>)}</ul>}
+                  <li key={k}>
+                    <div className="text-gray-800"><span className="text-gray-400 tabular-nums">{k + 1}.</span> {c.title}</div>
+                    {c.tasks.length > 0 && <ul className="pl-5 text-xs text-gray-500 list-disc">{c.tasks.map((x, j) => <li key={j}>{x}</li>)}</ul>}
                   </li>
                 ))}
               </ol>
@@ -162,20 +160,19 @@ function MilestoneEditor({ m, n, onChange, onUp, onDown, onRemove }: { m: Templa
         </div>
 
         <div>
-          <div className="text-sm font-medium text-gray-700 mb-2">Checkpoints <span className="font-normal text-gray-500">· each is a section of the milestone page; sub-tasks are its linear steps. Up to 4 keeps it simple.</span></div>
+          <div className="text-sm font-medium text-gray-700 mb-2">Checkpoints <span className="font-normal text-gray-500">· each becomes a card on the milestone (and a heading on its page). Tasks are optional.</span></div>
           <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))' }}>
             {cps.map((c, k) => (
               <div key={k} className="rounded-xl border border-gray-200 p-3 space-y-2 min-w-0">
                 <div className="flex gap-2 items-center">
                   <span className="text-xs text-gray-400 tabular-nums">{k + 1}.</span>
-                  <TextInput className="flex-1 min-w-0 h-9 text-sm" value={c.title} onChange={(e) => setC(k, { title: e.target.value, key: key(e.target.value) })} />
+                  <TextInput className="flex-1 min-w-0 h-9 text-sm" value={c.title} onChange={(e) => setC(k, { title: e.target.value })} />
                   <IconButton icon="trash" title="Remove checkpoint" onClick={() => onChange({ ...m, checkpoints: cps.filter((_, j) => j !== k) })} />
                 </div>
-                {k > 0 && <label className="text-xs text-gray-600 inline-flex items-center gap-2"><input type="checkbox" checked={!!c.parallel} onChange={(e) => setC(k, { parallel: e.target.checked })} />Runs in parallel with the previous one</label>}
-                <TextArea rows={Math.max(2, c.subtasks.length + 1)} className="text-sm" placeholder={'Sub-tasks, one per line'} value={c.subtasks.map((x) => x.title).join('\n')} onChange={(e) => setC(k, { subtasks: e.target.value.split('\n').map((x, j) => ({ key: key(x) || `step-${j}`, title: x })) })} onBlur={() => setC(k, { subtasks: c.subtasks.filter((x) => x.title.trim()).map((x) => ({ ...x, title: x.title.trim() })) })} />
+                <TextArea rows={Math.max(2, c.tasks.length + 1)} className="text-sm" placeholder={'Tasks, one per line (optional)'} value={c.tasks.join('\n')} onChange={(e) => setC(k, { tasks: e.target.value.split('\n') })} />
               </div>
             ))}
-            <button type="button" onClick={() => onChange({ ...m, checkpoints: [...cps, { key: `checkpoint-${cps.length + 1}`, title: `Checkpoint ${cps.length + 1}`, subtasks: [] }] })} className="rounded-xl border border-dashed border-gray-300 p-3 text-sm text-gray-500 hover:border-brand-300 hover:text-brand-700 min-h-[100px] inline-flex items-center justify-center gap-1.5">
+            <button type="button" onClick={() => onChange({ ...m, checkpoints: [...cps, { title: `Checkpoint ${cps.length + 1}`, tasks: [] }] })} className="rounded-xl border border-dashed border-gray-300 p-3 text-sm text-gray-500 hover:border-brand-300 hover:text-brand-700 min-h-[100px] inline-flex items-center justify-center gap-1.5">
               <Icon name="plus" size={15} />Add checkpoint
             </button>
           </div>

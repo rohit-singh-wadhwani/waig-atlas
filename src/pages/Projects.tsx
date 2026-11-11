@@ -9,7 +9,7 @@ import { createProject, milestoneProgress } from '../lib/projects';
 import { useWorld, NO_COUNTRIES } from '../lib/world';
 import { daysUntil, fmtDate } from '../lib/format';
 import { peopleOptions, personName, usePeople } from '../lib/team';
-import type { MilestoneTemplate, Project, ProjectMilestone, Task } from '../lib/types';
+import type { Checkpoint, MilestoneTemplate, Project, ProjectMilestone } from '../lib/types';
 import { placeLabel } from './Grants';
 import { isDone } from '../lib/projects';
 
@@ -26,6 +26,7 @@ export default function ProjectsPage() {
   const countries = world?.countries ?? NO_COUNTRIES;
   const projects = useData(() => db.list<Project>('projects'), [], []);
   const milestones = useData(() => db.list<ProjectMilestone>('project_milestones'), [], []);
+  const checkpoints = useData(() => db.list<Checkpoint>('milestone_checkpoints'), [], []);
   const [creating, setCreating] = useState(false);
 
   const msOf = (id: string) => milestones.data.filter((m) => m.project_id === id).sort((a, b) => a.order - b.order);
@@ -40,7 +41,7 @@ export default function ProjectsPage() {
         <KpiCard icon="folder" label="Projects" value={projects.data.length} foot={`${projects.data.filter((p) => p.status === 'active').length} active`} />
         <KpiCard icon="calendar" tint="orange" label="Milestones due in 30 days" value={upcoming.length} foot={upcoming[0] ? `next: ${upcoming[0].name}, ${fmtDate(upcoming[0].target_date)}` : undefined} />
         <KpiCard icon="checkCircle" tint="green" label="Milestones done" value={`${milestones.data.filter((m) => isDone(m)).length} / ${milestones.data.length}`} />
-        <KpiCard icon="clipboard" tint="purple" label="Open sub-tasks" value={milestones.data.reduce((n, m) => n + (m.checkpoints || []).reduce((k, c) => k + (c.subtasks.length ? c.subtasks.filter((x) => !x.done_at).length : c.done_at ? 0 : 1), 0), 0)} foot="Across all milestone checkpoints" />
+        <KpiCard icon="clipboard" tint="purple" label="Open checkpoints" value={checkpoints.data.filter((c) => !c.completed_on).length} foot={`${checkpoints.data.length} across all milestones`} />
       </div>
 
       {projects.data.length === 0 && !projects.loading ? (
