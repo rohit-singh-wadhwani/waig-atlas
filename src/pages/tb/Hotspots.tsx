@@ -67,7 +67,7 @@ export default function Hotspots({ data, onPlan }: { data: TbData; onPlan: (c: P
         />
         <TbLegend title={m.label} breaks={breaks} fmt={fmt} blind={show.blind} />
         <p className="text-xs text-gray-500 mt-2">
-          {dist.data.hasPrivate ? 'Includes notifications and campaign results your team uploaded.' : 'Open-data model only: upload district notifications on the Evidence & data tab to measure the real detection gap.'} Travel links are modelled from population and distance until GSS/Flowminder movement data is shared.
+          {dist.data.hasPrivate ? 'Includes notifications and campaign results your team uploaded.' : 'Open-data model only: upload district notifications on the Data sources tab to measure the real detection gap.'} Travel links are modelled from population and distance until GSS/Flowminder movement data is shared.
         </p>
       </Card>
 
@@ -126,7 +126,7 @@ function DistrictDetail({ d, avgMin, campaigns, P, onPlan }: { d: TbDistrict; av
       </div>
 
       <Card>
-        <CardHeader title="Why this district" subtitle="Each factor multiplies the national rate; all parameters are on the Evidence & data tab" />
+        <CardHeader title="Why this district" subtitle="Each factor multiplies the national rate" />
         <ul className="space-y-2 text-[15px]">
           <li>Risk factors (HIV {d.hiv ?? '—'}%, thin adults {d.thin ?? '—'}%, smoking {d.smoke ?? '—'}%, regional DHS): <b>×{d.m_risk.toFixed(2)}</b></li>
           <li>Crowding ({fmtInt(d.density)} people/km²): <b>×{d.m_density.toFixed(2)}</b></li>

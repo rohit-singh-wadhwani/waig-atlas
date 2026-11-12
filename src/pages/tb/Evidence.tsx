@@ -1,120 +1,123 @@
 import React, { useMemo, useState } from 'react';
-import { Badge, Button, Card, CardHeader, ExtLink, Field, Modal, TextArea, TextInput, cx } from '../../components/ui';
+import { Button, Card, CardHeader, ExtLink, Field, Modal, TextArea, TextInput, cx } from '../../components/ui';
 import Icon from '../../components/Icon';
 import { useMe } from '../../components/Layout';
 import { fmtTime } from '../../lib/format';
-import { tbSave, TbParam, TbPlaybook, TbStep } from '../../lib/tb';
+import { tbSave } from '../../lib/tb';
 import type { TbData } from './TbPage';
 
+/** What each feed gives us and what it is used for, matched on the feed name the pipeline reports. */
+const CATALOG: { match: RegExp; group: string; gives: string; use: string }[] = [
+  { match: /attributable/i, group: 'TB numbers', gives: 'TB cases linked to HIV, undernourishment, smoking, alcohol, diabetes', use: 'Splitting expected cases by risk' },
+  { match: /WHO/i, group: 'TB numbers', gives: 'Ghana\'s estimated and notified TB cases, by year', use: 'National totals: expected, found, missed' },
+  { match: /DHS/i, group: 'Who is at risk', gives: 'HIV, thinness and smoking rates by region', use: 'Which regions carry more risk' },
+  { match: /Wealth/i, group: 'Who is at risk', gives: 'Relative wealth of each ~2 km area', use: 'Poorer areas' },
+  { match: /WorldPop/i, group: 'Where people live and reach care', gives: 'Population on a 100 m grid', use: 'Spreading cases to where people live' },
+  { match: /Malaria Atlas|travel time/i, group: 'Where people live and reach care', gives: 'Travel time to the nearest health facility', use: 'Who is far from care' },
+  { match: /health facilities/i, group: 'Where people live and reach care', gives: 'Clinics and hospitals', use: 'Distance to care, facility counts' },
+  { match: /congregate|sites/i, group: 'Where people live and reach care', gives: 'Markets, lorry stations, prisons, mines', use: 'Screening venues and key populations' },
+  { match: /geoBoundaries/i, group: 'Boundaries', gives: 'Region and district boundaries', use: 'Map and district totals' },
+];
+const describe = (name: string) => CATALOG.find((c) => c.match.test(name)) || { group: 'Other', gives: '', use: '' };
+const cleanName = (n: string) => n.replace(/\s*\((\d[\d,]*)\s*\w*\)$/, '').replace(/^OpenStreetMap: /, 'OpenStreetMap · ');
+
 export default function Evidence({ data }: { data: TbData }) {
-  const { dist, params, playbooks, cities } = data;
+  const { dist, params, results, campaigns } = data;
   const meta = dist.data.meta;
-  const groups = useMemo(() => {
-    const g: Record<string, TbParam[]> = {};
-    for (const p of params.data) (g[p.grp] ||= []).push(p);
-    return g;
-  }, [params.data]);
   const [uploading, setUploading] = useState(false);
-  const [editing, setEditing] = useState<TbPlaybook | null>(null);
+  const sources = meta?.sources || [];
+  const okCount = sources.filter((s) => s.ok).length;
+  const groups = useMemo(() => {
+    const g: Record<string, typeof sources> = {};
+    for (const s of sources) (g[describe(s.name).group] ||= []).push(s);
+    return ['TB numbers', 'Who is at risk', 'Where people live and reach care', 'Boundaries', 'Other'].filter((k) => g[k]).map((k) => [k, g[k]] as const);
+  }, [sources]);
+  const notifDistricts = (dist.data as any).notifiedDistricts ?? (dist.data as any).list?.filter((d: any) => d.notified_uploaded != null).length ?? 0;
+  const evidence = params.data.filter((p) => p.status === 'evidence');
 
   return (
     <div className="space-y-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <Tile ok={okCount === sources.length && sources.length > 0} title="Open datasets" value={`${okCount} of ${sources.length} pulled`} sub={meta ? `Last refresh ${fmtTime(meta.updated_at)} · weekly` : 'Not run yet'} />
+        <Tile ok={false} warn title="DHIMS2 district data" value="Not connected" sub="Needs a read-only account from NTP / GHS" />
+        <Tile ok={notifDistricts > 0} warn={!notifDistricts} title="Uploaded notifications" value={notifDistricts ? `${notifDistricts} districts` : 'None yet'} sub={<button type="button" className="text-brand-700 hover:underline" onClick={() => setUploading(true)}>Upload from a report</button>} />
+        <Tile ok={results.data.length > 0} warn={!results.data.length} title="Campaign results" value={results.data.length ? `${results.data.length} reports` : 'None yet'} sub={`${campaigns.data.length} campaign${campaigns.data.length === 1 ? '' : 's'}`} />
+      </div>
+
+      <Card pad={false}>
+        <div className="p-6 pb-2"><CardHeader title="Datasets in use" subtitle="Pulled automatically every week. Click a name to open the source." /></div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-[15px]">
+            <thead>
+              <tr className="text-left text-sm text-gray-500 border-y border-gray-100 bg-gray-50/60">
+                <th className="px-6 py-2.5 font-medium">Dataset</th><th className="px-3 py-2.5 font-medium">What it gives</th><th className="px-3 py-2.5 font-medium">Used for</th><th className="px-6 py-2.5 font-medium text-right">Status</th>
+              </tr>
+            </thead>
+            {groups.map(([g, list]) => (
+              <tbody key={g}>
+                <tr><td colSpan={4} className="px-6 pt-4 pb-1 text-xs font-semibold uppercase tracking-wide text-gray-400">{g}</td></tr>
+                {list.map((s, i) => {
+                  const d = describe(s.name);
+                  const count = s.name.match(/\((\d[\d,]*)\s*(\w*)\)$/);
+                  return (
+                    <tr key={i} className="border-b border-gray-100 align-top">
+                      <td className="px-6 py-3 min-w-[260px]"><ExtLink href={s.url}>{cleanName(s.name)}</ExtLink>{count && <span className="block text-xs text-gray-500">{count[1]} {count[2] || 'records'}</span>}</td>
+                      <td className="px-3 py-3 text-sm text-gray-700 min-w-[220px]">{d.gives}</td>
+                      <td className="px-3 py-3 text-sm text-gray-700 min-w-[200px]">{d.use}</td>
+                      <td className="px-6 py-3 text-right whitespace-nowrap">
+                        <span className={cx('inline-flex items-center gap-1.5 text-sm', s.ok ? 'text-green-700' : 'text-red-700')} title={s.note || ''}><Icon name={s.ok ? 'checkCircle' : 'alert'} size={16} />{s.ok ? 'Pulled' : 'Failed'}</span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            ))}
+          </table>
+        </div>
+        <p className="px-6 py-4 text-xs text-gray-500">Not used yet because they need data-sharing agreements: DHIMS2 district TB data, the TB e-Tracker, GeneXpert results (GxAlert), and phone-based movement data.</p>
+      </Card>
+
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        <Card className="min-w-0">
-          <CardHeader title="Data feeds" subtitle={meta ? `Last weekly run ${fmtTime(meta.updated_at)}${meta.access_basis ? ` · access from ${meta.access_basis}` : ''}` : 'Not run yet'} />
-          <ul className="space-y-2.5">
-            {(meta?.sources || []).map((s, i) => (
-              <li key={i} className="flex gap-2.5 text-[15px]">
-                <Icon name={s.ok ? 'checkCircle' : 'alert'} size={17} className={cx('mt-0.5 shrink-0', s.ok ? 'text-green-600' : 'text-red-600')} />
-                <span className="min-w-0">
-                  <ExtLink href={s.url}>{s.name}</ExtLink>
-                  {s.note && <span className="block text-xs text-gray-500">{s.note}</span>}
-                </span>
+        <Card>
+          <CardHeader title="How the numbers are made" />
+          <ol className="space-y-2.5 text-[15px] text-gray-700">
+            <Step n={1}><b>Expected cases:</b> WHO's national estimate, shared across Ghana by where people live and each region's risk.</Step>
+            <Step n={2}><b>Found:</b> notified cases. Until district data is connected, Ghana's national rate ({meta?.national ? `${Math.round(meta.national.cdr * 100)}%` : '—'}) is used everywhere.</Step>
+            <Step n={3}><b>Hidden (missed):</b> expected minus found.</Step>
+            <Step n={4}><b>Where to screen:</b> places with the most hidden cases, plus prisons, mines, markets and lorry stations.</Step>
+          </ol>
+        </Card>
+        <Card>
+          <CardHeader title="Published evidence used" subtitle="Share of people screened who turn out to have TB" />
+          <ul className="divide-y divide-gray-100">
+            {evidence.map((p) => (
+              <li key={p.id} className="py-2.5 flex items-start justify-between gap-4 text-[15px]">
+                <span className="min-w-0">{p.label}{p.source_url && <span className="block text-xs"><ExtLink href={p.source_url}>{p.source_title}</ExtLink></span>}</span>
+                <span className="shrink-0 font-semibold tabular-nums">{p.value}{p.unit === '%' ? '%' : ` ${p.unit || ''}`}</span>
               </li>
             ))}
-          </ul>
-          <p className="text-xs text-gray-500 mt-4">Private inputs: {meta?.private || '—'}. Phone-based mobility (GSS/Telecel/Flowminder), DHIMS2 and TB e-Tracker data need a data-sharing agreement; upload them below when you have them.</p>
-        </Card>
-        <Card className="min-w-0">
-          <CardHeader title="Your data" subtitle="Private to signed-in team members; used at the next weekly model run" right={<Button variant="primary" icon="upload" onClick={() => setUploading(true)}>Upload notifications</Button>} />
-          <ul className="text-[15px] space-y-2 text-gray-700">
-            <li><b>District notifications</b> (NTP / DHIMS2 / partner reports): turn the modelled detection gap into a measured one.</li>
-            <li><b>Campaign results</b> (Campaigns tab): every report recalibrates the district estimate and measures how the cough AI and X-ray AI perform against GeneXpert.</li>
-            <li><b>Cities</b>: {cities.data.map((c) => c.name).join(', ') || 'none'}. Edit below.</li>
           </ul>
         </Card>
       </div>
 
-      <Card pad={false}>
-        <div className="p-6 pb-2">
-          <CardHeader title="Evidence and model parameters" subtitle='Every number the model uses. "Evidence" means the value was checked against the cited source; "Assumption" means it needs local data or verification. Edits apply at the next weekly run.' />
-        </div>
-        {Object.entries(groups).map(([g, list]) => (
-          <div key={g} className="border-t border-gray-100">
-            <div className="px-6 pt-4 pb-1 text-[13px] font-medium tracking-wider uppercase text-gray-500">{g}</div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-[15px]">
-                <tbody>
-                  {list.map((p) => <ParamRow key={p.id} p={p} />)}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        ))}
-      </Card>
-
-      <Card>
-        <CardHeader title="Response playbooks" subtitle="What a campaign turns into: ordered tasks for named roles. Edit steps to match how the district actually works." />
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {playbooks.data.map((p) => (
-            <div key={p.id} className="rounded-xl border border-gray-200 p-4 min-w-0">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="font-medium text-gray-900">{p.name}</div>
-                  <div className="text-xs text-gray-500">{p.trigger}</div>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <label className="text-sm inline-flex items-center gap-1.5"><input type="checkbox" checked={p.enabled} onChange={(e) => tbSave('tb_playbooks', { ...p, enabled: e.target.checked })} />On</label>
-                  <Button onClick={() => setEditing(p)}>Edit</Button>
-                </div>
-              </div>
-              {p.description && <p className="text-sm text-gray-600 mt-2">{p.description}</p>}
-              <ol className="list-decimal pl-5 mt-2 text-sm text-gray-700 space-y-0.5">{p.steps.map((s) => <li key={s.key}>{s.title} <span className="text-gray-400">· {s.role} · day {s.due_days}</span></li>)}</ol>
-              {p.source_url && <div className="mt-2 text-xs"><ExtLink href={p.source_url}>{p.source_title || 'Source'}</ExtLink></div>}
-            </div>
-          ))}
-        </div>
-      </Card>
-
       <CitiesCard data={data} />
       {uploading && <UploadNotifications data={data} onClose={() => setUploading(false)} />}
-      {editing && <PlaybookEditor p={editing} onClose={() => setEditing(null)} />}
     </div>
   );
 }
 
-function ParamRow({ p }: { p: TbParam }) {
-  const me = useMe();
-  const [v, setV] = useState(String(p.value));
-  const save = () => {
-    const n = Number(v);
-    if (!isFinite(n) || n === Number(p.value)) return setV(String(p.value));
-    tbSave('tb_parameters', { ...p, value: n, updated_at: new Date().toISOString(), updated_by: me.email });
-  };
+function Tile({ ok, warn, title, value, sub }: { ok: boolean; warn?: boolean; title: string; value: React.ReactNode; sub?: React.ReactNode }) {
   return (
-    <tr className="border-t border-gray-50 align-top">
-      <td className="px-6 py-3 min-w-[280px]">
-        <div className="text-gray-900">{p.label}</div>
-        {p.description && <div className="text-xs text-gray-500 mt-0.5">{p.description}</div>}
-      </td>
-      <td className="px-3 py-3 whitespace-nowrap">
-        <TextInput className="w-24 h-9 text-sm text-right" value={v} onChange={(e) => setV(e.target.value)} onBlur={save} onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()} />
-        <span className="text-sm text-gray-500 ml-2">{p.unit}</span>
-      </td>
-      <td className="px-3 py-3"><Badge className={p.status === 'evidence' ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-800'}>{p.status === 'evidence' ? 'Evidence' : 'Assumption'}</Badge></td>
-      <td className="px-3 pr-6 py-3 text-sm min-w-[220px]">{p.source_url ? <ExtLink href={p.source_url}>{p.source_title || 'Source'}</ExtLink> : <span className="text-gray-400">{p.source_title || 'No source yet'}</span>}</td>
-    </tr>
+    <div className="rounded-2xl border border-gray-200 bg-white p-5 min-w-0">
+      <div className="flex items-center gap-2 text-sm text-gray-500"><Icon name={ok ? 'checkCircle' : warn ? 'alert' : 'clock'} size={16} className={ok ? 'text-green-600' : warn ? 'text-amber-600' : 'text-gray-400'} />{title}</div>
+      <div className="text-xl font-semibold text-gray-900 mt-1.5">{value}</div>
+      {sub && <div className="text-sm text-gray-500 mt-0.5">{sub}</div>}
+    </div>
   );
+}
+
+function Step({ n, children }: { n: number; children: React.ReactNode }) {
+  return <li className="flex gap-3"><span className="shrink-0 w-6 h-6 rounded-full bg-gray-100 text-gray-600 text-xs font-semibold grid place-items-center mt-0.5">{n}</span><span>{children}</span></li>;
 }
 
 const norm = (s: string) => s.toLowerCase().replace(/\b(municipal|metropolitan|district|assembly|metro|municipality)\b/g, '').replace(/[^a-z]/g, '');
@@ -139,7 +142,7 @@ function UploadNotifications({ data, onClose }: { data: TbData; onClose: () => v
   return (
     <Modal open onClose={onClose} title="Upload district TB notifications" footer={done != null ? <Button variant="primary" onClick={onClose}>Close</Button> : <><Button onClick={onClose}>Cancel</Button><Button variant="primary" onClick={save} disabled={!ok.length}>Save {ok.length} rows</Button></>}>
       {done != null ? (
-        <p className="text-[15px]">Saved {done} rows. The detection gap updates at the next weekly model run.</p>
+        <p className="text-[15px]">Saved {done} rows. Reload the page to see them.</p>
       ) : (
         <>
           <p className="text-sm text-gray-600">Paste from a spreadsheet: <b>district, period, notified</b> and optionally <b>bacteriologically confirmed</b>. Period can be a year (2025), month (2025-07) or quarter (2025-Q3).</p>
@@ -152,62 +155,36 @@ function UploadNotifications({ data, onClose }: { data: TbData; onClose: () => v
   );
 }
 
-function PlaybookEditor({ p, onClose }: { p: TbPlaybook; onClose: () => void }) {
-  const [steps, setSteps] = useState<TbStep[]>(p.steps.map((s) => ({ ...s })));
-  const [name, setName] = useState(p.name);
-  const upd = (i: number, patch: Partial<TbStep>) => setSteps(steps.map((s, j) => (j === i ? { ...s, ...patch } : s)));
-  const save = async () => {
-    await tbSave('tb_playbooks', { ...p, name, steps: steps.filter((s) => s.title.trim()), updated_at: new Date().toISOString() } as any);
-    onClose();
-  };
-  return (
-    <Modal open onClose={onClose} title="Edit playbook" footer={<><Button onClick={onClose}>Cancel</Button><Button variant="primary" onClick={save}>Save</Button></>}>
-      <Field label="Name"><TextInput className="w-full" value={name} onChange={(e) => setName(e.target.value)} /></Field>
-      <div className="space-y-3">
-        {steps.map((s, i) => (
-          <div key={i} className="rounded-xl border border-gray-200 p-3 space-y-2">
-            <TextInput className="w-full h-9 text-sm" value={s.title} placeholder="Step" onChange={(e) => upd(i, { title: e.target.value })} />
-            <div className="flex gap-2">
-              <TextInput className="flex-1 min-w-0 h-9 text-sm" value={s.role} placeholder="Role" onChange={(e) => upd(i, { role: e.target.value })} />
-              <TextInput className="w-24 h-9 text-sm" type="number" value={s.due_days} onChange={(e) => upd(i, { due_days: Number(e.target.value) })} title="Due (days after start)" />
-              <Button onClick={() => setSteps(steps.filter((_, j) => j !== i))} icon="trash">Remove</Button>
-            </div>
-          </div>
-        ))}
-      </div>
-      <Button icon="plus" onClick={() => setSteps([...steps, { key: `step${Date.now()}`, title: '', role: '', due_days: 7 }])}>Add step</Button>
-    </Modal>
-  );
-}
-
 function CitiesCard({ data }: { data: TbData }) {
-  const [n, setN] = useState({ name: '', lat: '', lon: '', radius_km: '15' });
+  const [adding, setAdding] = useState(false);
+  const [n, setN] = useState({ name: '', lat: '', lon: '', radius_km: '10' });
   const add = () => {
     const lat = Number(n.lat), lon = Number(n.lon);
     if (!n.name.trim() || !isFinite(lat) || !isFinite(lon)) return;
-    tbSave('tb_cities', { id: n.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'), name: n.name.trim(), lat, lon, radius_km: Number(n.radius_km) || 15, h3_res: 8, enabled: true } as any);
-    setN({ name: '', lat: '', lon: '', radius_km: '15' });
+    tbSave('tb_cities', { id: n.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'), name: n.name.trim(), lat, lon, radius_km: Number(n.radius_km) || 10, h3_res: 8, enabled: true } as any);
+    setN({ name: '', lat: '', lon: '', radius_km: '10' });
+    setAdding(false);
   };
   return (
     <Card>
-      <CardHeader title="Cities" subtitle="Each city gets a fine hexagon map (about 0.7 km² per hexagon) at the next weekly run" />
-      <ul className="divide-y divide-gray-100 mb-4">
-        {data.cities.data.map((c) => (
-          <li key={c.id} className="py-2.5 flex flex-wrap items-center gap-3 text-[15px]">
-            <span className="font-medium min-w-[180px]">{c.name}</span>
-            <span className="text-sm text-gray-500">{Number(c.lat).toFixed(3)}, {Number(c.lon).toFixed(3)} · {c.radius_km} km radius</span>
-            <TextInput className="w-56 h-9 text-sm" placeholder="City partner (e.g. Accra Metropolitan Assembly)" defaultValue={c.city_partner || ''} onBlur={(e) => e.target.value !== (c.city_partner || '') && tbSave('tb_cities', { ...c, city_partner: e.target.value || null } as any)} />
-            <label className="text-sm inline-flex items-center gap-1.5"><input type="checkbox" checked={c.enabled !== false} onChange={(e) => tbSave('tb_cities', { ...c, enabled: e.target.checked } as any)} />On</label>
-          </li>
-        ))}
-      </ul>
+      <CardHeader title={`Cities mapped (${data.cities.data.filter((c) => c.enabled !== false).length})`} subtitle="Each gets a detailed hexagon map. New cities appear after the next weekly refresh." right={!adding && <Button icon="plus" onClick={() => setAdding(true)}>Add city</Button>} />
       <div className="flex flex-wrap gap-2">
-        <TextInput className="w-48" placeholder="City name" value={n.name} onChange={(e) => setN({ ...n, name: e.target.value })} />
-        <TextInput className="w-28" placeholder="Latitude" value={n.lat} onChange={(e) => setN({ ...n, lat: e.target.value })} />
-        <TextInput className="w-28" placeholder="Longitude" value={n.lon} onChange={(e) => setN({ ...n, lon: e.target.value })} />
-        <TextInput className="w-28" placeholder="Radius km" value={n.radius_km} onChange={(e) => setN({ ...n, radius_km: e.target.value })} />
-        <Button icon="plus" onClick={add}>Add city</Button>
+        {data.cities.data.map((c) => (
+          <span key={c.id} className="inline-flex items-center gap-2 rounded-full border border-gray-200 px-3 py-1 text-sm">
+            {c.name}<span className="text-gray-400">{c.radius_km} km</span>
+          </span>
+        ))}
       </div>
+      {adding && (
+        <div className="flex flex-wrap gap-2 mt-4">
+          <TextInput className="w-48" placeholder="City name" value={n.name} onChange={(e) => setN({ ...n, name: e.target.value })} />
+          <TextInput className="w-28" placeholder="Latitude" value={n.lat} onChange={(e) => setN({ ...n, lat: e.target.value })} />
+          <TextInput className="w-28" placeholder="Longitude" value={n.lon} onChange={(e) => setN({ ...n, lon: e.target.value })} />
+          <TextInput className="w-28" placeholder="Radius km" value={n.radius_km} onChange={(e) => setN({ ...n, radius_km: e.target.value })} />
+          <Button variant="primary" onClick={add}>Add</Button>
+          <Button onClick={() => setAdding(false)}>Cancel</Button>
+        </div>
+      )}
     </Card>
   );
 }

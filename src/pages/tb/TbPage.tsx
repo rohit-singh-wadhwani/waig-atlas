@@ -65,7 +65,7 @@ export default function TbPage() {
                 { value: 'city', label: 'City view' },
                 { value: 'campaigns', label: `Campaigns (${campaigns.data.length})` },
                 { value: 'tasks', label: `Tasks (${open.length})` },
-                { value: 'evidence', label: 'Evidence & data' },
+                { value: 'evidence', label: 'Data sources' },
                 { value: 'brief', label: 'AI brief' },
               ]}
             />

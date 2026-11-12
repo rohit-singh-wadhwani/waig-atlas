@@ -73,7 +73,7 @@ export default function CityView({ data, onPlan }: { data: TbData; onPlan: (c: P
     onPlan({ name: `${c?.name.split(' (')[0]}: ${pickedHexes.length} hotspot area${pickedHexes.length > 1 ? 's' : ''}`, city, district_id: d?.id, district_name: d?.name, hex_ids: picked, setting: 'community', playbook_id: 'acf_community', target_screened: Math.round(pickedHexes.reduce((s, h) => s + h.pop, 0) * 0.6 * 0.3) });
   };
 
-  if (!enabled.length) return <Empty icon="map" title="No cities configured">Add a city on the Evidence & data tab.</Empty>;
+  if (!enabled.length) return <Empty icon="map" title="No cities configured">Add a city on the Data sources tab.</Empty>;
   return (
     <div className="grid grid-cols-1 2xl:grid-cols-[minmax(0,1fr)_420px] gap-6">
       <Card className="min-w-0">
