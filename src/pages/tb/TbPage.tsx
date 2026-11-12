@@ -64,7 +64,7 @@ export default function TbPage() {
                 { value: 'act', label: 'Where to act' },
                 { value: 'city', label: 'City screening sites' },
                 { value: 'campaigns', label: `Campaigns & tasks${open.length ? ` (${open.length} open)` : ''}` },
-                { value: 'data', label: 'Data & method' },
+                { value: 'data', label: 'Data sources' },
                 { value: 'brief', label: 'Weekly brief' },
               ]}
             />

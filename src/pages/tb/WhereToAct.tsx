@@ -176,7 +176,7 @@ function KeyPopulations({ sites, P, onPlan }: { sites: TbSite[]; P: Record<strin
         </table>
       </div>
       {sites.length > 10 && <div className="px-6 py-3"><button type="button" className="text-sm text-brand-700 hover:underline" onClick={() => setAll(!all)}>{all ? 'Show fewer' : `Show all ${sites.length}`}</button></div>}
-      <p className="px-6 pb-5 text-xs text-gray-500">Yields: Kranzer K et al., systematic review of TB screening yields (Lancet Infect Dis 2010), on the Data & method tab.</p>
+      <p className="px-6 pb-5 text-xs text-gray-500">Yields: Kranzer K et al., systematic review of TB screening yields (Lancet Infect Dis 2010), on the Data sources tab.</p>
     </Card>
   );
 }

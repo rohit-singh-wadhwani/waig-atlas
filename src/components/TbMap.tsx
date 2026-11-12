@@ -3,7 +3,8 @@ import React, { useEffect, useRef, useState } from 'react';
 /** Sequential orange ramp for TB burden (light -> dark). */
 export const TB_RAMP = ['#fef0d9', '#fdd49e', '#fdbb84', '#fc8d59', '#e34a33', '#b30000'];
 export const SITE_COLORS: Record<string, string> = { market: '#7c3aed', 'transport hub': '#0891b2', prison: '#111827', 'mine / quarry': '#a16207' };
-const BASEMAP = 'https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png';
+// OpenFreeMap: free OpenStreetMap vector basemap, no API key or usage limits. Place names are drawn above our data.
+const BASEMAP_STYLE = 'https://tiles.openfreemap.org/styles/positron';
 
 export function breaksFor(values: number[], classes = 6) {
   const v = values.filter((x) => typeof x === 'number' && isFinite(x)).sort((a, b) => a - b);
@@ -50,11 +51,7 @@ export default function TbMap(p: TbMapProps) {
     if (!ml || !ref.current) return;
     const m = new ml.Map({
       container: ref.current,
-      style: {
-        version: 8,
-        sources: { base: { type: 'raster', tiles: [BASEMAP], tileSize: 256, attribution: '© OpenStreetMap contributors © CARTO' } },
-        layers: [{ id: 'base', type: 'raster', source: 'base' }],
-      },
+      style: BASEMAP_STYLE,
       bounds: [[-3.3, 4.6], [1.3, 11.2]],
       fitBoundsOptions: { padding: 20 },
       attributionControl: { compact: true },
@@ -64,13 +61,14 @@ export default function TbMap(p: TbMapProps) {
     const popup = new ml.Popup({ closeButton: false, closeOnClick: false, maxWidth: '300px', className: 'tb-tip' });
     m.on('load', () => {
       const empty = { type: 'FeatureCollection', features: [] };
+      const below = (m.getStyle().layers || []).find((l: any) => l.type === 'symbol')?.id;
       for (const id of ['districts', 'hexes', 'facilities', 'sites', 'highlight']) m.addSource(id, { type: 'geojson', data: empty, ...(id === 'districts' || id === 'hexes' ? { promoteId: id === 'districts' ? 'id' : 'h3' } : {}) });
-      m.addLayer({ id: 'd-fill', type: 'fill', source: 'districts', paint: { 'fill-color': TB_RAMP[1], 'fill-opacity': 0.72 } });
-      m.addLayer({ id: 'd-line', type: 'line', source: 'districts', paint: { 'line-color': '#ffffff', 'line-width': 0.6 } });
-      m.addLayer({ id: 'd-sel', type: 'line', source: 'districts', paint: { 'line-color': '#0f172a', 'line-width': 2.5 }, filter: ['==', ['get', 'id'], ''] });
-      m.addLayer({ id: 'h-fill', type: 'fill', source: 'hexes', paint: { 'fill-color': TB_RAMP[1], 'fill-opacity': 0.78 } });
-      m.addLayer({ id: 'h-line', type: 'line', source: 'hexes', paint: { 'line-color': '#ffffff', 'line-width': 0.4 } });
-      m.addLayer({ id: 'h-sel', type: 'line', source: 'hexes', paint: { 'line-color': '#0f172a', 'line-width': 2 }, filter: ['in', ['get', 'h3'], ['literal', []]] });
+      m.addLayer({ id: 'd-fill', type: 'fill', source: 'districts', paint: { 'fill-color': TB_RAMP[1], 'fill-opacity': 0.72 } }, below);
+      m.addLayer({ id: 'd-line', type: 'line', source: 'districts', paint: { 'line-color': '#ffffff', 'line-width': 0.6 } }, below);
+      m.addLayer({ id: 'd-sel', type: 'line', source: 'districts', paint: { 'line-color': '#0f172a', 'line-width': 2.5 }, filter: ['==', ['get', 'id'], ''] }, below);
+      m.addLayer({ id: 'h-fill', type: 'fill', source: 'hexes', paint: { 'fill-color': TB_RAMP[1], 'fill-opacity': 0.78 } }, below);
+      m.addLayer({ id: 'h-line', type: 'line', source: 'hexes', paint: { 'line-color': '#ffffff', 'line-width': 0.4 } }, below);
+      m.addLayer({ id: 'h-sel', type: 'line', source: 'hexes', paint: { 'line-color': '#0f172a', 'line-width': 2 }, filter: ['in', ['get', 'h3'], ['literal', []]] }, below);
       m.addLayer({ id: 'facilities', type: 'circle', source: 'facilities', paint: { 'circle-radius': ['match', ['get', 'kind'], 'hospital', 4.5, 3], 'circle-color': ['match', ['get', 'kind'], 'hospital', '#1d4ed8', '#60a5fa'], 'circle-stroke-color': '#fff', 'circle-stroke-width': 1 } });
       m.addLayer({ id: 'sites', type: 'circle', source: 'sites', paint: { 'circle-radius': ['interpolate', ['linear'], ['coalesce', ['get', 'pop_1km'], 0], 0, 4, 20000, 6, 80000, 10], 'circle-color': ['match', ['get', 'kind'], 'market', SITE_COLORS.market, 'transport hub', SITE_COLORS['transport hub'], 'prison', SITE_COLORS.prison, SITE_COLORS['mine / quarry']], 'circle-stroke-color': '#fff', 'circle-stroke-width': 2 } });
       m.addLayer({ id: 'highlight', type: 'circle', source: 'highlight', paint: { 'circle-radius': 16, 'circle-color': 'rgba(0,0,0,0)', 'circle-stroke-color': '#0f172a', 'circle-stroke-width': 3 } });

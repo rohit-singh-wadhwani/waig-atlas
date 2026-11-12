@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import TbMap, { breaksFor, TbLegend } from '../../components/TbMap';
 import { Button, Card, CardHeader, Empty, Segmented, cx } from '../../components/ui';
+import TitleSelect from '../../components/TitleSelect';
 import { expectedPositivity, fmtInt, TbCampaign, TbHex, TbSite } from '../../lib/tb';
 import { BasisTag, esc, kmFmt } from './common';
 import type { TbData } from './TbPage';
@@ -14,7 +15,7 @@ const distKm = (a: { lat: number; lon: number }, b: { lat: number; lon: number }
 };
 
 export default function CityScreening({ data, onPlan }: { data: TbData; onPlan: (c: Partial<TbCampaign>) => void }) {
-  const { layers, cities, dist, P } = data;
+  const { layers, cities, dist, P, campaigns } = data;
   const [city, setCity] = useState('');
   const [metric, setMetric] = useState<Metric>('expected_km2');
   const [showFac, setShowFac] = useState(false);
@@ -51,8 +52,11 @@ export default function CityScreening({ data, onPlan }: { data: TbData; onPlan: 
       .sort((a, b) => (b.expected_1km ?? 0) - (a.expected_1km ?? 0));
     const kept: TbSite[] = [];
     for (const s of inCity) if (!kept.some((k) => distKm(k, s) < DEDUPE_KM)) kept.push(s);
-    return kept;
-  }, [layers.data.siteList, c]);
+    // venues that already have a campaign come first
+    const has = (s: TbSite) => campaigns.data.some((cp) => cp.status !== 'cancelled' && cp.name === `${s.name || 'Market'}: TB screening`);
+    return [...kept.filter(has), ...kept.filter((s) => !has(s))];
+  }, [layers.data.siteList, c, campaigns.data]);
+  const campOf = (s: TbSite) => campaigns.data.find((cp) => cp.status !== 'cancelled' && cp.name === `${s.name || 'Market'}: TB screening`);
   const venueFc = useMemo(() => ({ type: 'FeatureCollection', features: venues.slice(0, all ? venues.length : 20).map((s) => ({ type: 'Feature', properties: s, geometry: { type: 'Point', coordinates: [s.lon, s.lat] } })) }), [venues, all]);
   const facFc = useMemo(() => {
     const fc = layers.data.facilities;
@@ -67,28 +71,23 @@ export default function CityScreening({ data, onPlan }: { data: TbData; onPlan: 
     return `<b>${esc(pr.district)}</b><br/>${fmtInt(Number(pr.pop))} people · ${fmtInt(Number(pr.density))} per km²<br/>≈${Number(pr.expected).toFixed(1)} TB cases a year expected<br/>Nearest facility ${kmFmt(Number(pr.facility_km))}`;
   };
 
-  if (!enabled.length || !hexes.length) return <Empty icon="map" title="No city data yet">Add a city on the Data & method tab; it is mapped at the next weekly run.</Empty>;
+  if (!enabled.length || !hexes.length) return <Empty icon="map" title="No city data yet">Add a city on the Data sources tab; it is mapped at the next weekly run.</Empty>;
   const shown = venues.slice(0, all ? venues.length : 20);
 
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_480px] gap-6 items-start">
         <Card className="min-w-0">
-          <CardHeader
-            title={`${c?.name || ''}`}
-            subtitle={`${fmtInt(totals.pop)} people within ${c?.radius_km} km · about ${fmtInt(totals.exp)} TB cases expected a year`}
-            right={
-              <div className="flex flex-wrap gap-2">
-                {enabled.length > 1 && <Segmented size="sm" value={city} onChange={setCity} options={enabled.map((x) => ({ value: x.id, label: x.name.split(' (')[0] }))} />}
-                <Segmented size="sm" value={metric} onChange={setMetric} options={[{ value: 'expected_km2', label: 'Expected cases per km²' }, { value: 'density', label: 'People per km²' }]} />
-              </div>
-            }
-          />
-          <label className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-1.5 text-sm cursor-pointer select-none mb-3">
-            <input type="checkbox" checked={showFac} onChange={(e) => setShowFac(e.target.checked)} /> Health facilities
-          </label>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            {enabled.length > 1 ? <TitleSelect label="City" value={city} onChange={setCity} options={enabled.map((x) => ({ value: x.id, label: x.name }))} /> : <h3 className="text-xl font-semibold">{c?.name}</h3>}
+            <Segmented size="sm" value={metric} onChange={setMetric} options={[{ value: 'expected_km2', label: 'Expected cases per km²' }, { value: 'density', label: 'People per km²' }]} />
+          </div>
+          <p className="text-[15px] text-gray-500 mt-1 mb-4">{`${fmtInt(totals.pop)} people within ${c?.radius_km} km · about ${fmtInt(totals.exp)} TB cases expected a year`}</p>
           <TbMap hexes={hexFc} sites={venueFc} facilities={facFc} metric={metric} breaks={breaks} fit={fit} highlight={picked ? [picked.lon, picked.lat] : null} tooltip={tip} height={620} />
-          <TbLegend title={metric === 'density' ? 'People per km²' : 'Expected cases per km² a year'} breaks={breaks} fmt={(v) => (metric === 'density' ? fmtInt(v) : v.toFixed(1))} sites />
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <TbLegend title={metric === 'density' ? 'People per km²' : 'Expected cases per km² a year'} breaks={breaks} fmt={(v) => (metric === 'density' ? fmtInt(v) : v < 0.1 ? v.toFixed(2) : v.toFixed(1))} sites />
+            <label className="inline-flex items-center gap-2 mt-3 text-sm text-gray-700 cursor-pointer select-none"><input type="checkbox" checked={showFac} onChange={(e) => setShowFac(e.target.checked)} /> Health facilities</label>
+          </div>
         </Card>
 
         <Card className="min-w-0" pad={false}>
@@ -99,7 +98,7 @@ export default function CityScreening({ data, onPlan }: { data: TbData; onPlan: 
             {shown.map((s, i) => {
               const p = expectedPositivity('market', dist.data.list.find((d) => d.id === s.district_id), P, natRate);
               return (
-                <li key={i} className={cx('px-6 py-3 flex gap-3 cursor-pointer hover:bg-gray-50', picked === s && 'bg-gray-50')} onClick={() => setPicked(s)}>
+                <li key={i} className={cx('px-6 py-3 flex gap-3 cursor-pointer hover:bg-gray-50', picked === s && 'bg-gray-50', campOf(s) && 'bg-green-50/60')} onClick={() => setPicked(s)}>
                   <span className="w-6 text-sm text-gray-400 tabular-nums pt-0.5">{i + 1}</span>
                   <span className="min-w-0 flex-1">
                     <span className="flex items-baseline justify-between gap-3">
@@ -107,6 +106,7 @@ export default function CityScreening({ data, onPlan }: { data: TbData; onPlan: 
                       <span className="shrink-0 text-right"><span className="tabular-nums font-semibold">{fmtInt(s.expected_1km)}</span><span className="text-xs text-gray-500"> cases/yr nearby</span></span>
                     </span>
                     <span className="block text-xs text-gray-500">{s.kind === 'transport hub' ? 'Lorry station / bus terminal' : 'Market'} · {s.district} · {fmtInt(s.pop_1km)} people within 1 km</span>
+                    {campOf(s) && <span className="inline-block mt-1 text-[11px] px-1.5 py-px rounded bg-green-100 text-green-800 font-medium">✓ Campaign {campOf(s)!.status}</span>}
                     <span className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-xs text-gray-600">
                       <span>Nearest facility {kmFmt(s.facility_km)}{s.walk_min != null ? ` · ${s.walk_min < 5 ? 'under 5' : fmtInt(s.walk_min)} min walk` : ''}</span>
                       {p != null && <span>≈1 case per {fmtInt(1 / p)} screened</span>}
