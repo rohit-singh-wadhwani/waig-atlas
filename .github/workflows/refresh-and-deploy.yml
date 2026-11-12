@@ -33,6 +33,8 @@ jobs:
     timeout-minutes: 75
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main # always build the latest data, even when a run was queued behind a data refresh
       - uses: actions/setup-node@v4
         with:
           node-version: 20
