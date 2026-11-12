@@ -1,30 +1,35 @@
-# One-off probe of new data sources (run in GitHub Actions; prints what is available). v2
-import json, re, requests
+# One-off probe v3: PxWeb table metadata + GSS district shapefile fields.
+import io, json, zipfile, requests
 from urllib.parse import quote
 H = {'User-Agent': 'waig-atlas-probe/1.0'}
-def get(u, **k):
-    r = requests.get(u, headers=H, timeout=120, **k); print('GET', r.status_code, u[:160], len(r.content)); return r
-
-print('== PxWeb raw root'); root = get('https://statsbank.statsghana.gov.gh/api/v1/en/').json(); print(json.dumps(root)[:600])
-db = next((d for d in root if 'PHC 2021' in json.dumps(d)), None); print('db', db)
-dbid = db.get('dbid') or db.get('id') or db.get('text')
-base = 'https://statsbank.statsghana.gov.gh/api/v1/en/' + quote(dbid) + '/'
-def walk(path, depth=0):
-    try: items = get(base + path).json()
-    except Exception as e: print('ERR', e); return
-    for it in items:
-        print('  ' * (depth + 1), it.get('type'), '|', it.get('id'), '|', it.get('text'))
-        if it.get('type') == 'l' and depth < 2 and re.search(r'hous|poverty|multidim|water|sanit|age|population', it.get('text', ''), re.I):
-            walk(path + quote(it['id']) + '/', depth + 1)
-walk('')
-
-print('== WorldPop age structures')
-for a in ['asic', 'aswpgp']:
+B = 'https://statsbank.statsghana.gov.gh/api/v1/en/PHC%202021%20StatsBank/'
+T = {'pop': 'Population/population_table2_locality2.px', 'hh': 'Population/avg_hhsize_table.px', 'sleep': 'Housing/sleep_rooms.px', 'mpi': 'Multidimensional%20Poverty/MPI_by_locality.px', 'ins': 'Population/health_insurance.px'}
+for k, t in T.items():
+    print('==', k)
     try:
-        j = get(f'https://hub.worldpop.org/rest/data/age_structures/{a}?iso3=GHA').json()
-        for d in j.get('data', [])[-6:]: print(json.dumps({k: d.get(k) for k in ('id', 'title', 'popyear', 'doi', 'files')})[:600])
+        m = requests.get(B + t, headers=H, timeout=60).json()
+        print(m.get('title'))
+        for v in m['variables']:
+            vals = list(zip(v['values'], v['valueTexts']))
+            print('  VAR', v['code'], '|', v['text'], '| n=', len(vals), '|', vals[:6], '...', vals[-3:])
     except Exception as e: print('ERR', e)
-j = get('https://hub.worldpop.org/rest/data/age_structures').json(); print(json.dumps(j)[:1800])
+# test query: MPI, all districts, total locality
 try:
-    r = get('https://hub.worldpop.org/geodata/summary?id=104559'); print(sorted(set(re.findall(r'https?://[^"\'\s<>]+', r.text)))[:80])
+    m = requests.get(B + T['mpi'], headers=H, timeout=60).json()
+    q = {'query': [], 'response': {'format': 'json-stat2'}}
+    for v in m['variables']:
+        if len(v['values']) > 300: continue
+        sel = v['values'] if v['code'].lower().startswith(('dist', 'geo', 'reg')) or len(v['values']) <= 8 else v['values'][:1]
+        q['query'].append({'code': v['code'], 'selection': {'filter': 'item', 'values': sel}})
+    r = requests.post(B + T['mpi'], json=q, headers=H, timeout=120); print('MPI POST', r.status_code, r.text[:1500])
 except Exception as e: print('ERR', e)
+print('== shapefile')
+r = requests.get('https://statsbank.statsghana.gov.gh/assets/geofiles.zip', headers=H, timeout=180)
+z = zipfile.ZipFile(io.BytesIO(r.content)); inner = zipfile.ZipFile(io.BytesIO(z.read('Geo FIles/Districts_261.zip')))
+print([i.filename for i in inner.infolist()])
+import shapefile
+shp = [n for n in inner.namelist() if n.endswith('.shp')][0]; base = shp[:-4]
+sf = shapefile.Reader(shp=io.BytesIO(inner.read(base + '.shp')), dbf=io.BytesIO(inner.read(base + '.dbf')), shx=io.BytesIO(inner.read(base + '.shx')))
+print('fields', sf.fields); print('n', len(sf)); print(sf.records()[:3]); print('bbox', sf.bbox)
+prj = [n for n in inner.namelist() if n.endswith('.prj')]
+if prj: print(inner.read(prj[0])[:400])
