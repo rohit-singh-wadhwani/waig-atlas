@@ -18,8 +18,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: pip install -q requests numpy rasterio shapely h3 scipy
-      - run: python scripts/tb/build_tb.py
+      - run: pip install -q requests numpy rasterio shapely h3 scipy pyshp
+      - run: python scripts/tb/build_tb3.py
         env:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       - name: DHIMS2 sync (skips when not configured)
@@ -35,16 +35,16 @@ jobs:
       - name: Summary
         run: |
           python - <<'PY'
-          import json, numpy as np
-          m = json.load(open('public/data/tb/meta.json')); print(json.dumps({k: m[k] for k in ('method', 'national', 'counts', 'access_basis')}, indent=1))
-          for s in m['sources']: print('SRC', s['ok'], s['name'], s.get('note', '')[:120])
+          import json, numpy as np, os
+          m = json.load(open('public/data/tb/meta.json')); print(json.dumps({k: m[k] for k in ('method', 'national', 'counts')}, indent=1))
+          for s in m['sources']: print('SRC', s['ok'], s['name'], s.get('note', '')[:140])
           d = [f['properties'] for f in json.load(open('public/data/tb/districts.geojson'))['features']]
-          wf = np.array([x['walk_far'] or 0 for x in d]); print('walk_far pct', np.percentile(wf, [10, 25, 50, 75, 90]).round(3), 'n>=.3', (wf >= .3).sum(), 'n>=.2', (wf >= .2).sum())
-          e = np.array([x['expected_100k'] for x in d]); print('exp_100k', np.percentile(e, [0, 25, 50, 75, 100]).round(1))
-          top = sorted(d, key=lambda x: -x['expected'])[:8]; print('top', [(x['name'], x['expected'], x['parts']) for x in top])
-          s = [f['properties'] for f in json.load(open('public/data/tb/sites.geojson'))['features']]
-          print('sites top', sorted([(x['pop_1km'], x['name'], x['kind'], x['district']) for x in s], reverse=True)[:8])
-          print(open('public/data/tb/dhims2.json').read())
+          for k in ('expected_100k', 'vs_ghana', 'age_effect', 'risk_effect', 'poverty', 'crowding', 'insured', 'walk_far', 'adults', 'urban'):
+              v = np.array([x[k] for x in d if x.get(k) is not None], float); print(k, len(v), np.percentile(v, [0, 10, 50, 90, 100]).round(3) if len(v) else '-')
+          top = sorted(d, key=lambda x: -x['expected_100k'])[:10]; print('top rate', [(x['name'], x['expected_100k'], x['vs_ghana']) for x in top])
+          top = sorted(d, key=lambda x: -x['expected'])[:10]; print('top count', [(x['name'], x['expected']) for x in top])
+          sz = sum(os.path.getsize(os.path.join('public/data/tb/d', f)) for f in os.listdir('public/data/tb/d')); print('district files MB', round(sz / 1e6, 1), len(os.listdir('public/data/tb/d')))
+          x = json.load(open('public/data/tb/d/' + top[0]['id'] + '.json')); print('sample', top[0]['id'], len(x['hexes']), len(x['towns']), len(x['venues']), len(x['facilities'])); print(x['towns'][:3]); print(x['venues'][:3])
           PY
       - name: Commit outputs to this branch
         run: |
