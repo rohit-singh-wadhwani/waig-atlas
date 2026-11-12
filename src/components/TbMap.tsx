@@ -3,7 +3,8 @@ import React, { useEffect, useRef, useState } from 'react';
 /** Sequential orange ramp for TB burden (light -> dark). Blind spots use a red hatch on top. */
 export const TB_RAMP = ['#fef0d9', '#fdd49e', '#fdbb84', '#fc8d59', '#e34a33', '#b30000'];
 export const BLIND_RED = '#c81e1e';
-const BASEMAP = 'https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png';
+// OpenFreeMap: free OpenStreetMap vector basemap, no API key or usage limits. Place names are drawn above our data.
+const BASEMAP_STYLE = 'https://tiles.openfreemap.org/styles/positron';
 
 export function breaksFor(values: number[], classes = 6) {
   const v = values.filter((x) => typeof x === 'number' && isFinite(x)).sort((a, b) => a - b);
@@ -70,11 +71,7 @@ export default function TbMap(p: TbMapProps) {
     if (!ml || !ref.current) return;
     const m = new ml.Map({
       container: ref.current,
-      style: {
-        version: 8,
-        sources: { base: { type: 'raster', tiles: [BASEMAP], tileSize: 256, attribution: '© OpenStreetMap contributors © CARTO' } },
-        layers: [{ id: 'base', type: 'raster', source: 'base' }],
-      },
+      style: BASEMAP_STYLE,
       bounds: [[-3.3, 4.6], [1.3, 11.2]],
       fitBoundsOptions: { padding: 20 },
       attributionControl: { compact: true },
@@ -85,14 +82,15 @@ export default function TbMap(p: TbMapProps) {
     m.on('load', () => {
       m.addImage('hatch', hatchImage(), { pixelRatio: 2 });
       const empty = { type: 'FeatureCollection', features: [] };
+      const below = (m.getStyle().layers || []).find((l: any) => l.type === 'symbol')?.id;
       for (const id of ['districts', 'hexes', 'facilities', 'sites', 'flows']) m.addSource(id, { type: 'geojson', data: empty, ...(id === 'districts' || id === 'hexes' ? { promoteId: id === 'districts' ? 'id' : 'h3' } : {}) });
-      m.addLayer({ id: 'd-fill', type: 'fill', source: 'districts', paint: { 'fill-color': TB_RAMP[1], 'fill-opacity': 0.72 } });
-      m.addLayer({ id: 'd-hatch', type: 'fill', source: 'districts', paint: { 'fill-pattern': 'hatch', 'fill-opacity': 0.9 }, filter: ['==', ['get', 'id'], '__none__'] });
-      m.addLayer({ id: 'd-line', type: 'line', source: 'districts', paint: { 'line-color': '#ffffff', 'line-width': 0.6 } });
-      m.addLayer({ id: 'd-sel', type: 'line', source: 'districts', paint: { 'line-color': '#0f172a', 'line-width': 2.5 }, filter: ['==', ['get', 'id'], ''] });
-      m.addLayer({ id: 'h-fill', type: 'fill', source: 'hexes', paint: { 'fill-color': TB_RAMP[1], 'fill-opacity': 0.78 } });
-      m.addLayer({ id: 'h-line', type: 'line', source: 'hexes', paint: { 'line-color': '#ffffff', 'line-width': 0.4 } });
-      m.addLayer({ id: 'h-sel', type: 'line', source: 'hexes', paint: { 'line-color': '#0f172a', 'line-width': 2 }, filter: ['in', ['get', 'h3'], ['literal', []]] });
+      m.addLayer({ id: 'd-fill', type: 'fill', source: 'districts', paint: { 'fill-color': TB_RAMP[1], 'fill-opacity': 0.72 } }, below);
+      m.addLayer({ id: 'd-hatch', type: 'fill', source: 'districts', paint: { 'fill-pattern': 'hatch', 'fill-opacity': 0.9 }, filter: ['==', ['get', 'id'], '__none__'] }, below);
+      m.addLayer({ id: 'd-line', type: 'line', source: 'districts', paint: { 'line-color': '#ffffff', 'line-width': 0.6 } }, below);
+      m.addLayer({ id: 'd-sel', type: 'line', source: 'districts', paint: { 'line-color': '#0f172a', 'line-width': 2.5 }, filter: ['==', ['get', 'id'], ''] }, below);
+      m.addLayer({ id: 'h-fill', type: 'fill', source: 'hexes', paint: { 'fill-color': TB_RAMP[1], 'fill-opacity': 0.78 } }, below);
+      m.addLayer({ id: 'h-line', type: 'line', source: 'hexes', paint: { 'line-color': '#ffffff', 'line-width': 0.4 } }, below);
+      m.addLayer({ id: 'h-sel', type: 'line', source: 'hexes', paint: { 'line-color': '#0f172a', 'line-width': 2 }, filter: ['in', ['get', 'h3'], ['literal', []]] }, below);
       m.addLayer({ id: 'flows', type: 'line', source: 'flows', layout: { 'line-cap': 'round' }, paint: { 'line-color': '#1e3a8a', 'line-opacity': 0.75, 'line-width': ['interpolate', ['linear'], ['get', 'share'], 0, 1.5, 0.3, 6], 'line-dasharray': [2, 1.5] } });
       m.addLayer({ id: 'sites', type: 'circle', source: 'sites', paint: { 'circle-radius': 4, 'circle-color': ['match', ['get', 'kind'], 'market', '#7c3aed', 'transport hub', '#0891b2', 'prison', '#111827', '#a16207'], 'circle-stroke-color': '#fff', 'circle-stroke-width': 1.5 } });
       m.addLayer({ id: 'facilities', type: 'circle', source: 'facilities', paint: { 'circle-radius': ['match', ['get', 'kind'], 'hospital', 5, 3.5], 'circle-color': ['match', ['get', 'kind'], 'hospital', '#1d4ed8', '#60a5fa'], 'circle-stroke-color': '#fff', 'circle-stroke-width': 1.2 } });
