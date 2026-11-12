@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import TbMap, { breaksFor, TbLegend } from '../../components/TbMap';
-import { Button, Card, CardHeader, Empty, Segmented, Select } from '../../components/ui';
+import { Button, Card, CardHeader, Empty, Segmented } from '../../components/ui';
+import TitleSelect from '../../components/TitleSelect';
 import { fmtInt, TbCampaign, TbHex } from '../../lib/tb';
 import type { TbData } from './TbPage';
 
@@ -62,20 +63,11 @@ export default function CityView({ data, onPlan }: { data: TbData; onPlan: (c: P
   return (
     <div className="grid grid-cols-1 2xl:grid-cols-[minmax(0,1fr)_420px] gap-6">
       <Card className="min-w-0">
-        <CardHeader
-          title={c?.name || 'City'}
-          subtitle={`${m.help} Click hexagons to select an area for a campaign.`}
-        />
-        <div className="flex flex-wrap items-center gap-2 mb-3 text-sm">
-          <Select className="w-[200px] [&_select]:h-9 [&_select]:text-sm" value={city} onChange={(v) => { if (v) { setCity(v); setPicked([]); } }} options={enabled.map((x) => ({ value: x.id, label: x.name.split(' (')[0] }))} />
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <TitleSelect label="City" value={city} onChange={(v) => { setCity(v); setPicked([]); }} options={enabled.map((x) => ({ value: x.id, label: x.name }))} />
           <Segmented size="sm" value={metric} onChange={setMetric} options={HEX_METRICS.map((x) => ({ value: x.key, label: x.label }))} />
-          {([['facilities', 'Health facilities'], ['sites', 'Markets, transport, prisons, mines']] as const).map(([k, label]) => (
-            <label key={k} className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-1.5 cursor-pointer select-none">
-              <input type="checkbox" checked={show[k]} onChange={(e) => setShow({ ...show, [k]: e.target.checked })} />
-              {label}
-            </label>
-          ))}
         </div>
+        <p className="text-[15px] text-gray-500 mt-1 mb-4">{m.help} Click hexagons to select an area for a campaign.</p>
         <TbMap
           districts={dist.data.geo}
           hexes={hexFc}
@@ -95,7 +87,17 @@ export default function CityView({ data, onPlan }: { data: TbData; onPlan: (c: P
           }
           height={560}
         />
-        <TbLegend title={m.label} breaks={breaks} fmt={m.fmt} />
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <TbLegend title={m.label} breaks={breaks} fmt={m.fmt} />
+          <div className="flex flex-wrap gap-4 mt-3 text-sm text-gray-700">
+            {([['facilities', 'Health facilities'], ['sites', 'Markets, transport, prisons, mines']] as const).map(([k, label]) => (
+              <label key={k} className="inline-flex items-center gap-2 cursor-pointer select-none">
+                <input type="checkbox" checked={show[k]} onChange={(e) => setShow({ ...show, [k]: e.target.checked })} />
+                {label}
+              </label>
+            ))}
+          </div>
+        </div>
       </Card>
 
       <Card className="min-w-0">
