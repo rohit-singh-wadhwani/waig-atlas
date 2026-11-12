@@ -23,7 +23,7 @@ function reasons(h: TbHex) {
 }
 
 export default function CityView({ data, onPlan }: { data: TbData; onPlan: (c: Partial<TbCampaign>) => void }) {
-  const { layers, cities, dist } = data;
+  const { layers, cities, dist, campaigns } = data;
   const [city, setCity] = useState<string>('');
   const [metric, setMetric] = useState('hidden');
   const [show, setShow] = useState({ facilities: true, sites: true });
@@ -50,6 +50,20 @@ export default function CityView({ data, onPlan }: { data: TbData; onPlan: (c: P
   const clip = (fc: any) => (fc && fit ? { type: 'FeatureCollection', features: fc.features.filter((f: any) => { const [x, y] = f.geometry.coordinates; return x >= fit[0] && x <= fit[2] && y >= fit[1] && y <= fit[3]; }) } : null);
   const toggle = (id: string) => setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
   const pickedHexes = hexes.filter((h) => picked.includes(h.h3));
+  // hexagons already covered by a campaign in this city
+  const campByHex = useMemo(() => {
+    const m = new Map<string, TbCampaign>();
+    for (const cp of campaigns.data) if (cp.status !== 'cancelled' && (!cp.city || cp.city === city)) for (const id of cp.hex_ids || []) if (!m.has(id)) m.set(id, cp);
+    return m;
+  }, [campaigns.data, city]);
+  // selected first, then areas with a campaign, then the top estimates
+  const list = useMemo(() => {
+    const byId = new Map(hexes.map((h) => [h.h3, h]));
+    const sel = picked.map((id) => byId.get(id)).filter(Boolean) as TbHex[];
+    const withCamp = hexes.filter((h) => campByHex.has(h.h3) && !picked.includes(h.h3)).sort((a, b) => b.hidden - a.hidden);
+    const rest = top.filter((h) => !picked.includes(h.h3) && !campByHex.has(h.h3));
+    return [...sel, ...withCamp, ...rest];
+  }, [hexes, picked, campByHex, top]);
 
   const plan = () => {
     const byD: Record<string, number> = {};
@@ -103,23 +117,31 @@ export default function CityView({ data, onPlan }: { data: TbData; onPlan: (c: P
       <Card className="min-w-0">
         <CardHeader
           title="Where to screen first"
-          subtitle="Hexagons with the most estimated hidden cases"
+          subtitle="Selected areas and areas with a campaign come first, then the most estimated hidden cases"
           right={picked.length ? <Button variant="primary" icon="target" onClick={plan}>Plan for {picked.length}</Button> : undefined}
         />
         <ol className="divide-y divide-gray-100">
-          {top.map((h, i) => (
-            <li key={h.h3} className="py-2.5 flex gap-3 items-start">
-              <input type="checkbox" className="mt-1.5" checked={picked.includes(h.h3)} onChange={() => toggle(h.h3)} aria-label={`Select area ${i + 1}`} />
-              <div className="min-w-0 flex-1">
-                <div className="flex justify-between gap-3">
-                  <span className="font-medium text-gray-900 truncate">{h.district}</span>
-                  <span className="text-sm tabular-nums shrink-0">≈{h.hidden.toFixed(1)} hidden</span>
+          {list.map((h, i) => {
+            const sel = picked.includes(h.h3);
+            const cp = campByHex.get(h.h3);
+            return (
+              <li key={h.h3} className={`py-2.5 px-2 -mx-2 rounded-lg flex gap-3 items-start ${sel ? 'bg-brand-50/70' : cp ? 'bg-green-50/60' : ''}`}>
+                <input type="checkbox" className="mt-1.5" checked={sel} onChange={() => toggle(h.h3)} aria-label={`Select area ${i + 1}`} />
+                <div className="min-w-0 flex-1">
+                  <div className="flex justify-between gap-3">
+                    <span className="font-medium text-gray-900 truncate">{h.district}</span>
+                    <span className="text-sm tabular-nums shrink-0">≈{h.hidden.toFixed(1)} hidden</span>
+                  </div>
+                  <div className="text-xs text-gray-500">{fmtInt(h.pop)} people · {fmtInt(h.density)}/km²</div>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {sel && <span className="text-[11px] px-1.5 py-px rounded bg-brand-100 text-brand-800 font-medium">✓ Selected</span>}
+                    {cp && <span className="text-[11px] px-1.5 py-px rounded bg-green-100 text-green-800 font-medium" title={cp.name}>✓ Campaign {cp.status}: {cp.name.length > 32 ? cp.name.slice(0, 32) + '…' : cp.name}</span>}
+                    {reasons(h).map((r) => <span key={r} className="text-[11px] px-1.5 py-px rounded bg-orange-50 text-orange-800">{r}</span>)}
+                  </div>
                 </div>
-                <div className="text-xs text-gray-500">{fmtInt(h.pop)} people · {fmtInt(h.density)}/km²</div>
-                <div className="flex flex-wrap gap-1 mt-1">{reasons(h).map((r) => <span key={r} className="text-[11px] px-1.5 py-px rounded bg-orange-50 text-orange-800">{r}</span>)}</div>
-              </div>
-            </li>
-          ))}
+              </li>
+            );
+          })}
         </ol>
         <p className="text-xs text-gray-500 mt-3">
           Hexagon estimates share out the district estimate by population, crowding, wealth, distance to care and nearby markets, lorry stations, prisons and mines. Campaign results in these areas sharpen them.
