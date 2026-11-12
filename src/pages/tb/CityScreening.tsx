@@ -77,18 +77,16 @@ export default function CityScreening({ data, onPlan }: { data: TbData; onPlan: 
           <CardHeader
             title={`${c?.name || ''}`}
             subtitle={`${fmtInt(totals.pop)} people within ${c?.radius_km} km · about ${fmtInt(totals.exp)} TB cases expected a year`}
-            right={
-              <div className="flex flex-wrap gap-2">
+          />
+          <div className="flex flex-wrap items-center gap-2 mb-3">
                 {enabled.length > 1 && <Select className="w-[200px] [&_select]:h-9 [&_select]:text-sm" value={city} onChange={(v) => v && setCity(v)} options={enabled.map((x) => ({ value: x.id, label: x.name.split(' (')[0] }))} />}
                 <Segmented size="sm" value={metric} onChange={setMetric} options={[{ value: 'expected_km2', label: 'Expected cases per km²' }, { value: 'density', label: 'People per km²' }]} />
-              </div>
-            }
-          />
-          <label className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-1.5 text-sm cursor-pointer select-none mb-3">
-            <input type="checkbox" checked={showFac} onChange={(e) => setShowFac(e.target.checked)} /> Health facilities
-          </label>
+              <label className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-1.5 text-sm cursor-pointer select-none">
+              <input type="checkbox" checked={showFac} onChange={(e) => setShowFac(e.target.checked)} /> Health facilities
+            </label>
+          </div>
           <TbMap hexes={hexFc} sites={venueFc} facilities={facFc} metric={metric} breaks={breaks} fit={fit} highlight={picked ? [picked.lon, picked.lat] : null} tooltip={tip} height={620} />
-          <TbLegend title={metric === 'density' ? 'People per km²' : 'Expected cases per km² a year'} breaks={breaks} fmt={(v) => (metric === 'density' ? fmtInt(v) : v.toFixed(1))} sites />
+          <TbLegend title={metric === 'density' ? 'People per km²' : 'Expected cases per km² a year'} breaks={breaks} fmt={(v) => (metric === 'density' ? fmtInt(v) : v < 0.1 ? v.toFixed(2) : v.toFixed(1))} sites />
         </Card>
 
         <Card className="min-w-0" pad={false}>
