@@ -58,7 +58,7 @@ export default function Evidence({ data }: { data: TbData }) {
                 <tr><td colSpan={4} className="px-6 pt-4 pb-1 text-xs font-semibold uppercase tracking-wide text-gray-400">{g}</td></tr>
                 {list.map((s, i) => {
                   const d = describe(s.name);
-                  const count = s.name.match(/\((\d[\d,]*)\s*(\w*)\)$/);
+                  const count = s.name.match(/\((\d[\d,]*)\s+([a-z]+)\)$/i);
                   return (
                     <tr key={i} className="border-b border-gray-100 align-top">
                       <td className="px-6 py-3 min-w-[260px]"><ExtLink href={s.url}>{cleanName(s.name)}</ExtLink>{count && <span className="block text-xs text-gray-500">{count[1]} {count[2] || 'records'}</span>}</td>
