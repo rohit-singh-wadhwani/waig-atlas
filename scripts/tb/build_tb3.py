@@ -218,7 +218,7 @@ def worldpop_2026():
 
 def osm_extra():
     area = 'area["ISO3166-1"="GH"][admin_level=2]->.a;'
-    places = overpass(f'[out:json][timeout:300];{area}node["place"~"^(city|town|suburb|village|hamlet)$"](area.a);out tags;', 'towns and villages') or []
+    places = overpass(f'[out:json][timeout:300];{area}node["place"~"^(city|town|suburb|village|hamlet)$"](area.a);out;', 'towns and villages') or []
     comm = overpass(f'[out:json][timeout:300];{area}(nwr["amenity"~"^(school|place_of_worship|community_centre|pharmacy)$"](area.a);nwr["office"="ngo"](area.a););out center tags;', 'schools, places of worship, community centres, pharmacies, NGOs') or []
 
     def pt(e):
