@@ -8,7 +8,7 @@ export const pctFmt = (v: number | null | undefined, digits = 0) => (v == null |
 const BASIS: Record<Basis, { label: string; cls: string; title: string }> = {
   reported: { label: 'Reported', cls: 'bg-green-50 text-green-700 ring-green-200', title: 'Counted by a real system: WHO, DHIMS2, uploads or campaign reports' },
   measured: { label: 'Measured', cls: 'bg-sky-50 text-sky-700 ring-sky-200', title: 'From an open dataset: WorldPop, Malaria Atlas, OpenStreetMap, DHS' },
-  estimated: { label: 'Estimated', cls: 'bg-amber-50 text-amber-800 ring-amber-200', title: 'Calculated from reported and measured data; see Data & method' },
+  estimated: { label: 'Estimated', cls: 'bg-amber-50 text-amber-800 ring-amber-200', title: 'Calculated from reported and measured data; see Data sources' },
 };
 
 /** Small tag saying where a number comes from. */

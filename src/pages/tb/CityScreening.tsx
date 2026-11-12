@@ -71,7 +71,7 @@ export default function CityScreening({ data, onPlan }: { data: TbData; onPlan: 
     return `<b>${esc(pr.district)}</b><br/>${fmtInt(Number(pr.pop))} people · ${fmtInt(Number(pr.density))} per km²<br/>≈${Number(pr.expected).toFixed(1)} TB cases a year expected<br/>Nearest facility ${kmFmt(Number(pr.facility_km))}`;
   };
 
-  if (!enabled.length || !hexes.length) return <Empty icon="map" title="No city data yet">Add a city on the Data & method tab; it is mapped at the next weekly run.</Empty>;
+  if (!enabled.length || !hexes.length) return <Empty icon="map" title="No city data yet">Add a city on the Data sources tab; it is mapped at the next weekly run.</Empty>;
   const shown = venues.slice(0, all ? venues.length : 20);
 
   return (
