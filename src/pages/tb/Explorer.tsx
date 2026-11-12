@@ -421,7 +421,7 @@ function TownPanel({ d, town, venues, facilities, picked, toggle, campaigns, onP
         )}
         <div className="sticky bottom-0 bg-white pt-3 mt-2 border-t border-gray-100 flex items-center justify-between gap-3">
           <span className="text-sm text-gray-600">{picked.length ? `${picked.length} spot${picked.length > 1 ? 's' : ''} selected` : 'Select spots, or plan for the whole town'}</span>
-          <Button variant="primary" icon="target" onClick={onPlan}>Plan campaign</Button>
+          <Button variant="primary" icon="target" className="whitespace-nowrap shrink-0" onClick={onPlan}>Plan campaign</Button>
         </div>
       </Panel>
 
