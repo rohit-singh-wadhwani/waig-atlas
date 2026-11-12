@@ -5,17 +5,19 @@ import { db, dataUrl, uid } from './store';
 export type Basis = 'reported' | 'measured' | 'estimated';
 
 export type TbDistrict = {
-  id: string; name: string; region: string; pop: number; area_km2: number; density: number; rwi: number;
-  minutes: number; pct_far: number; walk_min: number | null; walk_far: number | null; walk_far_pop: number | null;
-  facilities: number; hospitals: number; labs: number; fac_100k: number; markets: number; hubs: number; prisons: number; mines: number;
-  hiv: number | null; thin: number | null; smoke: number | null;
-  expected: number; expected_100k: number; parts: Partial<Record<'hiv' | 'und' | 'smk' | 'alc' | 'dia' | 'other', number>>; lon: number; lat: number;
-  // joined in the app (members only): district notifications and campaign results
-  notified: number | null; notified_basis: string | null; detection: number | null; missed: number; missed_100k: number;
-  screened: number; confirmed: number; rank: number; approach: ApproachKey;
+  id: string; name: string; region: string; pop: number; census_pop: number | null; area_km2: number;
+  expected: number; expected_100k: number; vs_ghana: number; share: number; age_effect: number | null; risk_effect: number | null;
+  adults: number | null; male: number | null; urban: number | null; poverty: number | null; crowding: number | null; one_room: number | null; hh_size: number | null; insured: number | null;
+  hiv: number | null; thin: number | null; smoke: number | null; drive_min: number | null; walk_min: number | null; walk_far: number | null;
+  facilities: number; hospitals: number; labs: number; fac_100k: number; markets: number; hubs: number; prisons: number; mines: number; towns: number; lon: number; lat: number;
+  // joined in the app (members only)
+  notified: number | null; notified_basis: string | null; detection: number | null; missed: number; screened: number; confirmed: number; rank: number; approach: ApproachKey;
 };
-export type TbHex = { h3: string; city: string; district: string; district_id: string; pop: number; density: number; rwi: number; facility_km: number; minutes: number | null; walk_min: number | null; expected: number; expected_km2: number };
-export type TbSite = { kind: 'market' | 'transport hub' | 'prison' | 'mine / quarry'; name: string; district: string | null; district_id: string | null; pop_1km: number; expected_1km: number | null; facility_km: number; hospital_km: number; minutes: number | null; walk_min: number | null; lon: number; lat: number };
+export type TbHexRow = { h: string; p: number; e: number; k: number; f: number | null; w: number | null; r: [number, number][] };
+export type TbTown = { name: string; place: string; lon: number; lat: number; radius_km: number; pop: number; expected: number; facility_km: number | null; hospital_km: number | null; drive_min: number | null; walk_min: number | null };
+export type TbVenue = { name: string; kind: string; cong: boolean; lon: number; lat: number; pop_1km: number; expected_1km: number; facility_km: number | null; hospital_km: number | null; walk_min: number | null; district?: string; district_id?: string };
+export type TbFacility = { name: string; kind: string; lab: boolean; lon: number; lat: number };
+export type TbDetail = { id: string; hexes: TbHexRow[]; towns: TbTown[]; venues: TbVenue[]; facilities: TbFacility[] };
 export type TbParam = { id: string; grp: string; label: string; value: number; unit?: string; description?: string; source_title?: string; source_url?: string; status: 'evidence' | 'assumption' | 'policy'; updated_at?: string; updated_by?: string };
 export type TbStep = { key: string; title: string; role: string; due_days: number; detail?: string };
 export type TbPlaybook = { id: string; name: string; trigger?: string; description?: string; setting?: string; steps: TbStep[]; source_title?: string; source_url?: string; enabled: boolean };
@@ -23,6 +25,7 @@ export type TbCampaign = {
   id: string; name: string; city?: string | null; district_id?: string | null; district_name?: string | null; hex_ids?: string[]; setting?: string | null; playbook_id?: string | null;
   status: 'planned' | 'active' | 'done' | 'cancelled'; start_date?: string | null; end_date?: string | null; owner?: string | null; target_screened?: number | null;
   predicted_positivity?: number | null; notes?: string | null; created_by?: string | null; created_at?: string;
+  town?: string | null; spots?: { name: string; kind: string; lon: number; lat: number; pop_1km?: number }[] | null;
 };
 export type TbResult = {
   id: string; campaign_id: string; report_date: string; screened: number; cough_flagged: number; cxr_flagged: number; presumptive: number; tested: number; confirmed: number;
@@ -35,11 +38,11 @@ export type TbTask = {
 };
 export type TbCity = { id: string; name: string; lat: number; lon: number; radius_km: number; h3_res: number; city_partner?: string | null; enabled: boolean };
 export type TbMeta = {
-  updated_at: string; access_basis?: string; error?: string;
+  updated_at: string; error?: string;
   sources: { name: string; url: string; ok: boolean; note?: string; at: string }[];
-  method?: { far_minutes: number; catchment_km: number; attributable_year: number | null; attributable: Record<string, number>; unattributed: number; population_scale: number };
-  national?: { year: number; incidence: number; incidence_lo?: number | null; incidence_hi?: number | null; notified: number; cdr: number; pop: number; tbhiv_pct?: number | null };
-  counts?: { districts: number; facilities: number; sites: number; hexagons: number };
+  method?: { far_minutes: number; catchment_km: number; who_age_year?: number; age_groups?: string[]; attributable: Record<string, number>; attributable_year: number | null; census_missing?: string[] };
+  national?: { year: number; incidence: number; incidence_lo?: number | null; incidence_hi?: number | null; notified: number; cdr: number; pop: number; rate_100k?: number; tbhiv_pct?: number | null };
+  counts?: Record<string, number>;
 };
 export type Dhims2Status = { checked_at: string; connected: boolean; configured?: boolean; message: string; items?: { key: string; name: string }[]; districts_matched?: number; districts_total?: number; unmatched?: string[]; months?: string[] };
 
@@ -54,10 +57,14 @@ export async function loadTbPublic() {
   const [districts, meta, national, dhims2] = await Promise.all([json('districts.geojson').catch(() => null), json('meta.json').catch(() => null), json('national.json').catch(() => null), json('dhims2.json').catch(() => null)]);
   return { districts, meta: meta as TbMeta | null, national: national as { years: any[]; latest: any } | null, dhims2: dhims2 as Dhims2Status | null };
 }
-export const loadTbLayers = async () => {
-  const [facilities, sites, cities] = await Promise.all([json('facilities.geojson').catch(() => null), json('sites.geojson').catch(() => null), json('cities.geojson').catch(() => null)]);
-  return { facilities, sites, cities, siteList: (sites?.features || []).map((f: any) => ({ ...f.properties, lon: f.geometry.coordinates[0], lat: f.geometry.coordinates[1] })) as TbSite[] };
-};
+const detailCache = new Map<string, Promise<TbDetail | null>>();
+/** Hexagons, towns, screening spots and facilities for one district (loaded when the district is opened). */
+export function loadDistrictDetail(id: string) {
+  if (!detailCache.has(id)) detailCache.set(id, json(`d/${id}.json`).catch(() => null));
+  return detailCache.get(id)!;
+}
+export const loadKeySites = () => json('keysites.json').catch(() => []) as Promise<TbVenue[]>;
+export const loadReportedRegions = () => json('reported_regions.json').catch(() => ({})) as Promise<Record<string, { period: string; tb: number }[]>>;
 
 type NotifRow = { district_id: string; period: string; notified: number | null; source?: string | null };
 

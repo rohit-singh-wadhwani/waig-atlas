@@ -8,11 +8,20 @@ import type { TbData } from './TbPage';
 
 /** What each feed gives us and what it is used for, matched on the feed name the pipeline reports. */
 const CATALOG: { match: RegExp; group: string; gives: string; use: string }[] = [
+  { match: /DHIMS/i, group: 'TB numbers', gives: 'Monthly reported TB cases for Ashanti, Eastern and Volta, 2016-2023', use: 'Reported trend in those regions' },
+  { match: /age group and sex/i, group: 'TB numbers', gives: 'Ghana TB cases by age group and sex', use: 'Expected cases from each district\'s age and sex mix' },
+  { match: /Census: population/i, group: 'Who lives where', gives: 'Population by district, single age and sex; urban share', use: 'Age and sex mix of each district' },
+  { match: /Census district boundaries/i, group: 'Boundaries', gives: 'The 261 districts used by GHS and DHIMS2', use: 'Map, district totals, joining DHIMS2' },
+  { match: /sleeping rooms/i, group: 'Who is at risk', gives: 'Household size and sleeping rooms by district', use: 'Crowded homes' },
+  { match: /poverty/i, group: 'Who is at risk', gives: 'Share of people in multidimensional poverty, by district', use: 'Poorer districts' },
+  { match: /insurance/i, group: 'Who is at risk', gives: 'Share of people with health insurance, by district', use: 'Barriers to care' },
+  { match: /towns and villages/i, group: 'Where people live and reach care', gives: 'Named towns, villages and suburbs', use: 'Towns to visit in each district' },
+  { match: /schools|worship/i, group: 'Where people live and reach care', gives: 'Schools, churches, mosques, community centres, pharmacies, NGO offices', use: 'Screening spots and referral points' },
   { match: /attributable/i, group: 'TB numbers', gives: 'TB cases linked to HIV, undernourishment, smoking, alcohol, diabetes', use: 'Splitting expected cases by risk' },
   { match: /WHO/i, group: 'TB numbers', gives: 'Ghana\'s estimated and notified TB cases, by year', use: 'National totals: expected, found, missed' },
   { match: /DHS/i, group: 'Who is at risk', gives: 'HIV, thinness and smoking rates by region', use: 'Which regions carry more risk' },
   { match: /Wealth/i, group: 'Who is at risk', gives: 'Relative wealth of each ~2 km area', use: 'Poorer areas' },
-  { match: /WorldPop/i, group: 'Where people live and reach care', gives: 'Population on a 100 m grid', use: 'Spreading cases to where people live' },
+  { match: /WorldPop/i, group: 'Who lives where', gives: 'Population on a 100 m grid', use: 'People in each hexagon, town and spot' },
   { match: /Malaria Atlas|travel time/i, group: 'Where people live and reach care', gives: 'Travel time to the nearest health facility', use: 'Who is far from care' },
   { match: /health facilities/i, group: 'Where people live and reach care', gives: 'Clinics and hospitals', use: 'Distance to care, facility counts' },
   { match: /congregate|sites/i, group: 'Where people live and reach care', gives: 'Markets, lorry stations, prisons, mines', use: 'Screening venues and key populations' },
@@ -30,7 +39,7 @@ export default function Evidence({ data }: { data: TbData }) {
   const groups = useMemo(() => {
     const g: Record<string, typeof sources> = {};
     for (const s of sources) (g[describe(s.name).group] ||= []).push(s);
-    return ['TB numbers', 'Who is at risk', 'Where people live and reach care', 'Boundaries', 'Other'].filter((k) => g[k]).map((k) => [k, g[k]] as const);
+    return ['TB numbers', 'Who lives where', 'Who is at risk', 'Where people live and reach care', 'Boundaries', 'Other'].filter((k) => g[k]).map((k) => [k, g[k]] as const);
   }, [sources]);
   const notifDistricts = dist.data.notifiedDistricts;
   const dh = dist.data.dhims2;
@@ -60,7 +69,7 @@ export default function Evidence({ data }: { data: TbData }) {
                 <tr><td colSpan={4} className="px-6 pt-4 pb-1 text-xs font-semibold uppercase tracking-wide text-gray-400">{g}</td></tr>
                 {list.map((s, i) => {
                   const d = describe(s.name);
-                  const count = s.name.match(/\((\d[\d,]*)\s*(\w*)\)$/);
+                  const count = s.name.match(/\((\d[\d,]*)\s+([a-z]+)\)$/i);
                   return (
                     <tr key={i} className="border-b border-gray-100 align-top">
                       <td className="px-6 py-3 min-w-[260px]"><ExtLink href={s.url}>{cleanName(s.name)}</ExtLink>{count && <span className="block text-xs text-gray-500">{count[1]} {count[2] || 'records'}</span>}</td>
@@ -83,7 +92,7 @@ export default function Evidence({ data }: { data: TbData }) {
         <Card>
           <CardHeader title="How the numbers are made" />
           <ol className="space-y-2.5 text-[15px] text-gray-700">
-            <Step n={1}><b>Expected cases:</b> WHO's estimate for Ghana ({fmtInt(meta?.national?.incidence)}). The cases WHO links to HIV, undernourishment and smoking are shared by each region's survey rates; the rest by where people live.</Step>
+            <Step n={1}><b>Expected cases:</b> WHO's TB rates for each age group and sex, applied to each district's Census 2021 population, grown to 2026 with WorldPop. The cases WHO links to HIV, undernourishment and smoking are scaled by the region's survey rates. All districts add up to WHO's {fmtInt(meta?.national?.incidence)}.</Step>
             <Step n={2}><b>Found:</b> district notifications from DHIMS2 or uploads. Until connected, Ghana's national rate ({meta?.national ? `${Math.round(meta.national.cdr * 100)}%` : '—'}) is used everywhere.</Step>
             <Step n={3}><b>Missed:</b> expected minus found. Districts are ranked by this.</Step>
             <Step n={4}><b>Approach:</b> found below {P.rule_low_detection != null ? `${Math.round(P.rule_low_detection * 100)}%` : '—'} of expected → fix detection; {P.rule_walk_far_share != null ? `${Math.round(P.rule_walk_far_share * 100)}%` : '—'}+ of people over an hour's walk from care → mobile outreach; otherwise clinics and household contacts.</Step>
@@ -102,7 +111,6 @@ export default function Evidence({ data }: { data: TbData }) {
         </Card>
       </div>
 
-      <CitiesCard data={data} />
       {uploading && <UploadNotifications data={data} onClose={() => setUploading(false)} />}
     </div>
   );
@@ -154,39 +162,5 @@ function UploadNotifications({ data, onClose }: { data: TbData; onClose: () => v
         </>
       )}
     </Modal>
-  );
-}
-
-function CitiesCard({ data }: { data: TbData }) {
-  const [adding, setAdding] = useState(false);
-  const [n, setN] = useState({ name: '', lat: '', lon: '', radius_km: '10' });
-  const add = () => {
-    const lat = Number(n.lat), lon = Number(n.lon);
-    if (!n.name.trim() || !isFinite(lat) || !isFinite(lon)) return;
-    tbSave('tb_cities', { id: n.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'), name: n.name.trim(), lat, lon, radius_km: Number(n.radius_km) || 10, h3_res: 8, enabled: true } as any);
-    setN({ name: '', lat: '', lon: '', radius_km: '10' });
-    setAdding(false);
-  };
-  return (
-    <Card>
-      <CardHeader title={`Cities mapped (${data.cities.data.filter((c) => c.enabled !== false).length})`} subtitle="Each gets a detailed hexagon map. New cities appear after the next weekly refresh." right={!adding && <Button icon="plus" onClick={() => setAdding(true)}>Add city</Button>} />
-      <div className="flex flex-wrap gap-2">
-        {data.cities.data.map((c) => (
-          <span key={c.id} className="inline-flex items-center gap-2 rounded-full border border-gray-200 px-3 py-1 text-sm">
-            {c.name}<span className="text-gray-400">{c.radius_km} km</span>
-          </span>
-        ))}
-      </div>
-      {adding && (
-        <div className="flex flex-wrap gap-2 mt-4">
-          <TextInput className="w-48" placeholder="City name" value={n.name} onChange={(e) => setN({ ...n, name: e.target.value })} />
-          <TextInput className="w-28" placeholder="Latitude" value={n.lat} onChange={(e) => setN({ ...n, lat: e.target.value })} />
-          <TextInput className="w-28" placeholder="Longitude" value={n.lon} onChange={(e) => setN({ ...n, lon: e.target.value })} />
-          <TextInput className="w-28" placeholder="Radius km" value={n.radius_km} onChange={(e) => setN({ ...n, radius_km: e.target.value })} />
-          <Button variant="primary" onClick={add}>Add</Button>
-          <Button onClick={() => setAdding(false)}>Cancel</Button>
-        </div>
-      )}
-    </Card>
   );
 }
