@@ -1,6 +1,21 @@
 {
- "updated_at": "2026-11-12T07:41:06.533Z",
+ "updated_at": "2026-11-12T10:23:25.049Z",
  "insights": [
+  {
+   "id": "463814285bcd0bcc",
+   "title": "Did you know: medical oxygen saves lives every day?",
+   "summary": "Access to safe and affordable medical oxygen remains limited for a significant portion of the global population, impacting the treatment of conditions like pneumonia and malaria.",
+   "url": "https://www.youtube.com/shorts/MT6Y5dLdx9I",
+   "published_at": "2026-11-12T09:14:15.000Z",
+   "source_id": "who-youtube",
+   "source_name": "WHO on YouTube",
+   "kind": "social",
+   "countries": [],
+   "diseases": [
+    "pneumonia",
+    "malaria"
+   ]
+  },
   {
    "id": "622d44ddea7f9963",
    "title": "Strengthening Africa's health security: Dr Tedros' message to African Medicines Agency Week 2026",
