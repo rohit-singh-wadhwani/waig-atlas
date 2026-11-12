@@ -324,7 +324,7 @@ function DistrictPanel({ d, det, loading, rank, n, venues, campaigns, onTown, ru
           <div className="grid grid-cols-3 gap-2.5 mb-3">
             <Stat label="Facilities" value={d.facilities} sub={`${d.hospitals} hospitals`} basis="measured" />
             <Stat label="Labs" value={d.labs} basis="measured" />
-            <Stat label="Markets + stations" value={d.markets + d.hubs} basis="measured" />
+            <Stat label="Markets, stations" value={d.markets + d.hubs} basis="measured" />
           </div>
           {key.length > 0 && <ul className="space-y-1.5 text-sm">{key.map((v) => <li key={venueKey(v)} className="flex justify-between gap-3"><span className="truncate">{v.name || KIND_LABEL[v.kind]}<span className="text-gray-500"> · {KIND_LABEL[v.kind]}</span></span><span className="text-gray-500 shrink-0">key population</span></li>)}</ul>}
         </Panel>
@@ -345,7 +345,7 @@ function Driver({ label, value, note, pos }: { label: string; value: React.React
       {pos != null && (
         <div className="mt-1 flex items-center gap-2">
           <div className="relative h-1.5 flex-1 rounded-full bg-gradient-to-r from-red-400 via-amber-300 to-green-400"><span className="absolute -top-1 w-1 h-3.5 rounded bg-gray-900" style={{ left: `calc(${(pos * 100).toFixed(1)}% - 2px)` }} /></div>
-          <span className="text-[11px] text-gray-500 w-[118px] text-right">{worse != null && worse >= 50 ? `worse than ${worse}%` : `better than ${100 - (worse || 0)}%`}</span>
+          <span className="text-[11px] text-gray-500 w-[150px] text-right">{worse != null && worse >= 50 ? `worse than ${worse}% of districts` : `better than ${100 - (worse || 0)}% of districts`}</span>
         </div>
       )}
       {note && <div className="text-[11px] text-gray-400 mt-0.5">{note}</div>}

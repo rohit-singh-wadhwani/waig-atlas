@@ -49,7 +49,10 @@ export default function ExplorerMap(p: ExplorerMapProps) {
     const m = new ml.Map({ container: ref.current, style: BASEMAP_STYLE, bounds: [[-3.3, 4.6], [1.3, 11.2]], fitBoundsOptions: { padding: 20 }, attributionControl: { compact: true } });
     m.addControl(new ml.NavigationControl({ showCompass: false }), 'top-right');
     const popup = new ml.Popup({ closeButton: false, closeOnClick: false, maxWidth: '300px', className: 'tb-tip' });
+    // if the basemap cannot be reached, fall back to a plain background so the data still shows
+    const fallback = setTimeout(() => { if (!m.isStyleLoaded()) m.setStyle({ version: 8, sources: {}, layers: [{ id: 'bg', type: 'background', paint: { 'background-color': '#eef0f2' } }] }); }, 8000);
     m.on('load', () => {
+      clearTimeout(fallback);
       const below = (m.getStyle().layers || []).find((l: any) => l.type === 'symbol')?.id;
       for (const id of ['districts', 'hexes', 'towns', 'venues', 'facilities']) m.addSource(id, { type: 'geojson', data: EMPTY, ...(id === 'districts' ? { promoteId: 'id' } : {}) });
       m.addLayer({ id: 'd-fill', type: 'fill', source: 'districts', paint: { 'fill-color': TB_RAMP[1], 'fill-opacity': 0.75 } }, below);
@@ -86,6 +89,7 @@ export default function ExplorerMap(p: ExplorerMapProps) {
     });
     map.current = m;
     return () => {
+      clearTimeout(fallback);
       popup.remove();
       m.remove();
     };
