@@ -15,7 +15,7 @@ const distKm = (a: { lat: number; lon: number }, b: { lat: number; lon: number }
 };
 
 export default function CityScreening({ data, onPlan }: { data: TbData; onPlan: (c: Partial<TbCampaign>) => void }) {
-  const { layers, cities, dist, P } = data;
+  const { layers, cities, dist, P, campaigns } = data;
   const [city, setCity] = useState('');
   const [metric, setMetric] = useState<Metric>('expected_km2');
   const [showFac, setShowFac] = useState(false);
@@ -52,8 +52,11 @@ export default function CityScreening({ data, onPlan }: { data: TbData; onPlan: 
       .sort((a, b) => (b.expected_1km ?? 0) - (a.expected_1km ?? 0));
     const kept: TbSite[] = [];
     for (const s of inCity) if (!kept.some((k) => distKm(k, s) < DEDUPE_KM)) kept.push(s);
-    return kept;
-  }, [layers.data.siteList, c]);
+    // venues that already have a campaign come first
+    const has = (s: TbSite) => campaigns.data.some((cp) => cp.status !== 'cancelled' && cp.name === `${s.name || 'Market'}: TB screening`);
+    return [...kept.filter(has), ...kept.filter((s) => !has(s))];
+  }, [layers.data.siteList, c, campaigns.data]);
+  const campOf = (s: TbSite) => campaigns.data.find((cp) => cp.status !== 'cancelled' && cp.name === `${s.name || 'Market'}: TB screening`);
   const venueFc = useMemo(() => ({ type: 'FeatureCollection', features: venues.slice(0, all ? venues.length : 20).map((s) => ({ type: 'Feature', properties: s, geometry: { type: 'Point', coordinates: [s.lon, s.lat] } })) }), [venues, all]);
   const facFc = useMemo(() => {
     const fc = layers.data.facilities;
@@ -95,7 +98,7 @@ export default function CityScreening({ data, onPlan }: { data: TbData; onPlan: 
             {shown.map((s, i) => {
               const p = expectedPositivity('market', dist.data.list.find((d) => d.id === s.district_id), P, natRate);
               return (
-                <li key={i} className={cx('px-6 py-3 flex gap-3 cursor-pointer hover:bg-gray-50', picked === s && 'bg-gray-50')} onClick={() => setPicked(s)}>
+                <li key={i} className={cx('px-6 py-3 flex gap-3 cursor-pointer hover:bg-gray-50', picked === s && 'bg-gray-50', campOf(s) && 'bg-green-50/60')} onClick={() => setPicked(s)}>
                   <span className="w-6 text-sm text-gray-400 tabular-nums pt-0.5">{i + 1}</span>
                   <span className="min-w-0 flex-1">
                     <span className="flex items-baseline justify-between gap-3">
@@ -103,6 +106,7 @@ export default function CityScreening({ data, onPlan }: { data: TbData; onPlan: 
                       <span className="shrink-0 text-right"><span className="tabular-nums font-semibold">{fmtInt(s.expected_1km)}</span><span className="text-xs text-gray-500"> cases/yr nearby</span></span>
                     </span>
                     <span className="block text-xs text-gray-500">{s.kind === 'transport hub' ? 'Lorry station / bus terminal' : 'Market'} · {s.district} · {fmtInt(s.pop_1km)} people within 1 km</span>
+                    {campOf(s) && <span className="inline-block mt-1 text-[11px] px-1.5 py-px rounded bg-green-100 text-green-800 font-medium">✓ Campaign {campOf(s)!.status}</span>}
                     <span className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-xs text-gray-600">
                       <span>Nearest facility {kmFmt(s.facility_km)}{s.walk_min != null ? ` · ${s.walk_min < 5 ? 'under 5' : fmtInt(s.walk_min)} min walk` : ''}</span>
                       {p != null && <span>≈1 case per {fmtInt(1 / p)} screened</span>}
