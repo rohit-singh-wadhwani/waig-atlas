@@ -42,7 +42,8 @@ export default function Hotspots({ data, onPlan }: { data: TbData; onPlan: (c: P
   return (
     <div className="grid grid-cols-1 2xl:grid-cols-[minmax(0,1fr)_420px] gap-6">
       <Card className="min-w-0">
-        <CardHeader title="Where undiagnosed TB is likely to be" subtitle={m.help} right={<Segmented size="sm" value={metric} onChange={setMetric} options={METRICS.map((x) => ({ value: x.key, label: x.label }))} />} />
+        <CardHeader title="Where undiagnosed TB is likely to be" subtitle={m.help} />
+        <div className="mb-3 overflow-x-auto"><Segmented size="sm" value={metric} onChange={setMetric} options={METRICS.map((x) => ({ value: x.key, label: x.label }))} /></div>
         <div className="flex flex-wrap gap-2 mb-3 text-sm">
           {([['blind', 'Blind spots'], ['links', 'Travel links'], ['facilities', 'Health facilities'], ['sites', 'Markets, transport, prisons, mines']] as const).map(([k, label]) => (
             <label key={k} className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-1.5 cursor-pointer select-none">
