@@ -1,6 +1,36 @@
 {
- "updated_at": "2026-11-12T16:22:36.659Z",
+ "updated_at": "2026-11-12T19:17:18.638Z",
  "insights": [
+  {
+   "id": "aa8080a277f19ade",
+   "title": "Kenya begins countdown towards end of Ebola after last patient discharged",
+   "summary": "Kenya has started a 42-day countdown to declare the end of its Ebola outbreak after discharging its final patient and clearing quarantine cases.",
+   "url": "https://news.un.org/feed/view/en/story/2026/11/1168790",
+   "published_at": "2026-11-12T12:00:00.000Z",
+   "source_id": "un-news-health",
+   "source_name": "UN News: health",
+   "kind": "outbreak",
+   "countries": [
+    "KEN"
+   ],
+   "diseases": [
+    "Ebola"
+   ]
+  },
+  {
+   "id": "a74fde606ff5eef9",
+   "title": "Clinical validation of the Swaasa® artificial intelligence platform using cough sounds for screening and aid in diagnosis of respiratory diseases.",
+   "summary": "A clinical validation study evaluates the Swaasa artificial intelligence platform for screening and diagnosing respiratory diseases using cough sounds.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/43016516/",
+   "published_at": "2026-11-12T11:32:00.000Z",
+   "source_id": "pubmed-cough-acoustics",
+   "source_name": "PubMed: cough acoustics",
+   "kind": "research",
+   "countries": [],
+   "diseases": [
+    "respiratory diseases"
+   ]
+  },
   {
    "id": "463814285bcd0bcc",
    "title": "Did you know: medical oxygen saves lives every day?",
