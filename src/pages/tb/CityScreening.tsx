@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import TbMap, { breaksFor, TbLegend } from '../../components/TbMap';
-import { Button, Card, CardHeader, Empty, Segmented, cx } from '../../components/ui';
+import { Button, Card, CardHeader, Empty, Segmented, Select, cx } from '../../components/ui';
 import { expectedPositivity, fmtInt, TbCampaign, TbHex, TbSite } from '../../lib/tb';
 import { BasisTag, esc, kmFmt } from './common';
 import type { TbData } from './TbPage';
@@ -79,7 +79,7 @@ export default function CityScreening({ data, onPlan }: { data: TbData; onPlan: 
             subtitle={`${fmtInt(totals.pop)} people within ${c?.radius_km} km · about ${fmtInt(totals.exp)} TB cases expected a year`}
             right={
               <div className="flex flex-wrap gap-2">
-                {enabled.length > 1 && <Segmented size="sm" value={city} onChange={setCity} options={enabled.map((x) => ({ value: x.id, label: x.name.split(' (')[0] }))} />}
+                {enabled.length > 1 && <Select className="w-[200px] [&_select]:h-9 [&_select]:text-sm" value={city} onChange={(v) => v && setCity(v)} options={enabled.map((x) => ({ value: x.id, label: x.name.split(' (')[0] }))} />}
                 <Segmented size="sm" value={metric} onChange={setMetric} options={[{ value: 'expected_km2', label: 'Expected cases per km²' }, { value: 'density', label: 'People per km²' }]} />
               </div>
             }
