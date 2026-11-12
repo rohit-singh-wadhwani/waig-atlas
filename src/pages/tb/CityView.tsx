@@ -6,7 +6,7 @@ import type { TbData } from './TbPage';
 
 const esc = (s: any) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] as string));
 const HEX_METRICS = [
-  { key: 'hidden', label: 'Hidden cases', fmt: (v: number) => v.toFixed(1), help: 'Estimated undiagnosed cases per year in each ~0.7 km² hexagon.' },
+  { key: 'hidden', label: 'Hidden cases', fmt: (v: number) => (v < 0.1 ? v.toFixed(2) : v.toFixed(1)), help: 'Estimated undiagnosed cases per year in each ~0.7 km² hexagon.' },
   { key: 'hidden_100k', label: 'Hidden per 100k', fmt: (v: number) => v.toFixed(0), help: 'Undiagnosed cases per 100,000 residents.' },
   { key: 'density', label: 'People per km²', fmt: (v: number) => Math.round(v).toLocaleString('en-GB'), help: 'WorldPop 100 m population.' },
 ];
@@ -65,14 +65,10 @@ export default function CityView({ data, onPlan }: { data: TbData; onPlan: (c: P
         <CardHeader
           title={c?.name || 'City'}
           subtitle={`${m.help} Click hexagons to select an area for a campaign.`}
-          right={
-            <div className="flex flex-wrap gap-2">
-              <Select className="w-[200px] [&_select]:h-9 [&_select]:text-sm" value={city} onChange={(v) => { if (v) { setCity(v); setPicked([]); } }} options={enabled.map((x) => ({ value: x.id, label: x.name.split(' (')[0] }))} />
-              <Segmented size="sm" value={metric} onChange={setMetric} options={HEX_METRICS.map((x) => ({ value: x.key, label: x.label }))} />
-            </div>
-          }
         />
-        <div className="flex flex-wrap gap-2 mb-3 text-sm">
+        <div className="flex flex-wrap items-center gap-2 mb-3 text-sm">
+          <Select className="w-[200px] [&_select]:h-9 [&_select]:text-sm" value={city} onChange={(v) => { if (v) { setCity(v); setPicked([]); } }} options={enabled.map((x) => ({ value: x.id, label: x.name.split(' (')[0] }))} />
+          <Segmented size="sm" value={metric} onChange={setMetric} options={HEX_METRICS.map((x) => ({ value: x.key, label: x.label }))} />
           {([['facilities', 'Health facilities'], ['sites', 'Markets, transport, prisons, mines']] as const).map(([k, label]) => (
             <label key={k} className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-1.5 cursor-pointer select-none">
               <input type="checkbox" checked={show[k]} onChange={(e) => setShow({ ...show, [k]: e.target.checked })} />
