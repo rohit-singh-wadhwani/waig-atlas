@@ -9,7 +9,6 @@ const OUT = path.join(path.dirname(new URL(import.meta.url).pathname), '..', '..
 const read = (f) => JSON.parse(fs.readFileSync(path.join(OUT, f), 'utf8'));
 const r0 = (x) => (x == null ? null : Math.round(x));
 const r2 = (x) => (x == null ? null : Math.round(x * 100) / 100);
-const km = (a, b) => Math.hypot((a.lat - b.lat) * 110.57, (a.lon - b.lon) * 111.32 * Math.cos((a.lat * Math.PI) / 180));
 
 // same rules as src/lib/tb.ts
 function annual(rows) {
@@ -36,10 +35,10 @@ async function main() {
   const meta = read('meta.json');
   const nat = meta.national;
   const districts = read('districts.geojson').features.map((f) => f.properties);
-  const sites = read('sites.geojson').features.map((f) => ({ ...f.properties, lon: f.geometry.coordinates[0], lat: f.geometry.coordinates[1] }));
-  const [notif, campaigns, results, tasks, params, cities] = await Promise.all([
+  const keysites = read('keysites.json');
+  const [notif, campaigns, results, tasks, params] = await Promise.all([
     sb.select('tb_notifications', 'select=district_id,period,notified'), sb.select('tb_campaigns', 'select=*'), sb.select('tb_campaign_results', 'select=*'),
-    sb.select('tb_tasks', 'select=status,due,campaign_id'), sb.select('tb_parameters', 'select=id,label,value,unit,status'), sb.select('tb_cities', 'select=*&enabled=eq.true'),
+    sb.select('tb_tasks', 'select=status,due,campaign_id'), sb.select('tb_parameters', 'select=id,label,value,unit,status')
   ]);
   const P = Object.fromEntries(params.map((p) => [p.id, Number(p.value)]));
   const ann = annual(notif);
@@ -51,8 +50,9 @@ async function main() {
   }
   districts.sort((a, b) => b.missed - a.missed);
   const row = (d, i) => ({
-    rank: i + 1, district: d.name, region: d.region, people: d.pop, expected_cases_estimated: r0(d.expected), notified_reported: d.notified != null ? r0(d.notified) : 'not connected',
-    missed_estimated: r0(d.missed), share_over_1h_walk_measured: r2(d.walk_far), mapped_facilities: d.facilities, prisons: d.prisons, mines_quarries: d.mines, approach: d.approach,
+    rank: i + 1, district: d.name, region: d.region, people: d.pop, expected_cases_estimated: r0(d.expected), rate_per_100k_estimated: r0(d.expected_100k), vs_ghana: r2(d.vs_ghana),
+    notified_reported: d.notified != null ? r0(d.notified) : 'not connected', missed_estimated: r0(d.missed), poverty_pct_census: d.poverty, people_per_sleeping_room_census: d.crowding,
+    insured_share_census: r2(d.insured), share_over_1h_walk_measured: r2(d.walk_far), mapped_facilities: d.facilities, prisons: d.prisons, mines_quarries: d.mines, approach: d.approach,
   });
   const sum = (rows, k) => rows.reduce((s, r) => s + (Number(r[k]) || 0), 0);
   const campSummary = campaigns.map((c) => {
@@ -62,24 +62,21 @@ async function main() {
   });
   const yields = params.filter((p) => p.status === 'evidence').map((p) => `${p.label}: ${p.value} ${p.unit || ''}`).join('\n');
 
-  const scopes = [{ name: 'Ghana' }, ...cities.map((c) => ({ name: c.name.split(' (')[0], city: c }))];
+  const scopes = [{ name: 'Ghana' }, ...districts.slice(0, 5).map((d) => ({ name: d.name, district: d }))];
   for (const s of scopes) {
-    let ds = districts, venues = [];
-    if (s.city) {
-      const inCity = sites.filter((x) => km(x, s.city) <= s.city.radius_km);
-      const ids = new Set(inCity.map((x) => x.district_id));
-      ds = districts.filter((d) => ids.has(d.id));
-      const kept = [];
-      for (const v of inCity.filter((x) => x.kind === 'market' || x.kind === 'transport hub').sort((a, b) => (b.expected_1km || 0) - (a.expected_1km || 0))) if (!kept.some((k) => km(k, v) < 0.6)) kept.push(v);
-      venues = kept.slice(0, 8).map((v) => ({ venue: v.name || `unnamed ${v.kind}`, type: v.kind, district: v.district, people_within_1km_measured: v.pop_1km, expected_cases_nearby_estimated: r0(v.expected_1km), nearest_facility_km: v.facility_km }));
+    const ds = s.district ? [s.district] : districts;
+    let towns = [];
+    if (s.district) {
+      try { towns = JSON.parse(fs.readFileSync(path.join(OUT, 'd', `${s.district.id}.json`), 'utf8')).towns || []; } catch { towns = []; }
     }
-    const key = sites.filter((x) => (x.kind === 'prison' || x.kind === 'mine / quarry') && (!s.city || ds.some((d) => d.id === x.district_id))).sort((a, b) => b.pop_1km - a.pop_1km).slice(0, 8)
+    const venues = towns.slice(0, 8).map((t) => ({ town: t.name, people_measured: t.pop, expected_cases_estimated: r0(t.expected), nearest_facility_km: t.facility_km }));
+    const key = keysites.filter((x) => !s.district || x.district_id === s.district.id).sort((a, b) => b.pop_1km - a.pop_1km).slice(0, 8)
       .map((x) => ({ site: x.name || `unnamed ${x.kind}`, type: x.kind, district: x.district, people_within_1km_measured: x.pop_1km }));
-    const camps = campSummary.filter((c) => !s.city || c.city === s.city.id || ds.some((d) => d.name === c.district));
+    const camps = campSummary.filter((c) => !s.district || c.district === s.district.name);
     const input = {
       scope: s.name, today: today(), national_reported: { year: nat.year, expected_cases_who: nat.incidence, notified_who: nat.notified, detection_rate: nat.cdr },
       district_notifications_connected: ann.size > 0, rules: { low_detection_ratio: P.rule_low_detection ?? null, far_walk_share: P.rule_walk_far_share ?? null },
-      priority_districts: ds.slice(0, s.city ? 8 : 12).map(row), key_population_sites: key, screening_venues: venues, campaigns: camps,
+      priority_districts: ds.slice(0, 12).map(row), towns_to_visit: venues, key_population_sites: key, campaigns: camps,
     };
     const prompt = `You write the weekly TB case-finding brief for ${s.name} for Wadhwani AI Global, Aurum Institute and Ghana Health Service partners.
 Use ONLY the numbers in INPUT and EVIDENCE. Never invent figures, places, organisations or results. Keep each figure's label: "reported" (WHO, DHIMS2, campaign reports), "measured" (open datasets) or "estimated".
@@ -87,7 +84,7 @@ If district_notifications_connected is false, say once that district "missed" fi
 Map data comes from OpenStreetMap and misses sites: say "mapped" and never claim a place has no facility.
 Write in plain English for a district health director, in Markdown, max ~400 words, with these sections:
 ## Situation (2-3 sentences with the key numbers)
-## Where to act in the next 4 weeks (numbered, 3-5 items: place, why, and the approach — detection_gap = review notification and testing at main facilities; remote_outreach = mobile X-ray to communities over an hour's walk from care; clinics_and_contacts = screen clinic attendees with X-ray + AI and trace household contacts. Use screening_venues for named places in cities.)
+## Where to act in the next 4 weeks (numbered, 3-5 items: place, why, and the approach — detection_gap = review notification and testing at main facilities; remote_outreach = mobile X-ray to communities over an hour's walk from care; clinics_and_contacts = screen clinic attendees with X-ray + AI and trace household contacts. Use towns_to_visit for named places.)
 ## Key populations (prisons and mining sites to screen, with the published yields from EVIDENCE)
 ## What our screening is telling us (observed yield vs published yield; cough-AI and X-ray-AI confirmation rates; overdue tasks) — or "No screening results yet"
 ## Data to request (the one or two datasets that would most sharpen next week's brief)
