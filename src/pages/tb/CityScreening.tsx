@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import TbMap, { breaksFor, TbLegend } from '../../components/TbMap';
-import { Button, Card, CardHeader, Empty, Segmented, Select, cx } from '../../components/ui';
+import { Button, Card, CardHeader, Empty, Segmented, cx } from '../../components/ui';
+import TitleSelect from '../../components/TitleSelect';
 import { expectedPositivity, fmtInt, TbCampaign, TbHex, TbSite } from '../../lib/tb';
 import { BasisTag, esc, kmFmt } from './common';
 import type { TbData } from './TbPage';
@@ -74,19 +75,16 @@ export default function CityScreening({ data, onPlan }: { data: TbData; onPlan: 
     <div className="space-y-6">
       <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_480px] gap-6 items-start">
         <Card className="min-w-0">
-          <CardHeader
-            title={`${c?.name || ''}`}
-            subtitle={`${fmtInt(totals.pop)} people within ${c?.radius_km} km · about ${fmtInt(totals.exp)} TB cases expected a year`}
-          />
-          <div className="flex flex-wrap items-center gap-2 mb-3">
-                {enabled.length > 1 && <Select className="w-[200px] [&_select]:h-9 [&_select]:text-sm" value={city} onChange={(v) => v && setCity(v)} options={enabled.map((x) => ({ value: x.id, label: x.name.split(' (')[0] }))} />}
-                <Segmented size="sm" value={metric} onChange={setMetric} options={[{ value: 'expected_km2', label: 'Expected cases per km²' }, { value: 'density', label: 'People per km²' }]} />
-              <label className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-1.5 text-sm cursor-pointer select-none">
-              <input type="checkbox" checked={showFac} onChange={(e) => setShowFac(e.target.checked)} /> Health facilities
-            </label>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            {enabled.length > 1 ? <TitleSelect label="City" value={city} onChange={setCity} options={enabled.map((x) => ({ value: x.id, label: x.name }))} /> : <h3 className="text-xl font-semibold">{c?.name}</h3>}
+            <Segmented size="sm" value={metric} onChange={setMetric} options={[{ value: 'expected_km2', label: 'Expected cases per km²' }, { value: 'density', label: 'People per km²' }]} />
           </div>
+          <p className="text-[15px] text-gray-500 mt-1 mb-4">{`${fmtInt(totals.pop)} people within ${c?.radius_km} km · about ${fmtInt(totals.exp)} TB cases expected a year`}</p>
           <TbMap hexes={hexFc} sites={venueFc} facilities={facFc} metric={metric} breaks={breaks} fit={fit} highlight={picked ? [picked.lon, picked.lat] : null} tooltip={tip} height={620} />
-          <TbLegend title={metric === 'density' ? 'People per km²' : 'Expected cases per km² a year'} breaks={breaks} fmt={(v) => (metric === 'density' ? fmtInt(v) : v < 0.1 ? v.toFixed(2) : v.toFixed(1))} sites />
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <TbLegend title={metric === 'density' ? 'People per km²' : 'Expected cases per km² a year'} breaks={breaks} fmt={(v) => (metric === 'density' ? fmtInt(v) : v < 0.1 ? v.toFixed(2) : v.toFixed(1))} sites />
+            <label className="inline-flex items-center gap-2 mt-3 text-sm text-gray-700 cursor-pointer select-none"><input type="checkbox" checked={showFac} onChange={(e) => setShowFac(e.target.checked)} /> Health facilities</label>
+          </div>
         </Card>
 
         <Card className="min-w-0" pad={false}>
