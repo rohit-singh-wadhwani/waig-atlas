@@ -1,6 +1,12 @@
 {
  "runs": [
   {
+   "job": "health",
+   "at": "2026-11-12T02:02:18.614Z",
+   "ok": true,
+   "message": "6 indicators"
+  },
+  {
    "job": "insights",
    "at": "2026-11-12T01:35:21.171Z",
    "ok": true,
@@ -353,12 +359,6 @@
    "at": "2026-11-07T22:33:03.347Z",
    "ok": true,
    "message": "0 new calls added (10 candidates), 87 tracked · Gemini 2/2 calls ok"
-  },
-  {
-   "job": "scout",
-   "at": "2026-11-07T22:32:46.634Z",
-   "ok": true,
-   "message": "3 new opportunities written up (3 rated High/Medium) from 12 candidates (0 queued for the next run) · Gemini 3/6 calls ok (last error: Gemini gemini-3.8-flash quota: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://aist"
   }
  ]
 }
