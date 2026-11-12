@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import TbMap, { breaksFor, TbLegend } from '../../components/TbMap';
-import { Button, Card, CardHeader, Empty, Segmented } from '../../components/ui';
+import { Button, Card, CardHeader, Empty, Segmented, Select } from '../../components/ui';
 import { fmtInt, TbCampaign, TbHex } from '../../lib/tb';
 import type { TbData } from './TbPage';
 
@@ -67,7 +67,7 @@ export default function CityView({ data, onPlan }: { data: TbData; onPlan: (c: P
           subtitle={`${m.help} Click hexagons to select an area for a campaign.`}
           right={
             <div className="flex flex-wrap gap-2">
-              <Segmented size="sm" value={city} onChange={(v) => { setCity(v); setPicked([]); }} options={enabled.map((x) => ({ value: x.id, label: x.name.split(' (')[0] }))} />
+              <Select className="w-[200px] [&_select]:h-9 [&_select]:text-sm" value={city} onChange={(v) => { if (v) { setCity(v); setPicked([]); } }} options={enabled.map((x) => ({ value: x.id, label: x.name.split(' (')[0] }))} />
               <Segmented size="sm" value={metric} onChange={setMetric} options={HEX_METRICS.map((x) => ({ value: x.key, label: x.label }))} />
             </div>
           }
