@@ -1,6 +1,35 @@
 {
- "updated_at": "2026-11-11T10:27:46.581Z",
+ "updated_at": "2026-11-12T10:23:25.049Z",
  "insights": [
+  {
+   "id": "463814285bcd0bcc",
+   "title": "Did you know: medical oxygen saves lives every day?",
+   "summary": "Access to safe and affordable medical oxygen remains limited for a significant portion of the global population, impacting the treatment of conditions like pneumonia and malaria.",
+   "url": "https://www.youtube.com/shorts/MT6Y5dLdx9I",
+   "published_at": "2026-11-12T09:14:15.000Z",
+   "source_id": "who-youtube",
+   "source_name": "WHO on YouTube",
+   "kind": "social",
+   "countries": [],
+   "diseases": [
+    "pneumonia",
+    "malaria"
+   ]
+  },
+  {
+   "id": "622d44ddea7f9963",
+   "title": "Strengthening Africa's health security: Dr Tedros' message to African Medicines Agency Week 2026",
+   "summary": "The WHO highlighted efforts to strengthen medical regulatory systems and cooperation across Africa. This initiative supports broader health security and product access on the continent.",
+   "url": "https://www.youtube.com/watch?v=iqXkC1mADEQ",
+   "published_at": "2026-11-11T10:25:30.000Z",
+   "source_id": "who-youtube",
+   "source_name": "WHO on YouTube",
+   "kind": "social",
+   "countries": [
+    "RWA"
+   ],
+   "diseases": []
+  },
   {
    "id": "b45d4234ff019531",
    "title": "World News in Brief: Ending cholera by 2030 ‘within reach’, Haiti displacement and hunger, US human rights review rescheduled",
@@ -112,6 +141,60 @@
    "diseases": []
   },
   {
+   "id": "0177d4efb64325b2",
+   "title": "Consulting services for the development of multisectoral annual work plans for the implementation of the national action plan on AMR and the regulatory review of antimicrobial prescription and distribution",
+   "summary": "Central Asia is seeking consulting services to develop multisectoral work plans for antimicrobial resistance action and prescription reviews.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00480430",
+   "published_at": "2026-11-10T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "05d429818172d03a",
+   "title": "Consulting services for the development of communication materials and conduct of information and education campaigns on IHR requirements and priority zoonotic and food-borne diseases including climate-related impacts",
+   "summary": "Central Asia issued a tender for communication campaigns focusing on International Health Regulations and priority zoonotic and food-borne diseases.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00480435",
+   "published_at": "2026-11-10T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "81385dd90d040978",
+   "title": "Acquisition des vaccins et autres intrants pour la campagne de vaccination antirabique dans la province du Sankuru",
+   "summary": "Rabies vaccines and related inputs were acquired for a vaccination campaign in the Sankuru province of the Democratic Republic of Congo.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00480594",
+   "published_at": "2026-11-10T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "COD"
+   ],
+   "diseases": [
+    "Rabies"
+   ]
+  },
+  {
+   "id": "12f28d225f8374cc",
+   "title": "Engagement of a firm to develop a strategic framework for advocacy, Social and Behavioural Change Communication for Rural Emergency  Service and Material Transport (RESMAT)",
+   "summary": "World Bank contract award in Nigeria for developing a strategic framework for advocacy and behavior change communication related to rural emergency transport.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00480538",
+   "published_at": "2026-11-10T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "NGA"
+   ],
+   "diseases": []
+  },
+  {
    "id": "9b2cc27d3a29cf94",
    "title": "Tuberculosis exposure in a German childcare setting: contact investigation findings and considerations for preventive screening.",
    "summary": "A study details tuberculosis exposure and contact investigation findings within a German childcare setting, discussing considerations for preventive screening.",
@@ -136,6 +219,18 @@
    "source_id": "who-youtube",
    "source_name": "WHO on YouTube",
    "kind": "social",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "49e6a32a0c1b7916",
+   "title": "Consulting services for the development of a national operational plan for improving infection prevention and control",
+   "summary": "Consulting services tender for developing a national operational plan to improve infection prevention and control across Central Asia.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00480425",
+   "published_at": "2026-11-09T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
    "countries": [],
    "diseases": []
   },
