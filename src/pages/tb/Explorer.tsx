@@ -12,7 +12,7 @@ import { BasisTag, esc, kmFmt, pctFmt } from './common';
 import type { TbData } from './TbPage';
 
 const GHANA: [number, number, number, number] = [-3.3, 4.6, 1.3, 11.2];
-const townKey = (t: TbTown) => `${t.name}|${t.lon}|${t.lat}`;
+const townKey = (t: TbTown) => String(t.id);
 const venueKey = (v: TbVenue) => `${v.kind}|${v.lon}|${v.lat}`;
 const KIND_LABEL: Record<string, string> = { 'transport hub': 'Lorry station', market: 'Market', prison: 'Prison', 'mine / quarry': 'Mine / quarry', school: 'School', 'place of worship': 'Church / mosque', 'community centre': 'Community centre', pharmacy: 'Pharmacy', 'NGO office': 'NGO office' };
 const distKm = (a: { lon: number; lat: number }, b: { lon: number; lat: number }) => Math.hypot((a.lat - b.lat) * 110.57, (a.lon - b.lon) * 111.32 * Math.cos((a.lat * Math.PI) / 180));
@@ -58,7 +58,7 @@ export default function Explorer({ data, goTab }: { data: TbData; goTab: (t: str
   // venues: in a town, everything within its radius + 1 km; in a district, only congregate settings
   const venues = useMemo(() => {
     if (!det) return [] as TbVenue[];
-    const vs = town ? det.venues.filter((v) => distKm(v, town) <= town.radius_km + 1) : det.venues.filter((v) => v.cong);
+    const vs = town ? det.venues.filter((v) => (v.t != null ? v.t === town.id : distKm(v, town) <= town.radius_km + 1)) : [];
     return [...vs].sort((a, b) => b.expected_1km - a.expected_1km);
   }, [det, town]);
   const pickedVenues = venues.filter((v) => picked.includes(venueKey(v)));
@@ -73,15 +73,18 @@ export default function Explorer({ data, goTab }: { data: TbData; goTab: (t: str
   const townHexes = useMemo(() => {
     if (!det || !town) return [];
     const r = town.radius_km + 1.5;
-    return det.hexes.filter((h) => { const c = h.r[0]; return distKm({ lon: c[0], lat: c[1] }, town) <= r; });
+    return det.hexes.filter((h) => (h.t != null ? h.t === town.id : distKm({ lon: h.r[0][0], lat: h.r[0][1] }, town) <= r));
   }, [det, town]);
   const hexFc = useMemo(() => (town ? { type: 'FeatureCollection', features: townHexes.map((h) => ({ type: 'Feature', properties: { p: h.p, e: h.e, k: h.k, f: h.f, w: h.w }, geometry: { type: 'Polygon', coordinates: [[...h.r, h.r[0]]] } })) } : null), [town, townHexes]);
   const hBreaks = useMemo(() => breaksFor(townHexes.map((h) => h.k)), [townHexes]);
-  const townFc = useMemo(() => (det ? { type: 'FeatureCollection', features: det.towns.slice(0, town ? 400 : 60).map((t) => ({ type: 'Feature', properties: { ...t, key: townKey(t) }, geometry: { type: 'Point', coordinates: [t.lon, t.lat] } })) } : null), [det, town]);
+  const townFc = useMemo(() => (det ? { type: 'FeatureCollection', features: det.towns.filter((t) => t.geom).map((t) => ({ type: 'Feature', properties: { key: townKey(t), name: t.name, place: t.place, pop: t.pop, expected: t.expected, expected_km2: t.expected_km2, lon: t.lon, lat: t.lat }, geometry: t.geom })) } : null), [det]);
+  const tBreaks = useMemo(() => (det ? breaksFor(det.towns.map((t) => t.expected_km2)) : []), [det]);
   const venueFc = useMemo(() => ({ type: 'FeatureCollection', features: venues.map((v) => ({ type: 'Feature', properties: { ...v, key: venueKey(v) }, geometry: { type: 'Point', coordinates: [v.lon, v.lat] } })) }), [venues]);
   const facFc = useMemo(() => (det && town ? { type: 'FeatureCollection', features: det.facilities.filter((f) => distKm(f, town) <= town.radius_km + 3).map((f) => ({ type: 'Feature', properties: f, geometry: { type: 'Point', coordinates: [f.lon, f.lat] } })) } : null), [det, town]);
   const fit = useMemo<[number, number, number, number]>(() => {
     if (town) {
+      const b = bboxOf(town.geom);
+      if (b) return b;
       const r = town.radius_km + 1.2, dLat = r / 110.57, dLon = r / (111.32 * Math.cos((town.lat * Math.PI) / 180));
       return [town.lon - dLon, town.lat - dLat, town.lon + dLon, town.lat + dLat];
     }
@@ -92,7 +95,7 @@ export default function Explorer({ data, goTab }: { data: TbData; goTab: (t: str
   const tip = (pr: any, layer: string) => {
     if (layer === 'd-fill') return districtId ? '' : `<b>${esc(pr.name)}</b> · ${esc(String(pr.region))}<br/>About <b>${fmtInt(Number(pr.expected))}</b> new TB cases a year<br/>${fmtInt(Number(pr.expected_100k))} per 100,000 (${signedPct(Number(pr.vs_ghana))} vs Ghana)<br/><i>Click to open</i>`;
     if (layer === 'h-fill') return `${fmtInt(Number(pr.p))} people · ≈${Number(pr.e).toFixed(1)} TB cases a year<br/>Nearest facility ${kmFmt(Number(pr.f))}`;
-    if (layer === 'towns') return `<b>${esc(pr.name)}</b> (${esc(pr.place)})<br/>${fmtInt(Number(pr.pop))} people · ≈${Number(pr.expected).toFixed(0)} TB cases a year<br/><i>Click to open</i>`;
+    if (layer === 'town-fill') return town ? '' : `<b>${esc(pr.name)}</b> (${esc(pr.place)})<br/>${fmtInt(Number(pr.pop))} people · ≈${Number(pr.expected).toFixed(0)} TB cases a year<br/><i>Click to open</i>`;
     if (layer === 'venues') return `<b>${esc(pr.name || KIND_LABEL[pr.kind] || pr.kind)}</b><br/>${esc(KIND_LABEL[pr.kind] || pr.kind)} · ${fmtInt(Number(pr.pop_1km))} people within 1 km<br/><i>Click to ${town ? 'add to campaign' : 'open its town'}</i>`;
     if (layer === 'facilities') return `<b>${esc(pr.name || 'Health facility')}</b><br/>${esc(pr.kind)}${pr.lab === true || pr.lab === 'true' ? ' · lab' : ''}`;
     return '';
@@ -116,10 +119,10 @@ export default function Explorer({ data, goTab }: { data: TbData; goTab: (t: str
       <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_460px] gap-5 items-start">
         <div className="xl:sticky xl:top-4">
           <div className="h-[440px] md:h-[560px] xl:h-[calc(100vh-170px)] xl:min-h-[560px]">
-            <ExplorerMap districts={geo} districtMetric="expected_100k" districtBreaks={dBreaks} focusId={districtId} hexes={hexFc} hexBreaks={hBreaks} towns={townFc} venues={venueFc} facilities={facFc}
+            <ExplorerMap districts={geo} districtMetric="expected_100k" districtBreaks={dBreaks} focusId={districtId} hexes={hexFc} hexBreaks={hBreaks} towns={townFc} townBreaks={tBreaks} venues={venueFc} facilities={facFc}
               picked={picked} focusTown={tKey} fit={fit} onDistrict={(pr) => setDistrictId(pr.id)} onTown={(pr) => setTKey(pr.key)} onVenue={onVenue} tooltip={tip} />
           </div>
-          <MapLegend level={!d ? 'ghana' : town ? 'town' : 'district'} breaks={!d ? dBreaks : hBreaks} />
+          <MapLegend level={!d ? 'ghana' : town ? 'town' : 'district'} breaks={!d ? dBreaks : town ? hBreaks : tBreaks} />
         </div>
         <aside className="min-w-0 space-y-4">
           {!d && <GhanaPanel list={list} nat={nat} natRate={natRate} rank={rank} campaigns={campaigns.data} notified={dist.data.notifiedDistricts} onOpen={setDistrictId} goTab={goTab} data={data} />}
@@ -142,24 +145,14 @@ function Crumb({ children, on, active }: { children: React.ReactNode; on?: () =>
 }
 
 function MapLegend({ level, breaks }: { level: 'ghana' | 'district' | 'town'; breaks: number[] }) {
-  if (level === 'district') {
-    return (
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-gray-600 mt-3">
-        <span className="inline-flex items-center gap-1.5"><span className="w-3 h-3 rounded-full border-2 border-gray-900 bg-white" />Town (size = people)</span>
-        <span className="inline-flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-[#7c3aed]" />Market, station, prison or mine</span>
-        <span>Click a town to see its neighbourhoods and screening spots.</span>
-      </div>
-    );
-  }
   const fmt = (v: number) => (level === 'ghana' ? fmtInt(v) : v < 1 ? v.toFixed(2) : v.toFixed(1));
   const labels = breaks.length ? [`< ${fmt(breaks[0])}`, ...breaks.slice(0, -1).map((b, i) => `${fmt(b)}–${fmt(breaks[i + 1])}`), `> ${fmt(breaks[breaks.length - 1])}`] : [];
   return (
     <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-gray-600 mt-3">
-      <span className="font-medium text-gray-700">{level === 'ghana' ? 'Expected TB cases per 100,000 a year' : 'Expected cases per km² a year'}</span>
+      <span className="font-medium text-gray-700">{level === 'ghana' ? 'Expected TB cases per 100,000 a year' : level === 'district' ? 'Town areas: expected cases per km² a year' : 'Expected cases per km² a year'}</span>
       {labels.map((l, i) => <span key={i} className="inline-flex items-center gap-1.5"><span className="w-3.5 h-3.5 rounded-sm" style={{ background: TB_RAMP[Math.min(i, TB_RAMP.length - 1)] }} />{l}</span>)}
       {level === 'town' && (
         <>
-          <span className="inline-flex items-center gap-1.5"><span className="w-3 h-3 rounded-full border-2 border-gray-900 bg-white" />Town</span>
           <span className="inline-flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-[#1d4ed8]" />Health facility</span>
           <span className="inline-flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-[#7c3aed]" />Screening spot</span>
         </>
@@ -282,7 +275,7 @@ function DistrictPanel({ d, det, loading, rank, n, venues, campaigns, onTown, ru
   const [allTowns, setAllTowns] = useState(false);
   const [tSort, setTSort] = useState<'cases' | 'far'>('cases');
   const towns: TbTown[] = det ? [...det.towns].sort((x: TbTown, y: TbTown) => (tSort === 'cases' ? y.expected - x.expected : (y.facility_km ?? 0) - (x.facility_km ?? 0))) : [];
-  const key = venues.filter((v) => v.kind === 'prison' || v.kind === 'mine / quarry');
+  const key = (det?.venues || []).filter((v: TbVenue) => v.kind === 'prison' || v.kind === 'mine / quarry');
   return (
     <>
       <Panel title={d.name} sub={`${d.region} · ${fmtInt(d.pop)} people (2026) · ${d.urban != null ? `${Math.round(d.urban * 100)}% urban` : ''}`}>
@@ -342,7 +335,7 @@ function DistrictPanel({ d, det, loading, rank, n, venues, campaigns, onTown, ru
             <Stat label="Labs" value={d.labs} basis="measured" />
             <Stat label="Markets, stations" value={d.markets + d.hubs} basis="measured" />
           </div>
-          {key.length > 0 && <ul className="space-y-1.5 text-sm">{key.map((v) => <li key={venueKey(v)} className="flex justify-between gap-3"><span className="truncate">{v.name || KIND_LABEL[v.kind]}<span className="text-gray-500"> · {KIND_LABEL[v.kind]}</span></span><span className="text-gray-500 shrink-0">key population</span></li>)}</ul>}
+          {key.length > 0 && <ul className="space-y-1.5 text-sm">{key.map((v: TbVenue) => <li key={venueKey(v)} className="flex justify-between gap-3"><span className="truncate">{v.name || KIND_LABEL[v.kind]}<span className="text-gray-500"> · {KIND_LABEL[v.kind]}</span></span><span className="text-gray-500 shrink-0">key population</span></li>)}</ul>}
         </Panel>
       )}
 
@@ -402,7 +395,7 @@ function TownPanel({ d, town, venues, facilities, picked, toggle, campaigns, onP
     <>
       <Panel title={town.name} sub={`${town.place} in ${d.name}`}>
         <div className="grid grid-cols-2 gap-2.5">
-          <Stat label={`People within ${town.radius_km} km`} value={fmtInt(town.pop)} basis="measured" />
+          <Stat label="People living here" value={fmtInt(town.pop)} basis="measured" sub={town.area_km2 ? `${town.area_km2} km² area` : undefined} />
           <Stat label="Expected TB cases a year" value={`≈${fmtInt(town.expected)}`} basis="estimated" />
           <Stat label="Nearest health facility" value={kmFmt(town.facility_km)} basis="measured" sub={town.walk_min != null ? `${town.walk_min < 5 ? 'under 5' : fmtInt(town.walk_min)} min walk` : undefined} />
           <Stat label="Nearest hospital" value={kmFmt(town.hospital_km)} basis="measured" sub={town.drive_min != null ? `${fmtInt(town.drive_min)} min drive` : undefined} />

@@ -22,7 +22,8 @@ export type ExplorerMapProps = {
   focusId?: string | null;            // opened district: others are dimmed
   hexes?: any | null;
   hexBreaks?: number[];
-  towns?: any | null;
+  towns?: any | null;                 // town areas (polygons)
+  townBreaks?: number[];
   venues?: any | null;
   facilities?: any | null;
   picked?: string[];                  // venue keys chosen for a campaign
@@ -54,14 +55,15 @@ export default function ExplorerMap(p: ExplorerMapProps) {
     m.on('load', () => {
       clearTimeout(fallback);
       const below = (m.getStyle().layers || []).find((l: any) => l.type === 'symbol')?.id;
-      for (const id of ['districts', 'hexes', 'towns', 'venues', 'facilities']) m.addSource(id, { type: 'geojson', data: EMPTY, ...(id === 'districts' ? { promoteId: 'id' } : {}) });
+      for (const id of ['districts', 'towns', 'hexes', 'townlabels', 'venues', 'facilities']) m.addSource(id, { type: 'geojson', data: EMPTY, ...(id === 'districts' ? { promoteId: 'id' } : {}) });
       m.addLayer({ id: 'd-fill', type: 'fill', source: 'districts', paint: { 'fill-color': TB_RAMP[1], 'fill-opacity': 0.75 } }, below);
       m.addLayer({ id: 'd-line', type: 'line', source: 'districts', paint: { 'line-color': '#ffffff', 'line-width': 0.7 } }, below);
       m.addLayer({ id: 'd-focus', type: 'line', source: 'districts', paint: { 'line-color': '#0f172a', 'line-width': 2.5 }, filter: ['==', ['get', 'id'], ''] }, below);
-      m.addLayer({ id: 'h-fill', type: 'fill', source: 'hexes', paint: { 'fill-color': TB_RAMP[1], 'fill-opacity': 0.7 } }, below);
+      m.addLayer({ id: 'town-fill', type: 'fill', source: 'towns', paint: { 'fill-color': TB_RAMP[1], 'fill-opacity': 0.75 } }, below);
+      m.addLayer({ id: 'h-fill', type: 'fill', source: 'hexes', paint: { 'fill-color': TB_RAMP[1], 'fill-opacity': 0.75 } }, below);
+      m.addLayer({ id: 'town-line', type: 'line', source: 'towns', paint: { 'line-color': ['case', ['get', 'focus'], '#0f172a', '#ffffff'], 'line-width': ['case', ['get', 'focus'], 3, 1.2] } }, below);
       m.addLayer({ id: 'facilities', type: 'circle', source: 'facilities', paint: { 'circle-radius': ['match', ['get', 'kind'], 'hospital', 6, 4], 'circle-color': '#1d4ed8', 'circle-stroke-color': '#fff', 'circle-stroke-width': 1.5 } });
-      m.addLayer({ id: 'towns', type: 'circle', source: 'towns', paint: { 'circle-radius': ['interpolate', ['linear'], ['get', 'pop'], 300, 4, 20000, 8, 200000, 14], 'circle-color': '#fff', 'circle-stroke-color': '#0f172a', 'circle-stroke-width': ['case', ['get', 'focus'], 3, 1.5] } });
-      m.addLayer({ id: 'town-labels', type: 'symbol', source: 'towns', layout: { 'text-field': ['get', 'name'], 'text-font': ['Noto Sans Regular'], 'text-size': 12, 'text-offset': [0, 1.2], 'text-anchor': 'top', 'text-optional': true }, paint: { 'text-color': '#0f172a', 'text-halo-color': '#fff', 'text-halo-width': 1.5 } });
+      m.addLayer({ id: 'town-labels', type: 'symbol', source: 'townlabels', layout: { 'text-field': ['get', 'name'], 'text-font': ['Noto Sans Regular'], 'text-size': 12, 'text-anchor': 'center', 'text-optional': true }, paint: { 'text-color': '#0f172a', 'text-halo-color': '#fff', 'text-halo-width': 1.5 } });
       m.addLayer({ id: 'venues', type: 'circle', source: 'venues', paint: {
         'circle-radius': ['case', ['get', 'picked'], 9, 6],
         'circle-color': ['match', ['get', 'kind'], ...Object.entries(VENUE_COLORS).flat(), '#64748b'],
@@ -69,7 +71,7 @@ export default function ExplorerMap(p: ExplorerMapProps) {
       } });
       setReady(true);
     });
-    const layers = ['venues', 'facilities', 'towns', 'h-fill', 'd-fill'];
+    const layers = ['venues', 'facilities', 'h-fill', 'town-fill', 'd-fill'];
     m.on('mousemove', (e: any) => {
       const f = m.queryRenderedFeatures(e.point, { layers: layers.filter((l) => m.getLayer(l)) })[0];
       m.getCanvas().style.cursor = f && f.layer.id !== 'h-fill' ? 'pointer' : '';
@@ -81,10 +83,10 @@ export default function ExplorerMap(p: ExplorerMapProps) {
     });
     m.on('mouseout', () => popup.remove());
     m.on('click', (e: any) => {
-      const f = m.queryRenderedFeatures(e.point, { layers: ['venues', 'towns', 'd-fill'].filter((l) => m.getLayer(l)) })[0];
+      const f = m.queryRenderedFeatures(e.point, { layers: ['venues', 'town-fill', 'd-fill'].filter((l) => m.getLayer(l)) })[0];
       if (!f) return;
       if (f.layer.id === 'venues') props.current.onVenue?.(f.properties);
-      else if (f.layer.id === 'towns') props.current.onTown?.(f.properties);
+      else if (f.layer.id === 'town-fill') props.current.onTown?.(f.properties);
       else props.current.onDistrict?.(f.properties);
     });
     map.current = m;
@@ -108,6 +110,7 @@ export default function ExplorerMap(p: ExplorerMapProps) {
     if (!ready || !m) return;
     const t = p.towns ? { ...p.towns, features: p.towns.features.map((f: any) => ({ ...f, properties: { ...f.properties, focus: f.properties.key === p.focusTown } })) } : EMPTY;
     m.getSource('towns').setData(t);
+    m.getSource('townlabels').setData(p.towns ? { type: 'FeatureCollection', features: t.features.map((f: any) => ({ type: 'Feature', properties: { name: f.properties.name }, geometry: { type: 'Point', coordinates: [f.properties.lon, f.properties.lat] } })) } : EMPTY);
     const picked = new Set(p.picked || []);
     const v = p.venues ? { ...p.venues, features: p.venues.features.map((f: any) => ({ ...f, properties: { ...f.properties, picked: picked.has(f.properties.key) } })) } : EMPTY;
     m.getSource('venues').setData(v);
@@ -120,7 +123,9 @@ export default function ExplorerMap(p: ExplorerMapProps) {
     m.setPaintProperty('d-fill', 'fill-opacity', p.focusId ? ['case', ['==', ['get', 'id'], p.focusId], 0.08, 0.35] : 0.75);
     m.setFilter('d-focus', ['==', ['get', 'id'], p.focusId || '']);
     m.setPaintProperty('h-fill', 'fill-color', step('k', p.hexBreaks || []));
-  }, [ready, p.districtMetric, p.districtBreaks, p.focusId, p.hexBreaks]);
+    m.setPaintProperty('town-fill', 'fill-color', step('expected_km2', p.townBreaks || []));
+    m.setPaintProperty('town-fill', 'fill-opacity', p.focusTown ? 0 : 0.75);
+  }, [ready, p.districtMetric, p.districtBreaks, p.focusId, p.hexBreaks, p.townBreaks, p.focusTown]);
 
   useEffect(() => {
     const m = map.current;
