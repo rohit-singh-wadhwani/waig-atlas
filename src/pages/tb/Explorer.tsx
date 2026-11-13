@@ -169,9 +169,12 @@ function Panel({ title, sub, right, children, className }: { title?: React.React
   return (
     <section className={cx('rounded-2xl border border-gray-200 bg-white p-5', className)}>
       {(title || right) && (
-        <div className="flex items-start justify-between gap-3 mb-3">
-          <div className="min-w-0">{title && <h3 className="text-base font-semibold text-gray-900">{title}</h3>}{sub && <p className="text-sm text-gray-500 mt-0.5">{sub}</p>}</div>
-          {right}
+        <div className="mb-3">
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+            {title && <h3 className="text-base font-semibold text-gray-900 min-w-0">{title}</h3>}
+            {right}
+          </div>
+          {sub && <p className="text-sm text-gray-500 mt-1">{sub}</p>}
         </div>
       )}
       {children}
