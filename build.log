@@ -1,0 +1,432 @@
+npm warn deprecated rollup-plugin-terser@7.0.2: This package has been deprecated and is no longer maintained. Please use @rollup/plugin-terser
+npm warn deprecated sourcemap-codec@1.4.8: Please use @jridgewell/sourcemap-codec instead
+npm warn deprecated workbox-google-analytics@6.6.0: It is not compatible with newer versions of GA starting with v4, as long as you are using GAv3 it should be ok, but the package is not longer being maintained
+npm warn deprecated stable@0.1.8: Modern JS already guarantees Array#sort() is a stable sort, so this library is deprecated. See the compatibility table on MDN: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort#browser_compatibility
+npm warn deprecated workbox-cacheable-response@6.6.0: workbox-background-sync@6.6.0
+npm warn deprecated q@1.5.1: You or someone you depend on is using Q, the JavaScript Promise library that gave JavaScript developers strong feelings about promises. They can almost certainly migrate to the native JavaScript promise now. Thank you literally everyone for joining me in this bet against the odds. Be excellent to each other.
+npm warn deprecated
+npm warn deprecated (For a CapTP with native promises, see @endo/eventual-send and @endo/captp)
+npm warn deprecated whatwg-encoding@1.0.5: Use @exodus/bytes instead for a more spec-conformant and faster implementation
+npm warn deprecated w3c-hr-time@1.0.2: Use your platform's native performance.now() and performance.timeOrigin.
+npm warn deprecated domexception@2.0.1: Use your platform's native DOMException instead
+npm warn deprecated abab@2.0.6: Use your platform's native atob() and btoa() methods instead
+npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+npm warn deprecated @humanwhocodes/object-schema@2.0.3: Use @eslint/object-schema instead
+npm warn deprecated @humanwhocodes/config-array@0.13.0: Use @eslint/config-array instead
+npm warn deprecated @babel/plugin-proposal-private-methods@7.18.6: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-private-methods instead.
+npm warn deprecated @babel/plugin-proposal-numeric-separator@7.18.6: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-numeric-separator instead.
+npm warn deprecated @babel/plugin-proposal-nullish-coalescing-operator@7.18.6: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-nullish-coalescing-operator instead.
+npm warn deprecated @babel/plugin-proposal-class-properties@7.18.6: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-class-properties instead.
+npm warn deprecated @babel/plugin-proposal-optional-chaining@7.21.0: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-optional-chaining instead.
+npm warn deprecated @babel/plugin-proposal-private-property-in-object@7.21.11: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-private-property-in-object instead.
+npm warn deprecated svgo@1.3.2: This SVGO version is no longer supported. Upgrade to v2.x.x.
+npm warn deprecated uuid@8.3.2: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
+npm warn deprecated eslint@8.57.1: This version is no longer supported. Please see https://eslint.org/version-support for other options.
+
+added 1581 packages in 49s
+INSTALL_EXIT=0
+waig-atlas@0.1.0 /home/runner/work/waig-atlas/waig-atlas
+├─┬ @blocknote/core@0.22.0
+│ ├─┬ @tiptap/pm@2.27.3
+│ │ ├─┬ prosemirror-gapcursor@1.4.1
+│ │ │ └── prosemirror-view@1.37.2 deduped
+│ │ ├─┬ prosemirror-history@1.5.1
+│ │ │ └── prosemirror-view@1.37.2 deduped
+│ │ ├─┬ prosemirror-trailing-node@3.0.0
+│ │ │ └── prosemirror-view@1.37.2 deduped
+│ │ └── prosemirror-view@1.37.2 deduped
+│ ├─┬ prosemirror-dropcursor@1.8.4
+│ │ └── prosemirror-view@1.37.2 deduped
+│ ├─┬ prosemirror-highlight@0.9.0
+│ │ └── prosemirror-view@1.37.2 deduped
+│ ├─┬ prosemirror-state@1.4.4
+│ │ └── prosemirror-view@1.37.2 deduped
+│ ├─┬ prosemirror-tables@1.8.5
+│ │ └── prosemirror-view@1.37.2 deduped
+│ ├── prosemirror-view@1.37.2 overridden
+│ └─┬ y-prosemirror@1.2.13
+│   └── prosemirror-view@1.37.2 deduped
+├─┬ @blocknote/mantine@0.22.0
+│ ├── @blocknote/core@0.22.0 deduped
+│ ├── @blocknote/react@0.22.0 deduped
+│ └── @mantine/core@7.17.8 deduped
+├─┬ @blocknote/react@0.22.0
+│ └── @blocknote/core@0.22.0 deduped
+└── @mantine/core@7.17.8
+
+
+> waig-atlas@0.1.0 build
+> react-scripts build
+
+Creating an optimized production build...
+Compiled with warnings.
+
+[eslint] 
+src/pages/Grants.tsx
+  Line 12:10:  'DEMO' is defined but never used  @typescript-eslint/no-unused-vars
+
+src/pages/Sources.tsx
+  Line 6:14:  'DEMO' is defined but never used  @typescript-eslint/no-unused-vars
+
+src/pages/tb/Evidence.tsx
+  Line 37:9:  The 'sources' logical expression could make the dependencies of useMemo Hook (at line 43) change on every render. To fix this, wrap the initialization of 'sources' in its own useMemo() Hook  react-hooks/exhaustive-deps
+
+src/pages/tb/TaskBoard.tsx
+  Line 5:25:  'personName' is defined but never used  @typescript-eslint/no-unused-vars
+
+TS2554: Expected 0 arguments, but got 2.
+  [0m [90m 57 |[39m
+   [90m 58 |[39m [36mconst[39m [33mMermaidBlock[39m [33m=[39m createReactBlockSpec(
+  [31m[1m>[22m[39m[90m 59 |[39m   { type[33m:[39m [32m'mermaid'[39m[33m,[39m propSchema[33m:[39m { code[33m:[39m { [36mdefault[39m[33m:[39m [32m'flowchart LR\n  A[Start] --> B[Step] --> C[Done]'[39m } }[33m,[39m content[33m:[39m [32m'none'[39m }[33m,[39m
+   [90m    |[39m   [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+  [31m[1m>[22m[39m[90m 60 |[39m   { render[33m:[39m (props[33m:[39m any) [33m=>[39m [33m<[39m[33mMermaidRender[39m {[33m...[39mprops} [33m/[39m[33m>[39m }
+   [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+   [90m 61 |[39m )[33m;[39m
+   [90m 62 |[39m
+   [90m 63 |[39m [36mfunction[39m [33mMermaidRender[39m({ block[33m,[39m editor }[33m:[39m any) {[0m
+
+TS2554: Expected 0 arguments, but got 2.
+  [0m [90m 109 |[39m
+   [90m 110 |[39m [36mconst[39m [33mChartBlock[39m [33m=[39m createReactBlockSpec(
+  [31m[1m>[22m[39m[90m 111 |[39m   {
+   [90m     |[39m   [31m[1m^[22m[39m
+  [31m[1m>[22m[39m[90m 112 |[39m     type[33m:[39m [32m'chart'[39m[33m,[39m
+   [90m     |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+  [31m[1m>[22m[39m[90m 113 |[39m     propSchema[33m:[39m { kind[33m:[39m { [36mdefault[39m[33m:[39m [32m'bar'[39m[33m,[39m values[33m:[39m [[32m'bar'[39m[33m,[39m [32m'line'[39m[33m,[39m [32m'pie'[39m] [36mas[39m [36mconst[39m }[33m,[39m title[33m:[39m { [36mdefault[39m[33m:[39m [32m''[39m }[33m,[39m data[33m:[39m { [36mdefault[39m[33m:[39m [32m'Label,Value'[39m } }[33m,[39m
+   [90m     |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+  [31m[1m>[22m[39m[90m 114 |[39m     content[33m:[39m [32m'none'[39m[33m,[39m
+   [90m     |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+  [31m[1m>[22m[39m[90m 115 |[39m   }[33m,[39m
+   [90m     |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+  [31m[1m>[22m[39m[90m 116 |[39m   { render[33m:[39m (props[33m:[39m any) [33m=>[39m [33m<[39m[33mChartRender[39m {[33m...[39mprops} [33m/[39m[33m>[39m }
+   [90m     |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+   [90m 117 |[39m )[33m;[39m
+   [90m 118 |[39m
+   [90m 119 |[39m [36mfunction[39m [33mChartRender[39m({ block[33m,[39m editor }[33m:[39m any) {[0m
+
+TS2739: Type '{ triggerCharacter: string; getItems: (query: string) => Promise<any>; }' is missing the following properties from type '{ suggestionMenuComponent: FC<SuggestionMenuProps<unknown>>; onItemClick: (item: unknown) => void; }': suggestionMenuComponent, onItemClick
+  [0m [90m 472 |[39m       {[33m![39mready [33m&&[39m [33m<[39m[33mdiv[39m className[33m=[39m[32m"text-sm text-gray-400 py-4"[39m[33m>[39m[33mLoading[39m page…[33m<[39m[33m/[39m[33mdiv[39m[33m>[39m}
+   [90m 473 |[39m       [33m<[39m[33mBlockNoteView[39m editor[33m=[39m{editor [36mas[39m any} editable[33m=[39m{editable} theme[33m=[39m[32m"light"[39m slashMenu[33m=[39m{[36mfalse[39m} onChange[33m=[39m{() [33m=>[39m ready [33m&&[39m save()}[33m>[39m
+  [31m[1m>[22m[39m[90m 474 |[39m         [33m<[39m[33mSuggestionMenuController[39m triggerCharacter[33m=[39m[32m"/"[39m getItems[33m=[39m{[36masync[39m (query[33m:[39m string) [33m=>[39m filterSuggestionItems(slashItems(editor) [36mas[39m any[33m,[39m query) [36mas[39m any} [33m/[39m[33m>[39m
+   [90m     |[39m          [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+   [90m 475 |[39m       [33m<[39m[33m/[39m[33mBlockNoteView[39m[33m>[39m
+   [90m 476 |[39m     [33m<[39m[33m/[39m[33mdiv[39m[33m>[39m
+   [90m 477 |[39m   )[33m;[39m[0m
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+File sizes after gzip:
+
+  292.71 kB  build/static/js/8019.8f1a18bc.chunk.js
+  230.28 kB  build/static/js/2804.363e796a.chunk.js
+  196.92 kB  build/static/js/2347.da60734e.chunk.js
+  186.12 kB  build/static/js/main.80f0be0c.js
+  80.99 kB   build/static/js/410.2b78e14e.chunk.js
+  77.05 kB   build/static/js/8359.0f128045.chunk.js
+  51.56 kB   build/static/js/7719.7bf8bde9.chunk.js
+  51.05 kB   build/static/js/4783.3282a74a.chunk.js
+  30.53 kB   build/static/js/9926.bd508093.chunk.js
+  30.15 kB   build/static/js/7961.547392e9.chunk.js
+  29.3 kB    build/static/js/4151.1a564445.chunk.js
+  27.55 kB   build/static/js/938.2be08741.chunk.js
+  27.49 kB   build/static/js/7375.e673c658.chunk.js
+  27.48 kB   build/static/css/8019.6c69fad5.chunk.css
+  23.58 kB   build/static/js/6294.2aefdb3d.chunk.js
+  23.27 kB   build/static/js/358.dd1595a0.chunk.js
+  17.26 kB   build/static/js/7784.2d4c6f15.chunk.js
+  17.23 kB   build/static/js/7125.f4d3cdf3.chunk.js
+  17.17 kB   build/static/js/1050.d08cecfb.chunk.js
+  17.17 kB   build/static/js/5420.a7cfb21c.chunk.js
+  16.69 kB   build/static/js/5260.6c611de0.chunk.js
+  15.58 kB   build/static/js/6347.d11a7448.chunk.js
+  15.08 kB   build/static/js/4154.864b06b5.chunk.js
+  14.44 kB   build/static/js/5306.174def4e.chunk.js
+  13.99 kB   build/static/js/3765.09474d8f.chunk.js
+  13.9 kB    build/static/js/1477.635e6058.chunk.js
+  13.71 kB   build/static/js/1820.5a634f19.chunk.js
+  13.51 kB   build/static/js/3754.4aff57be.chunk.js
+  12.25 kB   build/static/js/5139.52e6fb66.chunk.js
+  12.02 kB   build/static/js/9007.95996e30.chunk.js
+  11.98 kB   build/static/js/4346.8562232a.chunk.js
+  11.55 kB   build/static/js/2188.a6b59200.chunk.js
+  11.26 kB   build/static/js/9597.6a5e5ab2.chunk.js
+  11.08 kB   build/static/js/4926.764f6063.chunk.js
+  10.63 kB   build/static/js/9324.a585362e.chunk.js
+  10.51 kB   build/static/js/101.61f4fcc8.chunk.js
+  10.42 kB   build/static/js/5519.029dd4dd.chunk.js
+  10.32 kB   build/static/js/5720.7143a97c.chunk.js
+  10.29 kB   build/static/js/1988.fc593dc3.chunk.js
+  10.17 kB   build/static/js/2960.da19b6b4.chunk.js
+  9.67 kB    build/static/js/4270.fcf2defc.chunk.js
+  8.89 kB    build/static/js/9805.9705e60c.chunk.js
+  8.53 kB    build/static/js/3139.24eba46c.chunk.js
+  8.43 kB    build/static/js/6656.285ec75f.chunk.js
+  8.43 kB    build/static/js/8928.de6a7ba3.chunk.js
+  8.4 kB     build/static/js/8459.cc9352bf.chunk.js
+  8.36 kB    build/static/js/7770.36ddea7d.chunk.js
+  8.29 kB    build/static/css/main.c197644c.css
+  8.22 kB    build/static/js/7315.3c66cbd2.chunk.js
+  8.17 kB    build/static/js/5623.e799c8f1.chunk.js
+  8.12 kB    build/static/js/9266.78c87ba7.chunk.js
+  7.76 kB    build/static/js/156.bf90ab86.chunk.js
+  7.76 kB    build/static/js/6133.5ee5f2ba.chunk.js
+  7.75 kB    build/static/js/2263.a93350a5.chunk.js
+  7.75 kB    build/static/js/5691.13527037.chunk.js
+  7.74 kB    build/static/js/7231.0ce50911.chunk.js
+  7.43 kB    build/static/js/7967.59785830.chunk.js
+  7.41 kB    build/static/js/3432.4e8db5f8.chunk.js
+  7.31 kB    build/static/js/8353.32f3d276.chunk.js
+  7 kB       build/static/js/5607.dd6f048b.chunk.js
+  6.88 kB    build/static/js/8674.a8d3ec4c.chunk.js
+  6.78 kB    build/static/js/3665.e0ccb9d3.chunk.js
+  6.78 kB    build/static/js/8703.b0aa2f3f.chunk.js
+  6.63 kB    build/static/js/5502.b2e4cb4b.chunk.js
+  6.5 kB     build/static/js/2608.41b0ccf9.chunk.js
+  6.44 kB    build/static/js/9313.5a8ceae3.chunk.js
+  6.36 kB    build/static/js/7379.90d78dfc.chunk.js
+  6.35 kB    build/static/js/6026.d735aff2.chunk.js
+  6.34 kB    build/static/js/3267.5a3bbcbc.chunk.js
+  6.26 kB    build/static/js/2219.53d84d88.chunk.js
+  6.17 kB    build/static/js/2987.acebf6b3.chunk.js
+  6.03 kB    build/static/js/1667.480d9bd6.chunk.js
+  6.02 kB    build/static/js/3460.24dc52ac.chunk.js
+  6 kB       build/static/js/7695.b70d20b5.chunk.js
+  5.99 kB    build/static/js/7944.460a7755.chunk.js
+  5.96 kB    build/static/js/321.0868c56d.chunk.js
+  5.88 kB    build/static/js/9316.3dc42d66.chunk.js
+  5.81 kB    build/static/js/4250.e44def7a.chunk.js
+  5.8 kB     build/static/js/3162.3147c97b.chunk.js
+  5.66 kB    build/static/js/7310.e74d0229.chunk.js
+  5.62 kB    build/static/js/1735.76b4cc5a.chunk.js
+  5.57 kB    build/static/js/6186.896de849.chunk.js
+  5.55 kB    build/static/js/9222.fd2e17fb.chunk.js
+  5.55 kB    build/static/js/5433.20c62b27.chunk.js
+  5.54 kB    build/static/js/2059.3741283a.chunk.js
+  5.44 kB    build/static/js/8337.a599529a.chunk.js
+  5.3 kB     build/static/js/4221.ac0fc9fb.chunk.js
+  5.2 kB     build/static/js/7391.efa9ad68.chunk.js
+  5.18 kB    build/static/js/7723.c9981edf.chunk.js
+  4.98 kB    build/static/js/6616.dc2bd510.chunk.js
+  4.95 kB    build/static/js/2991.98c78e53.chunk.js
+  4.94 kB    build/static/js/6556.cf9bc39c.chunk.js
+  4.9 kB     build/static/js/8175.f494a73e.chunk.js
+  4.85 kB    build/static/js/1476.e7f7dcaa.chunk.js
+  4.74 kB    build/static/js/3805.c67ec30b.chunk.js
+  4.67 kB    build/static/js/9228.2fc1814f.chunk.js
+  4.67 kB    build/static/js/6074.dd927a2d.chunk.js
+  4.61 kB    build/static/js/5679.b585ccc2.chunk.js
+  4.55 kB    build/static/js/5027.1c38eff3.chunk.js
+  4.46 kB    build/static/js/6385.88fdf8d4.chunk.js
+  4.45 kB    build/static/js/8988.37d37987.chunk.js
+  4.44 kB    build/static/js/9511.19ce8adf.chunk.js
+  4.39 kB    build/static/js/9789.e0fc0fa0.chunk.js
+  4.36 kB    build/static/js/6013.d50c02b9.chunk.js
+  4.35 kB    build/static/js/6461.9b4e17d8.chunk.js
+  4.25 kB    build/static/js/7299.8443ac6c.chunk.js
+  4.13 kB    build/static/js/5648.eff46a87.chunk.js
+  4.09 kB    build/static/js/6379.0889c0a3.chunk.js
+  4.09 kB    build/static/js/3121.bac9dca8.chunk.js
+  4.05 kB    build/static/js/2402.6e221f85.chunk.js
+  4.05 kB    build/static/js/1359.5a84054b.chunk.js
+  4.02 kB    build/static/js/3361.1f0bcb82.chunk.js
+  3.94 kB    build/static/js/7787.3d7b2d80.chunk.js
+  3.93 kB    build/static/js/6758.4f9705bc.chunk.js
+  3.92 kB    build/static/js/9682.8d58983b.chunk.js
+  3.92 kB    build/static/js/4876.e6119582.chunk.js
+  3.92 kB    build/static/js/8832.5a9cf8b7.chunk.js
+  3.92 kB    build/static/js/8494.a070f2fe.chunk.js
+  3.91 kB    build/static/js/5627.ceac866b.chunk.js
+  3.87 kB    build/static/js/8766.a6c490b1.chunk.js
+  3.85 kB    build/static/js/83.173e7d67.chunk.js
+  3.82 kB    build/static/js/4127.c67361ac.chunk.js
+  3.78 kB    build/static/js/6477.b9931961.chunk.js
+  3.72 kB    build/static/js/3453.4fb53f56.chunk.js
+  3.7 kB     build/static/js/647.9382083f.chunk.js
+  3.66 kB    build/static/js/9570.f46fa6e0.chunk.js
+  3.65 kB    build/static/js/6805.868da953.chunk.js
+  3.55 kB    build/static/js/17.34cc83b5.chunk.js
+  3.52 kB    build/static/js/5457.f23ae66e.chunk.js
+  3.51 kB    build/static/js/6131.93761774.chunk.js
+  3.47 kB    build/static/js/2351.6effe067.chunk.js
+  3.43 kB    build/static/js/7303.a32b9576.chunk.js
+  3.35 kB    build/static/js/898.cfa56689.chunk.js
+  3.32 kB    build/static/js/2346.bf4c69ce.chunk.js
+  3.25 kB    build/static/js/2772.30983b31.chunk.js
+  3.24 kB    build/static/js/1029.11b30823.chunk.js
+  3.21 kB    build/static/js/4428.d2656b93.chunk.js
+  3.2 kB     build/static/js/5313.3d4b5859.chunk.js
+  3.18 kB    build/static/js/8306.edfc7c14.chunk.js
+  3.18 kB    build/static/js/9062.5168a9b5.chunk.js
+  3.17 kB    build/static/js/9706.5edcc3f5.chunk.js
+  3.17 kB    build/static/js/5919.a18517be.chunk.js
+  3.17 kB    build/static/js/9794.32054ae3.chunk.js
+  3.16 kB    build/static/js/1751.b76e72ec.chunk.js
+  3.16 kB    build/static/js/2286.4045b21e.chunk.js
+  3.15 kB    build/static/js/7911.3a73720d.chunk.js
+  3.15 kB    build/static/js/9389.3213a391.chunk.js
+  3.15 kB    build/static/js/6581.5d961dea.chunk.js
+  3.14 kB    build/static/js/7324.6a281282.chunk.js
+  3.13 kB    build/static/js/6146.903cd556.chunk.js
+  3.12 kB    build/static/js/6782.4b17d804.chunk.js
+  3.12 kB    build/static/js/8811.44bcfa06.chunk.js
+  3.1 kB     build/static/js/3822.821db83d.chunk.js
+  3.08 kB    build/static/js/7562.d9fad7a4.chunk.js
+  3.07 kB    build/static/js/6906.86177fac.chunk.js
+  3.06 kB    build/static/js/3731.28937aa4.chunk.js
+  3.02 kB    build/static/js/2458.d5a90aa1.chunk.js
+  3.01 kB    build/static/js/1938.f5f202f4.chunk.js
+  3.01 kB    build/static/js/3364.5bae9670.chunk.js
+  2.99 kB    build/static/js/8224.c99a7198.chunk.js
+  2.99 kB    build/static/js/5133.864825fa.chunk.js
+  2.97 kB    build/static/js/3437.dc8db097.chunk.js
+  2.97 kB    build/static/js/3419.bb205a98.chunk.js
+  2.96 kB    build/static/js/3245.9150483c.chunk.js
+  2.95 kB    build/static/js/6955.1adeed3a.chunk.js
+  2.93 kB    build/static/js/1574.5cb060c9.chunk.js
+  2.9 kB     build/static/js/961.02bbf0e4.chunk.js
+  2.88 kB    build/static/js/1144.cf2dcd88.chunk.js
+  2.86 kB    build/static/js/6534.d2db7904.chunk.js
+  2.8 kB     build/static/js/6751.2b8ac606.chunk.js
+  2.7 kB     build/static/js/3126.9de4b2b5.chunk.js
+  2.66 kB    build/static/js/5636.e030d3d1.chunk.js
+  2.66 kB    build/static/js/5676.e79814ca.chunk.js
+  2.65 kB    build/static/js/8690.587825e9.chunk.js
+  2.64 kB    build/static/js/4836.97e2f47a.chunk.js
+  2.63 kB    build/static/js/9781.e857278a.chunk.js
+  2.6 kB     build/static/js/1114.f32fb0e4.chunk.js
+  2.6 kB     build/static/js/2117.89b063ff.chunk.js
+  2.56 kB    build/static/js/8402.1f84d72c.chunk.js
+  2.56 kB    build/static/js/2770.a12c93ff.chunk.js
+  2.55 kB    build/static/js/5287.8bead68f.chunk.js
+  2.54 kB    build/static/js/1060.75b89574.chunk.js
+  2.43 kB    build/static/js/3329.92c869b4.chunk.js
+  2.4 kB     build/static/js/8738.202622cc.chunk.js
+  2.38 kB    build/static/js/1150.ffbce533.chunk.js
+  2.38 kB    build/static/js/9048.97d323ab.chunk.js
+  2.36 kB    build/static/js/8073.98d7d881.chunk.js
+  2.35 kB    build/static/js/3800.0d7e1d1c.chunk.js
+  2.35 kB    build/static/js/1308.e89c6f79.chunk.js
+  2.34 kB    build/static/js/7079.e0b9f462.chunk.js
+  2.33 kB    build/static/js/5553.6af82a70.chunk.js
+  2.3 kB     build/static/js/6104.71950c5a.chunk.js
+  2.29 kB    build/static/js/1127.244a21f8.chunk.js
+  2.27 kB    build/static/js/8806.9e6c93a5.chunk.js
+  2.25 kB    build/static/js/4942.46c611ae.chunk.js
+  2.21 kB    build/static/js/7798.b9ceb18f.chunk.js
+  2.19 kB    build/static/js/9185.c4d28f64.chunk.js
+  2.16 kB    build/static/js/7041.aa230a5a.chunk.js
+  2.16 kB    build/static/js/1728.f1dec4eb.chunk.js
+  2.14 kB    build/static/js/7258.c4bd509c.chunk.js
+  2.1 kB     build/static/js/798.934754d7.chunk.js
+  2.06 kB    build/static/js/7428.82e81bc1.chunk.js
+  2.05 kB    build/static/js/5880.7730d187.chunk.js
+  2.03 kB    build/static/js/2549.b85fa928.chunk.js
+  2.03 kB    build/static/js/927.c00b3b93.chunk.js
+  1.99 kB    build/static/js/4330.fa438b8f.chunk.js
+  1.99 kB    build/static/js/6692.57b17d5e.chunk.js
+  1.98 kB    build/static/js/3338.f35464ac.chunk.js
+  1.96 kB    build/static/js/1923.e97833ae.chunk.js
+  1.96 kB    build/static/js/1389.83064de1.chunk.js
+  1.95 kB    build/static/js/5844.9bb4e04d.chunk.js
+  1.92 kB    build/static/js/5858.ae3c603e.chunk.js
+  1.92 kB    build/static/js/7259.4740ec02.chunk.js
+  1.91 kB    build/static/js/2484.290a9b5a.chunk.js
+  1.86 kB    build/static/js/950.c867b68b.chunk.js
+  1.84 kB    build/static/js/4111.4f0e8930.chunk.js
+  1.82 kB    build/static/js/6527.b69e4287.chunk.js
+  1.79 kB    build/static/js/1318.2f5c2467.chunk.js
+  1.77 kB    build/static/js/4841.c5c905d5.chunk.js
+  1.77 kB    build/static/js/8998.5dadc0b4.chunk.js
+  1.76 kB    build/static/js/1493.f8294b92.chunk.js
+  1.76 kB    build/static/js/566.2ac22fd2.chunk.js
+  1.76 kB    build/static/js/2115.8e79647b.chunk.js
+  1.74 kB    build/static/js/2365.b3e896be.chunk.js
+  1.74 kB    build/static/js/3309.e498c830.chunk.js
+  1.72 kB    build/static/js/5948.8169bfa8.chunk.js
+  1.69 kB    build/static/js/6204.7a66ccfb.chunk.js
+  1.68 kB    build/static/js/5946.0048c3cb.chunk.js
+  1.67 kB    build/static/js/1817.27a759dc.chunk.js
+  1.66 kB    build/static/js/8969.ca1d53cd.chunk.js
+  1.65 kB    build/static/js/8860.a43337b8.chunk.js
+  1.61 kB    build/static/js/2145.4dff834d.chunk.js
+  1.58 kB    build/static/js/4148.ebe42f3a.chunk.js
+  1.58 kB    build/static/js/3184.a16bf277.chunk.js
+  1.55 kB    build/static/js/9139.409037b2.chunk.js
+  1.55 kB    build/static/js/1708.80202167.chunk.js
+  1.53 kB    build/static/js/5026.23d118ca.chunk.js
+  1.51 kB    build/static/js/2162.a5e25dec.chunk.js
+  1.49 kB    build/static/js/6369.00037517.chunk.js
+  1.49 kB    build/static/js/7817.a2bceb4f.chunk.js
+  1.49 kB    build/static/js/9121.aa4327e4.chunk.js
+  1.46 kB    build/static/js/4441.5178252b.chunk.js
+  1.45 kB    build/static/js/1256.3f61c4c2.chunk.js
+  1.44 kB    build/static/js/9349.ba486bd3.chunk.js
+  1.43 kB    build/static/js/7617.ab0159a8.chunk.js
+  1.39 kB    build/static/js/869.fe3e291b.chunk.js
+  1.38 kB    build/static/js/8226.6db39a4b.chunk.js
+  1.37 kB    build/static/js/3525.4a463505.chunk.js
+  1.33 kB    build/static/js/1229.02bb6cf6.chunk.js
+  1.31 kB    build/static/js/6076.9601050e.chunk.js
+  1.28 kB    build/static/js/1531.1e35fd7a.chunk.js
+  1.28 kB    build/static/js/3912.1e35fd7a.chunk.js
+  1.27 kB    build/static/js/1523.f58c3f27.chunk.js
+  1.27 kB    build/static/js/6791.9d4c083c.chunk.js
+  1.25 kB    build/static/js/1724.81874bc1.chunk.js
+  1.25 kB    build/static/js/3431.48577386.chunk.js
+  1.23 kB    build/static/js/8895.076d46f9.chunk.js
+  1.17 kB    build/static/js/8065.ed92fb41.chunk.js
+  1.17 kB    build/static/js/9259.bcd0ce6a.chunk.js
+  1.16 kB    build/static/js/250.b6354da7.chunk.js
+  1.16 kB    build/static/js/4182.7bb38e46.chunk.js
+  1.15 kB    build/static/js/5986.b44d8d14.chunk.js
+  1.13 kB    build/static/js/4512.1e9f8138.chunk.js
+  1.05 kB    build/static/js/2954.ba05e2b9.chunk.js
+  1.04 kB    build/static/js/8535.87a49ffd.chunk.js
+  1.01 kB    build/static/js/3044.2eec0988.chunk.js
+  979 B      build/static/js/3174.b0fd48bd.chunk.js
+  960 B      build/static/js/4947.7ee82ce1.chunk.js
+  954 B      build/static/js/9553.f6858e1a.chunk.js
+  953 B      build/static/js/553.3e0e62c7.chunk.js
+  922 B      build/static/js/7423.b3ae3d9f.chunk.js
+  892 B      build/static/js/1210.dbba1aef.chunk.js
+  890 B      build/static/js/5501.accb7396.chunk.js
+  878 B      build/static/js/3627.63ba5182.chunk.js
+  869 B      build/static/js/4119.a3071593.chunk.js
+  866 B      build/static/js/8707.ecfc8551.chunk.js
+  864 B      build/static/js/735.b87586d2.chunk.js
+  851 B      build/static/js/6115.28e93a5e.chunk.js
+  793 B      build/static/js/1860.4d77a4f6.chunk.js
+  784 B      build/static/js/45.be845f28.chunk.js
+  771 B      build/static/js/4045.70827294.chunk.js
+  761 B      build/static/js/3164.4d5002f3.chunk.js
+  702 B      build/static/js/1055.b142f91e.chunk.js
+  670 B      build/static/js/8725.d65058e2.chunk.js
+  666 B      build/static/js/7958.06a7614f.chunk.js
+  600 B      build/static/js/8679.40635e69.chunk.js
+  561 B      build/static/js/3109.a023f70f.chunk.js
+  549 B      build/static/js/8080.69bfb3a1.chunk.js
+  517 B      build/static/js/1326.33777fae.chunk.js
+  490 B      build/static/js/2412.3b6889c6.chunk.js
+  483 B      build/static/js/8955.1abae130.chunk.js
+  437 B      build/static/js/1999.93c2984a.chunk.js
+  408 B      build/static/js/2268.36e3d8bc.chunk.js
+  382 B      build/static/js/282.73fbd09a.chunk.js
+
+The project was built assuming it is hosted at ./.
+You can control this with the homepage field in your package.json.
+
+The build folder is ready to be deployed.
+
+Find out more about deployment here:
+
+  https://cra.link/deployment
+
+npm notice
+npm notice New major version of npm available! 10.8.2 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice
+BUILD_EXIT=0
