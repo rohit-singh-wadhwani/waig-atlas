@@ -1,6 +1,22 @@
 {
- "updated_at": "2026-11-13T10:18:53.429Z",
+ "updated_at": "2026-11-13T13:30:57.151Z",
  "insights": [
+  {
+   "id": "3f7bf1b8e45acffe",
+   "title": "DR Congo Ebola outbreak: armed groups unrest hold back response",
+   "summary": "An ongoing Ebola outbreak in the Democratic Republic of the Congo faces severe response delays due to armed attacks on civilians and healthcare workers.",
+   "url": "https://news.un.org/feed/view/en/story/2026/11/1168797",
+   "published_at": "2026-11-13T12:00:00.000Z",
+   "source_id": "un-news-health",
+   "source_name": "UN News: health",
+   "kind": "outbreak",
+   "countries": [
+    "COD"
+   ],
+   "diseases": [
+    "Ebola"
+   ]
+  },
   {
    "id": "d18fe29462bce2e1",
    "title": "Geographical targeting of active case-finding for tuberculosis in Pakistan using artificial intelligence software (SPOT-TB): a pragmatic, stepped wedge, cluster-randomised control trial.",
@@ -63,6 +79,64 @@
    ]
   },
   {
+   "id": "45975f272b0d4570",
+   "title": "Procurement of It infrastructure for strengthening DHIS 2 Implementation and data ware house",
+   "summary": "A tender has been issued for IT infrastructure procurement to strengthen DHIS 2 implementation and data warehousing in Eastern and Southern Africa.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00481028",
+   "published_at": "2026-11-12T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "66772de509af7c29",
+   "title": "Contratación de servicios de infraestructura tecnológica en la nube (IaaS y PaaS) para el MISPAS",
+   "summary": "Cloud infrastructure services have been contracted for the Dominican Republic's Ministry of Health.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00481260",
+   "published_at": "2026-11-12T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "DOM"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "59c6001bc0db5aa8",
+   "title": "Procurement of Work Suits for Cholera outbreak",
+   "summary": "Zambia has procured work suits to support its cholera outbreak response efforts.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00481047",
+   "published_at": "2026-11-12T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "ZMB"
+   ],
+   "diseases": [
+    "cholera"
+   ]
+  },
+  {
+   "id": "6259166f0ec2b462",
+   "title": "Acquisition en urgence de dispositifs de prélèvement ISWAB et HEMASURE pour la collecte et le transport des échantillons biologiques destinés au diagnostic du virus Ebola dans les provinces de l’Ituri et du Nord-Kivu",
+   "summary": "Emergency procurement of biological sample collection devices for Ebola diagnosis has been awarded in regions of the Democratic Republic of the Congo.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00481177",
+   "published_at": "2026-11-12T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "COD"
+   ],
+   "diseases": [
+    "Ebola"
+   ]
+  },
+  {
    "id": "622d44ddea7f9963",
    "title": "Strengthening Africa's health security: Dr Tedros' message to African Medicines Agency Week 2026",
    "summary": "The WHO highlighted efforts to strengthen medical regulatory systems and cooperation across Africa. This initiative supports broader health security and product access on the continent.",
@@ -73,6 +147,34 @@
    "kind": "social",
    "countries": [
     "RWA"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "7e5f33c15e1fb60d",
+   "title": "Technical Consultant – Business Analyst to support the MoH KR in ensuring digital inter-structural and interagency interactions in the area of medicines circulation on the Electronic Database of Medicines and Medical Devices platform",
+   "summary": "The Ministry of Health in the Kyrgyz Republic is seeking a business analyst to support digital interagency interactions for medicines circulation.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00481022",
+   "published_at": "2026-11-11T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "KGZ"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "dee7584fc8828be7",
+   "title": "Information Technology Specialist to support the MoH KR in ensuring digital inter-structural and interagency interactions in the area of medicines circulation on the Electronic Database of Medicines and Medical Devices platform",
+   "summary": "The Ministry of Health in the Kyrgyz Republic is seeking an IT specialist to support the electronic database of medicines and medical devices.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00481024",
+   "published_at": "2026-11-11T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "KGZ"
    ],
    "diseases": []
   },
