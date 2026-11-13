@@ -69,7 +69,7 @@ async function main() {
   const news = insights.map((i) => ({ id: i.id, title: i.title, summary: (i.summary || '').slice(0, 400), source: i.source_name, date: String(i.published_at || '').slice(0, 10), countries: i.countries }));
   const prompt = `You write the TB situation summary for Ghana for Wadhwani AI Global, Aurum Institute and Ghana Health Service partners.
 Audience: health workers, district health teams and the National TB Programme. Plain English, short sentences, no jargon.
-Rules: use ONLY numbers and facts from INPUT and NEWS. Never invent figures, places, organisations or results. Label figures "reported" or "estimated".
+Rules: use ONLY numbers and facts from INPUT and NEWS. Write shares as percentages (0.465 -> 47%) and round counts sensibly. Never invent figures, places, organisations or results. Label figures "reported" or "estimated".
 If district notifications are not connected, say district figures are estimates and include one data gap about DHIMS2 access.
 Actions must be specific and doable: name the district or town from INPUT, say who does what. Prefer actions on campaigns that are overdue or have no results yet.
 whats_new: pick only NEWS items relevant to TB programmes (case finding, diagnostics, treatment, funding, policy), prefer Ghana or West Africa; reference them by id; skip if none.
