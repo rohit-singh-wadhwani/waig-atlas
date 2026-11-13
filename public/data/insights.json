@@ -1,6 +1,22 @@
 {
- "updated_at": "2026-11-13T04:16:00.465Z",
+ "updated_at": "2026-11-13T07:39:37.644Z",
  "insights": [
+  {
+   "id": "d18fe29462bce2e1",
+   "title": "Geographical targeting of active case-finding for tuberculosis in Pakistan using artificial intelligence software (SPOT-TB): a pragmatic, stepped wedge, cluster-randomised control trial.",
+   "summary": "A pragmatic cluster-randomised trial evaluates the use of artificial intelligence software (SPOT-TB) for geographical targeting of active tuberculosis case-finding in Pakistan.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/43020100/",
+   "published_at": "2026-11-12T23:32:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [
+    "PAK"
+   ],
+   "diseases": [
+    "tuberculosis"
+   ]
+  },
   {
    "id": "aa8080a277f19ade",
    "title": "Kenya begins countdown towards end of Ebola after last patient discharged",
@@ -1684,6 +1700,20 @@
    "summary": "An analysis of global freshwater resistomes explores environmental signatures linked to the burden of drug-resistant tuberculosis.",
    "url": "https://pubmed.ncbi.nlm.nih.gov/42692396/",
    "published_at": "2026-09-03T23:36:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [],
+   "diseases": [
+    "tuberculosis"
+   ]
+  },
+  {
+   "id": "1ef273119b96180b",
+   "title": "AI-assisted tuberculosis smear microscopy in a low-incidence hospital laboratory yields incremental diagnostic improvement alongside measurable workflow efficiency.",
+   "summary": "Evaluation of AI-assisted tuberculosis smear microscopy in a hospital laboratory shows both diagnostic improvements and increased workflow efficiency.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/42685556/",
+   "published_at": "2026-09-03T01:19:00.000Z",
    "source_id": "pubmed-ai-tb-malaria-dengue",
    "source_name": "PubMed: AI for TB, malaria, dengue",
    "kind": "research",
