@@ -1,6 +1,12 @@
 {
  "runs": [
   {
+   "job": "grants",
+   "at": "2026-11-13T14:32:45.608Z",
+   "ok": true,
+   "message": "0 new calls added (6 candidates), 89 tracked · Gemini 1/1 calls ok"
+  },
+  {
    "job": "insights",
    "at": "2026-11-13T13:30:57.152Z",
    "ok": true,
@@ -353,12 +359,6 @@
    "at": "2026-11-09T10:16:44.046Z",
    "ok": true,
    "message": "0 new insights (2 candidates), 98 kept · Gemini 1/1 calls ok"
-  },
-  {
-   "job": "insights",
-   "at": "2026-11-09T07:48:33.852Z",
-   "ok": true,
-   "message": "0 new insights (0 candidates), 98 kept · Gemini 0/0 calls ok"
   }
  ]
 }
