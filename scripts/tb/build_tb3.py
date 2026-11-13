@@ -38,8 +38,8 @@ import shapefile
 import h3
 from rasterio.features import rasterize
 from scipy.spatial import cKDTree
-from shapely.geometry import shape, mapping, Point, Polygon
-from shapely.ops import unary_union
+from shapely.geometry import shape, mapping, Point, Polygon, MultiPoint
+from shapely.ops import unary_union, voronoi_diagram
 from shapely.strtree import STRtree
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -476,32 +476,55 @@ def main():
         rnd = lambda co: [rnd(x) for x in co] if isinstance(co[0], (list, tuple)) else [round(co[0], 4), round(co[1], 4)]
         for h in hex_out:
             h['t'] = -1
-        # town areas: every hexagon joins its nearest named town, village or suburb (within TOWN_MAX_KM);
-        # those hexagons together are the town's area, population and expected cases
-        tw = d['towns']
+        # town areas: the district is split between its named towns, villages and suburbs (OpenStreetMap) so that every
+        # place belongs to its nearest one (Voronoi, clipped to the district). Population and expected cases are the
+        # hexagons inside each area. Towns whose area has no mapped population are kept and flagged, not hidden.
+        seen, tw = set(), []
+        for t in d['towns']:
+            k = (round(t['lon'], 5), round(t['lat'], 5))
+            if k not in seen:
+                seen.add(k)
+                tw.append(t)
         town_out = []
-        if tw and hex_out:
-            txy = km_xy([t['lon'] for t in tw], [t['lat'] for t in tw], lat0)
-            hxy = km_xy(cen_ll[:, 1], cen_ll[:, 0], lat0)
-            dist_, idx = cKDTree(txy).query(hxy)
+        if tw:
+            if len(tw) >= 2:
+                cells = voronoi_diagram(MultiPoint([(t['lon'], t['lat']) for t in tw]), envelope=d['geom'].envelope.buffer(0.2))
+                areas = [None] * len(tw)
+                ctree = STRtree(list(cells.geoms))
+                for k, t in enumerate(tw):
+                    p_ = Point(t['lon'], t['lat'])
+                    for ci in ctree.query(p_):
+                        if cells.geoms[ci].contains(p_) or cells.geoms[ci].touches(p_):
+                            areas[k] = cells.geoms[ci].intersection(d['geom'])
+                            break
+            else:
+                areas = [d['geom']]
             members = {}
-            for j, (dk, k) in enumerate(zip(dist_, idx)):
-                if dk <= TOWN_MAX_KM:
+            if hex_out:
+                txy = km_xy([t['lon'] for t in tw], [t['lat'] for t in tw], lat0)
+                hxy = km_xy(cen_ll[:, 1], cen_ll[:, 0], lat0)
+                _, idx = cKDTree(txy).query(hxy)
+                for j, k in enumerate(idx):
                     members.setdefault(int(k), []).append(j)
             tf, th, tm, twk = near(None, np.array([t['lon'] for t in tw]), np.array([t['lat'] for t in tw]))
-            order = sorted(((k, js, sum(hex_out[j]['p'] for j in js)) for k, js in members.items()), key=lambda x: -x[2])
-            for k, js, pp in order:
-                if pp < 300:
+            order = sorted(range(len(tw)), key=lambda k: -sum(hex_out[j]['p'] for j in members.get(k, [])))
+            for k in order:
+                g = areas[k]
+                if g is not None and g.geom_type == 'GeometryCollection':
+                    g = unary_union([x for x in g.geoms if x.geom_type in ('Polygon', 'MultiPolygon')])
+                if g is None or g.is_empty or g.geom_type not in ('Polygon', 'MultiPolygon'):
                     continue
+                js = members.get(k, [])
                 ti = len(town_out)
                 for j in js:
                     hex_out[j]['t'] = ti
-                poly = unary_union([Polygon(hex_out[j]['r']) for j in js]).simplify(0.0003, preserve_topology=True)
-                gj = mapping(poly)
+                pp = sum(hex_out[j]['p'] for j in js)
+                ee = sum(hex_out[j]['e'] or 0 for j in js)
+                area = g.area * 111.32 * 110.57 * math.cos(math.radians(d['lat']))
+                gj = mapping(g.simplify(0.0008, preserve_topology=True))
                 t = tw[k]
-                area = len(js) * hex_area
-                town_out.append({'id': ti, 'name': t['name'], 'place': t['place'], 'lon': round(t['lon'], 5), 'lat': round(t['lat'], 5), 'pop': round(pp), 'area_km2': r2(area, 1),
-                                 'radius_km': r2(math.sqrt(area / math.pi), 2), 'expected': r2(sum(hex_out[j]['e'] or 0 for j in js), 1), 'expected_km2': r2(sum(hex_out[j]['e'] or 0 for j in js) / area, 2),
+                town_out.append({'id': ti, 'name': t['name'], 'place': t['place'], 'lon': round(t['lon'], 5), 'lat': round(t['lat'], 5), 'pop': round(pp), 'nodata': pp < 1,
+                                 'area_km2': r2(area, 1), 'radius_km': r2(math.sqrt(max(area, 0.1) / math.pi), 2), 'expected': r2(ee, 1), 'expected_km2': r2(ee / area, 2) if area else None,
                                  'facility_km': r2(tf[k], 2), 'hospital_km': r2(th[k], 2), 'drive_min': r2(tm[k], 0), 'walk_min': r2(twk[k], 0),
                                  'geom': {'type': gj['type'], 'coordinates': rnd(gj['coordinates'])}})
         cell_town = {h['h']: h['t'] for h in hex_out}
