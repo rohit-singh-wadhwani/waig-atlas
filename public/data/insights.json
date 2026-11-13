@@ -1,5 +1,5 @@
 {
- "updated_at": "2026-11-13T16:08:32.846Z",
+ "updated_at": "2026-11-13T19:17:04.300Z",
  "insights": [
   {
    "id": "3f7bf1b8e45acffe",
@@ -15,6 +15,23 @@
    ],
    "diseases": [
     "Ebola"
+   ]
+  },
+  {
+   "id": "ddcb0ee8491ec20e",
+   "title": "Prospective field deployment of Swaasa(®) AI for community-based screening of tuberculosis and other respiratory diseases in Andhra Pradesh: a feasibility and implementation study.",
+   "summary": "This feasibility and implementation study evaluates the prospective field deployment of Swaasa AI for community-based screening of tuberculosis and other respiratory diseases in Andhra Pradesh.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/43023173/",
+   "published_at": "2026-11-13T11:29:00.000Z",
+   "source_id": "pubmed-cough-acoustics",
+   "source_name": "PubMed: cough acoustics",
+   "kind": "research",
+   "countries": [
+    "IND"
+   ],
+   "diseases": [
+    "tuberculosis",
+    "respiratory diseases"
    ]
   },
   {
