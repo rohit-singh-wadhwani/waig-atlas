@@ -54,14 +54,14 @@ export default function ExplorerMap(p: ExplorerMapProps) {
     m.on('load', () => {
       clearTimeout(fallback);
       const below = (m.getStyle().layers || []).find((l: any) => l.type === 'symbol')?.id;
-      for (const id of ['districts', 'hexes', 'towns', 'venues', 'facilities']) m.addSource(id, { type: 'geojson', data: EMPTY, ...(id === 'districts' ? { promoteId: 'id' } : {}) });
+      for (const id of ['districts', 'hexes', 'towns', 'townlabels', 'venues', 'facilities']) m.addSource(id, { type: 'geojson', data: EMPTY, ...(id === 'districts' ? { promoteId: 'id' } : {}) });
       m.addLayer({ id: 'd-fill', type: 'fill', source: 'districts', paint: { 'fill-color': TB_RAMP[1], 'fill-opacity': 0.75 } }, below);
       m.addLayer({ id: 'd-line', type: 'line', source: 'districts', paint: { 'line-color': '#ffffff', 'line-width': 0.7 } }, below);
       m.addLayer({ id: 'd-focus', type: 'line', source: 'districts', paint: { 'line-color': '#0f172a', 'line-width': 2.5 }, filter: ['==', ['get', 'id'], ''] }, below);
       m.addLayer({ id: 'h-fill', type: 'fill', source: 'hexes', paint: { 'fill-color': TB_RAMP[1], 'fill-opacity': 0.7 } }, below);
       m.addLayer({ id: 'facilities', type: 'circle', source: 'facilities', paint: { 'circle-radius': ['match', ['get', 'kind'], 'hospital', 6, 4], 'circle-color': '#1d4ed8', 'circle-stroke-color': '#fff', 'circle-stroke-width': 1.5 } });
       m.addLayer({ id: 'towns', type: 'circle', source: 'towns', paint: { 'circle-radius': ['interpolate', ['linear'], ['get', 'pop'], 300, 4, 20000, 8, 200000, 14], 'circle-color': '#fff', 'circle-stroke-color': '#0f172a', 'circle-stroke-width': ['case', ['get', 'focus'], 3, 1.5] } });
-      m.addLayer({ id: 'town-labels', type: 'symbol', source: 'towns', layout: { 'text-field': ['get', 'name'], 'text-font': ['Noto Sans Regular'], 'text-size': 12, 'text-offset': [0, 1.2], 'text-anchor': 'top', 'text-optional': true }, paint: { 'text-color': '#0f172a', 'text-halo-color': '#fff', 'text-halo-width': 1.5 } });
+      m.addLayer({ id: 'town-labels', type: 'symbol', source: 'townlabels', layout: { 'text-field': ['get', 'name'], 'text-font': ['Noto Sans Regular'], 'text-size': 12, 'text-offset': [0, 1.2], 'text-anchor': 'top', 'text-optional': true }, paint: { 'text-color': '#0f172a', 'text-halo-color': '#fff', 'text-halo-width': 1.5 } });
       m.addLayer({ id: 'venues', type: 'circle', source: 'venues', paint: {
         'circle-radius': ['case', ['get', 'picked'], 9, 6],
         'circle-color': ['match', ['get', 'kind'], ...Object.entries(VENUE_COLORS).flat(), '#64748b'],
@@ -108,6 +108,7 @@ export default function ExplorerMap(p: ExplorerMapProps) {
     if (!ready || !m) return;
     const t = p.towns ? { ...p.towns, features: p.towns.features.map((f: any) => ({ ...f, properties: { ...f.properties, focus: f.properties.key === p.focusTown } })) } : EMPTY;
     m.getSource('towns').setData(t);
+    m.getSource('townlabels').setData(t);
     const picked = new Set(p.picked || []);
     const v = p.venues ? { ...p.venues, features: p.venues.features.map((f: any) => ({ ...f, properties: { ...f.properties, picked: picked.has(f.properties.key) } })) } : EMPTY;
     m.getSource('venues').setData(v);
