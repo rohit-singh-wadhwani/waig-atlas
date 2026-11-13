@@ -53,7 +53,7 @@ export default function TbPage() {
                 { value: 'explore', label: 'Find and act' },
                 { value: 'campaigns', label: `Campaigns & tasks${open.length ? ` (${open.length} open)` : ''}` },
                 { value: 'data', label: 'Data sources' },
-                { value: 'brief', label: 'Weekly brief' },
+                { value: 'brief', label: 'Summary' },
               ]}
             />
           </div>

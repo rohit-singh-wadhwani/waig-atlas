@@ -1,106 +1,87 @@
-// Weekly TB brief: Gemini writes a short, grounded action brief for Ghana and each city from the same data the
-// TB pages show (public pipeline files + members-only notifications, campaigns and results). Numbers must come
-// from the inputs only; every figure is labelled reported, measured or estimated.
+// TB summary (refreshed daily with the news feed): what changed, what is new in TB news and research, and action
+// items for each audience. Gemini writes it as structured JSON from the inputs below only.
 import fs from 'node:fs';
 import path from 'node:path';
 import { HAS_GEMINI, HAS_SB, gemini, geminiStatus, log, sb, today } from '../lib.mjs';
 
-const OUT = path.join(path.dirname(new URL(import.meta.url).pathname), '..', '..', 'public', 'data', 'tb');
-const read = (f) => JSON.parse(fs.readFileSync(path.join(OUT, f), 'utf8'));
+const DATA = path.join(path.dirname(new URL(import.meta.url).pathname), '..', '..', 'public', 'data');
+const read = (f) => JSON.parse(fs.readFileSync(path.join(DATA, f), 'utf8').replace(/\bNaN\b/g, 'null'));
 const r0 = (x) => (x == null ? null : Math.round(x));
-const r2 = (x) => (x == null ? null : Math.round(x * 100) / 100);
 
-// same rules as src/lib/tb.ts
-function annual(rows) {
-  const by = new Map();
-  for (const r of rows) if (r.notified != null) by.set(r.district_id, [...(by.get(r.district_id) || []), r]);
-  const out = new Map();
-  for (const [id, list] of by) {
-    const m = list.filter((r) => /^\d{4}-\d{2}$/.test(r.period)).sort((a, b) => b.period.localeCompare(a.period)).slice(0, 12);
-    if (m.length >= 6) { out.set(id, (m.reduce((s, r) => s + Number(r.notified), 0) * 12) / m.length); continue; }
-    const q = list.filter((r) => /^\d{4}-?Q[1-4]$/i.test(r.period)).sort((a, b) => b.period.localeCompare(a.period)).slice(0, 4);
-    if (q.length >= 2) { out.set(id, (q.reduce((s, r) => s + Number(r.notified), 0) * 4) / q.length); continue; }
-    const y = list.filter((r) => /^\d{4}$/.test(r.period)).sort((a, b) => b.period.localeCompare(a.period));
-    if (y.length) out.set(id, Number(y[0].notified));
-  }
-  return out;
-}
-const approach = (d, P) =>
-  d.detection != null && P.rule_low_detection != null && d.detection < P.rule_low_detection ? 'detection_gap'
-    : d.walk_far != null && P.rule_walk_far_share != null && d.walk_far >= P.rule_walk_far_share ? 'remote_outreach'
-    : 'clinics_and_contacts';
+const SCHEMA = {
+  type: 'object',
+  properties: {
+    headline: { type: 'string', description: 'One sentence: the single most important thing right now.' },
+    situation: { type: 'array', items: { type: 'string' }, description: '2-4 short bullets with the key numbers, each labelled reported/estimated.' },
+    whats_new: {
+      type: 'array', description: 'Up to 5 recent TB news or research items from NEWS that matter for Ghana programme work.',
+      items: { type: 'object', properties: { id: { type: 'string' }, why_it_matters: { type: 'string' } }, required: ['id', 'why_it_matters'] },
+    },
+    actions: {
+      type: 'array', description: '4-8 concrete action items.',
+      items: {
+        type: 'object',
+        properties: {
+          audience: { type: 'string', enum: ['Health workers', 'District health teams', 'National TB Programme / Government', 'Partners (Aurum, Wadhwani AI)'] },
+          action: { type: 'string', description: 'Imperative, specific: what to do and where.' },
+          why: { type: 'string', description: 'The evidence from INPUT or NEWS behind it.' },
+          where: { type: 'string', description: 'District or town names from INPUT, or "National".' },
+          priority: { type: 'string', enum: ['now', 'this month', 'next quarter'] },
+        },
+        required: ['audience', 'action', 'why', 'priority'],
+      },
+    },
+    data_gaps: { type: 'array', items: { type: 'string' }, description: '1-3 data gaps that limit decisions, with who could close them.' },
+  },
+  required: ['headline', 'situation', 'whats_new', 'actions', 'data_gaps'],
+};
 
 async function main() {
   if (!HAS_GEMINI || !HAS_SB) throw new Error('needs GEMINI_API_KEY and SUPABASE_SERVICE_ROLE_KEY');
-  const meta = read('meta.json');
+  const meta = read('tb/meta.json');
   const nat = meta.national;
-  const districts = read('districts.geojson').features.map((f) => f.properties);
-  const keysites = read('keysites.json');
-  const [notif, campaigns, results, tasks, params] = await Promise.all([
-    sb.select('tb_notifications', 'select=district_id,period,notified'), sb.select('tb_campaigns', 'select=*'), sb.select('tb_campaign_results', 'select=*'),
-    sb.select('tb_tasks', 'select=status,due,campaign_id'), sb.select('tb_parameters', 'select=id,label,value,unit,status')
+  const districts = read('tb/districts.geojson').features.map((f) => f.properties).sort((a, b) => b.expected - a.expected);
+  const keysites = read('tb/keysites.json');
+  const dhims2 = fs.existsSync(path.join(DATA, 'tb/dhims2.json')) ? read('tb/dhims2.json') : { connected: false };
+  const insights = (read('insights.json').insights || [])
+    .filter((i) => /tuberc|\btb\b/i.test(`${i.title} ${i.summary || ''}`) || (i.diseases || []).some((x) => /tuberc|^tb$/i.test(x)))
+    .sort((a, b) => String(b.published_at || '').localeCompare(String(a.published_at || '')))
+    .slice(0, 25);
+  const [notif, campaigns, results, tasks] = await Promise.all([
+    sb.select('tb_notifications', 'select=district_id,period,notified'), sb.select('tb_campaigns', 'select=*'),
+    sb.select('tb_campaign_results', 'select=*'), sb.select('tb_tasks', 'select=status,due,campaign_id,role,title'),
   ]);
-  const P = Object.fromEntries(params.map((p) => [p.id, Number(p.value)]));
-  const ann = annual(notif);
-  for (const d of districts) {
-    d.notified = ann.has(d.id) ? ann.get(d.id) : null;
-    d.detection = d.notified != null ? d.notified / d.expected : null;
-    d.missed = d.notified != null ? Math.max(d.expected - d.notified, 0) : d.expected * (1 - nat.cdr);
-    d.approach = approach(d, P);
-  }
-  districts.sort((a, b) => b.missed - a.missed);
-  const row = (d, i) => ({
-    rank: i + 1, district: d.name, region: d.region, people: d.pop, expected_cases_estimated: r0(d.expected), rate_per_100k_estimated: r0(d.expected_100k), vs_ghana: r2(d.vs_ghana),
-    notified_reported: d.notified != null ? r0(d.notified) : 'not connected', missed_estimated: r0(d.missed), poverty_pct_census: d.poverty, people_per_sleeping_room_census: d.crowding,
-    insured_share_census: r2(d.insured), share_over_1h_walk_measured: r2(d.walk_far), mapped_facilities: d.facilities, prisons: d.prisons, mines_quarries: d.mines, approach: d.approach,
-  });
   const sum = (rows, k) => rows.reduce((s, r) => s + (Number(r[k]) || 0), 0);
-  const campSummary = campaigns.map((c) => {
-    const rs = results.filter((r) => r.campaign_id === c.id);
-    const ts = tasks.filter((t) => t.campaign_id === c.id);
-    return { name: c.name, district: c.district_name, city: c.city, setting: c.setting, status: c.status, start: c.start_date, screened: sum(rs, 'screened'), confirmed: sum(rs, 'confirmed'), started_treatment: sum(rs, 'started_treatment'), cough_ai_flagged: sum(rs, 'cough_flagged'), cough_ai_flagged_confirmed: sum(rs, 'cough_flagged_confirmed'), xray_ai_flagged: sum(rs, 'cxr_flagged'), xray_ai_flagged_confirmed: sum(rs, 'cxr_flagged_confirmed'), tasks_open: ts.filter((t) => t.status !== 'done').length, tasks_overdue: ts.filter((t) => t.status !== 'done' && t.due && t.due < today()).length };
-  });
-  const yields = params.filter((p) => p.status === 'evidence').map((p) => `${p.label}: ${p.value} ${p.unit || ''}`).join('\n');
-
-  const scopes = [{ name: 'Ghana' }, ...districts.slice(0, 5).map((d) => ({ name: d.name, district: d }))];
-  for (const s of scopes) {
-    const ds = s.district ? [s.district] : districts;
-    let towns = [];
-    if (s.district) {
-      try { towns = JSON.parse(fs.readFileSync(path.join(OUT, 'd', `${s.district.id}.json`), 'utf8')).towns || []; } catch { towns = []; }
-    }
-    const venues = towns.slice(0, 8).map((t) => ({ town: t.name, people_measured: t.pop, expected_cases_estimated: r0(t.expected), nearest_facility_km: t.facility_km }));
-    const key = keysites.filter((x) => !s.district || x.district_id === s.district.id).sort((a, b) => b.pop_1km - a.pop_1km).slice(0, 8)
-      .map((x) => ({ site: x.name || `unnamed ${x.kind}`, type: x.kind, district: x.district, people_within_1km_measured: x.pop_1km }));
-    const camps = campSummary.filter((c) => !s.district || c.district === s.district.name);
-    const input = {
-      scope: s.name, today: today(), national_reported: { year: nat.year, expected_cases_who: nat.incidence, notified_who: nat.notified, detection_rate: nat.cdr },
-      district_notifications_connected: ann.size > 0, rules: { low_detection_ratio: P.rule_low_detection ?? null, far_walk_share: P.rule_walk_far_share ?? null },
-      priority_districts: ds.slice(0, 12).map(row), towns_to_visit: venues, key_population_sites: key, campaigns: camps,
-    };
-    const prompt = `You write the weekly TB case-finding brief for ${s.name} for Wadhwani AI Global, Aurum Institute and Ghana Health Service partners.
-Use ONLY the numbers in INPUT and EVIDENCE. Never invent figures, places, organisations or results. Keep each figure's label: "reported" (WHO, DHIMS2, campaign reports), "measured" (open datasets) or "estimated".
-If district_notifications_connected is false, say once that district "missed" figures apply the national detection rate, so they show where most cases are expected rather than where detection is weakest, and that DHIMS2 access would fix this.
-Map data comes from OpenStreetMap and misses sites: say "mapped" and never claim a place has no facility.
-Write in plain English for a district health director, in Markdown, max ~400 words, with these sections:
-## Situation (2-3 sentences with the key numbers)
-## Where to act in the next 4 weeks (numbered, 3-5 items: place, why, and the approach — detection_gap = review notification and testing at main facilities; remote_outreach = mobile X-ray to communities over an hour's walk from care; clinics_and_contacts = screen clinic attendees with X-ray + AI and trace household contacts. Use towns_to_visit for named places.)
-## Key populations (prisons and mining sites to screen, with the published yields from EVIDENCE)
-## What our screening is telling us (observed yield vs published yield; cough-AI and X-ray-AI confirmation rates; overdue tasks) — or "No screening results yet"
-## Data to request (the one or two datasets that would most sharpen next week's brief)
+  const input = {
+    today: today(),
+    national_reported: { year: nat.year, expected_cases_who: nat.incidence, notified_who: nat.notified, found_share: nat.cdr, rate_per_100k: nat.rate_100k },
+    district_notifications: dhims2.connected ? `DHIMS2 connected (${dhims2.districts_matched} districts)` : notif.length ? `${new Set(notif.map((n) => n.district_id)).size} districts uploaded` : 'not connected: district figures are estimates',
+    top_districts_estimated: districts.slice(0, 10).map((d) => ({ district: d.name, region: d.region, expected_cases: r0(d.expected), rate_per_100k: r0(d.expected_100k), vs_ghana: d.vs_ghana, poverty_pct: d.poverty, people_per_sleeping_room: d.crowding, insured_share: d.insured, share_over_1h_walk: d.walk_far, prisons: d.prisons, mines: d.mines })),
+    highest_rate_districts_estimated: [...districts].sort((a, b) => b.expected_100k - a.expected_100k).slice(0, 5).map((d) => ({ district: d.name, rate_per_100k: r0(d.expected_100k), vs_ghana: d.vs_ghana })),
+    far_from_care_districts: [...districts].sort((a, b) => (b.walk_far || 0) - (a.walk_far || 0)).slice(0, 5).map((d) => ({ district: d.name, share_over_1h_walk: d.walk_far, facilities: d.facilities })),
+    key_population_sites: { prisons: keysites.filter((k) => k.kind === 'prison').length, mines_quarries: keysites.filter((k) => k.kind !== 'prison').length },
+    campaigns: campaigns.map((c) => {
+      const rs = results.filter((r) => r.campaign_id === c.id);
+      const ts = tasks.filter((t) => t.campaign_id === c.id);
+      return { name: c.name, district: c.district_name, town: c.town, status: c.status, start: c.start_date, screened: sum(rs, 'screened'), confirmed: sum(rs, 'confirmed'), started_treatment: sum(rs, 'started_treatment'), tasks_open: ts.filter((t) => t.status !== 'done').length, tasks_overdue: ts.filter((t) => t.status !== 'done' && t.due && t.due < today()).length };
+    }),
+  };
+  const news = insights.map((i) => ({ id: i.id, title: i.title, summary: (i.summary || '').slice(0, 400), source: i.source_name, date: String(i.published_at || '').slice(0, 10), countries: i.countries }));
+  const prompt = `You write the TB situation summary for Ghana for Wadhwani AI Global, Aurum Institute and Ghana Health Service partners.
+Audience: health workers, district health teams and the National TB Programme. Plain English, short sentences, no jargon.
+Rules: use ONLY numbers and facts from INPUT and NEWS. Never invent figures, places, organisations or results. Label figures "reported" or "estimated".
+If district notifications are not connected, say district figures are estimates and include one data gap about DHIMS2 access.
+Actions must be specific and doable: name the district or town from INPUT, say who does what. Prefer actions on campaigns that are overdue or have no results yet.
+whats_new: pick only NEWS items relevant to TB programmes (case finding, diagnostics, treatment, funding, policy), prefer Ghana or West Africa; reference them by id; skip if none.
 INPUT:
 ${JSON.stringify(input)}
-EVIDENCE (published screening yields):
-${yields}`;
-    try {
-      const md = await gemini(prompt, { json: false, quality: true, temperature: 0.2 });
-      const text = typeof md === 'string' ? md.trim() : JSON.stringify(md);
-      await sb.upsert('tb_briefs', [{ id: `${s.name.toLowerCase().replace(/\W+/g, '-')}-${today()}`, scope: s.name, generated_at: new Date().toISOString(), model: geminiStatus.lastModel || 'Gemini', content_md: text, inputs: input }]);
-      log('brief written', s.name, text.length, 'chars');
-    } catch (e) {
-      log('brief failed', s.name, e.message);
-    }
-  }
+NEWS:
+${JSON.stringify(news)}`;
+  const out = await gemini(prompt, { json: true, schema: SCHEMA, quality: true, temperature: 0.2 });
+  const byId = new Map(insights.map((i) => [i.id, i]));
+  out.whats_new = (out.whats_new || []).filter((w) => byId.has(w.id)).map((w) => ({ ...w, title: byId.get(w.id).title, url: byId.get(w.id).url, source: byId.get(w.id).source_name, date: String(byId.get(w.id).published_at || '').slice(0, 10) }));
+  await sb.upsert('tb_briefs', [{ id: `ghana-${today()}`, scope: 'Ghana', generated_at: new Date().toISOString(), model: geminiStatus.lastModel || 'Gemini', content: out, content_md: out.headline, inputs: { ...input, news_considered: news.length } }]);
+  log('summary written', out.actions?.length, 'actions', out.whats_new?.length, 'news');
 }
 
 main().catch((e) => {

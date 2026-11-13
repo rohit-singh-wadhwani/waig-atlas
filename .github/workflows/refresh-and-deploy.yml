@@ -13,7 +13,7 @@ on:
     - cron: "41 1,13 * * *"  # grants every 12 hours (07:11 and 19:11 IST)
     - cron: "53 0 * * *"     # health datasets daily (06:23 IST)
     - cron: "29 2 * * *"     # grant scout daily (07:59 IST)
-    - cron: "7 3 * * 1"      # TB surveillance data + AI brief, Mondays (08:37 IST)
+    - cron: "7 3 * * 1"      # TB surveillance data, Mondays (08:37 IST)
 
 permissions:
   contents: write
@@ -99,8 +99,8 @@ jobs:
           DHIMS2_PASSWORD: ${{ secrets.DHIMS2_PASSWORD }}
           DHIMS2_TOKEN: ${{ secrets.DHIMS2_TOKEN }}
           DHIMS2_DX: ${{ secrets.DHIMS2_DX }}
-      - name: TB weekly AI brief
-        if: contains(steps.pick.outputs.jobs, 'tb')
+      - name: TB summary (daily, after the news feed)
+        if: contains(steps.pick.outputs.jobs, 'tb') || contains(steps.pick.outputs.jobs, 'insights')
         timeout-minutes: 15
         continue-on-error: true
         run: node scripts/tb/brief.mjs
