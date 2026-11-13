@@ -220,7 +220,7 @@ create table public.tb_parameters (
   description text,
   source_title text,
   source_url text,
-  status text not null default 'assumption' check (status in ('evidence', 'assumption')),
+  status text not null default 'assumption' check (status in ('evidence', 'assumption', 'policy')),
   updated_at timestamptz default now(),
   updated_by text
 );
@@ -264,6 +264,8 @@ create table public.tb_campaigns (
   owner text,
   target_screened integer,
   predicted_positivity numeric,
+  town text,
+  spots jsonb,                       -- [{name, kind, lon, lat, pop_1km}] screening spots picked in the explorer
   notes text,
   created_by text,
   created_at timestamptz default now()
