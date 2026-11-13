@@ -80,7 +80,7 @@ jobs:
           python-version: "3.11"
       - name: TB surveillance data
         if: contains(steps.pick.outputs.jobs, 'tb')
-        timeout-minutes: 30
+        timeout-minutes: 50
         continue-on-error: true
         run: |
           pip install -q requests numpy rasterio shapely h3 scipy pyshp
