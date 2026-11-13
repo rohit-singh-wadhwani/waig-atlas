@@ -13,9 +13,9 @@ export type TbDistrict = {
   // joined in the app (members only)
   notified: number | null; notified_basis: string | null; detection: number | null; missed: number; screened: number; confirmed: number; rank: number; approach: ApproachKey;
 };
-export type TbHexRow = { h: string; p: number; e: number; k: number; f: number | null; w: number | null; r: [number, number][] };
-export type TbTown = { name: string; place: string; lon: number; lat: number; radius_km: number; pop: number; expected: number; facility_km: number | null; hospital_km: number | null; drive_min: number | null; walk_min: number | null };
-export type TbVenue = { name: string; kind: string; cong: boolean; lon: number; lat: number; pop_1km: number; expected_1km: number; facility_km: number | null; hospital_km: number | null; walk_min: number | null; district?: string; district_id?: string };
+export type TbHexRow = { h: string; p: number; e: number; k: number; f: number | null; w: number | null; t: number; r: [number, number][] };
+export type TbTown = { id: number; name: string; place: string; lon: number; lat: number; radius_km: number; area_km2: number; pop: number; expected: number; expected_km2: number; geom: any; facility_km: number | null; hospital_km: number | null; drive_min: number | null; walk_min: number | null };
+export type TbVenue = { name: string; kind: string; cong: boolean; t?: number; lon: number; lat: number; pop_1km: number; expected_1km: number; facility_km: number | null; hospital_km: number | null; walk_min: number | null; district?: string; district_id?: string };
 export type TbFacility = { name: string; kind: string; lab: boolean; lon: number; lat: number };
 export type TbDetail = { id: string; hexes: TbHexRow[]; towns: TbTown[]; venues: TbVenue[]; facilities: TbFacility[] };
 export type TbParam = { id: string; grp: string; label: string; value: number; unit?: string; description?: string; source_title?: string; source_url?: string; status: 'evidence' | 'assumption' | 'policy'; updated_at?: string; updated_by?: string };
