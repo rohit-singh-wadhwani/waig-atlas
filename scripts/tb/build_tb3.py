@@ -503,7 +503,7 @@ def main():
             if v['kind'] in ('prison', 'mine / quarry'):
                 keysites.append({**v, 'district': d['name'], 'district_id': d['id']})
         fac_out = [{'name': f['name'], 'kind': f['kind'], 'lab': f['lab'], 'lon': round(f['lon'], 5), 'lat': round(f['lat'], 5)} for f in d['facilities']]
-        json.dump({'id': d['id'], 'hexes': hex_out, 'towns': town_out, 'venues': keep, 'facilities': fac_out}, open(os.path.join(DD, f'{d["id"]}.json'), 'w'), separators=(',', ':'))
+        json.dump({'id': d['id'], 'hexes': hex_out, 'towns': town_out, 'venues': keep, 'facilities': fac_out}, open(os.path.join(DD, f'{d["id"]}.json'), 'w'), separators=(',', ':'), allow_nan=False)
 
         c = d['cen']
         gj = mapping(d['geom'].simplify(0.003, preserve_topology=True))
@@ -520,7 +520,7 @@ def main():
             'facilities': len(d['facilities']), 'hospitals': d['hospitals'], 'labs': d['labs'], 'fac_100k': r2(len(d['facilities']) / max(d['pop'], 1) * 1e5, 2),
             'markets': d['markets'], 'hubs': d['hubs'], 'prisons': d['prisons'], 'mines': d['mines'], 'towns': len(town_out),
             'lon': r2(d['lon'], 4), 'lat': r2(d['lat'], 4)}})
-    json.dump({'type': 'FeatureCollection', 'features': feats}, open(os.path.join(OUT, 'districts.geojson'), 'w'), separators=(',', ':'))
+    json.dump({'type': 'FeatureCollection', 'features': feats}, open(os.path.join(OUT, 'districts.geojson'), 'w'), separators=(',', ':'), allow_nan=False)
     json.dump(keysites, open(os.path.join(OUT, 'keysites.json'), 'w'), separators=(',', ':'))
     json.dump(reported, open(os.path.join(OUT, 'reported_regions.json'), 'w'), separators=(',', ':'))
     json.dump({'years': years, 'latest': nat}, open(os.path.join(OUT, 'national.json'), 'w'), indent=1)

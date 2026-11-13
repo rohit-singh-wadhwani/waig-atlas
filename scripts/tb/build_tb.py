@@ -93,7 +93,13 @@ def km_xy(lon, lat, lat0):
 
 
 def r2(x, n=2):
-    return None if x is None or (isinstance(x, float) and not math.isfinite(x)) else round(float(x), n)
+    if x is None:
+        return None
+    try:
+        x = float(x)  # also numpy floats
+    except (TypeError, ValueError):
+        return None
+    return round(x, n) if math.isfinite(x) else None
 
 
 # ---------------- sources ----------------
