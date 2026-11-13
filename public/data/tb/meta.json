@@ -1,124 +1,124 @@
 {
- "updated_at": "2026-11-12T22:23:17.447474+00:00",
+ "updated_at": "2026-11-13T07:09:09.909520+00:00",
  "sources": [
   {
    "name": "Ghana Statistical Service: 2021 Census district boundaries",
    "url": "https://statsbank.statsghana.gov.gh/assets/geofiles.zip",
    "ok": true,
    "note": "261 districts",
-   "at": "2026-11-12T22:23:17.447474+00:00"
+   "at": "2026-11-13T07:09:09.909520+00:00"
   },
   {
    "name": "WHO: Ghana TB cases attributable to risk factors (2024)",
    "url": "https://extranet.who.int/tme/generateCSV.asp?ds=estimates_age_sex",
    "ok": true,
    "note": "hiv 5,300, und 2,600, smk 500, alc 3,200",
-   "at": "2026-11-12T22:23:17.447474+00:00"
+   "at": "2026-11-13T07:09:09.909520+00:00"
   },
   {
    "name": "WHO Global TB Programme: Ghana estimates and notifications (latest 2024)",
    "url": "https://www.who.int/teams/global-programme-on-tuberculosis-and-lung-health/data",
    "ok": true,
    "note": "",
-   "at": "2026-11-12T22:23:17.447474+00:00"
+   "at": "2026-11-13T07:09:09.909520+00:00"
   },
   {
    "name": "WHO: Ghana TB incidence by age group and sex (2024)",
    "url": "https://extranet.who.int/tme/generateCSV.asp?ds=estimates_age_sex",
    "ok": true,
    "note": "0-4, 5-9, 10-14, 15-19, 20-24, 25-34, 35-44, 45-54, 55-64, 65-+",
-   "at": "2026-11-12T22:23:17.447474+00:00"
+   "at": "2026-11-13T07:09:09.909520+00:00"
   },
   {
    "name": "DHS Program API: Ghana DHS 2022 (thinness, tobacco use) and 2014 (HIV), by region",
    "url": "https://api.dhsprogram.com",
    "ok": true,
    "note": "18 regions",
-   "at": "2026-11-12T22:23:17.447474+00:00"
+   "at": "2026-11-13T07:09:09.909520+00:00"
   },
   {
    "name": "GSS 2021 Census: population by district, single age and sex",
    "url": "https://statsbank.statsghana.gov.gh/pxweb/en/PHC%202021%20StatsBank/Population/",
    "ok": true,
    "note": "289 areas",
-   "at": "2026-11-12T22:23:17.447474+00:00"
+   "at": "2026-11-13T07:09:09.909520+00:00"
   },
   {
    "name": "GSS 2021 Census: household size and sleeping rooms by district",
    "url": "https://statsbank.statsghana.gov.gh/pxweb/en/PHC%202021%20StatsBank/Housing/",
    "ok": true,
    "note": "",
-   "at": "2026-11-12T22:23:17.447474+00:00"
+   "at": "2026-11-13T07:09:09.909520+00:00"
   },
   {
    "name": "GSS 2021 Census: multidimensional poverty by district",
    "url": "https://statsbank.statsghana.gov.gh/pxweb/en/PHC%202021%20StatsBank/Multidimensional%20Poverty/",
    "ok": true,
    "note": "",
-   "at": "2026-11-12T22:23:17.447474+00:00"
+   "at": "2026-11-13T07:09:09.909520+00:00"
   },
   {
    "name": "GSS 2021 Census: health insurance coverage by district",
    "url": "https://statsbank.statsghana.gov.gh/pxweb/en/PHC%202021%20StatsBank/Population/",
    "ok": true,
    "note": "",
-   "at": "2026-11-12T22:23:17.447474+00:00"
+   "at": "2026-11-13T07:09:09.909520+00:00"
   },
   {
    "name": "OpenStreetMap: health facilities (1340)",
    "url": "https://overpass-api.de/api/interpreter",
    "ok": true,
    "note": "",
-   "at": "2026-11-12T22:23:17.447474+00:00"
+   "at": "2026-11-13T07:09:09.909520+00:00"
   },
   {
    "name": "OpenStreetMap: congregate sites (1471)",
    "url": "https://overpass-api.de/api/interpreter",
    "ok": true,
    "note": "",
-   "at": "2026-11-12T22:23:17.447474+00:00"
+   "at": "2026-11-13T07:09:09.909520+00:00"
   },
   {
    "name": "OpenStreetMap: towns and villages (11236)",
    "url": "https://overpass-api.de/api/interpreter",
    "ok": true,
    "note": "",
-   "at": "2026-11-12T22:23:17.447474+00:00"
+   "at": "2026-11-13T07:09:09.909520+00:00"
   },
   {
    "name": "OpenStreetMap: schools, places of worship, community centres, pharmacies, NGOs (10654)",
    "url": "https://overpass-api.de/api/interpreter",
    "ok": true,
    "note": "",
-   "at": "2026-11-12T22:23:17.447474+00:00"
+   "at": "2026-11-13T07:09:09.909520+00:00"
   },
   {
    "name": "DHIMS II extract: monthly reported TB, Ashanti, Eastern and Volta, 2016-2023 (Mendeley Data)",
    "url": "https://data.mendeley.com/datasets/r3c3cr7x6g/1",
    "ok": true,
    "note": "Volta 96 months, Eastern 96 months, Ashanti 96 months",
-   "at": "2026-11-12T22:23:17.447474+00:00"
+   "at": "2026-11-13T07:09:09.909520+00:00"
   },
   {
    "name": "Malaria Atlas Project: motorised travel time to healthcare",
    "url": "https://data.malariaatlas.org/geoserver/Accessibility/ows?service=WCS&version=2.0.1&request=GetCoverage&coverageId=Accessibility__202001_Global_Motorized_Travel_Time_to_Healthcare",
    "ok": true,
    "note": "coverage Accessibility__202001_Global_Motorized_Travel_Time_to_Healthcare",
-   "at": "2026-11-12T22:23:17.447474+00:00"
+   "at": "2026-11-13T07:09:09.909520+00:00"
   },
   {
    "name": "Malaria Atlas Project: walking travel time to healthcare",
    "url": "https://data.malariaatlas.org/geoserver/Accessibility/ows?service=WCS&version=2.0.1&request=GetCoverage&coverageId=Accessibility__202001_Global_Walking_Only_Travel_Time_To_Healthcare",
    "ok": true,
    "note": "coverage Accessibility__202001_Global_Walking_Only_Travel_Time_To_Healthcare",
-   "at": "2026-11-12T22:23:17.447474+00:00"
+   "at": "2026-11-13T07:09:09.909520+00:00"
   },
   {
    "name": "WorldPop 2026 population (100 m, R2025A)",
    "url": "https://data.worldpop.org/GIS/Population/Global_2015_2030/R2025A/2026/GHA/v1/100m/constrained/gha_pop_2026_CN_100m_R2025A_v1.tif",
    "ok": true,
    "note": "",
-   "at": "2026-11-12T22:23:17.447474+00:00"
+   "at": "2026-11-13T07:09:09.909520+00:00"
   }
  ],
  "method": {
