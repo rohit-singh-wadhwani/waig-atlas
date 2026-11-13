@@ -36,7 +36,6 @@ export type TbTask = {
   id: string; campaign_id?: string | null; title: string; detail?: string | null; role?: string | null; assignee?: string | null; district_id?: string | null; district_name?: string | null;
   due?: string | null; status: 'todo' | 'doing' | 'done' | 'blocked'; priority?: string; step_key?: string | null; outcome?: string | null; created_by?: string | null; created_at?: string; updated_at?: string;
 };
-export type TbCity = { id: string; name: string; lat: number; lon: number; radius_km: number; h3_res: number; city_partner?: string | null; enabled: boolean };
 export type TbMeta = {
   updated_at: string; error?: string;
   sources: { name: string; url: string; ok: boolean; note?: string; at: string }[];
@@ -54,7 +53,7 @@ const json = async (f: string) => {
   return JSON.parse((await r.text()).replace(/\bNaN\b/g, 'null'));
 };
 
-export async function loadTbPublic() {
+async function loadTbPublic() {
   const [districts, meta, national, dhims2] = await Promise.all([json('districts.geojson').catch(() => null), json('meta.json').catch(() => null), json('national.json').catch(() => null), json('dhims2.json').catch(() => null)]);
   return { districts, meta: meta as TbMeta | null, national: national as { years: any[]; latest: any } | null, dhims2: dhims2 as Dhims2Status | null };
 }
@@ -64,13 +63,12 @@ export function loadDistrictDetail(id: string) {
   if (!detailCache.has(id)) detailCache.set(id, json(`d/${id}.json`).catch(() => null));
   return detailCache.get(id)!;
 }
-export const loadKeySites = () => json('keysites.json').catch(() => []) as Promise<TbVenue[]>;
 export const loadReportedRegions = () => json('reported_regions.json').catch(() => ({})) as Promise<Record<string, { period: string; tb: number }[]>>;
 
 type NotifRow = { district_id: string; period: string; notified: number | null; source?: string | null };
 
 /** Annual notifications per district from monthly, quarterly or yearly rows: the latest 12 months, else the latest year. */
-export function annualNotified(rows: NotifRow[]) {
+function annualNotified(rows: NotifRow[]) {
   const by = new Map<string, NotifRow[]>();
   for (const r of rows) if (r.notified != null) by.set(r.district_id, [...(by.get(r.district_id) || []), r]);
   const out = new Map<string, { value: number; basis: string }>();
@@ -183,7 +181,7 @@ export const SETTINGS = [
   { value: 'facility', label: 'Facility OPD screening' },
 ];
 
-export function addDays(iso: string, days: number) {
+function addDays(iso: string, days: number) {
   const d = new Date(iso + 'T00:00:00');
   d.setDate(d.getDate() + days);
   return d.toISOString().slice(0, 10);

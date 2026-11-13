@@ -1,13 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import ExplorerMap, { bboxOf, VENUE_COLORS } from '../../components/ExplorerMap';
-import { breaksFor, TB_RAMP } from '../../components/TbMap';
+import ExplorerMap, { bboxOf, breaksFor, TB_RAMP, VENUE_COLORS } from '../../components/ExplorerMap';
 import { Badge, Button, Field, Select, TextInput, cx } from '../../components/ui';
 import Icon from '../../components/Icon';
 import { useMe } from '../../components/Layout';
 import { useData } from '../../lib/hooks';
 import { uid } from '../../lib/store';
 import { peopleOptions, personName, usePeople } from '../../lib/team';
-import { APPROACH, approachOf, createCampaign, expectedPositivity, fmtInt, loadDistrictDetail, loadReportedRegions, rulesFrom, tbSave, TbCampaign, TbDistrict, TbTask, TbTown, TbVenue } from '../../lib/tb';
+import { APPROACH, approachOf, createCampaign, expectedPositivity, fmtInt, loadDistrictDetail, loadReportedRegions, rulesFrom, tbSave, TbCampaign, TbDistrict, TbHexRow, TbTask, TbTown, TbVenue } from '../../lib/tb';
 import { BasisTag, esc, kmFmt, pctFmt } from './common';
 import type { TbData } from './TbPage';
 
@@ -46,6 +45,9 @@ export default function Explorer({ data, goTab }: { data: TbData; goTab: (t: str
   const [districtId, setDistrictId] = useState<string | null>(null);
   const [tKey, setTKey] = useState<string | null>(null);
   const [picked, setPicked] = useState<string[]>([]);
+  const [selHex, setSelHex] = useState<string[]>([]);
+  const [pins, setPins] = useState<Pin[]>([]);
+  const [pinMode, setPinMode] = useState(false);
   const [planning, setPlanning] = useState(false);
   const [created, setCreated] = useState<string | null>(null);
   const d = districtId ? byId.get(districtId) || null : null;
@@ -53,7 +55,7 @@ export default function Explorer({ data, goTab }: { data: TbData; goTab: (t: str
   const det = detail.data && detail.data.id === districtId ? detail.data : null;
   const town = det && tKey ? det.towns.find((t) => townKey(t) === tKey) || null : null;
   useEffect(() => { setTKey(null); setPicked([]); setPlanning(false); setCreated(null); }, [districtId]);
-  useEffect(() => { setPicked([]); setPlanning(false); setCreated(null); }, [tKey]);
+  useEffect(() => { setPicked([]); setSelHex([]); setPins([]); setPinMode(false); setPlanning(false); setCreated(null); }, [tKey]);
 
   // venues: in a town, everything within its radius + 1 km; in a district, only congregate settings
   const venues = useMemo(() => {
@@ -61,7 +63,6 @@ export default function Explorer({ data, goTab }: { data: TbData; goTab: (t: str
     const vs = town ? det.venues.filter((v) => (v.t != null ? v.t === town.id : distKm(v, town) <= town.radius_km + 1)) : [];
     return [...vs].sort((a, b) => b.expected_1km - a.expected_1km);
   }, [det, town]);
-  const pickedVenues = venues.filter((v) => picked.includes(venueKey(v)));
 
   // ---------- map data ----------
   const geo = useMemo(() => {
@@ -75,7 +76,16 @@ export default function Explorer({ data, goTab }: { data: TbData; goTab: (t: str
     const r = town.radius_km + 1.5;
     return det.hexes.filter((h) => (h.t != null ? h.t === town.id : distKm({ lon: h.r[0][0], lat: h.r[0][1] }, town) <= r));
   }, [det, town]);
-  const hexFc = useMemo(() => (town ? { type: 'FeatureCollection', features: townHexes.map((h) => ({ type: 'Feature', properties: { p: h.p, e: h.e, k: h.k, f: h.f, w: h.w }, geometry: { type: 'Polygon', coordinates: [[...h.r, h.r[0]]] } })) } : null), [town, townHexes]);
+  // once hexagons are chosen, only gathering places inside them are offered
+  const hexVenues = useMemo(() => {
+    if (!selHex.length) return venues;
+    const rings = townHexes.filter((h) => selHex.includes(h.h)).map((h) => h.r);
+    return venues.filter((v) => rings.some((r) => inRing([v.lon, v.lat], r)));
+  }, [venues, selHex, townHexes]);
+  const pickedVenues = hexVenues.filter((v) => picked.includes(venueKey(v)));
+  const spots: Spot[] = [...pickedVenues.map((v) => ({ name: v.name || KIND_LABEL[v.kind] || v.kind, kind: v.kind, lon: v.lon, lat: v.lat, pop_1km: v.pop_1km })), ...pins.map((x) => ({ name: x.name, kind: 'screening point', lon: x.lon, lat: x.lat }))];
+  const pinFc = useMemo(() => ({ type: 'FeatureCollection', features: pins.map((x) => ({ type: 'Feature', properties: { id: x.id, name: x.name }, geometry: { type: 'Point', coordinates: [x.lon, x.lat] } })) }), [pins]);
+  const hexFc = useMemo(() => (town ? { type: 'FeatureCollection', features: townHexes.map((h) => ({ type: 'Feature', properties: { h: h.h, p: h.p, e: h.e, k: h.k, f: h.f, w: h.w }, geometry: { type: 'Polygon', coordinates: [[...h.r, h.r[0]]] } })) } : null), [town, townHexes]);
   const hBreaks = useMemo(() => breaksFor(townHexes.map((h) => h.k)), [townHexes]);
   const townFc = useMemo(() => (det ? { type: 'FeatureCollection', features: det.towns.filter((t) => t.geom).map((t) => ({ type: 'Feature', properties: { key: townKey(t), nodata: !!t.nodata, name: t.name, place: t.place, pop: t.pop, expected: t.expected, expected_km2: t.expected_km2, lon: t.lon, lat: t.lat }, geometry: t.geom })) } : null), [det]);
   const tBreaks = useMemo(() => (det ? breaksFor(det.towns.filter((t) => !t.nodata).map((t) => t.expected_km2)) : []), [det]);
@@ -94,12 +104,22 @@ export default function Explorer({ data, goTab }: { data: TbData; goTab: (t: str
 
   const tip = (pr: any, layer: string) => {
     if (layer === 'd-fill') return districtId ? '' : `<b>${esc(pr.name)}</b> · ${esc(String(pr.region))}<br/>About <b>${fmtInt(Number(pr.expected))}</b> new TB cases a year<br/>${fmtInt(Number(pr.expected_100k))} per 100,000 (${signedPct(Number(pr.vs_ghana))} vs Ghana)<br/><i>Click to open</i>`;
-    if (layer === 'h-fill') return `${fmtInt(Number(pr.p))} people · ≈${Number(pr.e).toFixed(1)} TB cases a year<br/>Nearest facility ${kmFmt(Number(pr.f))}`;
+    if (layer === 'h-fill') return `${fmtInt(Number(pr.p))} people · ≈${Number(pr.e).toFixed(1)} TB cases a year<br/>Nearest facility ${kmFmt(Number(pr.f))}<br/><i>${pinMode ? (selHex.includes(pr.h) ? 'Click to drop a screening point here' : 'Select this hexagon first') : selHex.includes(pr.h) ? 'Click to unselect' : 'Click to select'}</i>`;
+    if (layer === 'pins') return `<b>${esc(pr.name)}</b><br/>Screening point you placed`;
     if (layer === 'town-fill' && (pr.nodata === true || pr.nodata === 'true')) return town ? '' : `<b>${esc(pr.name)}</b> (${esc(pr.place)})<br/>No population mapped in this area<br/><i>Click to open</i>`;
     if (layer === 'town-fill') return town ? '' : `<b>${esc(pr.name)}</b> (${esc(pr.place)})<br/>${fmtInt(Number(pr.pop))} people · ≈${Number(pr.expected).toFixed(0)} TB cases a year<br/><i>Click to open</i>`;
     if (layer === 'venues') return `<b>${esc(pr.name || KIND_LABEL[pr.kind] || pr.kind)}</b><br/>${esc(KIND_LABEL[pr.kind] || pr.kind)} · ${fmtInt(Number(pr.pop_1km))} people within 1 km<br/><i>Click to ${town ? 'add to campaign' : 'open its town'}</i>`;
     if (layer === 'facilities') return `<b>${esc(pr.name || 'Health facility')}</b><br/>${esc(pr.kind)}${pr.lab === true || pr.lab === 'true' ? ' · lab' : ''}`;
     return '';
+  };
+  const toggleHex = (pr: any) => {
+    const h = String(pr.h);
+    setSelHex((x) => (x.includes(h) ? x.filter((y) => y !== h) : [...x, h]));
+    if (selHex.includes(h)) setPins((x) => x.filter((y) => y.h !== h)); // unselecting drops its points
+  };
+  const dropPin = (ll: [number, number], h: string) => {
+    setPins((x) => [...x, { id: uid('pin'), name: `Screening point ${x.length + 1}`, lon: Math.round(ll[0] * 1e5) / 1e5, lat: Math.round(ll[1] * 1e5) / 1e5, h }]);
+    setPinMode(false);
   };
   const toggle = (k: string) => setPicked((x) => (x.includes(k) ? x.filter((y) => y !== k) : [...x, k]));
   const onVenue = (pr: any) => {
@@ -115,13 +135,13 @@ export default function Explorer({ data, goTab }: { data: TbData; goTab: (t: str
         <Crumb on={() => setDistrictId(null)} active={!d}>Ghana</Crumb>
         {d && <><Sep /><Crumb on={() => setTKey(null)} active={!town}>{d.name}</Crumb><span className="text-gray-400 text-sm">{d.region}</span></>}
         {town && <><Sep /><Crumb active>{town.name}</Crumb></>}
-        <span className="ml-auto text-sm text-gray-500 hidden md:inline">{!d ? 'Click a district on the map or in the list' : !town ? 'Click a town to see screening spots' : 'Tick spots, then plan a campaign'}</span>
+        <span className="ml-auto text-sm text-gray-500 hidden md:inline">{!d ? 'Click a district on the map or in the list' : !town ? 'Click a town to open it' : pinMode ? 'Click inside a selected hexagon to place the point' : 'Select hexagons, then pick spots or place a point'}</span>
       </nav>
       <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_460px] gap-5 items-start">
         <div className="xl:sticky xl:top-4">
           <div className="h-[440px] md:h-[560px] xl:h-[calc(100vh-170px)] xl:min-h-[560px]">
             <ExplorerMap districts={geo} districtMetric="expected_100k" districtBreaks={dBreaks} focusId={districtId} hexes={hexFc} hexBreaks={hBreaks} towns={townFc} townBreaks={tBreaks} venues={venueFc} facilities={facFc}
-              picked={picked} focusTown={tKey} fit={fit} onDistrict={(pr) => setDistrictId(pr.id)} onTown={(pr) => setTKey(pr.key)} onVenue={onVenue} tooltip={tip} />
+              picked={picked} focusTown={tKey} selectedHexes={selHex} pins={pinFc} pinMode={pinMode} onHex={toggleHex} onPin={dropPin} fit={fit} onDistrict={(pr) => setDistrictId(pr.id)} onTown={(pr) => setTKey(pr.key)} onVenue={onVenue} tooltip={tip} />
           </div>
           <MapLegend level={!d ? 'ghana' : town ? 'town' : 'district'} breaks={!d ? dBreaks : town ? hBreaks : tBreaks} />
         </div>
@@ -129,11 +149,11 @@ export default function Explorer({ data, goTab }: { data: TbData; goTab: (t: str
           {!d && <GhanaPanel list={list} nat={nat} natRate={natRate} rank={rank} campaigns={campaigns.data} notified={dist.data.notifiedDistricts} onOpen={setDistrictId} goTab={goTab} data={data} />}
           {d && !town && <DistrictPanel d={d} det={det} loading={detail.loading} rank={rank} n={list.length} venues={venues} campaigns={campaigns.data.filter((c) => c.district_id === d.id)} onTown={(t) => setTKey(townKey(t))} rules={rules} />}
           {d && town && !planning && !created && (
-            <TownPanel d={d} town={town} venues={venues} facilities={det?.facilities.filter((f) => distKm(f, town) <= town.radius_km + 3).sort((a, b) => distKm(a, town) - distKm(b, town)) || []}
-              picked={picked} toggle={toggle} campaigns={campaigns.data.filter((c) => c.district_id === d.id && c.town === town.name)} onPlan={() => setPlanning(true)} P={P} natRate={natRate} />
+            <TownPanel d={d} town={town} venues={hexVenues} hexes={townHexes} selHex={selHex} clearHex={() => { setSelHex([]); setPins([]); }} pins={pins} setPins={setPins} pinMode={pinMode} setPinMode={setPinMode} spots={spots} facilities={det?.facilities.filter((f) => distKm(f, town) <= town.radius_km + 3).sort((a, b) => distKm(a, town) - distKm(b, town)) || []}
+              picked={picked} toggle={toggle} campaigns={campaigns.data.filter((c) => c.district_id === d.id && c.town === town.name)} onPlan={() => setPlanning(true)} />
           )}
-          {d && town && planning && !created && <PlanPanel d={d} town={town} spots={pickedVenues} data={data} onCancel={() => setPlanning(false)} onCreated={(id) => { setCreated(id); setPlanning(false); }} natRate={natRate} />}
-          {d && town && created && <CreatedPanel id={created} data={data} onDone={() => { setCreated(null); setPicked([]); }} goTab={goTab} />}
+          {d && town && planning && !created && <PlanPanel d={d} town={town} spots={spots} hexIds={selHex} reachHex={townHexes.filter((h) => selHex.includes(h.h)).reduce((a, h) => a + h.p, 0)} data={data} onCancel={() => setPlanning(false)} onCreated={(id) => { setCreated(id); setPlanning(false); }} natRate={natRate} />}
+          {d && town && created && <CreatedPanel id={created} data={data} onDone={() => { setCreated(null); setPicked([]); setSelHex([]); setPins([]); }} goTab={goTab} />}
         </aside>
       </div>
     </div>
@@ -398,12 +418,30 @@ function TrendPanel({ region, series }: { region: string; series: { period: stri
 }
 
 // ---------------- level 3: town ----------------
-function TownPanel({ d, town, venues, facilities, picked, toggle, campaigns, onPlan, P, natRate }: { d: TbDistrict; town: TbTown; venues: TbVenue[]; facilities: any[]; picked: string[]; toggle: (k: string) => void; campaigns: TbCampaign[]; onPlan: () => void; P: Record<string, number>; natRate: number | null }) {
+type Pin = { id: string; name: string; lon: number; lat: number; h: string };
+type Spot = { name: string; kind: string; lon: number; lat: number; pop_1km?: number };
+
+/** Point-in-polygon (ray casting) for a hexagon ring. */
+function inRing(pt: [number, number], ring: [number, number][]) {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i], [xj, yj] = ring[j];
+    if (yi > pt[1] !== yj > pt[1] && pt[0] < ((xj - xi) * (pt[1] - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+
+type TownPanelProps = {
+  d: TbDistrict; town: TbTown; venues: TbVenue[]; hexes: TbHexRow[]; selHex: string[]; clearHex: () => void; pins: Pin[]; setPins: React.Dispatch<React.SetStateAction<Pin[]>>;
+  pinMode: boolean; setPinMode: (b: boolean) => void; spots: Spot[]; facilities: any[]; picked: string[]; toggle: (k: string) => void; campaigns: TbCampaign[]; onPlan: () => void;
+};
+function TownPanel({ d, town, venues, hexes, selHex, clearHex, pins, setPins, pinMode, setPinMode, spots, facilities, picked, toggle, campaigns, onPlan }: TownPanelProps) {
   const [kind, setKind] = useState('');
   const kinds = Array.from(new Set(venues.map((v) => v.kind)));
   const shown = venues.filter((v) => !kind || v.kind === kind);
   const ordered = [...shown.filter((v) => picked.includes(venueKey(v))), ...shown.filter((v) => !picked.includes(venueKey(v)))];
-  const yieldFor = (v: TbVenue) => expectedPositivity(v.kind === 'prison' ? 'prison' : v.kind === 'mine / quarry' ? 'mine' : 'community', d, P, natRate);
+  const sel = hexes.filter((h) => selHex.includes(h.h));
+  const selPop = sel.reduce((a, h) => a + h.p, 0), selExp = sel.reduce((a, h) => a + h.e, 0);
   return (
     <>
       <Panel title={town.name} sub={`${town.place} in ${d.name}`}>
@@ -417,24 +455,35 @@ function TownPanel({ d, town, venues, facilities, picked, toggle, campaigns, onP
         {campaigns.length > 0 && <p className="text-sm mt-3 text-green-800 bg-green-50 rounded-lg px-3 py-2">✓ {campaigns.length} campaign{campaigns.length > 1 ? 's' : ''} already here: {campaigns.map((c) => c.name).join(', ')}</p>}
       </Panel>
 
-      <Panel title="Screening spots" sub="Where people gather, ranked by people living within 1 km. Tick the ones to screen at.">
-        <div className="flex flex-wrap gap-1.5 mb-3">
-          <Chip on={!kind} onClick={() => setKind('')}>All ({venues.length})</Chip>
-          {kinds.map((k) => <Chip key={k} on={kind === k} onClick={() => setKind(k)} color={VENUE_COLORS[k]}>{KIND_LABEL[k] || k} ({venues.filter((v) => v.kind === k).length})</Chip>)}
-        </div>
-        {!venues.length ? <p className="text-sm text-gray-500">No gathering places mapped near {town.name} in OpenStreetMap. You can still plan a campaign at the town itself.</p> : (
-          <ul className="divide-y divide-gray-100 -mx-1 max-h-[420px] overflow-y-auto">
+      <Panel title="1. Select hexagons" sub="Click hexagons on the map to choose the areas to cover. Darker ones are expected to have more TB per km²."
+        right={selHex.length > 0 && <button type="button" className="text-sm text-brand-700 hover:underline" onClick={clearHex}>Clear</button>}>
+        {!selHex.length ? <p className="text-sm text-gray-500">None selected: the whole town is covered.</p> : (
+          <div className="grid grid-cols-3 gap-2.5">
+            <Stat label="Hexagons" value={String(selHex.length)} basis="measured" sub={`≈${(selHex.length * 0.74).toFixed(1)} km²`} />
+            <Stat label="People" value={fmtInt(selPop)} basis="measured" />
+            <Stat label="Expected cases a year" value={`≈${selExp < 10 ? selExp.toFixed(1) : fmtInt(selExp)}`} basis="estimated" />
+          </div>
+        )}
+      </Panel>
+
+      <Panel title="2. Choose where to screen" sub={selHex.length ? 'Gathering places inside the selected hexagons. Tick one, or place your own point if there is none.' : 'Gathering places in this town, ranked by people living within 1 km.'}>
+        {venues.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mb-3">
+            <Chip on={!kind} onClick={() => setKind('')}>All ({venues.length})</Chip>
+            {kinds.map((k) => <Chip key={k} on={kind === k} onClick={() => setKind(k)} color={VENUE_COLORS[k]}>{KIND_LABEL[k] || k} ({venues.filter((v) => v.kind === k).length})</Chip>)}
+          </div>
+        )}
+        {!venues.length ? <p className="text-sm text-gray-700 bg-amber-50 rounded-lg px-3 py-2">No gathering places are mapped {selHex.length ? 'inside these hexagons' : `in ${town.name}`} in OpenStreetMap. Place a screening point where the team will set up (a junction, a chief's house, a borehole).</p> : (
+          <ul className="divide-y divide-gray-100 -mx-1 max-h-[360px] overflow-y-auto">
             {ordered.slice(0, 40).map((v) => {
-              const k = venueKey(v), on = picked.includes(k), y = yieldFor(v);
+              const k = venueKey(v), on = picked.includes(k);
               return (
                 <li key={k}>
                   <label className={cx('flex gap-3 px-1 py-2.5 rounded-lg cursor-pointer', on ? 'bg-brand-50' : 'hover:bg-gray-50')}>
                     <input type="checkbox" checked={on} onChange={() => toggle(k)} className="mt-1" />
                     <span className="min-w-0 flex-1">
                       <span className="flex justify-between gap-2"><span className="font-medium truncate">{v.name || `Unnamed ${KIND_LABEL[v.kind]?.toLowerCase() || v.kind}`}</span><span className="text-sm tabular-nums shrink-0">{fmtInt(v.pop_1km)} <span className="text-xs text-gray-500">within 1 km</span></span></span>
-                      <span className="flex items-center gap-1.5 text-xs text-gray-500 mt-0.5">
-                        <span className="w-2 h-2 rounded-full" style={{ background: VENUE_COLORS[v.kind] || '#64748b' }} />{KIND_LABEL[v.kind] || v.kind} · facility {kmFmt(v.facility_km)}{y ? ` · ~1 case per ${fmtInt(1 / y)} screened` : ''}
-                      </span>
+                      <span className="flex items-center gap-1.5 text-xs text-gray-500 mt-0.5"><span className="w-2 h-2 rounded-full" style={{ background: VENUE_COLORS[v.kind] || '#64748b' }} />{KIND_LABEL[v.kind] || v.kind} · facility {kmFmt(v.facility_km)}</span>
                     </span>
                   </label>
                 </li>
@@ -442,8 +491,24 @@ function TownPanel({ d, town, venues, facilities, picked, toggle, campaigns, onP
             })}
           </ul>
         )}
-        <div className="sticky bottom-0 bg-white pt-3 mt-2 border-t border-gray-100 flex items-center justify-between gap-3">
-          <span className="text-sm text-gray-600">{picked.length ? `${picked.length} spot${picked.length > 1 ? 's' : ''} selected` : 'Select spots, or plan for the whole town'}</span>
+        <div className="mt-3">
+          {pins.length > 0 && (
+            <ul className="space-y-1.5 mb-2">
+              {pins.map((x) => (
+                <li key={x.id} className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-red-600 shrink-0" />
+                  <TextInput className="flex-1 min-w-0" value={x.name} onChange={(e) => setPins((ps) => ps.map((y) => (y.id === x.id ? { ...y, name: e.target.value } : y)))} />
+                  <span className="text-xs text-gray-500 tabular-nums shrink-0">{x.lat.toFixed(4)}, {x.lon.toFixed(4)}</span>
+                  <button type="button" aria-label="Remove point" className="text-gray-400 hover:text-red-600" onClick={() => setPins((ps) => ps.filter((y) => y.id !== x.id))}><Icon name="x" size={16} /></button>
+                </li>
+              ))}
+            </ul>
+          )}
+          <Button icon="pin" disabled={!selHex.length} onClick={() => setPinMode(!pinMode)} className={pinMode ? 'ring-2 ring-red-500' : ''}>{pinMode ? 'Click a selected hexagon… (cancel)' : 'Place a screening point'}</Button>
+          {!selHex.length && <p className="text-xs text-gray-500 mt-1">Select a hexagon first to place a point inside it.</p>}
+        </div>
+        <div className="sticky bottom-0 bg-white pt-3 mt-3 border-t border-gray-100 flex items-center justify-between gap-3">
+          <span className="text-sm text-gray-600">{spots.length ? `${spots.length} screening spot${spots.length > 1 ? 's' : ''}` : 'No spots yet: plan for the selected area'}</span>
           <Button variant="primary" icon="target" className="whitespace-nowrap shrink-0" onClick={onPlan}>Plan campaign</Button>
         </div>
       </Panel>
@@ -466,7 +531,7 @@ function Chip({ children, on, onClick, color }: { children: React.ReactNode; on:
 }
 
 // ---------------- level 4: plan + tasks ----------------
-function PlanPanel({ d, town, spots, data, onCancel, onCreated, natRate }: { d: TbDistrict; town: TbTown; spots: TbVenue[]; data: TbData; onCancel: () => void; onCreated: (id: string) => void; natRate: number | null }) {
+function PlanPanel({ d, town, spots, hexIds, reachHex, data, onCancel, onCreated, natRate }: { d: TbDistrict; town: TbTown; spots: Spot[]; hexIds: string[]; reachHex: number; data: TbData; onCancel: () => void; onCreated: (id: string) => void; natRate: number | null }) {
   const me = useMe();
   const people = usePeople();
   const keyPop = spots.find((s) => s.kind === 'prison' || s.kind === 'mine / quarry');
@@ -477,14 +542,14 @@ function PlanPanel({ d, town, spots, data, onCancel, onCreated, natRate }: { d: 
   const [owner, setOwner] = useState(me.email);
   const [target, setTarget] = useState('');
   const [saving, setSaving] = useState(false);
-  const reach = spots.length ? spots.reduce((s, v) => s + v.pop_1km, 0) : town.pop;
+  const reach = hexIds.length ? reachHex : town.pop;
   const setting = keyPop ? (keyPop.kind === 'prison' ? 'prison' : 'mine') : spots.some((s) => s.kind === 'market' || s.kind === 'transport hub') ? 'market' : APPROACH[d.approach].setting;
   const y = expectedPositivity(setting, d, data.P, natRate);
   const playbook = data.playbooks.data.find((p) => p.id === pb);
   const save = async () => {
     setSaving(true);
     const id = uid('tbc');
-    await createCampaign({ id, name: name.trim() || `${town.name}: TB screening`, district_id: d.id, district_name: d.name, town: town.name, setting, playbook_id: pb || null, status: 'planned', start_date: start, owner, target_screened: target ? Number(target) : null, predicted_positivity: y, spots: spots.map((s) => ({ name: s.name || KIND_LABEL[s.kind], kind: s.kind, lon: s.lon, lat: s.lat, pop_1km: s.pop_1km })) } as TbCampaign, playbook, people.map((p) => ({ email: p.email, role: p.role, district: p.district })), me.email);
+    await createCampaign({ id, name: name.trim() || `${town.name}: TB screening`, district_id: d.id, district_name: d.name, town: town.name, setting, playbook_id: pb || null, status: 'planned', start_date: start, owner, target_screened: target ? Number(target) : null, predicted_positivity: y, hex_ids: hexIds, spots } as TbCampaign, playbook, people.map((p) => ({ email: p.email, role: p.role, district: p.district })), me.email);
     setSaving(false);
     onCreated(id);
   };
@@ -498,9 +563,10 @@ function PlanPanel({ d, town, spots, data, onCancel, onCreated, natRate }: { d: 
           <Field label="Start"><TextInput type="date" className="w-full" value={start} onChange={(e) => setStart(e.target.value)} /></Field>
           <Field label="Lead"><Select value={owner} onChange={setOwner} options={peopleOptions(people, owner)} /></Field>
         </div>
-        <Field label="Target to screen (optional)"><TextInput className="w-full" inputMode="numeric" placeholder={`${fmtInt(reach)} people live within reach`} value={target} onChange={(e) => setTarget(e.target.value.replace(/\D/g, ''))} /></Field>
-        {target && y ? <p className="text-sm text-gray-700">Expect about <b>{fmtInt(Number(target) * y)}</b> people with TB found (1 in {fmtInt(1 / y)}, published yield for this setting) <BasisTag b="estimated" /></p> : null}
-        {spots.length > 0 && <div className="text-sm"><div className="text-xs text-gray-500 mb-1">Spots</div><ul className="space-y-1">{spots.map((s) => <li key={venueKey(s)} className="flex items-center gap-2"><span className="w-2 h-2 rounded-full" style={{ background: VENUE_COLORS[s.kind] }} />{s.name || KIND_LABEL[s.kind]}<span className="text-gray-500">· {KIND_LABEL[s.kind]}</span></li>)}</ul></div>}
+        <Field label="Target to screen (optional)"><TextInput className="w-full" inputMode="numeric" placeholder={`${fmtInt(reach)} people live in the ${hexIds.length ? 'selected hexagons' : 'town'}`} value={target} onChange={(e) => setTarget(e.target.value.replace(/\D/g, ''))} /></Field>
+        {target && y ? <p className="text-sm text-gray-700">Expect about <b>{fmtInt(Number(target) * y)}</b>* people with TB found.<span className="block text-xs text-gray-500 mt-0.5">* Assumption: published screening yield for this setting (Kranzer et al. 2010 review{setting === 'prison' || setting === 'mine' ? '' : ', general population 0.7%'}), scaled by {d.name}'s expected rate vs Ghana. Replace with your own results once the first campaign reports.</span></p> : null}
+        {hexIds.length > 0 && <p className="text-sm text-gray-700">{hexIds.length} hexagon{hexIds.length > 1 ? 's' : ''} selected</p>}
+        {spots.length > 0 && <div className="text-sm"><div className="text-xs text-gray-500 mb-1">Spots</div><ul className="space-y-1">{spots.map((s, i) => <li key={i} className="flex items-center gap-2"><span className="w-2 h-2 rounded-full" style={{ background: VENUE_COLORS[s.kind] || '#dc2626' }} />{s.name}<span className="text-gray-500">· {KIND_LABEL[s.kind] || s.kind}</span></li>)}</ul></div>}
         <div className="flex justify-end gap-2 pt-2"><Button onClick={onCancel}>Back</Button><Button variant="primary" onClick={save} disabled={saving}>{saving ? 'Creating…' : 'Create campaign and tasks'}</Button></div>
       </div>
     </Panel>

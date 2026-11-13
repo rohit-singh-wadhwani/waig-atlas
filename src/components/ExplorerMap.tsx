@@ -1,10 +1,20 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { TB_RAMP } from './TbMap';
 
 export const VENUE_COLORS: Record<string, string> = {
   market: '#7c3aed', 'transport hub': '#0891b2', prison: '#111827', 'mine / quarry': '#a16207',
   school: '#16a34a', 'place of worship': '#db2777', 'community centre': '#ea580c', pharmacy: '#0d9488', 'NGO office': '#4f46e5',
 };
+/** Sequential orange ramp for TB burden (light -> dark). */
+export const TB_RAMP = ['#fef0d9', '#fdd49e', '#fdbb84', '#fc8d59', '#e34a33', '#b30000'];
+
+/** Quantile class breaks for a choropleth. */
+export function breaksFor(values: number[], classes = 6) {
+  const v = values.filter((x) => typeof x === 'number' && isFinite(x)).sort((a, b) => a - b);
+  if (!v.length) return [] as number[];
+  const out: number[] = [];
+  for (let i = 1; i < classes; i++) out.push(v[Math.floor((i / classes) * (v.length - 1))]);
+  return Array.from(new Set(out));
+}
 const BASEMAP_STYLE = 'https://tiles.openfreemap.org/styles/positron';
 const EMPTY = { type: 'FeatureCollection', features: [] };
 
@@ -28,6 +38,11 @@ export type ExplorerMapProps = {
   facilities?: any | null;
   picked?: string[];                  // venue keys chosen for a campaign
   focusTown?: string | null;
+  selectedHexes?: string[];           // hexagons chosen for a campaign
+  pins?: any | null;                  // screening points dropped by the user
+  pinMode?: boolean;                  // next click inside a selected hexagon drops a pin
+  onHex?: (p: any) => void;
+  onPin?: (lngLat: [number, number], hex: string) => void;
   fit?: [number, number, number, number] | null;
   onDistrict?: (p: any) => void;
   onTown?: (p: any) => void;
@@ -55,12 +70,13 @@ export default function ExplorerMap(p: ExplorerMapProps) {
     m.on('load', () => {
       clearTimeout(fallback);
       const below = (m.getStyle().layers || []).find((l: any) => l.type === 'symbol')?.id;
-      for (const id of ['districts', 'towns', 'hexes', 'townlabels', 'venues', 'facilities']) m.addSource(id, { type: 'geojson', data: EMPTY, ...(id === 'districts' ? { promoteId: 'id' } : {}) });
+      for (const id of ['districts', 'towns', 'hexes', 'townlabels', 'venues', 'facilities', 'pins']) m.addSource(id, { type: 'geojson', data: EMPTY, ...(id === 'districts' ? { promoteId: 'id' } : {}) });
       m.addLayer({ id: 'd-fill', type: 'fill', source: 'districts', paint: { 'fill-color': TB_RAMP[1], 'fill-opacity': 0.75 } }, below);
       m.addLayer({ id: 'd-line', type: 'line', source: 'districts', paint: { 'line-color': '#ffffff', 'line-width': 0.7 } }, below);
       m.addLayer({ id: 'd-focus', type: 'line', source: 'districts', paint: { 'line-color': '#0f172a', 'line-width': 2.5 }, filter: ['==', ['get', 'id'], ''] }, below);
       m.addLayer({ id: 'town-fill', type: 'fill', source: 'towns', paint: { 'fill-color': TB_RAMP[1], 'fill-opacity': 0.75 } }, below);
       m.addLayer({ id: 'h-fill', type: 'fill', source: 'hexes', paint: { 'fill-color': TB_RAMP[1], 'fill-opacity': 0.75 } }, below);
+      m.addLayer({ id: 'h-sel', type: 'line', source: 'hexes', paint: { 'line-color': '#0f172a', 'line-width': 2.5 }, filter: ['in', ['get', 'h'], ['literal', []]] }, below);
       m.addLayer({ id: 'town-line', type: 'line', source: 'towns', paint: { 'line-color': ['case', ['get', 'focus'], '#0f172a', '#ffffff'], 'line-width': ['case', ['get', 'focus'], 3, 1.2] } }, below);
       m.addLayer({ id: 'facilities', type: 'circle', source: 'facilities', paint: { 'circle-radius': ['match', ['get', 'kind'], 'hospital', 6, 4], 'circle-color': '#1d4ed8', 'circle-stroke-color': '#fff', 'circle-stroke-width': 1.5 } });
       m.addLayer({ id: 'town-labels', type: 'symbol', source: 'townlabels', layout: { 'text-field': ['get', 'name'], 'text-font': ['Noto Sans Regular'], 'text-size': 12, 'text-anchor': 'center', 'text-optional': true }, paint: { 'text-color': '#0f172a', 'text-halo-color': '#fff', 'text-halo-width': 1.5 } });
@@ -69,12 +85,13 @@ export default function ExplorerMap(p: ExplorerMapProps) {
         'circle-color': ['match', ['get', 'kind'], ...Object.entries(VENUE_COLORS).flat(), '#64748b'],
         'circle-stroke-color': ['case', ['get', 'picked'], '#0f172a', '#ffffff'], 'circle-stroke-width': ['case', ['get', 'picked'], 3, 1.5],
       } });
+      m.addLayer({ id: 'pins', type: 'circle', source: 'pins', paint: { 'circle-radius': 8, 'circle-color': '#dc2626', 'circle-stroke-color': '#0f172a', 'circle-stroke-width': 3 } });
       setReady(true);
     });
-    const layers = ['venues', 'facilities', 'h-fill', 'town-fill', 'd-fill'];
+    const layers = ['pins', 'venues', 'facilities', 'h-fill', 'town-fill', 'd-fill'];
     m.on('mousemove', (e: any) => {
       const f = m.queryRenderedFeatures(e.point, { layers: layers.filter((l) => m.getLayer(l)) })[0];
-      m.getCanvas().style.cursor = f && f.layer.id !== 'h-fill' ? 'pointer' : '';
+      m.getCanvas().style.cursor = props.current.pinMode ? 'crosshair' : f ? 'pointer' : '';
       const tip = props.current.tooltip;
       if (!f || !tip) return popup.remove();
       const html = tip(f.properties, f.layer.id);
@@ -83,9 +100,15 @@ export default function ExplorerMap(p: ExplorerMapProps) {
     });
     m.on('mouseout', () => popup.remove());
     m.on('click', (e: any) => {
-      const f = m.queryRenderedFeatures(e.point, { layers: ['venues', 'town-fill', 'd-fill'].filter((l) => m.getLayer(l)) })[0];
+      const cur = props.current;
+      const f = m.queryRenderedFeatures(e.point, { layers: ['venues', 'h-fill', 'town-fill', 'd-fill'].filter((l) => m.getLayer(l)) })[0];
       if (!f) return;
-      if (f.layer.id === 'venues') props.current.onVenue?.(f.properties);
+      if (cur.pinMode && f.layer.id === 'h-fill') {
+        if ((cur.selectedHexes || []).includes(f.properties.h)) cur.onPin?.([e.lngLat.lng, e.lngLat.lat], f.properties.h);
+        return;
+      }
+      if (f.layer.id === 'h-fill') cur.onHex?.(f.properties);
+      else if (f.layer.id === 'venues') props.current.onVenue?.(f.properties);
       else if (f.layer.id === 'town-fill') props.current.onTown?.(f.properties);
       else props.current.onDistrict?.(f.properties);
     });
@@ -114,7 +137,10 @@ export default function ExplorerMap(p: ExplorerMapProps) {
     const picked = new Set(p.picked || []);
     const v = p.venues ? { ...p.venues, features: p.venues.features.map((f: any) => ({ ...f, properties: { ...f.properties, picked: picked.has(f.properties.key) } })) } : EMPTY;
     m.getSource('venues').setData(v);
-  }, [ready, p.towns, p.venues, p.picked, p.focusTown]);
+    m.getSource('pins').setData(p.pins || EMPTY);
+    m.setFilter('h-sel', ['in', ['get', 'h'], ['literal', p.selectedHexes || []]]);
+    m.setPaintProperty('h-fill', 'fill-opacity', (p.selectedHexes || []).length ? ['case', ['in', ['get', 'h'], ['literal', p.selectedHexes]], 0.9, 0.45] : 0.75);
+  }, [ready, p.towns, p.venues, p.picked, p.focusTown, p.pins, p.selectedHexes]);
 
   useEffect(() => {
     const m = map.current;
@@ -124,13 +150,14 @@ export default function ExplorerMap(p: ExplorerMapProps) {
     m.setFilter('d-focus', ['==', ['get', 'id'], p.focusId || '']);
     m.setPaintProperty('h-fill', 'fill-color', step('k', p.hexBreaks || []));
     m.setPaintProperty('town-fill', 'fill-color', ['case', ['==', ['get', 'nodata'], true], '#d1d5db', step('expected_km2', p.townBreaks || [])]);
-    m.setPaintProperty('town-fill', 'fill-opacity', p.focusTown ? 0 : 0.75);
+    // an opened town shows its hexagons; neighbouring towns stay visible but faded
+    m.setPaintProperty('town-fill', 'fill-opacity', p.focusTown ? ['case', ['==', ['get', 'key'], p.focusTown], 0, 0.28] : 0.75);
   }, [ready, p.districtMetric, p.districtBreaks, p.focusId, p.hexBreaks, p.townBreaks, p.focusTown]);
 
   useEffect(() => {
     const m = map.current;
     if (!ready || !m || !p.fit) return;
-    m.fitBounds([[p.fit[0], p.fit[1]], [p.fit[2], p.fit[3]]], { padding: 30, duration: 700, maxZoom: 15 });
+    m.fitBounds([[p.fit[0], p.fit[1]], [p.fit[2], p.fit[3]]], { padding: 30, duration: 700, maxZoom: 14 });
   }, [ready, p.fit]);
 
   return <div ref={ref} className="w-full h-full rounded-xl overflow-hidden border border-gray-100" style={{ height: p.height || '100%' }} />;
