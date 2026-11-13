@@ -1,5 +1,5 @@
 {
- "updated_at": "2026-11-12T03:35:18.056Z",
+ "updated_at": "2026-11-13T03:21:36.551Z",
  "grants": [
   {
    "id": "f4a4ef7d5c8b0fd4",
@@ -2486,6 +2486,44 @@
    "notes": null,
    "added_by": null,
    "updated_at": "2026-11-11T03:25:12.28+00:00"
+  },
+  {
+   "id": "9561d3c8c44f932e",
+   "title": "UKRI Translation: MRC Impact Acceleration Awards",
+   "funder": "Medical Research Council (MRC)",
+   "summary": "This grant funds high-risk development steps to de-risk medical products, devices, or diagnostics. It is intended for research organisations eligible for MRC funding to generate critical preliminary data.",
+   "amount_text": "£50,000 - £300,000",
+   "amount_usd": 380000,
+   "deadline": "2027-03-10",
+   "open_date": "2026-11-12",
+   "eligibility": "UK-based research organisations; international researchers can participate as project co-leads.",
+   "requirements": "Must generate critical preliminary data to de-risk a medical product or diagnostic.",
+   "countries": [
+    "GBR"
+   ],
+   "regions": [],
+   "themes": [
+    "Diagnostics",
+    "Medical Devices",
+    "Health AI"
+   ],
+   "url": "https://www.ukri.org/opportunity/ukri-translation-mrc-impact-acceleration-awards/",
+   "source_id": "ukri-opportunities",
+   "source_name": "UKRI funding finder",
+   "fetched_at": "2026-11-12T14:35:23.865+00:00",
+   "score": null,
+   "strengths": [],
+   "weaknesses": [],
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-12T14:38:09.152607+00:00"
   }
  ]
 }

@@ -83,8 +83,8 @@ jobs:
         timeout-minutes: 30
         continue-on-error: true
         run: |
-          pip install -q requests numpy rasterio shapely h3 scipy
-          python scripts/tb/build_tb.py
+          pip install -q requests numpy rasterio shapely h3 scipy pyshp
+          python scripts/tb/build_tb3.py
         env:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       - name: DHIMS2 district notifications (skips until credentials are set)

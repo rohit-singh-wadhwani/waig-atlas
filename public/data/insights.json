@@ -1,6 +1,36 @@
 {
- "updated_at": "2026-11-12T10:23:25.049Z",
+ "updated_at": "2026-11-13T04:16:00.465Z",
  "insights": [
+  {
+   "id": "aa8080a277f19ade",
+   "title": "Kenya begins countdown towards end of Ebola after last patient discharged",
+   "summary": "Kenya has started a 42-day countdown to declare the end of its Ebola outbreak after discharging its final patient and clearing quarantine cases.",
+   "url": "https://news.un.org/feed/view/en/story/2026/11/1168790",
+   "published_at": "2026-11-12T12:00:00.000Z",
+   "source_id": "un-news-health",
+   "source_name": "UN News: health",
+   "kind": "outbreak",
+   "countries": [
+    "KEN"
+   ],
+   "diseases": [
+    "Ebola"
+   ]
+  },
+  {
+   "id": "a74fde606ff5eef9",
+   "title": "Clinical validation of the Swaasa® artificial intelligence platform using cough sounds for screening and aid in diagnosis of respiratory diseases.",
+   "summary": "A clinical validation study evaluates the Swaasa artificial intelligence platform for screening and diagnosing respiratory diseases using cough sounds.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/43016516/",
+   "published_at": "2026-11-12T11:32:00.000Z",
+   "source_id": "pubmed-cough-acoustics",
+   "source_name": "PubMed: cough acoustics",
+   "kind": "research",
+   "countries": [],
+   "diseases": [
+    "respiratory diseases"
+   ]
+  },
   {
    "id": "463814285bcd0bcc",
    "title": "Did you know: medical oxygen saves lives every day?",
@@ -27,6 +57,144 @@
    "kind": "social",
    "countries": [
     "RWA"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "e0f4e32187a651ee",
+   "title": "Recruter un Consultant international pour Contribuer à l'Evaluation d’impact FBR au Mali entre 2019 – 2024",
+   "summary": "A consulting contract has been awarded to contribute to a performance-based financing impact evaluation in Mali.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00480943",
+   "published_at": "2026-11-11T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "MLI"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "b3c12a4d42e797ac",
+   "title": "Procurement of 68 All-in-One PCs, 27 laptops, 68 UPS, 68 stabilizers, 20 MFPs, 68 surge protectors, 6 hard disks and 3 A3 printers for 19 health facilities and 2 MEDSTAT centers.",
+   "summary": "Tajikistan is procuring IT equipment including PCs, laptops, and printers for multiple health facilities and medical statistics centers.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00480821",
+   "published_at": "2026-11-11T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "TJK"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "fb8373c5c90f9525",
+   "title": "Supply and delivery of 670,000 Litres of Liquid Medical Oxygen for Emergency Preparedness",
+   "summary": "A contract was awarded for the supply of liquid medical oxygen to support emergency preparedness across Eastern and Southern Africa.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00480860",
+   "published_at": "2026-11-11T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "076528a9754aeaaa",
+   "title": "Development and Harmonization of the National Health Data Standards and HL7 FHIR Implementation Guides for the National Digital Health Architecture (NDHA).",
+   "summary": "Nigeria awarded a contract for developing national health data standards and HL7 FHIR implementation guides to advance its digital health architecture.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00480980",
+   "published_at": "2026-11-11T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "NGA"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "14dba866a7641ce6",
+   "title": "Acquisition en franchise d'un lot de trois (3) véhicules 4*4 fermés tout-terrain pour l'UC en support logistique aux trois départements FBR (Nord, Sud, Nippes)",
+   "summary": "Haiti is acquiring all-terrain vehicles to support primary health care and surveillance logistics across three departments.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00480952",
+   "published_at": "2026-11-11T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "HTI"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "b4ac8c4b935ebe74",
+   "title": "Travaux de réaménagement du centre communautaire de santé de Mandrou, incluant démolition, dallage, menuiserie métallique, peinture et mise à niveau du forage",
+   "summary": "Renovation works have been contracted for a community health center in Mandrou, Haiti, as part of primary healthcare strengthening.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00481003",
+   "published_at": "2026-11-11T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "HTI"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "9f4b7d787d2b6a41",
+   "title": "Procurement of packs of IUCD Insertion",
+   "summary": "Zambia has procured intrauterine contraceptive device insertion packs for its health emergency preparedness and response project.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00480929",
+   "published_at": "2026-11-11T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "ZMB"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "4ae734fb128ff030",
+   "title": "Procurement of Diesel Generators for 26x CFCs",
+   "summary": "Pakistan is procuring diesel generators for 26 community facility centers to ensure reliable power for service delivery.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00480812",
+   "published_at": "2026-11-11T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "PAK"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "ded57e887ddebcf8",
+   "title": "Sélection d'un cabinet pour la réalisation du diagnostic national des infrastructures et compétences numériques du système de santé/Zone N°3",
+   "summary": "Senegal has selected a firm to conduct a national diagnostic of digital infrastructures and skills within the health system.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00480871",
+   "published_at": "2026-11-11T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "SEN"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "b6f3766d789f63cc",
+   "title": "Sélection d'un cabinet pour la réalisation du diagnostic national des infrastructures et compétences numériques du système de santé/Zone N°2",
+   "summary": "Senegal has selected a consulting firm to conduct a national diagnostic of digital health infrastructure and skills under the Digital Economy Acceleration Project.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00480872",
+   "published_at": "2026-11-11T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "SEN"
    ],
    "diseases": []
   },
