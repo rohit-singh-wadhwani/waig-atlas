@@ -206,18 +206,31 @@ function Panel({ title, sub, right, children, className }: { title?: React.React
   );
 }
 
-/** A figure with where it comes from: click the tag to see the dataset and calculation. */
+/** The Reported / Measured / Estimated tag; hover (or tap) shows the dataset and calculation in a floating note. */
+function HowTag({ b, how }: { b: 'reported' | 'measured' | 'estimated'; how?: string }) {
+  const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
+  if (!how) return <BasisTag b={b} />;
+  const show = (el: HTMLElement) => {
+    const r = el.getBoundingClientRect();
+    const w = 280;
+    setPos({ x: Math.max(8, Math.min(r.right - w, window.innerWidth - w - 8)), y: r.bottom + 6 });
+  };
+  return (
+    <span className="inline-flex shrink-0 cursor-help" tabIndex={0} aria-label={how}
+      onMouseEnter={(e) => show(e.currentTarget)} onMouseLeave={() => setPos(null)}
+      onFocus={(e) => show(e.currentTarget)} onBlur={() => setPos(null)}>
+      <BasisTag b={b} />
+      {pos && <span role="tooltip" className="fixed z-50 w-[280px] rounded-lg bg-gray-900 px-3 py-2 text-xs leading-relaxed text-white shadow-lg pointer-events-none" style={{ left: pos.x, top: pos.y }}>{how}</span>}
+    </span>
+  );
+}
+
 function Stat({ label, value, sub, basis, how }: { label: string; value: React.ReactNode; sub?: React.ReactNode; basis?: 'reported' | 'measured' | 'estimated'; how?: string }) {
-  const [open, setOpen] = useState(false);
   return (
     <div className="rounded-xl bg-gray-50 p-3 min-w-0">
-      <div className="flex items-center justify-between gap-2 text-xs text-gray-500">
-        <span>{label}</span>
-        {basis && (how ? <button type="button" onClick={() => setOpen(!open)} aria-expanded={open} title="How this is worked out" className="inline-flex items-center gap-0.5"><BasisTag b={basis} /><Icon name="chevronDown" size={12} className={cx('transition-transform', open && 'rotate-180')} /></button> : <BasisTag b={basis} />)}
-      </div>
+      <div className="flex items-start justify-between gap-2 text-xs text-gray-500"><span className="min-w-0">{label}</span>{basis && <HowTag b={basis} how={how} />}</div>
       <div className="text-lg font-semibold text-gray-900 tabular-nums mt-0.5">{value}</div>
       {sub && <div className="text-xs text-gray-500 mt-0.5">{sub}</div>}
-      {open && how && <div className="text-xs text-gray-600 mt-2 pt-2 border-t border-gray-200 leading-relaxed">{how}</div>}
     </div>
   );
 }
@@ -319,7 +332,7 @@ function DistrictPanel({ d, det, loading, rank, n, venues, campaigns, onTown, ru
       <Panel title={d.name} sub={`${d.region} · ${fmtInt(d.pop)} people (2026) · ${d.urban != null ? `${Math.round(d.urban * 100)}% urban` : ''}`}>
         <div className="grid grid-cols-2 gap-2.5">
           <Stat label="Expected new cases a year" value={fmtInt(d.expected)} basis="estimated" sub={`${(d.share * 100).toFixed(1)}% of Ghana's cases`} how="WHO 2024 rates by age group and sex × this district's population by age and sex (2021 Census), × a regional risk factor (DHS 2022/2014 rates of HIV, thinness and smoking vs Ghana, weighted by WHO's share of cases linked to each), grown to 2026 with WorldPop and scaled so all districts add up to WHO's national total." />
-          <Stat label="Rate per 100,000" value={fmtInt(d.expected_100k)} how="Expected cases (above) ÷ 2026 population (WorldPop) × 100,000, compared with Ghana's rate." sub={<span className={d.vs_ghana >= 1 ? 'text-red-700' : 'text-green-700'}>{signedPct(d.vs_ghana)} vs Ghana</span>} />
+          <Stat label="Rate per 100,000" value={fmtInt(d.expected_100k)} basis="estimated" how="Expected cases (above) ÷ 2026 population (WorldPop) × 100,000, compared with Ghana's rate." sub={<span className={d.vs_ghana >= 1 ? 'text-red-700' : 'text-green-700'}>{signedPct(d.vs_ghana)} vs Ghana</span>} />
           <Stat label="Notified a year" value={d.notified != null ? fmtInt(d.notified) : 'Not connected'} basis="reported" sub={d.notified != null ? `${pctFmt(d.detection)} of expected` : 'Needs DHIMS2'} how="From DHIMS2 (live sync) or district reports uploaded on the Data sources tab, last 12 months. Share = notified ÷ expected cases." />
           <Stat how="Sum of results entered for campaigns in this district (Campaigns & tasks tab)." label="Our screening here" value={d.screened ? `${fmtInt(d.confirmed)} found` : 'None yet'} basis="reported" sub={d.screened ? `${fmtInt(d.screened)} screened` : `${campaigns.length} campaign${campaigns.length === 1 ? '' : 's'}`} />
         </div>
@@ -456,7 +469,7 @@ function TownPanel({ d, town, venues, hexes, selHex, clearHex, pins, setPins, pi
     <>
       <Panel title={town.name} sub={`${town.place} in ${d.name}`}>
         <div className="grid grid-cols-2 gap-2.5">
-          <Stat label="People living here" value={fmtInt(town.pop)} how="WorldPop 2026 population (100 m grid) summed over this town's area. The town area is the part of the district nearer to this OpenStreetMap place than to any other." sub={town.area_km2 ? `${town.area_km2} km² area` : undefined} />
+          <Stat label="People living here" value={fmtInt(town.pop)} basis="measured" how="WorldPop 2026 population (100 m grid) summed over this town's area. The town area is the part of the district nearer to this OpenStreetMap place than to any other." sub={town.area_km2 ? `${town.area_km2} km² area` : undefined} />
           <Stat label="Expected TB cases a year" value={`≈${fmtInt(town.expected)}`} basis="estimated" how="People living here × the district's expected rate per person. Assumes TB is spread evenly by population within the district." />
           <Stat label="Nearest health facility" value={kmFmt(town.facility_km)} how="Straight-line distance from the town centre to the nearest OpenStreetMap clinic or hospital. Walking time from the Malaria Atlas Project walking-only travel-time map (2020)." basis="measured" sub={town.walk_min != null ? `${town.walk_min < 5 ? 'under 5' : fmtInt(town.walk_min)} min walk` : undefined} />
           <Stat label="Nearest hospital" value={kmFmt(town.hospital_km)} how="Straight-line distance to the nearest OpenStreetMap hospital. Driving time from the Malaria Atlas Project motorised travel-time map (2020)." basis="measured" sub={town.drive_min != null ? `${fmtInt(town.drive_min)} min drive` : undefined} />
