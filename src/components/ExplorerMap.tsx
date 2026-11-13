@@ -123,7 +123,7 @@ export default function ExplorerMap(p: ExplorerMapProps) {
     m.setPaintProperty('d-fill', 'fill-opacity', p.focusId ? ['case', ['==', ['get', 'id'], p.focusId], 0.08, 0.35] : 0.75);
     m.setFilter('d-focus', ['==', ['get', 'id'], p.focusId || '']);
     m.setPaintProperty('h-fill', 'fill-color', step('k', p.hexBreaks || []));
-    m.setPaintProperty('town-fill', 'fill-color', step('expected_km2', p.townBreaks || []));
+    m.setPaintProperty('town-fill', 'fill-color', ['case', ['==', ['get', 'nodata'], true], '#d1d5db', step('expected_km2', p.townBreaks || [])]);
     m.setPaintProperty('town-fill', 'fill-opacity', p.focusTown ? 0 : 0.75);
   }, [ready, p.districtMetric, p.districtBreaks, p.focusId, p.hexBreaks, p.townBreaks, p.focusTown]);
 

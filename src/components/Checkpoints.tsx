@@ -78,14 +78,14 @@ export default function Checkpoints({ items, table, base, progress, onProgress, 
 
   return (
     <div>
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-        <div>
+      <div className="mb-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <h3 className="text-[17px] font-semibold text-gray-900">Checkpoints</h3>
-          <p className="text-sm text-gray-500 mt-0.5">{list.length ? `${complete} of ${list.length} complete · ${pct}%` : hint || 'Break this into checkpoints with dates, an owner and what needs doing.'}</p>
+          <button type="button" onClick={() => add()} className="inline-flex items-center gap-1.5 h-10 px-4 rounded-xl border border-gray-200 bg-white text-[15px] text-gray-800 hover:bg-gray-50">
+            <Icon name="plus" size={16} />Add checkpoint
+          </button>
         </div>
-        <button type="button" onClick={() => add()} className="inline-flex items-center gap-1.5 h-10 px-4 rounded-xl border border-gray-200 bg-white text-[15px] text-gray-800 hover:bg-gray-50">
-          <Icon name="plus" size={16} />Add checkpoint
-        </button>
+        <p className="text-sm text-gray-500 mt-1">{list.length ? `${complete} of ${list.length} complete · ${pct}%` : hint || 'Break this into checkpoints with dates, an owner and what needs doing.'}</p>
       </div>
 
       {!list.length && suggestions.length > 0 && (

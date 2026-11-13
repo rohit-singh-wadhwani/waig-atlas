@@ -77,8 +77,8 @@ export default function Explorer({ data, goTab }: { data: TbData; goTab: (t: str
   }, [det, town]);
   const hexFc = useMemo(() => (town ? { type: 'FeatureCollection', features: townHexes.map((h) => ({ type: 'Feature', properties: { p: h.p, e: h.e, k: h.k, f: h.f, w: h.w }, geometry: { type: 'Polygon', coordinates: [[...h.r, h.r[0]]] } })) } : null), [town, townHexes]);
   const hBreaks = useMemo(() => breaksFor(townHexes.map((h) => h.k)), [townHexes]);
-  const townFc = useMemo(() => (det ? { type: 'FeatureCollection', features: det.towns.filter((t) => t.geom).map((t) => ({ type: 'Feature', properties: { key: townKey(t), name: t.name, place: t.place, pop: t.pop, expected: t.expected, expected_km2: t.expected_km2, lon: t.lon, lat: t.lat }, geometry: t.geom })) } : null), [det]);
-  const tBreaks = useMemo(() => (det ? breaksFor(det.towns.map((t) => t.expected_km2)) : []), [det]);
+  const townFc = useMemo(() => (det ? { type: 'FeatureCollection', features: det.towns.filter((t) => t.geom).map((t) => ({ type: 'Feature', properties: { key: townKey(t), nodata: !!t.nodata, name: t.name, place: t.place, pop: t.pop, expected: t.expected, expected_km2: t.expected_km2, lon: t.lon, lat: t.lat }, geometry: t.geom })) } : null), [det]);
+  const tBreaks = useMemo(() => (det ? breaksFor(det.towns.filter((t) => !t.nodata).map((t) => t.expected_km2)) : []), [det]);
   const venueFc = useMemo(() => ({ type: 'FeatureCollection', features: venues.map((v) => ({ type: 'Feature', properties: { ...v, key: venueKey(v) }, geometry: { type: 'Point', coordinates: [v.lon, v.lat] } })) }), [venues]);
   const facFc = useMemo(() => (det && town ? { type: 'FeatureCollection', features: det.facilities.filter((f) => distKm(f, town) <= town.radius_km + 3).map((f) => ({ type: 'Feature', properties: f, geometry: { type: 'Point', coordinates: [f.lon, f.lat] } })) } : null), [det, town]);
   const fit = useMemo<[number, number, number, number]>(() => {
@@ -95,6 +95,7 @@ export default function Explorer({ data, goTab }: { data: TbData; goTab: (t: str
   const tip = (pr: any, layer: string) => {
     if (layer === 'd-fill') return districtId ? '' : `<b>${esc(pr.name)}</b> · ${esc(String(pr.region))}<br/>About <b>${fmtInt(Number(pr.expected))}</b> new TB cases a year<br/>${fmtInt(Number(pr.expected_100k))} per 100,000 (${signedPct(Number(pr.vs_ghana))} vs Ghana)<br/><i>Click to open</i>`;
     if (layer === 'h-fill') return `${fmtInt(Number(pr.p))} people · ≈${Number(pr.e).toFixed(1)} TB cases a year<br/>Nearest facility ${kmFmt(Number(pr.f))}`;
+    if (layer === 'town-fill' && (pr.nodata === true || pr.nodata === 'true')) return town ? '' : `<b>${esc(pr.name)}</b> (${esc(pr.place)})<br/>No population mapped in this area<br/><i>Click to open</i>`;
     if (layer === 'town-fill') return town ? '' : `<b>${esc(pr.name)}</b> (${esc(pr.place)})<br/>${fmtInt(Number(pr.pop))} people · ≈${Number(pr.expected).toFixed(0)} TB cases a year<br/><i>Click to open</i>`;
     if (layer === 'venues') return `<b>${esc(pr.name || KIND_LABEL[pr.kind] || pr.kind)}</b><br/>${esc(KIND_LABEL[pr.kind] || pr.kind)} · ${fmtInt(Number(pr.pop_1km))} people within 1 km<br/><i>Click to ${town ? 'add to campaign' : 'open its town'}</i>`;
     if (layer === 'facilities') return `<b>${esc(pr.name || 'Health facility')}</b><br/>${esc(pr.kind)}${pr.lab === true || pr.lab === 'true' ? ' · lab' : ''}`;
@@ -151,6 +152,9 @@ function MapLegend({ level, breaks }: { level: 'ghana' | 'district' | 'town'; br
     <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-gray-600 mt-3">
       <span className="font-medium text-gray-700">{level === 'ghana' ? 'Expected TB cases per 100,000 a year' : level === 'district' ? 'Town areas: expected cases per km² a year' : 'Expected cases per km² a year'}</span>
       {labels.map((l, i) => <span key={i} className="inline-flex items-center gap-1.5"><span className="w-3.5 h-3.5 rounded-sm" style={{ background: TB_RAMP[Math.min(i, TB_RAMP.length - 1)] }} />{l}</span>)}
+      {level === 'district' && <span className="inline-flex items-center gap-1.5"><span className="w-3.5 h-3.5 rounded-sm bg-[#d1d5db]" />No population mapped</span>}
+      {level === 'district' && <span className="w-full text-gray-500">Each area is the part of the district nearest to that town, village or suburb (OpenStreetMap).</span>}
+      {level === 'town' && <span className="w-full text-gray-500">Blank parts of the town area have no people mapped by WorldPop (farmland, forest, water).</span>}
       {level === 'town' && (
         <>
           <span className="inline-flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-[#1d4ed8]" />Health facility</span>
@@ -165,9 +169,12 @@ function Panel({ title, sub, right, children, className }: { title?: React.React
   return (
     <section className={cx('rounded-2xl border border-gray-200 bg-white p-5', className)}>
       {(title || right) && (
-        <div className="flex items-start justify-between gap-3 mb-3">
-          <div className="min-w-0">{title && <h3 className="text-base font-semibold text-gray-900">{title}</h3>}{sub && <p className="text-sm text-gray-500 mt-0.5">{sub}</p>}</div>
-          {right}
+        <div className="mb-3">
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+            {title && <h3 className="text-base font-semibold text-gray-900 min-w-0">{title}</h3>}
+            {right}
+          </div>
+          {sub && <p className="text-sm text-gray-500 mt-1">{sub}</p>}
         </div>
       )}
       {children}
@@ -274,7 +281,8 @@ function DistrictPanel({ d, det, loading, rank, n, venues, campaigns, onTown, ru
   const series = reported.data[d.region] || null;
   const [allTowns, setAllTowns] = useState(false);
   const [tSort, setTSort] = useState<'cases' | 'far'>('cases');
-  const towns: TbTown[] = det ? [...det.towns].sort((x: TbTown, y: TbTown) => (tSort === 'cases' ? y.expected - x.expected : (y.facility_km ?? 0) - (x.facility_km ?? 0))) : [];
+  const noData: TbTown[] = det ? det.towns.filter((t: TbTown) => t.nodata) : [];
+  const towns: TbTown[] = det ? [...det.towns].filter((t: TbTown) => !t.nodata).sort((x: TbTown, y: TbTown) => (tSort === 'cases' ? y.expected - x.expected : (y.facility_km ?? 0) - (x.facility_km ?? 0))) : [];
   const key = (det?.venues || []).filter((v: TbVenue) => v.kind === 'prison' || v.kind === 'mine / quarry');
   return (
     <>
@@ -306,6 +314,11 @@ function DistrictPanel({ d, det, loading, rank, n, venues, campaigns, onTown, ru
               ))}
             </ol>
             {towns.length > 8 && <button type="button" className="text-sm text-brand-700 hover:underline mt-2" onClick={() => setAllTowns(!allTowns)}>{allTowns ? 'Show top 8' : `Show all ${towns.length}`}</button>}
+            {noData.length > 0 && (
+              <p className="text-xs text-gray-600 bg-gray-50 rounded-lg px-3 py-2 mt-3">
+                <b>{noData.length} place{noData.length > 1 ? 's' : ''} with no population mapped</b> (shown grey on the map): {noData.slice(0, 12).map((t) => t.name).join(', ')}{noData.length > 12 ? ` and ${noData.length - 12} more` : ''}. WorldPop finds no homes there, so there is nothing to estimate; check locally if people live there.
+              </p>
+            )}
           </>
         )}
       </Panel>
@@ -400,6 +413,7 @@ function TownPanel({ d, town, venues, facilities, picked, toggle, campaigns, onP
           <Stat label="Nearest health facility" value={kmFmt(town.facility_km)} basis="measured" sub={town.walk_min != null ? `${town.walk_min < 5 ? 'under 5' : fmtInt(town.walk_min)} min walk` : undefined} />
           <Stat label="Nearest hospital" value={kmFmt(town.hospital_km)} basis="measured" sub={town.drive_min != null ? `${fmtInt(town.drive_min)} min drive` : undefined} />
         </div>
+        {town.nodata && <p className="text-sm mt-3 text-gray-700 bg-gray-50 rounded-lg px-3 py-2">No population is mapped in this area, so there are no estimates. If people live here, screening can still be planned.</p>}
         {campaigns.length > 0 && <p className="text-sm mt-3 text-green-800 bg-green-50 rounded-lg px-3 py-2">✓ {campaigns.length} campaign{campaigns.length > 1 ? 's' : ''} already here: {campaigns.map((c) => c.name).join(', ')}</p>}
       </Panel>
 

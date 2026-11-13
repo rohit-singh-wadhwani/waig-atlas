@@ -10,14 +10,15 @@ export function Card({ children, className = '', pad = true }: { children: React
   return <div className={cx('bg-white border border-gray-200 rounded-2xl shadow-card', pad && 'p-6', className)}>{children}</div>;
 }
 
+/** Card title row: title and any controls on one line; the description below spans the full width of the card. */
 export function CardHeader({ title, subtitle, right }: { title: React.ReactNode; subtitle?: React.ReactNode; right?: React.ReactNode }) {
   return (
-    <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
-      <div className="min-w-[160px] flex-1">
-        <h3 className="text-[17px] font-semibold text-gray-900">{title}</h3>
-        {subtitle && <p className="text-sm text-gray-500 mt-1">{subtitle}</p>}
+    <div className="mb-4">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+        <h3 className="text-[17px] font-semibold text-gray-900 min-w-0">{title}</h3>
+        {right && <div className="flex flex-wrap items-center gap-2 max-w-full min-w-0">{right}</div>}
       </div>
-      {right && <div className="flex flex-wrap items-center gap-2 shrink-0 max-w-full min-w-0">{right}</div>}
+      {subtitle && <p className="text-sm text-gray-500 mt-1">{subtitle}</p>}
     </div>
   );
 }
