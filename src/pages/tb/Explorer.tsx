@@ -70,11 +70,16 @@ export default function Explorer({ data, goTab }: { data: TbData; goTab: (t: str
     return { ...g, features: g.features.map((f: any) => ({ ...f, properties: { ...f.properties, ...byId.get(f.properties.id), parts: undefined } })) };
   }, [dist.data.geo, byId]);
   const dBreaks = useMemo(() => breaksFor(list.map((x) => x.expected_100k)), [list]);
-  const hexFc = useMemo(() => (det ? { type: 'FeatureCollection', features: det.hexes.map((h) => ({ type: 'Feature', properties: { p: h.p, e: h.e, k: h.k, f: h.f, w: h.w }, geometry: { type: 'Polygon', coordinates: [[...h.r, h.r[0]]] } })) } : null), [det]);
-  const hBreaks = useMemo(() => (det ? breaksFor(det.hexes.map((h) => h.k)) : []), [det]);
+  const townHexes = useMemo(() => {
+    if (!det || !town) return [];
+    const r = town.radius_km + 1.5;
+    return det.hexes.filter((h) => { const c = h.r[0]; return distKm({ lon: c[0], lat: c[1] }, town) <= r; });
+  }, [det, town]);
+  const hexFc = useMemo(() => (town ? { type: 'FeatureCollection', features: townHexes.map((h) => ({ type: 'Feature', properties: { p: h.p, e: h.e, k: h.k, f: h.f, w: h.w }, geometry: { type: 'Polygon', coordinates: [[...h.r, h.r[0]]] } })) } : null), [town, townHexes]);
+  const hBreaks = useMemo(() => breaksFor(townHexes.map((h) => h.k)), [townHexes]);
   const townFc = useMemo(() => (det ? { type: 'FeatureCollection', features: det.towns.slice(0, town ? 400 : 60).map((t) => ({ type: 'Feature', properties: { ...t, key: townKey(t) }, geometry: { type: 'Point', coordinates: [t.lon, t.lat] } })) } : null), [det, town]);
   const venueFc = useMemo(() => ({ type: 'FeatureCollection', features: venues.map((v) => ({ type: 'Feature', properties: { ...v, key: venueKey(v) }, geometry: { type: 'Point', coordinates: [v.lon, v.lat] } })) }), [venues]);
-  const facFc = useMemo(() => (det ? { type: 'FeatureCollection', features: det.facilities.map((f) => ({ type: 'Feature', properties: f, geometry: { type: 'Point', coordinates: [f.lon, f.lat] } })) } : null), [det]);
+  const facFc = useMemo(() => (det && town ? { type: 'FeatureCollection', features: det.facilities.filter((f) => distKm(f, town) <= town.radius_km + 3).map((f) => ({ type: 'Feature', properties: f, geometry: { type: 'Point', coordinates: [f.lon, f.lat] } })) } : null), [det, town]);
   const fit = useMemo<[number, number, number, number]>(() => {
     if (town) {
       const r = town.radius_km + 1.2, dLat = r / 110.57, dLon = r / (111.32 * Math.cos((town.lat * Math.PI) / 180));
@@ -114,7 +119,7 @@ export default function Explorer({ data, goTab }: { data: TbData; goTab: (t: str
             <ExplorerMap districts={geo} districtMetric="expected_100k" districtBreaks={dBreaks} focusId={districtId} hexes={hexFc} hexBreaks={hBreaks} towns={townFc} venues={venueFc} facilities={facFc}
               picked={picked} focusTown={tKey} fit={fit} onDistrict={(pr) => setDistrictId(pr.id)} onTown={(pr) => setTKey(pr.key)} onVenue={onVenue} tooltip={tip} />
           </div>
-          <MapLegend level={!d ? 'ghana' : 'district'} breaks={!d ? dBreaks : hBreaks} />
+          <MapLegend level={!d ? 'ghana' : town ? 'town' : 'district'} breaks={!d ? dBreaks : hBreaks} />
         </div>
         <aside className="min-w-0 space-y-4">
           {!d && <GhanaPanel list={list} nat={nat} natRate={natRate} rank={rank} campaigns={campaigns.data} notified={dist.data.notifiedDistricts} onOpen={setDistrictId} goTab={goTab} data={data} />}
@@ -136,14 +141,23 @@ function Crumb({ children, on, active }: { children: React.ReactNode; on?: () =>
   return active ? <span className="font-semibold text-gray-900">{children}</span> : <button type="button" onClick={on} className="text-brand-700 hover:underline">{children}</button>;
 }
 
-function MapLegend({ level, breaks }: { level: 'ghana' | 'district'; breaks: number[] }) {
+function MapLegend({ level, breaks }: { level: 'ghana' | 'district' | 'town'; breaks: number[] }) {
+  if (level === 'district') {
+    return (
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-gray-600 mt-3">
+        <span className="inline-flex items-center gap-1.5"><span className="w-3 h-3 rounded-full border-2 border-gray-900 bg-white" />Town (size = people)</span>
+        <span className="inline-flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-[#7c3aed]" />Market, station, prison or mine</span>
+        <span>Click a town to see its neighbourhoods and screening spots.</span>
+      </div>
+    );
+  }
   const fmt = (v: number) => (level === 'ghana' ? fmtInt(v) : v < 1 ? v.toFixed(2) : v.toFixed(1));
   const labels = breaks.length ? [`< ${fmt(breaks[0])}`, ...breaks.slice(0, -1).map((b, i) => `${fmt(b)}–${fmt(breaks[i + 1])}`), `> ${fmt(breaks[breaks.length - 1])}`] : [];
   return (
     <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-gray-600 mt-3">
       <span className="font-medium text-gray-700">{level === 'ghana' ? 'Expected TB cases per 100,000 a year' : 'Expected cases per km² a year'}</span>
       {labels.map((l, i) => <span key={i} className="inline-flex items-center gap-1.5"><span className="w-3.5 h-3.5 rounded-sm" style={{ background: TB_RAMP[Math.min(i, TB_RAMP.length - 1)] }} />{l}</span>)}
-      {level === 'district' && (
+      {level === 'town' && (
         <>
           <span className="inline-flex items-center gap-1.5"><span className="w-3 h-3 rounded-full border-2 border-gray-900 bg-white" />Town</span>
           <span className="inline-flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-[#1d4ed8]" />Health facility</span>
@@ -266,7 +280,8 @@ function DistrictPanel({ d, det, loading, rank, n, venues, campaigns, onTown, ru
   const reported = useData(loadReportedRegions, [], {} as Record<string, { period: string; tb: number }[]>);
   const series = reported.data[d.region] || null;
   const [allTowns, setAllTowns] = useState(false);
-  const towns: TbTown[] = det ? [...det.towns].sort((x: TbTown, y: TbTown) => y.expected - x.expected) : [];
+  const [tSort, setTSort] = useState<'cases' | 'far'>('cases');
+  const towns: TbTown[] = det ? [...det.towns].sort((x: TbTown, y: TbTown) => (tSort === 'cases' ? y.expected - x.expected : (y.facility_km ?? 0) - (x.facility_km ?? 0))) : [];
   const key = venues.filter((v) => v.kind === 'prison' || v.kind === 'mine / quarry');
   return (
     <>
@@ -279,26 +294,9 @@ function DistrictPanel({ d, det, loading, rank, n, venues, campaigns, onTown, ru
         </div>
       </Panel>
 
-      <Panel title="Why this district" sub={`Where it sits among Ghana's ${n} districts`}>
-        <ul className="space-y-3">
-          <Driver label="Age and sex mix" value={d.age_effect != null ? `${signedPct(d.age_effect)} TB vs Ghana` : '—'} note={d.adults != null ? `${Math.round(d.adults * 100)}% adults, ${Math.round((d.male || 0) * 100)}% male · Census 2021` : 'Census 2021'} />
-          <Driver label="Regional HIV, undernourishment, smoking" value={d.risk_effect != null ? `${signedPct(d.risk_effect)} TB vs Ghana` : '—'} note={`${d.region} region (DHS): HIV ${d.hiv ?? '—'}%, thin adults ${d.thin ?? '—'}%, tobacco ${d.smoke ?? '—'}%`} />
-          {SIGNALS.map((s) => {
-            const v = d[s.key] as number | null;
-            const r = rank[s.key as string]?.get(d.id);
-            return <Driver key={s.key as string} label={s.label} value={v != null ? s.fmt(v) : '—'} note={s.source} pos={r} />;
-          })}
-        </ul>
-      </Panel>
-
-      <Panel title="Recommended approach" right={<Badge className={a.cls}>{a.short}</Badge>}>
-        <p className="text-[15px] font-medium text-gray-900">{a.label}</p>
-        <p className="text-sm text-gray-600 mt-1">{a.how}</p>
-        <p className="text-xs text-gray-500 mt-2">Rule: {rules.walkFarShare != null ? `${Math.round(rules.walkFarShare * 100)}%+ of people over 1 hour's walk → outreach` : ''}{rules.lowDetection != null ? `; notified below ${Math.round(rules.lowDetection * 100)}% of expected → fix detection` : ''}. {a.who}</p>
-      </Panel>
-
-      <Panel title="Towns to visit" sub="Ranked by expected TB cases among people living there. Click one to plan screening.">
-        {loading && !det ? <p className="text-sm text-gray-500">Loading…</p> : !towns.length ? <p className="text-sm text-gray-500">No towns mapped in OpenStreetMap for this district.</p> : (
+      <Panel title="Towns to start with" sub="Click a town to see its neighbourhoods and screening spots."
+        right={<div className="flex rounded-lg bg-gray-100 p-0.5 text-sm shrink-0">{(['cases', 'far'] as const).map((k) => <button key={k} type="button" onClick={() => setTSort(k)} className={cx('px-2.5 py-1 rounded-md whitespace-nowrap', tSort === k ? 'bg-white shadow-sm font-medium' : 'text-gray-600')}>{k === 'cases' ? 'Most cases' : 'Farthest from care'}</button>)}</div>}>
+        {loading && !det ? <p className="text-sm text-gray-500">Loading…</p> : !det ? <p className="text-sm text-amber-800 bg-amber-50 rounded-lg px-3 py-2">Town details for this district could not be loaded. The district figures above are still correct.</p> : !towns.length ? <p className="text-sm text-gray-500">No towns or villages are mapped in OpenStreetMap for this district.</p> : (
           <>
             <ol className="divide-y divide-gray-100 -mx-1">
               {towns.slice(0, allTowns ? towns.length : 8).map((t, i) => (
@@ -319,7 +317,25 @@ function DistrictPanel({ d, det, loading, rank, n, venues, campaigns, onTown, ru
         )}
       </Panel>
 
-      {(key.length > 0 || d.facilities > 0) && (
+      <Panel title="Why this district" sub={`Where it sits among Ghana's ${n} districts`}>
+        <ul className="space-y-3">
+          <Driver label="Age and sex mix" value={d.age_effect != null ? `${signedPct(d.age_effect)} TB vs Ghana` : '—'} note={d.adults != null ? `${Math.round(d.adults * 100)}% adults, ${Math.round((d.male || 0) * 100)}% male · Census 2021` : 'Census 2021'} />
+          <Driver label="Regional HIV, undernourishment, smoking" value={d.risk_effect != null ? `${signedPct(d.risk_effect)} TB vs Ghana` : '—'} note={`${d.region} region (DHS): HIV ${d.hiv ?? '—'}%, thin adults ${d.thin ?? '—'}%, tobacco ${d.smoke ?? '—'}%`} />
+          {SIGNALS.map((s) => {
+            const v = d[s.key] as number | null;
+            const r = rank[s.key as string]?.get(d.id);
+            return <Driver key={s.key as string} label={s.label} value={v != null ? s.fmt(v) : '—'} note={s.source} pos={r} />;
+          })}
+        </ul>
+      </Panel>
+
+      <Panel title="Recommended approach" right={<Badge className={a.cls}>{a.short}</Badge>}>
+        <p className="text-[15px] font-medium text-gray-900">{a.label}</p>
+        <p className="text-sm text-gray-600 mt-1">{a.how}</p>
+        <p className="text-xs text-gray-500 mt-2">Rule: {rules.walkFarShare != null ? `${Math.round(rules.walkFarShare * 100)}%+ of people over 1 hour's walk → outreach` : ''}{rules.lowDetection != null ? `; notified below ${Math.round(rules.lowDetection * 100)}% of expected → fix detection` : ''}. {a.who}</p>
+      </Panel>
+
+      {det && (key.length > 0 || d.facilities > 0) && (
         <Panel title="Settings and services" sub="OpenStreetMap; may be incomplete">
           <div className="grid grid-cols-3 gap-2.5 mb-3">
             <Stat label="Facilities" value={d.facilities} sub={`${d.hospitals} hospitals`} basis="measured" />
@@ -421,7 +437,7 @@ function TownPanel({ d, town, venues, facilities, picked, toggle, campaigns, onP
         )}
         <div className="sticky bottom-0 bg-white pt-3 mt-2 border-t border-gray-100 flex items-center justify-between gap-3">
           <span className="text-sm text-gray-600">{picked.length ? `${picked.length} spot${picked.length > 1 ? 's' : ''} selected` : 'Select spots, or plan for the whole town'}</span>
-          <Button variant="primary" icon="target" onClick={onPlan}>Plan campaign</Button>
+          <Button variant="primary" icon="target" className="whitespace-nowrap shrink-0" onClick={onPlan}>Plan campaign</Button>
         </div>
       </Panel>
 

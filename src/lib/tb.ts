@@ -50,7 +50,8 @@ export type Dhims2Status = { checked_at: string; connected: boolean; configured?
 const json = async (f: string) => {
   const r = await fetch(dataUrl('tb/' + f), { cache: 'no-cache' });
   if (!r.ok) throw new Error(`${f}: ${r.status}`);
-  return r.json();
+  // older pipeline runs wrote NaN for missing values, which strict JSON rejects
+  return JSON.parse((await r.text()).replace(/\bNaN\b/g, 'null'));
 };
 
 export async function loadTbPublic() {
