@@ -48,6 +48,7 @@ export default function Explorer({ data, goTab }: { data: TbData; goTab: (t: str
   const [selHex, setSelHex] = useState<string[]>([]);
   const [pins, setPins] = useState<Pin[]>([]);
   const [pinMode, setPinMode] = useState(false);
+  const [satellite, setSatellite] = useState(false);
   const [planning, setPlanning] = useState(false);
   const [created, setCreated] = useState<string | null>(null);
   const d = districtId ? byId.get(districtId) || null : null;
@@ -104,7 +105,7 @@ export default function Explorer({ data, goTab }: { data: TbData; goTab: (t: str
 
   const tip = (pr: any, layer: string) => {
     if (layer === 'd-fill') return districtId ? '' : `<b>${esc(pr.name)}</b> · ${esc(String(pr.region))}<br/>About <b>${fmtInt(Number(pr.expected))}</b> new TB cases a year<br/>${fmtInt(Number(pr.expected_100k))} per 100,000 (${signedPct(Number(pr.vs_ghana))} vs Ghana)<br/><i>Click to open</i>`;
-    if (layer === 'h-fill') return `${fmtInt(Number(pr.p))} people · ≈${Number(pr.e).toFixed(1)} TB cases a year<br/>Nearest facility ${kmFmt(Number(pr.f))}<br/><i>${pinMode ? (selHex.includes(pr.h) ? 'Click to drop a screening point here' : 'Select this hexagon first') : selHex.includes(pr.h) ? 'Click to unselect' : 'Click to select'}</i>`;
+    if (layer === 'h-fill') return `${fmtInt(Number(pr.p))} people <span style="color:#6b7280">(WorldPop 2026)</span><br/>≈${Number(pr.e).toFixed(1)} TB cases a year <span style="color:#6b7280">(estimate: people × district rate)</span><br/>Nearest facility ${kmFmt(Number(pr.f))} <span style="color:#6b7280">(OpenStreetMap, straight line)</span><br/><i>${pinMode ? (selHex.includes(pr.h) ? 'Click to drop a screening point here' : 'Select this hexagon first') : selHex.includes(pr.h) ? 'Click to unselect' : 'Click to select'}</i>`;
     if (layer === 'pins') return `<b>${esc(pr.name)}</b><br/>Screening point you placed`;
     if (layer === 'town-fill' && (pr.nodata === true || pr.nodata === 'true')) return town ? '' : `<b>${esc(pr.name)}</b> (${esc(pr.place)})<br/>No population mapped in this area<br/><i>Click to open</i>`;
     if (layer === 'town-fill') return town ? '' : `<b>${esc(pr.name)}</b> (${esc(pr.place)})<br/>${fmtInt(Number(pr.pop))} people · ≈${Number(pr.expected).toFixed(0)} TB cases a year<br/><i>Click to open</i>`;
@@ -139,9 +140,12 @@ export default function Explorer({ data, goTab }: { data: TbData; goTab: (t: str
       </nav>
       <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_460px] gap-5 items-start">
         <div className="xl:sticky xl:top-4">
-          <div className="h-[440px] md:h-[560px] xl:h-[calc(100vh-170px)] xl:min-h-[560px]">
+          <div className="relative h-[440px] md:h-[560px] xl:h-[calc(100vh-170px)] xl:min-h-[560px]">
+            <div className="absolute top-2.5 left-2.5 z-10 inline-flex rounded-lg border border-gray-200 bg-white p-0.5 text-sm shadow-sm">
+              {[['Map', false], ['Satellite', true]].map(([l, v]) => <button key={String(l)} type="button" onClick={() => setSatellite(v as boolean)} className={cx('px-2.5 py-1 rounded-md', satellite === v ? 'bg-gray-900 text-white' : 'text-gray-700 hover:bg-gray-50')}>{l}</button>)}
+            </div>
             <ExplorerMap districts={geo} districtMetric="expected_100k" districtBreaks={dBreaks} focusId={districtId} hexes={hexFc} hexBreaks={hBreaks} towns={townFc} townBreaks={tBreaks} venues={venueFc} facilities={facFc}
-              picked={picked} focusTown={tKey} selectedHexes={selHex} pins={pinFc} pinMode={pinMode} onHex={toggleHex} onPin={dropPin} fit={fit} onDistrict={(pr) => setDistrictId(pr.id)} onTown={(pr) => setTKey(pr.key)} onVenue={onVenue} tooltip={tip} />
+              picked={picked} focusTown={tKey} selectedHexes={selHex} pins={pinFc} pinMode={pinMode} onHex={toggleHex} onPin={dropPin} satellite={satellite} fit={fit} onDistrict={(pr) => setDistrictId(pr.id)} onTown={(pr) => setTKey(pr.key)} onVenue={onVenue} tooltip={tip} />
           </div>
           <MapLegend level={!d ? 'ghana' : town ? 'town' : 'district'} breaks={!d ? dBreaks : town ? hBreaks : tBreaks} />
         </div>
@@ -202,12 +206,18 @@ function Panel({ title, sub, right, children, className }: { title?: React.React
   );
 }
 
-function Stat({ label, value, sub, basis }: { label: string; value: React.ReactNode; sub?: React.ReactNode; basis?: 'reported' | 'measured' | 'estimated' }) {
+/** A figure with where it comes from: click the tag to see the dataset and calculation. */
+function Stat({ label, value, sub, basis, how }: { label: string; value: React.ReactNode; sub?: React.ReactNode; basis?: 'reported' | 'measured' | 'estimated'; how?: string }) {
+  const [open, setOpen] = useState(false);
   return (
     <div className="rounded-xl bg-gray-50 p-3 min-w-0">
-      <div className="flex items-center justify-between gap-2 text-xs text-gray-500"><span>{label}</span>{basis && <BasisTag b={basis} />}</div>
+      <div className="flex items-center justify-between gap-2 text-xs text-gray-500">
+        <span>{label}</span>
+        {basis && (how ? <button type="button" onClick={() => setOpen(!open)} aria-expanded={open} title="How this is worked out" className="inline-flex items-center gap-0.5"><BasisTag b={basis} /><Icon name="chevronDown" size={12} className={cx('transition-transform', open && 'rotate-180')} /></button> : <BasisTag b={basis} />)}
+      </div>
       <div className="text-lg font-semibold text-gray-900 tabular-nums mt-0.5">{value}</div>
       {sub && <div className="text-xs text-gray-500 mt-0.5">{sub}</div>}
+      {open && how && <div className="text-xs text-gray-600 mt-2 pt-2 border-t border-gray-200 leading-relaxed">{how}</div>}
     </div>
   );
 }
@@ -235,9 +245,9 @@ function GhanaPanel({ list, nat, natRate, rank, campaigns, notified, onOpen, goT
     <>
       <Panel title="Ghana" sub={nat ? `WHO estimate for ${nat.year}` : ''}>
         <div className="grid grid-cols-2 gap-2.5">
-          <Stat label="New TB cases a year" value={fmtInt(nat?.incidence)} basis="reported" sub={natRate ? `${fmtInt(natRate)} per 100,000` : undefined} />
-          <Stat label="Found and notified" value={fmtInt(nat?.notified)} basis="reported" sub={nat ? `${Math.round(nat.cdr * 100)}% of expected` : ''} />
-          <Stat label="Missed each year" value={fmtInt(nat ? nat.incidence - nat.notified : null)} basis="estimated" sub="Expected minus notified" />
+          <Stat label="New TB cases a year" value={fmtInt(nat?.incidence)} basis="reported" sub={natRate ? `${fmtInt(natRate)} per 100,000` : undefined} how={`WHO Global TB Programme estimate for Ghana, ${nat?.year ?? 'latest year'}. WHO\'s own uncertainty range: ${fmtInt(nat?.incidence_lo)}–${fmtInt(nat?.incidence_hi)}. Rate = cases ÷ WHO population (${fmtInt(nat?.pop)}) × 100,000.`} />
+          <Stat label="Found and notified" value={fmtInt(nat?.notified)} basis="reported" sub={nat ? `${Math.round(nat.cdr * 100)}% of expected` : ''} how={`Cases notified to WHO by Ghana\'s National TB Programme, ${nat?.year ?? ''}. Share found = notified ÷ WHO estimated cases.`} />
+          <Stat label="Missed each year" value={fmtInt(nat ? nat.incidence - nat.notified : null)} basis="estimated" sub="Expected minus notified" how="WHO estimated cases minus cases notified, same year. Inherits WHO's wide uncertainty range on the estimate." />
           <Stat label="Campaigns running" value={active.length} sub={<button type="button" className="text-brand-700 hover:underline" onClick={() => goTab('campaigns')}>{campaigns.length} in total</button>} />
         </div>
         {!notified && <p className="text-xs text-amber-800 bg-amber-50 rounded-lg px-3 py-2 mt-3">District notifications are not connected yet (needs DHIMS2), so district figures are expected cases, not measured gaps.</p>}
@@ -308,10 +318,10 @@ function DistrictPanel({ d, det, loading, rank, n, venues, campaigns, onTown, ru
     <>
       <Panel title={d.name} sub={`${d.region} · ${fmtInt(d.pop)} people (2026) · ${d.urban != null ? `${Math.round(d.urban * 100)}% urban` : ''}`}>
         <div className="grid grid-cols-2 gap-2.5">
-          <Stat label="Expected new cases a year" value={fmtInt(d.expected)} basis="estimated" sub={`${(d.share * 100).toFixed(1)}% of Ghana's cases`} />
-          <Stat label="Rate per 100,000" value={fmtInt(d.expected_100k)} basis="estimated" sub={<span className={d.vs_ghana >= 1 ? 'text-red-700' : 'text-green-700'}>{signedPct(d.vs_ghana)} vs Ghana</span>} />
-          <Stat label="Notified a year" value={d.notified != null ? fmtInt(d.notified) : 'Not connected'} basis="reported" sub={d.notified != null ? `${pctFmt(d.detection)} of expected` : 'Needs DHIMS2'} />
-          <Stat label="Our screening here" value={d.screened ? `${fmtInt(d.confirmed)} found` : 'None yet'} basis="reported" sub={d.screened ? `${fmtInt(d.screened)} screened` : `${campaigns.length} campaign${campaigns.length === 1 ? '' : 's'}`} />
+          <Stat label="Expected new cases a year" value={fmtInt(d.expected)} basis="estimated" sub={`${(d.share * 100).toFixed(1)}% of Ghana's cases`} how="WHO 2024 rates by age group and sex × this district's population by age and sex (2021 Census), × a regional risk factor (DHS 2022/2014 rates of HIV, thinness and smoking vs Ghana, weighted by WHO's share of cases linked to each), grown to 2026 with WorldPop and scaled so all districts add up to WHO's national total." />
+          <Stat label="Rate per 100,000" value={fmtInt(d.expected_100k)} how="Expected cases (above) ÷ 2026 population (WorldPop) × 100,000, compared with Ghana's rate." sub={<span className={d.vs_ghana >= 1 ? 'text-red-700' : 'text-green-700'}>{signedPct(d.vs_ghana)} vs Ghana</span>} />
+          <Stat label="Notified a year" value={d.notified != null ? fmtInt(d.notified) : 'Not connected'} basis="reported" sub={d.notified != null ? `${pctFmt(d.detection)} of expected` : 'Needs DHIMS2'} how="From DHIMS2 (live sync) or district reports uploaded on the Data sources tab, last 12 months. Share = notified ÷ expected cases." />
+          <Stat how="Sum of results entered for campaigns in this district (Campaigns & tasks tab)." label="Our screening here" value={d.screened ? `${fmtInt(d.confirmed)} found` : 'None yet'} basis="reported" sub={d.screened ? `${fmtInt(d.screened)} screened` : `${campaigns.length} campaign${campaigns.length === 1 ? '' : 's'}`} />
         </div>
       </Panel>
 
@@ -364,9 +374,9 @@ function DistrictPanel({ d, det, loading, rank, n, venues, campaigns, onTown, ru
       {det && (key.length > 0 || d.facilities > 0) && (
         <Panel title="Settings and services" sub="OpenStreetMap; may be incomplete">
           <div className="grid grid-cols-3 gap-2.5 mb-3">
-            <Stat label="Facilities" value={d.facilities} sub={`${d.hospitals} hospitals`} basis="measured" />
-            <Stat label="Labs" value={d.labs} basis="measured" />
-            <Stat label="Markets, stations" value={d.markets + d.hubs} basis="measured" />
+            <Stat label="Facilities" value={d.facilities} sub={`${d.hospitals} hospitals`} basis="measured" how="Count of health facilities mapped in OpenStreetMap inside the district boundary. OpenStreetMap can miss small facilities." />
+            <Stat label="Labs" value={d.labs} basis="measured" how="OpenStreetMap facilities tagged as a laboratory inside the district. Does not show GeneXpert sites specifically." />
+            <Stat label="Markets, stations" value={d.markets + d.hubs} basis="measured" how="Markets plus lorry/bus stations mapped in OpenStreetMap inside the district." />
           </div>
           {key.length > 0 && <ul className="space-y-1.5 text-sm">{key.map((v: TbVenue) => <li key={venueKey(v)} className="flex justify-between gap-3"><span className="truncate">{v.name || KIND_LABEL[v.kind]}<span className="text-gray-500"> · {KIND_LABEL[v.kind]}</span></span><span className="text-gray-500 shrink-0">key population</span></li>)}</ul>}
         </Panel>
@@ -446,10 +456,10 @@ function TownPanel({ d, town, venues, hexes, selHex, clearHex, pins, setPins, pi
     <>
       <Panel title={town.name} sub={`${town.place} in ${d.name}`}>
         <div className="grid grid-cols-2 gap-2.5">
-          <Stat label="People living here" value={fmtInt(town.pop)} basis="measured" sub={town.area_km2 ? `${town.area_km2} km² area` : undefined} />
-          <Stat label="Expected TB cases a year" value={`≈${fmtInt(town.expected)}`} basis="estimated" />
-          <Stat label="Nearest health facility" value={kmFmt(town.facility_km)} basis="measured" sub={town.walk_min != null ? `${town.walk_min < 5 ? 'under 5' : fmtInt(town.walk_min)} min walk` : undefined} />
-          <Stat label="Nearest hospital" value={kmFmt(town.hospital_km)} basis="measured" sub={town.drive_min != null ? `${fmtInt(town.drive_min)} min drive` : undefined} />
+          <Stat label="People living here" value={fmtInt(town.pop)} how="WorldPop 2026 population (100 m grid) summed over this town's area. The town area is the part of the district nearer to this OpenStreetMap place than to any other." sub={town.area_km2 ? `${town.area_km2} km² area` : undefined} />
+          <Stat label="Expected TB cases a year" value={`≈${fmtInt(town.expected)}`} basis="estimated" how="People living here × the district's expected rate per person. Assumes TB is spread evenly by population within the district." />
+          <Stat label="Nearest health facility" value={kmFmt(town.facility_km)} how="Straight-line distance from the town centre to the nearest OpenStreetMap clinic or hospital. Walking time from the Malaria Atlas Project walking-only travel-time map (2020)." basis="measured" sub={town.walk_min != null ? `${town.walk_min < 5 ? 'under 5' : fmtInt(town.walk_min)} min walk` : undefined} />
+          <Stat label="Nearest hospital" value={kmFmt(town.hospital_km)} how="Straight-line distance to the nearest OpenStreetMap hospital. Driving time from the Malaria Atlas Project motorised travel-time map (2020)." basis="measured" sub={town.drive_min != null ? `${fmtInt(town.drive_min)} min drive` : undefined} />
         </div>
         {town.nodata && <p className="text-sm mt-3 text-gray-700 bg-gray-50 rounded-lg px-3 py-2">No population is mapped in this area, so there are no estimates. If people live here, screening can still be planned.</p>}
         {campaigns.length > 0 && <p className="text-sm mt-3 text-green-800 bg-green-50 rounded-lg px-3 py-2">✓ {campaigns.length} campaign{campaigns.length > 1 ? 's' : ''} already here: {campaigns.map((c) => c.name).join(', ')}</p>}
@@ -459,9 +469,9 @@ function TownPanel({ d, town, venues, hexes, selHex, clearHex, pins, setPins, pi
         right={selHex.length > 0 && <button type="button" className="text-sm text-brand-700 hover:underline" onClick={clearHex}>Clear</button>}>
         {!selHex.length ? <p className="text-sm text-gray-500">None selected: the whole town is covered.</p> : (
           <div className="grid grid-cols-3 gap-2.5">
-            <Stat label="Hexagons" value={String(selHex.length)} basis="measured" sub={`≈${(selHex.length * 0.74).toFixed(1)} km²`} />
-            <Stat label="People" value={fmtInt(selPop)} basis="measured" />
-            <Stat label="Expected cases a year" value={`≈${selExp < 10 ? selExp.toFixed(1) : fmtInt(selExp)}`} basis="estimated" />
+            <Stat label="Hexagons" value={String(selHex.length)} how="Uber H3 hexagons at resolution 8, about 0.74 km² each." basis="measured" sub={`≈${(selHex.length * 0.74).toFixed(1)} km²`} />
+            <Stat label="People" value={fmtInt(selPop)} basis="measured" how="WorldPop 2026 population (100 m grid) summed over the selected hexagons." />
+            <Stat label="Expected cases a year" value={`≈${selExp < 10 ? selExp.toFixed(1) : fmtInt(selExp)}`} basis="estimated" how="People in the selected hexagons × the district's expected rate per person." />
           </div>
         )}
       </Panel>

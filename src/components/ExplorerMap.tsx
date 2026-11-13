@@ -16,6 +16,8 @@ export function breaksFor(values: number[], classes = 6) {
   return Array.from(new Set(out));
 }
 const BASEMAP_STYLE = 'https://tiles.openfreemap.org/styles/positron';
+// Esri World Imagery: free satellite tiles, no key; credited in the map's attribution.
+const SATELLITE = { type: 'raster', tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'], tileSize: 256, maxzoom: 18, attribution: 'Imagery © Esri, Maxar, Earthstar Geographics' };
 const EMPTY = { type: 'FeatureCollection', features: [] };
 
 function step(prop: string, breaks: number[]) {
@@ -48,6 +50,7 @@ export type ExplorerMapProps = {
   onTown?: (p: any) => void;
   onVenue?: (p: any) => void;
   tooltip?: (p: any, layer: string) => string;
+  satellite?: boolean;
   height?: number | string;
 };
 
@@ -70,6 +73,8 @@ export default function ExplorerMap(p: ExplorerMapProps) {
     m.on('load', () => {
       clearTimeout(fallback);
       const below = (m.getStyle().layers || []).find((l: any) => l.type === 'symbol')?.id;
+      m.addSource('satellite', SATELLITE);
+      m.addLayer({ id: 'satellite', type: 'raster', source: 'satellite', layout: { visibility: 'none' } }, below);
       for (const id of ['districts', 'towns', 'hexes', 'townlabels', 'venues', 'facilities', 'pins']) m.addSource(id, { type: 'geojson', data: EMPTY, ...(id === 'districts' ? { promoteId: 'id' } : {}) });
       m.addLayer({ id: 'd-fill', type: 'fill', source: 'districts', paint: { 'fill-color': TB_RAMP[1], 'fill-opacity': 0.75 } }, below);
       m.addLayer({ id: 'd-line', type: 'line', source: 'districts', paint: { 'line-color': '#ffffff', 'line-width': 0.7 } }, below);
@@ -153,6 +158,12 @@ export default function ExplorerMap(p: ExplorerMapProps) {
     // an opened town shows its hexagons; neighbouring towns stay visible but faded
     m.setPaintProperty('town-fill', 'fill-opacity', p.focusTown ? ['case', ['==', ['get', 'key'], p.focusTown], 0, 0.28] : 0.75);
   }, [ready, p.districtMetric, p.districtBreaks, p.focusId, p.hexBreaks, p.townBreaks, p.focusTown]);
+
+  useEffect(() => {
+    const m = map.current;
+    if (!ready || !m) return;
+    m.setLayoutProperty('satellite', 'visibility', p.satellite ? 'visible' : 'none');
+  }, [ready, p.satellite]);
 
   useEffect(() => {
     const m = map.current;
