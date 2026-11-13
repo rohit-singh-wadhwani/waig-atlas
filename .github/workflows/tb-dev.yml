@@ -44,7 +44,7 @@ jobs:
           top = sorted(d, key=lambda x: -x['expected_100k'])[:10]; print('top rate', [(x['name'], x['expected_100k'], x['vs_ghana']) for x in top])
           top = sorted(d, key=lambda x: -x['expected'])[:10]; print('top count', [(x['name'], x['expected']) for x in top])
           sz = sum(os.path.getsize(os.path.join('public/data/tb/d', f)) for f in os.listdir('public/data/tb/d')); print('district files MB', round(sz / 1e6, 1), len(os.listdir('public/data/tb/d')))
-          x = json.load(open('public/data/tb/d/' + top[0]['id'] + '.json')); print('sample', top[0]['id'], len(x['hexes']), len(x['towns']), len(x['venues']), len(x['facilities'])); print(x['towns'][:3]); print(x['venues'][:3])
+          x = json.load(open('public/data/tb/d/' + top[0]['id'] + '.json')); print('sample', top[0]['id'], len(x['hexes']), len(x['towns']), len(x['venues']), len(x['facilities'])); print([{k: v for k, v in t.items() if k != 'geom'} for t in x['towns'][:3]]); print(x['venues'][:3])
           PY
       - name: Commit outputs to this branch
         run: |

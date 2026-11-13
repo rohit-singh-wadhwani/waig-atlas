@@ -38,7 +38,8 @@ import shapefile
 import h3
 from rasterio.features import rasterize
 from scipy.spatial import cKDTree
-from shapely.geometry import shape, mapping, Point
+from shapely.geometry import shape, mapping, Point, Polygon
+from shapely.ops import unary_union
 from shapely.strtree import STRtree
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -50,7 +51,7 @@ FAR_MIN = 60          # minutes on foot that count as "far from care"
 CATCH_KM = 1.0        # walking catchment of a screening spot
 HEX_RES = 8           # ~0.74 km2 hexagons
 MIN_HEX_POP = 30      # skip near-empty hexagons
-TOWN_R = {'city': 3.0, 'town': 2.0, 'suburb': 1.0, 'village': 1.0, 'hamlet': 0.7}
+TOWN_MAX_KM = 5.0     # a hexagon joins its nearest named place if it is within this distance
 RF_SURVEY = {'hiv': 'hiv', 'und': 'thin', 'smk': 'smoke'}
 WP_URL = 'https://data.worldpop.org/GIS/Population/Global_2015_2030/R2025A/2026/GHA/v1/100m/constrained/gha_pop_2026_CN_100m_R2025A_v1.tif'
 DD = os.path.join(OUT, 'd')
@@ -472,32 +473,53 @@ def main():
         for j, (cid, pv) in enumerate(hexes):
             ring = [[round(lng, 4), round(lat, 4)] for lat, lng in h3.cell_to_boundary(cid)]
             hex_out.append({'h': cid, 'p': round(pv), 'e': r2(pv * d['rate'], 2), 'k': r2(pv * d['rate'] / hex_area, 2), 'f': r2(hf[j], 2), 'w': r2(hw[j], 0), 'r': ring})
-        # towns
+        rnd = lambda co: [rnd(x) for x in co] if isinstance(co[0], (list, tuple)) else [round(co[0], 4), round(co[1], 4)]
+        for h in hex_out:
+            h['t'] = -1
+        # town areas: every hexagon joins its nearest named town, village or suburb (within TOWN_MAX_KM);
+        # those hexagons together are the town's area, population and expected cases
         tw = d['towns']
-        tf, th, tm, twk = near(None, np.array([t['lon'] for t in tw]), np.array([t['lat'] for t in tw]))
         town_out = []
-        for j, t in enumerate(tw):
-            rad = TOWN_R.get(t['place'], 1.0)
-            pp = people_within(t['lon'], t['lat'], rad)
-            if pp < 300:
-                continue
-            town_out.append({'name': t['name'], 'place': t['place'], 'lon': round(t['lon'], 5), 'lat': round(t['lat'], 5), 'radius_km': rad, 'pop': round(pp),
-                             'expected': r2(pp * d['rate'], 1), 'facility_km': r2(tf[j], 2), 'hospital_km': r2(th[j], 2), 'drive_min': r2(tm[j], 0), 'walk_min': r2(twk[j], 0)})
-        town_out.sort(key=lambda x: -x['pop'])
-        # venues: all congregate sites; community venues limited to the 40 busiest per kind
+        if tw and hex_out:
+            txy = km_xy([t['lon'] for t in tw], [t['lat'] for t in tw], lat0)
+            hxy = km_xy(cen_ll[:, 1], cen_ll[:, 0], lat0)
+            dist_, idx = cKDTree(txy).query(hxy)
+            members = {}
+            for j, (dk, k) in enumerate(zip(dist_, idx)):
+                if dk <= TOWN_MAX_KM:
+                    members.setdefault(int(k), []).append(j)
+            tf, th, tm, twk = near(None, np.array([t['lon'] for t in tw]), np.array([t['lat'] for t in tw]))
+            order = sorted(((k, js, sum(hex_out[j]['p'] for j in js)) for k, js in members.items()), key=lambda x: -x[2])
+            for k, js, pp in order:
+                if pp < 300:
+                    continue
+                ti = len(town_out)
+                for j in js:
+                    hex_out[j]['t'] = ti
+                poly = unary_union([Polygon(hex_out[j]['r']) for j in js]).simplify(0.0003, preserve_topology=True)
+                gj = mapping(poly)
+                t = tw[k]
+                area = len(js) * hex_area
+                town_out.append({'id': ti, 'name': t['name'], 'place': t['place'], 'lon': round(t['lon'], 5), 'lat': round(t['lat'], 5), 'pop': round(pp), 'area_km2': r2(area, 1),
+                                 'radius_km': r2(math.sqrt(area / math.pi), 2), 'expected': r2(sum(hex_out[j]['e'] or 0 for j in js), 1), 'expected_km2': r2(sum(hex_out[j]['e'] or 0 for j in js) / area, 2),
+                                 'facility_km': r2(tf[k], 2), 'hospital_km': r2(th[k], 2), 'drive_min': r2(tm[k], 0), 'walk_min': r2(twk[k], 0),
+                                 'geom': {'type': gj['type'], 'coordinates': rnd(gj['coordinates'])}})
+        cell_town = {h['h']: h['t'] for h in hex_out}
+        # venues: all congregate sites; community venues limited to the 12 busiest per kind in each town
         vs = d['venues']
         vf, vh, vm, vw = near(None, np.array([v['lon'] for v in vs]), np.array([v['lat'] for v in vs]))
         ven = []
         for j, v in enumerate(vs):
             pp = people_within(v['lon'], v['lat'], CATCH_KM)
             ven.append({'name': v['name'], 'kind': v['kind'], 'cong': v['cong'], 'lon': round(v['lon'], 5), 'lat': round(v['lat'], 5), 'pop_1km': round(pp),
+                        't': cell_town.get(h3.latlng_to_cell(v['lat'], v['lon'], HEX_RES), -1),
                         'expected_1km': r2(pp * d['rate'], 1), 'facility_km': r2(vf[j], 2), 'hospital_km': r2(vh[j], 2), 'walk_min': r2(vw[j], 0)})
         keep, per_kind = [], {}
         for v in sorted(ven, key=lambda x: -x['pop_1km']):
             if v['cong']:
                 keep.append(v)
-            elif per_kind.get(v['kind'], 0) < 40:
-                per_kind[v['kind']] = per_kind.get(v['kind'], 0) + 1
+            elif per_kind.get((v['t'], v['kind']), 0) < 12:
+                per_kind[(v['t'], v['kind'])] = per_kind.get((v['t'], v['kind']), 0) + 1
                 keep.append(v)
         for v in keep:
             if v['kind'] in ('prison', 'mine / quarry'):
