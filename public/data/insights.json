@@ -1,5 +1,5 @@
 {
- "updated_at": "2026-11-14T15:57:37.018Z",
+ "updated_at": "2026-11-14T19:05:50.304Z",
  "insights": [
   {
    "id": "6099322fb23e3246",
@@ -2108,18 +2108,6 @@
    "source_id": "pubmed-cough-acoustics",
    "source_name": "PubMed: cough acoustics",
    "kind": "research",
-   "countries": [],
-   "diseases": []
-  },
-  {
-   "id": "75d465aa366f642d",
-   "title": "Ebola disease caused by Bundibugyo virus, Democratic Republic of the Congo & Uganda",
-   "summary": "The Bundibugyo virus disease (BVD) outbreak in the Democratic Republic of the Congo remains active, with sustained transmission driving increases in reported cases and deaths. As of 15 July 2026, a cumulative total of 2124 confirmed cases, including 828 deaths, have been reported from the Democratic",
-   "url": "https://www.who.int/emergencies/disease-outbreak-news/item/2026-DON613",
-   "published_at": "2026-07-17T16:13:00.000Z",
-   "source_id": "who-don",
-   "source_name": "WHO Disease Outbreak News",
-   "kind": "outbreak",
    "countries": [],
    "diseases": []
   }
