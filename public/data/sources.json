@@ -10,7 +10,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-14T03:22:37.807Z",
+  "last_run": "2026-11-14T14:23:37.242Z",
   "last_status": "ok",
   "last_message": "60 items, 0 new",
   "item_count": 60
@@ -26,7 +26,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-14T03:22:37.395Z",
+  "last_run": "2026-11-14T14:23:36.799Z",
   "last_status": "ok",
   "last_message": "60 items, 0 new",
   "item_count": 60
@@ -42,10 +42,10 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-14T03:22:39.547Z",
-  "last_status": "error",
-  "last_message": "HTTP 403 Forbidden for https://grants.nih.gov/grants/guide/newsfeed/fundingopps.xml",
-  "item_count": 0
+  "last_run": "2026-11-14T14:23:36.094Z",
+  "last_status": "ok",
+  "last_message": "3 items, 0 new",
+  "item_count": 3
  },
  {
   "id": "fundsforngos-health",
@@ -74,7 +74,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-14T03:22:39.096Z",
+  "last_run": "2026-11-14T14:23:38.436Z",
   "last_status": "ok",
   "last_message": "20 items, 0 new",
   "item_count": 20
