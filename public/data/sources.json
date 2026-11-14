@@ -122,7 +122,7 @@
   "kind": "news",
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-13T22:02:49.242Z",
+  "last_run": "2026-11-14T01:25:55.100Z",
   "last_status": "ok",
   "last_message": "1 recent items, 0 new",
   "item_count": 1
@@ -138,7 +138,7 @@
   "kind": "outbreak",
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-13T22:02:48.501Z",
+  "last_run": "2026-11-14T01:26:37.207Z",
   "last_status": "ok",
   "last_message": "13 recent items, 0 new",
   "item_count": 13
@@ -154,7 +154,7 @@
   "kind": "news",
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-13T22:02:50.408Z",
+  "last_run": "2026-11-14T01:25:55.630Z",
   "last_status": "ok",
   "last_message": "30 recent items, 0 new",
   "item_count": 30
@@ -170,7 +170,7 @@
   "kind": "research",
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-13T22:02:56.695Z",
+  "last_run": "2026-11-14T01:26:01.801Z",
   "last_status": "ok",
   "last_message": "20 recent items, 0 new",
   "item_count": 20
@@ -186,7 +186,7 @@
   "kind": "research",
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-13T22:02:52.924Z",
+  "last_run": "2026-11-14T01:25:58.719Z",
   "last_status": "ok",
   "last_message": "19 recent items, 0 new",
   "item_count": 19
@@ -202,10 +202,10 @@
   "kind": "social",
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-13T22:02:47.246Z",
-  "last_status": "ok",
-  "last_message": "15 recent items, 0 new",
-  "item_count": 15
+  "last_run": "2026-11-14T01:26:35.957Z",
+  "last_status": "error",
+  "last_message": "HTTP 404 Not Found for https://www.youtube.com/feeds/videos.xml?channel_id=UC07-dOwgza1IguKA86jqxNA",
+  "item_count": 0
  },
  {
   "id": "gemini-ministry-updates",
@@ -218,7 +218,7 @@
   "kind": "social",
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-13T22:02:53.142Z",
+  "last_run": "2026-11-14T01:26:37.534Z",
   "last_status": "error",
   "last_message": "Gemini failed: no model available",
   "item_count": 0
@@ -234,7 +234,7 @@
   "kind": "tender",
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-13T22:02:46.380Z",
+  "last_run": "2026-11-14T01:26:35.494Z",
   "last_status": "error",
   "last_message": "Gemini model gemini-2.5-flash-lite not available",
   "item_count": 0
@@ -346,7 +346,7 @@
   "kind": "tender",
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-13T22:02:54.205Z",
+  "last_run": "2026-11-14T01:25:59.418Z",
   "last_status": "ok",
   "last_message": "40 recent items, 0 new",
   "item_count": 40
