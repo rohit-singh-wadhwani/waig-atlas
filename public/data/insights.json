@@ -1,6 +1,22 @@
 {
- "updated_at": "2026-11-14T04:13:14.334Z",
+ "updated_at": "2026-11-14T07:27:23.107Z",
  "insights": [
+  {
+   "id": "e40c6a90260969ba",
+   "title": "Middle East respiratory syndrome (MERS) – Qatar",
+   "summary": "Qatar reported two laboratory-confirmed cases of MERS-CoV in August 2026, marking the country's first cases since 2022. Both patients had occupational exposure to dromedary camels, and all monitored contacts tested negative.",
+   "url": "https://www.who.int/emergencies/disease-outbreak-news/item/2026-DON626",
+   "published_at": "2026-11-13T19:00:00.000Z",
+   "source_id": "who-don",
+   "source_name": "WHO Disease Outbreak News",
+   "kind": "outbreak",
+   "countries": [
+    "QAT"
+   ],
+   "diseases": [
+    "MERS"
+   ]
+  },
   {
    "id": "3f7bf1b8e45acffe",
    "title": "DR Congo Ebola outbreak: armed groups unrest hold back response",
