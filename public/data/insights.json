@@ -1,6 +1,20 @@
 {
- "updated_at": "2026-11-14T10:04:08.482Z",
+ "updated_at": "2026-11-14T13:14:50.772Z",
  "insights": [
+  {
+   "id": "6099322fb23e3246",
+   "title": "Machine-Learning-Assisted Risk Stratification for Tuberculosis Infection in High-Risk Groups Receiving Immunosuppressive Therapy.",
+   "summary": "This study evaluates machine learning models for risk stratification of tuberculosis infection among patients receiving immunosuppressive therapy. It is relevant for teams developing AI diagnostics and risk prediction tools for TB.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/43028564/",
+   "published_at": "2026-11-14T05:32:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [],
+   "diseases": [
+    "tuberculosis"
+   ]
+  },
   {
    "id": "e40c6a90260969ba",
    "title": "Middle East respiratory syndrome (MERS) – Qatar",
@@ -110,6 +124,34 @@
     "pneumonia",
     "malaria"
    ]
+  },
+  {
+   "id": "308571dbc01f3092",
+   "title": "Project management TA for 4 years",
+   "summary": "A request for expression of interest is announced for project management technical assistance to improve frontline health and education worker performance in Lao PDR.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00481306",
+   "published_at": "2026-11-12T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "LAO"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "f2055d0368bc0a46",
+   "title": "Administration TA for 4 years",
+   "summary": "A request for expression of interest is issued for administrative technical assistance supporting frontline health and education worker performance projects in Lao PDR.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00481308",
+   "published_at": "2026-11-12T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "LAO"
+   ],
+   "diseases": []
   },
   {
    "id": "45975f272b0d4570",
