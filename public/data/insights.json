@@ -1,6 +1,20 @@
 {
- "updated_at": "2026-11-15T04:14:46.857Z",
+ "updated_at": "2026-11-15T07:28:41.126Z",
  "insights": [
+  {
+   "id": "08b2a7b1062ca39c",
+   "title": "MRI Radiomics and Deep Learning for Differentiating Spinal Tuberculosis from Spinal Metastasis: A Multicenter Study.",
+   "summary": "A multicenter study evaluates MRI radiomics and deep learning models to differentiate spinal tuberculosis from spinal metastasis.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/43033258/",
+   "published_at": "2026-11-15T00:57:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [],
+   "diseases": [
+    "Tuberculosis"
+   ]
+  },
   {
    "id": "6099322fb23e3246",
    "title": "Machine-Learning-Assisted Risk Stratification for Tuberculosis Infection in High-Risk Groups Receiving Immunosuppressive Therapy.",
