@@ -1,5 +1,5 @@
 {
- "updated_at": "2026-11-15T10:04:23.053Z",
+ "updated_at": "2026-11-15T13:16:17.654Z",
  "insights": [
   {
    "id": "08b2a7b1062ca39c",
@@ -28,6 +28,42 @@
    "diseases": [
     "tuberculosis"
    ]
+  },
+  {
+   "id": "689a96e4c1187043",
+   "title": "Reconduite du contrat du Chargé de Projet du Programme HeSP",
+   "summary": "The World Bank awarded a contract extension for the project manager of the Health Security Program in Western and Central Africa.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00481588",
+   "published_at": "2026-11-14T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "781f97a42885149f",
+   "title": "Reconduite du contrat du Spécialiste en Sauvegardes Environnementales et Sociales du Programme HeSP.",
+   "summary": "A contract was renewed for the Environmental and Social Safeguards Specialist under the Health Security Program in Western and Central Africa.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00481587",
+   "published_at": "2026-11-14T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "3044786771cd6e5c",
+   "title": "procurement of Renovation construction of AHRI laboratory (central cleaning and sterilization facility IVD incubation centres , Animal house and Bio equivalence centers)",
+   "summary": "A procurement contract was awarded for laboratory renovation and construction under the Health Emergency Preparedness, Response and Resilience Program in Eastern and Southern Africa.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00481568",
+   "published_at": "2026-11-14T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [],
+   "diseases": []
   },
   {
    "id": "e40c6a90260969ba",
