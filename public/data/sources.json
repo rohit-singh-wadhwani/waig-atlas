@@ -10,7 +10,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-16T02:40:24.804Z",
+  "last_run": "2026-11-16T03:40:26.222Z",
   "last_status": "ok",
   "last_message": "60 items, 0 new",
   "item_count": 60
@@ -26,7 +26,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-16T02:40:25.965Z",
+  "last_run": "2026-11-16T03:40:26.696Z",
   "last_status": "ok",
   "last_message": "60 items, 0 new",
   "item_count": 60
@@ -42,7 +42,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-16T02:40:28.468Z",
+  "last_run": "2026-11-16T03:40:28.123Z",
   "last_status": "ok",
   "last_message": "3 items, 0 new",
   "item_count": 3
@@ -74,7 +74,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-16T02:40:27.465Z",
+  "last_run": "2026-11-16T03:40:27.664Z",
   "last_status": "ok",
   "last_message": "20 items, 0 new",
   "item_count": 20
@@ -426,9 +426,9 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-15T03:19:38.642Z",
-  "last_status": "skipped",
-  "last_message": "Skipped: Gemini Google Search needs billing enabled on the Gemini key (free tier has no search quota). The free \"web search\" sources cover this meanwhile.",
+  "last_run": "2026-11-16T03:35:56.149Z",
+  "last_status": "error",
+  "last_message": "Gemini Google Search needs billing enabled on the Gemini key (free tier has no search quota). The free \"web search\" sources cover this meanwhile.",
   "item_count": 0
  },
  {
@@ -442,9 +442,9 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-15T03:19:37.760Z",
-  "last_status": "error",
-  "last_message": "Gemini Google Search needs billing enabled on the Gemini key (free tier has no search quota). The free \"web search\" sources cover this meanwhile.",
+  "last_run": "2026-11-16T03:35:56.562Z",
+  "last_status": "skipped",
+  "last_message": "Skipped: Gemini Google Search needs billing enabled on the Gemini key (free tier has no search quota). The free \"web search\" sources cover this meanwhile.",
   "item_count": 0
  },
  {
@@ -458,7 +458,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-15T03:19:40.689Z",
+  "last_run": "2026-11-16T03:35:58.973Z",
   "last_status": "skipped",
   "last_message": "Skipped: Gemini Google Search needs billing enabled on the Gemini key (free tier has no search quota). The free \"web search\" sources cover this meanwhile.",
   "item_count": 0
@@ -474,7 +474,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-15T03:19:41.544Z",
+  "last_run": "2026-11-16T03:35:57.448Z",
   "last_status": "skipped",
   "last_message": "Skipped: Gemini Google Search needs billing enabled on the Gemini key (free tier has no search quota). The free \"web search\" sources cover this meanwhile.",
   "item_count": 0
@@ -490,7 +490,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-15T03:19:39.459Z",
+  "last_run": "2026-11-16T03:35:58.274Z",
   "last_status": "skipped",
   "last_message": "Skipped: Gemini Google Search needs billing enabled on the Gemini key (free tier has no search quota). The free \"web search\" sources cover this meanwhile.",
   "item_count": 0
@@ -506,7 +506,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-15T03:19:39.759Z",
+  "last_run": "2026-11-16T03:35:58.632Z",
   "last_status": "skipped",
   "last_message": "Skipped: Gemini Google Search needs billing enabled on the Gemini key (free tier has no search quota). The free \"web search\" sources cover this meanwhile.",
   "item_count": 0
@@ -522,7 +522,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-15T03:19:53.867Z",
+  "last_run": "2026-11-16T03:36:06.271Z",
   "last_status": "ok",
   "last_message": "unchanged since last run · 0 seen, 0 new",
   "item_count": 0
@@ -538,7 +538,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-15T03:19:55.077Z",
+  "last_run": "2026-11-16T03:36:10.315Z",
   "last_status": "ok",
   "last_message": "unchanged since last run · 0 seen, 0 new",
   "item_count": 0
@@ -554,7 +554,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-15T03:19:49.157Z",
+  "last_run": "2026-11-16T03:36:01.736Z",
   "last_status": "ok",
   "last_message": "unchanged since last run · 0 seen, 0 new",
   "item_count": 0
@@ -570,7 +570,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-15T03:19:44.177Z",
+  "last_run": "2026-11-16T03:36:07.168Z",
   "last_status": "ok",
   "last_message": "unchanged since last run · 0 seen, 0 new",
   "item_count": 0
@@ -586,7 +586,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-15T03:19:50.274Z",
+  "last_run": "2026-11-16T03:36:04.363Z",
   "last_status": "ok",
   "last_message": "unchanged since last run · 0 seen, 0 new",
   "item_count": 0
@@ -602,7 +602,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-15T03:19:45.757Z",
+  "last_run": "2026-11-16T03:36:08.443Z",
   "last_status": "ok",
   "last_message": "unchanged since last run · 0 seen, 0 new",
   "item_count": 0
@@ -618,7 +618,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-15T03:19:49.719Z",
+  "last_run": "2026-11-16T03:36:02.366Z",
   "last_status": "ok",
   "last_message": "unchanged since last run · 0 seen, 0 new",
   "item_count": 0
@@ -634,7 +634,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-15T03:19:48.712Z",
+  "last_run": "2026-11-16T03:36:00.859Z",
   "last_status": "ok",
   "last_message": "unchanged since last run · 0 seen, 0 new",
   "item_count": 0
@@ -650,7 +650,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-15T03:19:50.776Z",
+  "last_run": "2026-11-16T03:36:04.835Z",
   "last_status": "ok",
   "last_message": "unchanged since last run · 0 seen, 0 new",
   "item_count": 0
@@ -666,7 +666,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-15T03:19:43.770Z",
+  "last_run": "2026-11-16T03:36:06.704Z",
   "last_status": "ok",
   "last_message": "unchanged since last run · 0 seen, 0 new",
   "item_count": 0
@@ -698,7 +698,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-15T03:19:42.149Z",
+  "last_run": "2026-11-16T03:36:00.259Z",
   "last_status": "ok",
   "last_message": "unchanged since last run · 0 seen, 0 new",
   "item_count": 0
@@ -714,7 +714,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-15T03:19:46.260Z",
+  "last_run": "2026-11-16T03:36:09.147Z",
   "last_status": "ok",
   "last_message": "unchanged since last run · 0 seen, 0 new",
   "item_count": 0
@@ -730,7 +730,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-15T03:19:43.382Z",
+  "last_run": "2026-11-16T03:36:03.819Z",
   "last_status": "ok",
   "last_message": "unchanged since last run · 0 seen, 0 new",
   "item_count": 0
@@ -746,7 +746,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-15T03:19:56.602Z",
+  "last_run": "2026-11-16T03:36:11.720Z",
   "last_status": "ok",
   "last_message": "unchanged since last run · 0 seen, 0 new",
   "item_count": 0
@@ -762,7 +762,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-15T03:19:45.097Z",
+  "last_run": "2026-11-16T03:36:07.582Z",
   "last_status": "ok",
   "last_message": "unchanged since last run · 0 seen, 0 new",
   "item_count": 0
@@ -778,7 +778,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-15T03:19:58.247Z",
+  "last_run": "2026-11-16T03:36:13.627Z",
   "last_status": "ok",
   "last_message": "11 seen, 0 new",
   "item_count": 11
@@ -794,7 +794,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-15T03:19:59.018Z",
+  "last_run": "2026-11-16T03:36:14.553Z",
   "last_status": "ok",
   "last_message": "10 in feed, 6 look relevant · 6 seen, 0 new",
   "item_count": 6
@@ -826,10 +826,10 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-15T03:20:13.976Z",
-  "last_status": "ok",
-  "last_message": "search hits: DuckDuckGo 16, Bing News 0; 11 look like funding calls · 11 seen, 1 new",
-  "item_count": 11
+  "last_run": "2026-11-16T03:36:27.835Z",
+  "last_status": "error",
+  "last_message": "web search returned nothing (search hits: DuckDuckGo 0, Bing News 0; 0 look like funding calls)",
+  "item_count": 0
  },
  {
   "id": "scout-web-foundations",
@@ -842,10 +842,10 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-15T03:20:29.584Z",
+  "last_run": "2026-11-16T03:36:41.603Z",
   "last_status": "ok",
-  "last_message": "search hits: DuckDuckGo 21, Bing News 5; 13 look like funding calls · 13 seen, 2 new",
-  "item_count": 13
+  "last_message": "search hits: DuckDuckGo 10, Bing News 5; 10 look like funding calls · 10 seen, 3 new",
+  "item_count": 10
  },
  {
   "id": "scout-web-tenders",
@@ -858,10 +858,10 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-15T03:20:39.712Z",
-  "last_status": "ok",
-  "last_message": "search hits: DuckDuckGo 10, Bing News 0; 5 look like funding calls · 5 seen, 3 new",
-  "item_count": 5
+  "last_run": "2026-11-16T03:36:50.531Z",
+  "last_status": "error",
+  "last_message": "web search returned nothing (search hits: DuckDuckGo 0, Bing News 0; 0 look like funding calls)",
+  "item_count": 0
  },
  {
   "id": "scout-web-innovation",
@@ -874,9 +874,9 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-15T03:20:50.464Z",
+  "last_run": "2026-11-16T03:36:59.524Z",
   "last_status": "ok",
-  "last_message": "search hits: DuckDuckGo 9, Bing News 1; 10 look like funding calls · 10 seen, 1 new",
-  "item_count": 10
+  "last_message": "search hits: DuckDuckGo 0, Bing News 1; 1 look like funding calls · 1 seen, 1 new",
+  "item_count": 1
  }
 ]
