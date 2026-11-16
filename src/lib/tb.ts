@@ -30,12 +30,17 @@ export type TbCampaign = {
 export type TbResult = {
   id: string; campaign_id: string; report_date: string; screened: number; cough_flagged: number; cxr_flagged: number; presumptive: number; tested: number; confirmed: number;
   rr_confirmed: number; started_treatment: number; contacts_identified: number; contacts_screened: number; tpt_started: number; cough_flagged_confirmed: number; cxr_flagged_confirmed: number;
-  notes?: string; reported_by?: string;
+  notes?: string; reported_by?: string; task_id?: string | null;
 };
 export type TbTask = {
   id: string; campaign_id?: string | null; title: string; detail?: string | null; role?: string | null; assignee?: string | null; district_id?: string | null; district_name?: string | null;
   due?: string | null; status: 'todo' | 'doing' | 'done' | 'blocked'; priority?: string; step_key?: string | null; outcome?: string | null; created_by?: string | null; created_at?: string; updated_at?: string;
+  links?: TbLink[]; attachments?: TbFile[];
 };
+export type TbLink = { url: string; label?: string | null; added_by?: string | null; at?: string };
+export type TbFile = { name: string; url: string; size?: number; added_by?: string | null; at?: string };
+/** A comment on a task. */
+export type TbTaskUpdate = { id: string; task_id: string; campaign_id?: string | null; author?: string | null; body?: string | null; created_at: string };
 export type TbMeta = {
   updated_at: string; error?: string;
   sources: { name: string; url: string; ok: boolean; note?: string; at: string }[];

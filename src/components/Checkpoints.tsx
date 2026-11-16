@@ -207,7 +207,7 @@ function CheckpointCard({ c, n, first, last, people, onChange, onMove, onRemove 
 const URL_RE = /(https?:\/\/[^\s]+)/g;
 
 /** Short label for a pasted link: Linear issues show their key and title, other links their site and last path part. */
-function linkLabel(url: string) {
+export function linkLabel(url: string) {
   try {
     const u = new URL(url);
     const parts = u.pathname.split('/').filter(Boolean);

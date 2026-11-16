@@ -9,7 +9,7 @@ import Checkpoints from '../components/Checkpoints';
 import { Attachments, Comments } from '../components/Collab';
 import Icon from '../components/Icon';
 import { useData } from '../lib/hooks';
-import { DEMO, db, loadGrants } from '../lib/store';
+import { db, loadGrants } from '../lib/store';
 import { FIT_OPTIONS, fitScore, parseCountries, parseDeadline, pipelineId } from '../lib/pipeline';
 import { useWorld, NO_COUNTRIES } from '../lib/world';
 import { daysUntil, fmtDate, fmtTime, fmtUsd, relDays, scoreTone } from '../lib/format';

@@ -34,7 +34,7 @@ export default function Evidence({ data }: { data: TbData }) {
   const { dist, params, results, campaigns } = data;
   const meta = dist.data.meta;
   const [uploading, setUploading] = useState(false);
-  const sources = meta?.sources || [];
+  const sources = useMemo(() => meta?.sources || [], [meta]);
   const okCount = sources.filter((s) => s.ok).length;
   const groups = useMemo(() => {
     const g: Record<string, typeof sources> = {};

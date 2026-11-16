@@ -1,106 +1,316 @@
-import React, { useMemo, useState } from 'react';
-import { Badge, Button, Card, CardHeader, Drawer, Empty, Field, Modal, Select, TextArea, TextInput, cx } from '../../components/ui';
+import React, { useMemo, useRef, useState } from 'react';
+import { Badge, Button, Card, CardHeader, Drawer, Empty, ExtLink, Field, Modal, Segmented, Select, TextArea, TextInput, cx } from '../../components/ui';
+import Icon from '../../components/Icon';
 import { useMe } from '../../components/Layout';
-import { uid } from '../../lib/store';
+import { linkLabel } from '../../components/Checkpoints';
+import { fmtTime } from '../../lib/format';
+import { uid, uploadFile } from '../../lib/store';
 import { peopleOptions, personName, usePeople } from '../../lib/team';
-import { cascadeTotals, createCampaign, expectedPositivity, fmtInt, pct, SETTINGS, tbRemove, tbSave, TbCampaign, TbResult, TbTask } from '../../lib/tb';
+import { cascadeTotals, createCampaign, expectedPositivity, fmtInt, pct, SETTINGS, tbRemove, tbSave, TbCampaign, TbFile, TbResult, TbTask, TbTaskUpdate } from '../../lib/tb';
 import type { TbData } from './TbPage';
 
 const STATUS_CLS: Record<string, string> = { planned: 'bg-gray-100 text-gray-700', active: 'bg-brand-50 text-brand-700', done: 'bg-green-50 text-green-700', cancelled: 'bg-red-50 text-red-700' };
 const nns = (p: number | null) => (p && p > 0 ? Math.round(1 / p) : null);
 const natRateOf = (data: TbData) => { const n = data.dist.data.meta?.national; return n ? (n.incidence / n.pop) * 1e5 : null; };
 
+type Filter = 'open' | 'overdue' | 'week' | 'doing' | 'blocked' | 'done';
+const TASK_STATUS = [{ value: 'todo', label: 'To do' }, { value: 'doing', label: 'In progress' }, { value: 'blocked', label: 'Blocked' }, { value: 'done', label: 'Done' }];
+const STATUS_DOT: Record<string, string> = { todo: 'bg-gray-300', doing: 'bg-brand-500', blocked: 'bg-red-500', done: 'bg-green-500' };
+// playbook steps where screening numbers are produced, so the task offers "Enter results"
+const RESULT_STEPS = ['screen', 'test', 'link', 'contacts', 'outreach', 'report', 'track'];
+const day = (d: Date) => d.toISOString().slice(0, 10);
+
+/** Campaigns & tasks: what is active, who owns it, what is late; each task opens into a workspace. */
 export default function Campaigns({ data, onPlan }: { data: TbData; onPlan: (c: Partial<TbCampaign>) => void }) {
-  const { campaigns, results, tasks, dist, P } = data;
-  const [open, setOpen] = useState<string | null>(null);
+  const me = useMe();
+  const people = usePeople();
+  const { campaigns, results, tasks, updates, playbooks, dist, P } = data;
+  const [filter, setFilter] = useState<Filter>('open');
+  const [mine, setMine] = useState(false);
+  const [role, setRole] = useState('');
+  const [openCampaign, setOpenCampaign] = useState<string | null>(null);
+  const [openTask, setOpenTask] = useState<string | null>(null);
+  const [adding, setAdding] = useState(false);
+  const today = day(new Date());
+  const weekEnd = day(new Date(Date.now() + 7 * 864e5));
   const byCampaign = useMemo(() => {
     const m: Record<string, TbResult[]> = {};
     for (const r of results.data) (m[r.campaign_id] ||= []).push(r);
     return m;
   }, [results.data]);
-  const list = [...campaigns.data].sort((a, b) => (b.start_date || b.created_at || '').localeCompare(a.start_date || a.created_at || ''));
+  const roles = useMemo(() => Array.from(new Set([...playbooks.data.flatMap((p) => p.steps.map((s) => s.role)), ...tasks.data.map((t) => t.role || '')].filter(Boolean))).sort(), [playbooks.data, tasks.data]);
+  const match = (t: TbTask, f: Filter) =>
+    f === 'done' ? t.status === 'done'
+    : t.status !== 'done' && (f === 'open' || (f === 'overdue' && !!t.due && t.due < today) || (f === 'week' && !!t.due && t.due >= today && t.due <= weekEnd) || (f === 'doing' && t.status === 'doing') || (f === 'blocked' && t.status === 'blocked'));
+  const scoped = tasks.data.filter((t) => (!mine || t.assignee === me.email) && (!role || t.role === role));
+  const count = (f: Filter) => scoped.filter((t) => match(t, f)).length;
+  const shown = scoped.filter((t) => match(t, filter)).sort((x, y) => (x.due || '9999').localeCompare(y.due || '9999'));
+  const camps = [...campaigns.data].sort((x, y) => (y.start_date || y.created_at || '').localeCompare(x.start_date || x.created_at || ''));
+  const groups = [...camps.map((c) => ({ c, items: shown.filter((t) => t.campaign_id === c.id) })), { c: null as TbCampaign | null, items: shown.filter((t) => !t.campaign_id || !campaigns.data.some((c) => c.id === t.campaign_id)) }].filter((g) => g.items.length);
   const all = cascadeTotals(results.data);
-  // predicted confirmed cases across reported campaigns
-  const predicted = campaigns.data.reduce((s, c) => {
+  const predicted = campaigns.data.reduce((sum, c) => {
     const t = cascadeTotals(byCampaign[c.id] || []);
     const d = dist.data.list.find((x) => x.id === c.district_id);
-    return s + t.screened * (expectedPositivity(c.setting, d, P, natRateOf(data)) ?? 0);
+    return sum + t.screened * (expectedPositivity(c.setting, d, P, natRateOf(data)) ?? 0);
   }, 0);
-  const noCampaign = dist.data.list.filter((d) => !campaigns.data.some((c) => c.district_id === d.id)).sort((a, b) => a.rank - b.rank).slice(0, 6);
-  const current = campaigns.data.find((c) => c.id === open) || null;
+  const curCampaign = campaigns.data.find((c) => c.id === openCampaign) || null;
+  const curTask = tasks.data.find((t) => t.id === openTask) || null;
+  const FILTERS: { value: Filter; label: string; tone?: string }[] = [
+    { value: 'open', label: 'Open' }, { value: 'overdue', label: 'Overdue', tone: 'text-red-700' }, { value: 'week', label: 'Due this week' },
+    { value: 'doing', label: 'In progress' }, { value: 'blocked', label: 'Blocked', tone: 'text-red-700' }, { value: 'done', label: 'Done' },
+  ];
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <Card className="xl:col-span-2 min-w-0">
-          <CardHeader title="What campaigns are teaching us" subtitle="What screening actually found, against the published yield for each setting" right={<Button variant="primary" icon="plus" onClick={() => onPlan({ setting: 'community', playbook_id: 'acf_community' })}>New campaign</Button>} />
-          {all.screened ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <Mini label="People screened" value={fmtInt(all.screened)} />
-              <Mini label="Confirmed TB" value={fmtInt(all.confirmed)} sub={`expected ≈ ${predicted.toFixed(0)}`} />
-              <Mini label="Screened per case found" value={all.confirmed ? fmtInt(all.screened / all.confirmed) : '—'} sub={predicted ? `expected ${fmtInt(all.screened / predicted)}` : ''} />
-              <Mini label="Started treatment" value={pct(all.started_treatment, all.confirmed)} sub={`${fmtInt(all.started_treatment)} of ${fmtInt(all.confirmed)}`} />
-              <Mini label="Cough AI: confirmed among flagged" value={pct(all.cough_flagged_confirmed, all.cough_flagged)} sub="positive predictive value" />
-              <Mini label="X-ray AI: confirmed among flagged" value={pct(all.cxr_flagged_confirmed, all.cxr_flagged)} sub="positive predictive value" />
-              <Mini label="Cases the cough AI flagged" value={pct(all.cough_flagged_confirmed, all.confirmed)} sub="share of confirmed (sensitivity, approx.)" />
-              <Mini label="Cases the X-ray AI flagged" value={pct(all.cxr_flagged_confirmed, all.confirmed)} sub="share of confirmed (sensitivity, approx.)" />
-            </div>
-          ) : (
-            <p className="text-[15px] text-gray-600">No results reported yet. When teams enter campaign results, this shows how many people it took to find one case against the published yield, and how well the cough AI (HeAR) and X-ray AI flags matched GeneXpert results.</p>
+    <div className="space-y-5">
+      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2.5">
+        {FILTERS.map((f) => (
+          <button key={f.value} type="button" onClick={() => setFilter(f.value)}
+            className={cx('rounded-xl border px-3.5 py-2.5 text-left transition-colors', filter === f.value ? 'border-gray-900 bg-white shadow-sm' : 'border-gray-200 bg-white/60 hover:bg-white')}>
+            <div className={cx('text-2xl font-semibold tabular-nums', count(f.value) && f.tone ? f.tone : 'text-gray-900')}>{count(f.value)}</div>
+            <div className="text-xs text-gray-500">{f.label}</div>
+          </button>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_360px] gap-5 items-start">
+        <Card pad={false} className="min-w-0">
+          <div className="p-5 pb-3">
+            <CardHeader title={FILTERS.find((f) => f.value === filter)!.label + ' tasks'} subtitle="Grouped by campaign. Click a task to add notes, links, files or results."
+              right={<><Segmented<'all' | 'mine'> size="sm" value={mine ? 'mine' : 'all'} onChange={(v) => setMine(v === 'mine')} options={[{ value: 'all', label: 'Everyone' }, { value: 'mine', label: 'Mine' }]} />
+                <Select className="w-[200px] [&_select]:h-9 [&_select]:text-sm" value={role} onChange={setRole} placeholder="All roles" options={roles.map((r) => ({ value: r, label: r }))} />
+                <Button icon="plus" onClick={() => setAdding(true)}>Task</Button></>} />
+          </div>
+          {!groups.length ? (
+            <div className="px-5 pb-5"><Empty icon="checkCircle" title={tasks.data.length ? 'Nothing in this view' : 'No tasks yet'}>{tasks.data.length ? 'Try another filter above.' : 'Tasks are created from the playbook when you plan a campaign on Find and act.'}</Empty></div>
+          ) : groups.map(({ c, items }) => {
+            const ct = c ? tasks.data.filter((x) => x.campaign_id === c.id) : [];
+            const done = ct.filter((x) => x.status === 'done').length;
+            return (
+              <section key={c?.id || 'other'} className="border-t border-gray-100">
+                <div className="px-5 py-3 bg-gray-50/70 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                  {c ? (
+                    <button type="button" className="min-w-0 text-left" onClick={() => setOpenCampaign(c.id)}>
+                      <span className="font-semibold text-gray-900 hover:underline">{c.name}</span>
+                      <span className="text-sm text-gray-500"> · {[c.town, c.district_name].filter(Boolean).join(', ')}{c.start_date ? ` · starts ${c.start_date}` : ''}</span>
+                    </button>
+                  ) : <span className="font-semibold text-gray-900">Other tasks</span>}
+                  {c && <Badge className={STATUS_CLS[c.status]}>{c.status}</Badge>}
+                  {c && ct.length > 0 && (
+                    <span className="ml-auto flex items-center gap-2 text-xs text-gray-500">
+                      <span className="w-24 h-1.5 rounded-full bg-gray-200 overflow-hidden"><span className="block h-full bg-green-500" style={{ width: `${(done / ct.length) * 100}%` }} /></span>
+                      {done}/{ct.length} done
+                    </span>
+                  )}
+                </div>
+                <ul className="divide-y divide-gray-100">
+                  {items.map((t) => <TaskRow key={t.id} t={t} today={today} updates={updates.data.filter((u) => u.task_id === t.id).length} onOpen={() => setOpenTask(t.id)} />)}
+                </ul>
+              </section>
+            );
+          })}
+        </Card>
+
+        <div className="space-y-5 min-w-0">
+          <Card>
+            <CardHeader title="Campaigns" right={<Button variant="primary" icon="plus" onClick={() => onPlan({ setting: 'community', playbook_id: 'acf_community' })}>New</Button>} />
+            {!camps.length ? <p className="text-sm text-gray-500">None yet. Plan one from a town on Find and act.</p> : (
+              <ul className="divide-y divide-gray-100 -mx-1">
+                {camps.map((c) => {
+                  const ct = tasks.data.filter((x) => x.campaign_id === c.id);
+                  const late = ct.filter((x) => x.status !== 'done' && x.due && x.due < today).length;
+                  const tt = cascadeTotals(byCampaign[c.id] || []);
+                  return (
+                    <li key={c.id}>
+                      <button type="button" onClick={() => setOpenCampaign(c.id)} className="w-full text-left px-1 py-2.5 rounded-lg hover:bg-gray-50">
+                        <div className="flex items-center justify-between gap-2"><span className="font-medium text-gray-900 truncate">{c.name}</span><Badge className={STATUS_CLS[c.status]}>{c.status}</Badge></div>
+                        <div className="text-xs text-gray-500 mt-0.5">{[c.town, c.district_name].filter(Boolean).join(', ')} · {ct.filter((x) => x.status === 'done').length}/{ct.length} tasks{late ? <span className="text-red-600"> · {late} late</span> : null}{tt.screened ? ` · ${fmtInt(tt.screened)} screened, ${fmtInt(tt.confirmed)} confirmed` : ''}</div>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </Card>
+          {all.screened > 0 && (
+            <Card>
+              <CardHeader title="Results so far" subtitle="All campaigns" />
+              <div className="grid grid-cols-2 gap-2.5">
+                <Mini label="People screened" value={fmtInt(all.screened)} />
+                <Mini label="Confirmed TB" value={fmtInt(all.confirmed)} sub={predicted ? `≈${predicted.toFixed(0)} expected*` : undefined} />
+                <Mini label="Screened per case" value={all.confirmed ? fmtInt(all.screened / all.confirmed) : '—'} />
+                <Mini label="Started treatment" value={pct(all.started_treatment, all.confirmed)} />
+                <Mini label="Cough AI flags confirmed" value={pct(all.cough_flagged_confirmed, all.cough_flagged)} />
+                <Mini label="X-ray AI flags confirmed" value={pct(all.cxr_flagged_confirmed, all.cxr_flagged)} />
+              </div>
+              {predicted > 0 && <p className="text-xs text-gray-500 mt-2">* Expected = people screened × published yield for the setting (Kranzer 2010), scaled by district rate.</p>}
+            </Card>
+          )}
+        </div>
+      </div>
+
+      <Drawer open={!!curCampaign} onClose={() => setOpenCampaign(null)} title={curCampaign?.name} subtitle={curCampaign ? [curCampaign.town, curCampaign.district_name, SETTINGS.find((x) => x.value === curCampaign.setting)?.label].filter(Boolean).join(' · ') : ''}>
+        {curCampaign && <CampaignDetail c={curCampaign} data={data} rows={byCampaign[curCampaign.id] || []} tasks={tasks.data.filter((x) => x.campaign_id === curCampaign.id)} onOpenTask={(id) => { setOpenCampaign(null); setOpenTask(id); }} onDeleted={() => setOpenCampaign(null)} />}
+      </Drawer>
+      <Drawer open={!!curTask} onClose={() => setOpenTask(null)} title={curTask?.title} subtitle={curTask ? [campaigns.data.find((c) => c.id === curTask.campaign_id)?.name, curTask.role].filter(Boolean).join(' · ') : ''}>
+        {curTask && <TaskWorkspace t={curTask} c={campaigns.data.find((x) => x.id === curTask.campaign_id) || null} data={data} />}
+      </Drawer>
+      {adding && <AddTask roles={roles} campaigns={campaigns.data.map((c) => ({ value: c.id, label: c.name }))} districts={dist.data.list.map((d) => ({ value: d.id, label: d.name }))} me={me.email} people={peopleOptions(people)} onClose={() => setAdding(false)} />}
+    </div>
+  );
+}
+
+function TaskRow({ t, today, updates, onOpen }: { t: TbTask; today: string; updates: number; onOpen: () => void }) {
+  const late = t.status !== 'done' && !!t.due && t.due < today;
+  const toggle = () => tbSave('tb_tasks', { ...t, status: t.status === 'done' ? 'todo' : 'done', updated_at: new Date().toISOString() });
+  return (
+    <li className="flex items-start gap-3 px-5 py-3 hover:bg-gray-50">
+      <input type="checkbox" className="mt-1" checked={t.status === 'done'} onChange={toggle} aria-label="Done" />
+      <button type="button" onClick={onOpen} className="min-w-0 flex-1 text-left">
+        <div className={cx('text-[15px]', t.status === 'done' ? 'line-through text-gray-400' : 'text-gray-900')}>{t.title}</div>
+        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 mt-1 text-xs text-gray-500">
+          <span className="inline-flex items-center gap-1"><span className={cx('w-2 h-2 rounded-full', STATUS_DOT[t.status])} />{TASK_STATUS.find((x) => x.value === t.status)?.label}</span>
+          <span>{t.assignee ? personName(t.assignee) : <span className="text-amber-700">Unassigned</span>}{t.role ? ` · ${t.role}` : ''}</span>
+          {t.due && <span className={cx(late && 'text-red-600 font-medium')}>{late ? 'Overdue · ' : 'Due '}{t.due}</span>}
+          {(t.links?.length || 0) > 0 && <span className="inline-flex items-center gap-0.5"><Icon name="link" size={12} />{t.links!.length}</span>}
+          {(t.attachments?.length || 0) > 0 && <span className="inline-flex items-center gap-0.5"><Icon name="paperclip" size={12} />{t.attachments!.length}</span>}
+          {updates > 0 && <span className="inline-flex items-center gap-0.5"><Icon name="message" size={12} />{updates}</span>}
+        </div>
+      </button>
+      <Icon name="chevronRight" size={16} className="text-gray-300 mt-1.5 shrink-0" />
+    </li>
+  );
+}
+
+/** Everything about one task: owner, status, notes, links (incl. Linear), files, updates, results. */
+function TaskWorkspace({ t, c, data }: { t: TbTask; c: TbCampaign | null; data: TbData }) {
+  const me = useMe();
+  const people = usePeople();
+  const [note, setNote] = useState(t.detail || '');
+  const [url, setUrl] = useState('');
+  const [comment, setComment] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+  const [results, setResults] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const save = (patch: Partial<TbTask>) => tbSave('tb_tasks', { ...t, ...patch, updated_at: new Date().toISOString() });
+  const feed = data.updates.data.filter((u) => u.task_id === t.id).sort((a, b) => b.created_at.localeCompare(a.created_at));
+  const linked = data.results.data.filter((r) => r.task_id === t.id);
+  const now = () => new Date().toISOString();
+  const addLink = async () => {
+    const u = url.trim();
+    if (!/^https?:\/\//.test(u)) return setErr('Paste a full link starting with https://');
+    setErr('');
+    await save({ links: [...(t.links || []), { url: u, label: linkLabel(u), added_by: me.email, at: now() }] });
+    setUrl('');
+  };
+  const upload = async (files: FileList | null) => {
+    if (!files?.length) return;
+    setBusy(true); setErr('');
+    try {
+      const added: TbFile[] = [];
+      for (const f of Array.from(files)) added.push({ name: f.name, url: await uploadFile(f, `tb-tasks/${t.id}`), size: f.size, added_by: me.email, at: now() });
+      await save({ attachments: [...(t.attachments || []), ...added] });
+    } catch (e: any) {
+      setErr(e?.message || 'Upload failed');
+    } finally {
+      setBusy(false);
+      if (fileRef.current) fileRef.current.value = '';
+    }
+  };
+  const post = async () => {
+    if (!comment.trim()) return;
+    await tbSave('tb_task_updates', { id: uid('tbu'), task_id: t.id, campaign_id: t.campaign_id || null, author: me.email, body: comment.trim(), created_at: now() } as TbTaskUpdate);
+    setComment('');
+  };
+  const linearUrl = () => {
+    const place = c ? [c.town, c.district_name].filter(Boolean).join(', ') : t.district_name || '';
+    const desc = [t.detail, c && `Campaign: ${c.name}${place ? ` (${place})` : ''}`, t.role && `Role: ${t.role}`, t.due && `Due: ${t.due}`, `From WAIG Atlas TB Surveillance`].filter(Boolean).join('\n\n');
+    return `https://linear.app/new?title=${encodeURIComponent(t.title)}&description=${encodeURIComponent(desc)}`;
+  };
+  const showResults = !!c && (RESULT_STEPS.includes(t.step_key || '') || linked.length > 0);
+
+  return (
+    <>
+      <Card>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <Field label="Status"><Select value={t.status} onChange={(v) => save({ status: v as TbTask['status'] })} options={TASK_STATUS} /></Field>
+          <Field label="Owner"><Select value={t.assignee || ''} onChange={(v) => save({ assignee: v || null })} placeholder="Unassigned" options={peopleOptions(people, t.assignee)} /></Field>
+          <Field label="Due"><TextInput type="date" className="w-full" value={t.due || ''} onChange={(e) => save({ due: e.target.value || null })} /></Field>
+        </div>
+        <div className="mt-3" />
+        <Field label="Notes"><TextArea rows={3} value={note} onChange={(e) => setNote(e.target.value)} onBlur={() => note !== (t.detail || '') && save({ detail: note || null })} placeholder="What needs doing, decisions, contacts on the ground" /></Field>
+      </Card>
+
+      {showResults && (
+        <Card>
+          <CardHeader title="Screening results" subtitle={linked.length ? `${linked.length} report${linked.length > 1 ? 's' : ''} linked to this task` : 'Numbers from this step feed the campaign cascade'} right={<Button variant="primary" icon="plus" onClick={() => setResults(true)}>Enter results</Button>} />
+          {linked.length > 0 && (
+            <ul className="text-sm divide-y divide-gray-100">
+              {linked.map((r) => <li key={r.id} className="py-2">{r.report_date} · {fmtInt(r.screened)} screened · {fmtInt(r.confirmed)} confirmed{r.reported_by ? ` · ${personName(r.reported_by)}` : ''}</li>)}
+            </ul>
           )}
         </Card>
-        <Card className="min-w-0">
-          <CardHeader title="Top-ranked districts with no screening yet" subtitle="From the Where to act ranking" />
-          <ul className="space-y-2">
-            {noCampaign.map((d) => (
-              <li key={d.id} className="flex items-center justify-between gap-2">
-                <span className="min-w-0"><span className="block truncate text-[15px]">{d.name}</span><span className="text-xs text-gray-500">rank {d.rank} · ≈{fmtInt(d.missed)} missed a year</span></span>
-                <Button className="shrink-0" onClick={() => onPlan({ district_id: d.id, district_name: d.name, setting: 'community', playbook_id: 'acf_community', name: `${d.name}: community case-finding` })}>Plan</Button>
+      )}
+
+      <Card>
+        <CardHeader title="Links" subtitle="Linear issues, documents, sheets, WhatsApp groups" right={<Button icon="external" onClick={() => window.open(linearUrl(), '_blank', 'noopener')}>Create in Linear</Button>} />
+        {(t.links || []).length > 0 && (
+          <ul className="space-y-1.5 mb-3">
+            {(t.links || []).map((l, i) => (
+              <li key={i} className="flex items-center gap-2 text-sm">
+                <Icon name="link" size={14} className="text-gray-400 shrink-0" />
+                <ExtLink href={l.url} className="truncate min-w-0">{l.label || l.url}</ExtLink>
+                <button type="button" aria-label="Remove link" className="ml-auto text-gray-400 hover:text-red-600" onClick={() => save({ links: (t.links || []).filter((_, j) => j !== i) })}><Icon name="x" size={14} /></button>
               </li>
             ))}
           </ul>
-        </Card>
-      </div>
-
-      <Card pad={false}>
-        <div className="p-6 pb-2"><CardHeader title="Campaigns" subtitle="Click one to see its cascade, tasks and results" /></div>
-        {!list.length ? (
-          <div className="p-6 pt-0"><Empty icon="target" title="No campaigns yet">Start from a hotspot on the map, a city area, or "New campaign".</Empty></div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-[15px]">
-              <thead>
-                <tr className="text-left text-sm text-gray-500 border-y border-gray-100 bg-gray-50/60">
-                  <th className="px-6 py-2.5 font-medium">Campaign</th><th className="px-3 py-2.5 font-medium">Status</th><th className="px-3 py-2.5 font-medium">Dates</th>
-                  <th className="px-3 py-2.5 font-medium text-right">Screened</th><th className="px-3 py-2.5 font-medium text-right">Confirmed</th><th className="px-3 py-2.5 font-medium text-right">Per case</th><th className="px-3 py-2.5 font-medium">Tasks</th>
-                </tr>
-              </thead>
-              <tbody>
-                {list.map((c) => {
-                  const t = cascadeTotals(byCampaign[c.id] || []);
-                  const ct = tasks.data.filter((x) => x.campaign_id === c.id);
-                  return (
-                    <tr key={c.id} className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer" onClick={() => setOpen(c.id)}>
-                      <td className="px-6 py-3 min-w-[260px]"><div className="font-medium text-gray-900">{c.name}</div><div className="text-sm text-gray-500">{[c.district_name, SETTINGS.find((s) => s.value === c.setting)?.label].filter(Boolean).join(' · ')}</div></td>
-                      <td className="px-3 py-3"><Badge className={STATUS_CLS[c.status]}>{c.status}</Badge></td>
-                      <td className="px-3 py-3 text-sm whitespace-nowrap">{c.start_date || '—'}{c.end_date ? ` → ${c.end_date}` : ''}</td>
-                      <td className="px-3 py-3 text-right tabular-nums">{fmtInt(t.screened)}</td>
-                      <td className="px-3 py-3 text-right tabular-nums">{fmtInt(t.confirmed)}</td>
-                      <td className="px-3 py-3 text-right tabular-nums">{t.confirmed ? fmtInt(t.screened / t.confirmed) : '—'}</td>
-                      <td className="px-3 py-3 text-sm whitespace-nowrap">{ct.filter((x) => x.status === 'done').length}/{ct.length} done</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
         )}
+        <div className="flex gap-2">
+          <TextInput className="flex-1 min-w-0" value={url} onChange={(e) => setUrl(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && addLink()} placeholder="Paste a link (e.g. the Linear issue after creating it)" />
+          <Button onClick={addLink} disabled={!url.trim()}>Add</Button>
+        </div>
       </Card>
 
-      <Drawer open={!!current} onClose={() => setOpen(null)} title={current?.name} subtitle={current ? [current.district_name, SETTINGS.find((s) => s.value === current.setting)?.label].filter(Boolean).join(' · ') : ''}>
-        {current && <CampaignDetail c={current} data={data} rows={byCampaign[current.id] || []} tasks={tasks.data.filter((x) => x.campaign_id === current.id)} onDeleted={() => setOpen(null)} />}
-      </Drawer>
-    </div>
+      <Card>
+        <CardHeader title="Files" subtitle="Photos, register scans, consent forms, reports" right={<Button icon="upload" disabled={busy} onClick={() => fileRef.current?.click()}>{busy ? 'Uploading…' : 'Upload'}</Button>} />
+        <input ref={fileRef} type="file" multiple className="hidden" onChange={(e) => upload(e.target.files)} />
+        {!(t.attachments || []).length ? <p className="text-sm text-gray-500">No files yet.</p> : (
+          <ul className="space-y-1.5">
+            {(t.attachments || []).map((f, i) => (
+              <li key={i} className="flex items-center gap-2 text-sm">
+                <Icon name="paperclip" size={14} className="text-gray-400 shrink-0" />
+                <ExtLink href={f.url} className="truncate min-w-0">{f.name}</ExtLink>
+                <span className="text-xs text-gray-400 shrink-0">{f.size ? `${Math.max(1, Math.round(f.size / 1024))} KB` : ''}{f.added_by ? ` · ${personName(f.added_by)}` : ''}</span>
+                <button type="button" aria-label="Remove file" className="ml-auto text-gray-400 hover:text-red-600" onClick={() => save({ attachments: (t.attachments || []).filter((_, j) => j !== i) })}><Icon name="x" size={14} /></button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
+      {err && <p className="text-sm text-red-600">{err}</p>}
+
+      <Card>
+        <CardHeader title="Updates" subtitle="Progress notes from the team, newest first" />
+        <div className="flex gap-2 mb-3">
+          <TextArea rows={2} className="flex-1" value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Add an update" />
+          <Button variant="primary" className="self-end" onClick={post} disabled={!comment.trim()}>Post</Button>
+        </div>
+        {!feed.length ? <p className="text-sm text-gray-500">No updates yet.</p> : (
+          <ul className="space-y-3">
+            {feed.map((u) => (
+              <li key={u.id} className="text-sm">
+                <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
+                  <span className="font-medium text-gray-700">{personName(u.author)}</span>
+                  <span>{fmtTime(u.created_at)}</span>
+                </div>
+                {u.body && <p className="text-gray-800 mt-0.5 whitespace-pre-wrap">{u.body}</p>}
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
+      {results && c && <ResultsForm c={c} task={t} me={me.email} onClose={() => setResults(false)} />}
+    </>
   );
 }
 
@@ -119,7 +329,7 @@ const CASCADE: { key: string; label: string }[] = [
   { key: 'confirmed', label: 'Confirmed TB' }, { key: 'started_treatment', label: 'Started treatment' },
 ];
 
-function CampaignDetail({ c, data, rows, tasks, onDeleted }: { c: TbCampaign; data: TbData; rows: TbResult[]; tasks: TbTask[]; onDeleted: () => void }) {
+function CampaignDetail({ c, data, rows, tasks, onOpenTask, onDeleted }: { c: TbCampaign; data: TbData; rows: TbResult[]; tasks: TbTask[]; onOpenTask: (id: string) => void; onDeleted: () => void }) {
   const me = useMe();
   const people = usePeople();
   const [adding, setAdding] = useState(false);
@@ -143,7 +353,7 @@ function CampaignDetail({ c, data, rows, tasks, onDeleted }: { c: TbCampaign; da
       </Card>
 
       <Card>
-        <CardHeader title="Cascade" subtitle={`Expected about 1 case per ${nns(exp) ?? '—'} screened${t.screened ? `; observed ${t.confirmed ? `1 per ${Math.round(t.screened / t.confirmed)}` : 'none yet'}` : ''}`} right={<Button variant="primary" icon="plus" onClick={() => setAdding(true)}>Add results</Button>} />
+        <CardHeader title="Cascade" subtitle={`Expected* about 1 case per ${nns(exp) ?? '—'} screened${t.screened ? `; observed ${t.confirmed ? `1 per ${Math.round(t.screened / t.confirmed)}` : 'none yet'}` : ''}`} right={<Button variant="primary" icon="plus" onClick={() => setAdding(true)}>Add results</Button>} />
         <div className="space-y-2.5">
           {CASCADE.map((s, i) => {
             const v = t[s.key] || 0;
@@ -168,21 +378,24 @@ function CampaignDetail({ c, data, rows, tasks, onDeleted }: { c: TbCampaign; da
       </Card>
 
       <Card>
-        <CardHeader title="Tasks" subtitle="Generated from the playbook; assigned by role" />
+        <CardHeader title="Tasks" subtitle="Click one to open it" />
         {!tasks.length && <p className="text-sm text-gray-500">No tasks.</p>}
-        <ul className="divide-y divide-gray-100">
+        <ul className="divide-y divide-gray-100 -mx-1">
           {[...tasks].sort((a, b) => (a.due || '').localeCompare(b.due || '')).map((x) => (
-            <li key={x.id} className="py-2.5 flex flex-wrap items-center gap-3">
-              <input type="checkbox" checked={x.status === 'done'} onChange={(e) => tbSave('tb_tasks', { ...x, status: e.target.checked ? 'done' : 'todo', updated_at: new Date().toISOString() })} aria-label="Done" />
-              <div className="min-w-0 flex-1">
-                <div className={cx('text-[15px]', x.status === 'done' && 'line-through text-gray-400')}>{x.title}</div>
-                <div className={cx('text-xs', x.status !== 'done' && x.due && x.due < today ? 'text-red-600' : 'text-gray-500')}>{x.role}{x.assignee ? ` · ${personName(x.assignee)}` : ' · unassigned'}{x.due ? ` · due ${x.due}` : ''}</div>
-              </div>
-              <Select className="w-[180px] [&_select]:h-9 [&_select]:text-sm" value={x.assignee || ''} onChange={(v) => tbSave('tb_tasks', { ...x, assignee: v || null })} placeholder="Assign" options={peopleOptions(people, x.assignee)} />
+            <li key={x.id}>
+              <button type="button" onClick={() => onOpenTask(x.id)} className="w-full text-left px-1 py-2.5 rounded-lg hover:bg-gray-50 flex items-center gap-3">
+                <span className={cx('w-2 h-2 rounded-full shrink-0', STATUS_DOT[x.status])} />
+                <span className="min-w-0 flex-1">
+                  <span className={cx('block text-[15px]', x.status === 'done' && 'line-through text-gray-400')}>{x.title}</span>
+                  <span className={cx('block text-xs', x.status !== 'done' && x.due && x.due < today ? 'text-red-600' : 'text-gray-500')}>{x.role}{x.assignee ? ` · ${personName(x.assignee)}` : ' · unassigned'}{x.due ? ` · due ${x.due}` : ''}</span>
+                </span>
+                <Icon name="chevronRight" size={16} className="text-gray-300" />
+              </button>
             </li>
           ))}
         </ul>
       </Card>
+
 
       {rows.length > 0 && (
         <Card>
@@ -212,14 +425,14 @@ const FIELDS: { key: keyof TbResult; label: string; hint?: string }[] = [
   { key: 'started_treatment', label: 'Started treatment' }, { key: 'contacts_identified', label: 'Household contacts identified' }, { key: 'contacts_screened', label: 'Contacts screened' }, { key: 'tpt_started', label: 'Preventive treatment started' },
 ];
 
-function ResultsForm({ c, me, onClose }: { c: TbCampaign; me: string; onClose: () => void }) {
+function ResultsForm({ c, task, me, onClose }: { c: TbCampaign; task?: TbTask; me: string; onClose: () => void }) {
   const [v, setV] = useState<Record<string, any>>({ report_date: new Date().toISOString().slice(0, 10) });
   const [err, setErr] = useState('');
   const save = async () => {
     const n = (k: string) => Number(v[k] || 0);
     if (n('confirmed') > n('screened') || n('tested') > n('screened')) return setErr('Confirmed and tested cannot exceed people screened.');
     if (n('cough_flagged_confirmed') > n('cough_flagged') || n('cxr_flagged_confirmed') > n('cxr_flagged')) return setErr('Confirmed among flagged cannot exceed the number flagged.');
-    const row: any = { id: uid('tbr'), campaign_id: c.id, report_date: v.report_date, notes: v.notes || null, reported_by: me };
+    const row: any = { id: uid('tbr'), campaign_id: c.id, task_id: task?.id || null, report_date: v.report_date, notes: v.notes || null, reported_by: me };
     for (const f of FIELDS) row[f.key] = n(f.key as string);
     await tbSave('tb_campaign_results', row);
     onClose();
@@ -269,8 +482,9 @@ export function CampaignForm({ data, initial, me, onClose, onSaved }: { data: Tb
         <Field label="People to screen (target)"><TextInput type="number" min={0} className="w-full" value={c.target_screened ?? ''} onChange={(e) => setC({ ...c, target_screened: e.target.value ? Number(e.target.value) : null })} /></Field>
       </div>
       <div className="rounded-xl bg-orange-50 text-orange-900 text-sm p-3">
-        Expected yield: about <b>1 confirmed case per {nns(exp) ?? '—'}</b> people screened ({SETTINGS.find((s) => s.value === c.setting)?.label || 'setting'}).
+        Expected yield*: about <b>1 confirmed case per {nns(exp) ?? '—'}</b> people screened ({SETTINGS.find((s) => s.value === c.setting)?.label || 'setting'}).
         {c.target_screened && exp != null ? <> At {fmtInt(c.target_screened)} screened, expect about <b>{(c.target_screened * exp).toFixed(0)}</b> cases.</> : null}
+        <span className="block text-xs mt-1 text-orange-800">* Assumption: published screening yield for the setting (Kranzer et al. 2010), scaled by the district's expected rate vs Ghana.</span>
       </div>
       {pb && (
         <div className="text-sm">
@@ -280,6 +494,28 @@ export function CampaignForm({ data, initial, me, onClose, onSaved }: { data: Tb
         </div>
       )}
       <Field label="Notes"><TextArea rows={2} value={c.notes || ''} onChange={(e) => setC({ ...c, notes: e.target.value })} /></Field>
+    </Modal>
+  );
+}
+
+function AddTask({ roles, campaigns, districts, people, me, onClose }: { roles: string[]; campaigns: { value: string; label: string }[]; districts: { value: string; label: string }[]; people: { value: string; label: string }[]; me: string; onClose: () => void }) {
+  const [t, setT] = useState<Partial<TbTask>>({ status: 'todo' });
+  const save = async () => {
+    if (!t.title?.trim()) return;
+    await tbSave('tb_tasks', { ...(t as TbTask), id: uid('tbt'), title: t.title.trim(), district_name: districts.find((d) => d.value === t.district_id)?.label || null, created_by: me });
+    onClose();
+  };
+  return (
+    <Modal open onClose={onClose} title="Add task" footer={<><Button onClick={onClose}>Cancel</Button><Button variant="primary" onClick={save} disabled={!t.title?.trim()}>Add</Button></>}>
+      <Field label="Task"><TextInput className="w-full" value={t.title || ''} onChange={(e) => setT({ ...t, title: e.target.value })} /></Field>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <Field label="Role"><TextInput className="w-full" list="tb-roles" value={t.role || ''} onChange={(e) => setT({ ...t, role: e.target.value })} /></Field>
+        <Field label="Owner"><Select value={t.assignee || ''} onChange={(v) => setT({ ...t, assignee: v || null })} placeholder="Unassigned" options={people} /></Field>
+        <Field label="Campaign"><Select value={t.campaign_id || ''} onChange={(v) => setT({ ...t, campaign_id: v || null })} placeholder="None" options={campaigns} /></Field>
+        <Field label="District"><Select value={t.district_id || ''} onChange={(v) => setT({ ...t, district_id: v || null })} placeholder="None" options={districts} /></Field>
+        <Field label="Due"><TextInput type="date" className="w-full" value={t.due || ''} onChange={(e) => setT({ ...t, due: e.target.value })} /></Field>
+      </div>
+      <datalist id="tb-roles">{roles.map((r) => <option key={r} value={r} />)}</datalist>
     </Modal>
   );
 }

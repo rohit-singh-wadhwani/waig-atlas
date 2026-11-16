@@ -2,10 +2,9 @@ import React, { useMemo, useState } from 'react';
 import { PageHeader, useMe } from '../../components/Layout';
 import { Empty, Segmented } from '../../components/ui';
 import { useData, useLocalPref } from '../../lib/hooks';
-import { loadTbDistricts, tbList, TbCampaign, TbParam, TbPlaybook, TbResult, TbTask } from '../../lib/tb';
+import { loadTbDistricts, tbList, TbCampaign, TbParam, TbPlaybook, TbResult, TbTask, TbTaskUpdate } from '../../lib/tb';
 import Explorer from './Explorer';
 import Campaigns, { CampaignForm } from './Campaigns';
-import TaskBoard from './TaskBoard';
 import Evidence from './Evidence';
 import Brief from './Brief';
 
@@ -20,8 +19,9 @@ export function useTbData() {
   const campaigns = useData(() => tbList<TbCampaign>('tb_campaigns'), [], []);
   const results = useData(() => tbList<TbResult>('tb_campaign_results'), [], []);
   const tasks = useData(() => tbList<TbTask>('tb_tasks'), [], []);
+  const updates = useData(() => tbList<TbTaskUpdate>('tb_task_updates'), [], []);
   const P = useMemo(() => Object.fromEntries(params.data.map((p) => [p.id, Number(p.value)])) as Record<string, number>, [params.data]);
-  return { dist, params, playbooks, campaigns, results, tasks, P };
+  return { dist, params, playbooks, campaigns, results, tasks, updates, P };
 }
 export type TbData = ReturnType<typeof useTbData>;
 
@@ -59,10 +59,7 @@ export default function TbPage() {
           </div>
           {tab === 'explore' && <Explorer data={data} goTab={(t) => setTab(t as Tab)} />}
           {tab === 'campaigns' && (
-            <div className="space-y-6">
-              <Campaigns data={data} onPlan={setPlan} />
-              <TaskBoard data={data} />
-            </div>
+            <Campaigns data={data} onPlan={setPlan} />
           )}
           {tab === 'data' && <Evidence data={data} />}
           {tab === 'brief' && <Brief />}

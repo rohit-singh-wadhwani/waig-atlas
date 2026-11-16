@@ -3,7 +3,7 @@ import { PageHeader } from '../components/Layout';
 import { Badge, Button, Card, CardHeader, Empty, ExtLink, Field, KpiCard, Modal, Segmented, Select, TextArea, TextInput, cx } from '../components/ui';
 import Icon from '../components/Icon';
 import { useData } from '../lib/hooks';
-import { db, DEMO, loadRunLog } from '../lib/store';
+import { db, loadRunLog } from '../lib/store';
 import { fmtTime, timeAgo } from '../lib/format';
 import type { Source } from '../lib/types';
 
