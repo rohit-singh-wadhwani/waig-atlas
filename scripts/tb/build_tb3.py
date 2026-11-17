@@ -268,6 +268,134 @@ def dhims_regions():
 
 
 # ---------------- build ----------------
+GH_BOX = (-3.4, 4.4, 1.3, 11.3)  # lon_min, lat_min, lon_max, lat_max
+
+
+def _fac_kind(t):
+    t = (t or '').lower()
+    if 'hospital' in t:
+        return 'hospital'
+    if 'chps' in t or 'community-based' in t or 'community based' in t:
+        return 'CHPS'
+    if 'health cent' in t or 'health post' in t:
+        return 'health centre'
+    if 'maternity' in t:
+        return 'maternity home'
+    if 'polyclinic' in t:
+        return 'polyclinic'
+    return 'clinic'
+
+
+def _in_ghana(lon, lat):
+    return GH_BOX[0] <= lon <= GH_BOX[2] and GH_BOX[1] <= lat <= GH_BOX[3]
+
+
+def _ckan_resource(api, pkg, want=('xlsx', 'csv')):
+    j = get(f'{api}/api/3/action/package_show?id={pkg}').json()['result']
+    res = [r for r in j.get('resources', []) if (r.get('format') or '').lower() in want and r.get('url')]
+    res.sort(key=lambda r: want.index((r.get('format') or '').lower()))
+    if not res:
+        raise RuntimeError(f'no {want} resource in {pkg}')
+    return res[0]['url'], (res[0].get('format') or '').lower()
+
+
+def who_kemri_facilities():
+    """WHO / KEMRI-Wellcome spatial database of public-sector health facilities in sub-Saharan Africa
+    (Maina et al. 2019, Scientific Data), Ghana rows. Optional: skipped with a logged reason if unavailable."""
+    try:
+        url, fmt = _ckan_resource('https://data.humdata.org', 'health-facilities-in-sub-saharan-africa')
+        raw = get(url).content
+        rows = []
+        if fmt == 'xlsx':
+            import openpyxl
+            wb = openpyxl.load_workbook(io.BytesIO(raw), read_only=True, data_only=True)
+            ws = wb.worksheets[0]
+            it = ws.iter_rows(values_only=True)
+            head = None
+            for r in it:  # the sheet has a title block above the header row
+                if r and any(str(c or '').strip().lower() == 'country' for c in r):
+                    head = [str(c or '').strip().lower() for c in r]
+                    break
+            for r in it:
+                rows.append(dict(zip(head, r)))
+        else:
+            rows = [{k.strip().lower(): v for k, v in r.items()} for r in csv.DictReader(io.StringIO(raw.decode('utf-8', 'replace')))]
+        out = []
+        for r in rows:
+            if str(r.get('country') or '').strip().lower() != 'ghana':
+                continue
+            try:
+                lon, lat = float(r.get('long') or r.get('longitude')), float(r.get('lat') or r.get('latitude'))
+            except (TypeError, ValueError):
+                continue
+            if _in_ghana(lon, lat):
+                out.append({'lon': lon, 'lat': lat, 'name': str(r.get('facility name') or '').strip(), 'kind': _fac_kind(r.get('facility type')), 'lab': False, 'src': 'WHO/KEMRI 2019'})
+        source(f'WHO/KEMRI public health facilities, Ghana ({len(out)})', 'https://data.humdata.org/dataset/health-facilities-in-sub-saharan-africa', bool(out), 'Maina et al. 2019, Scientific Data; public sector only')
+        return out
+    except Exception as e:
+        source('WHO/KEMRI public health facilities, Ghana', 'https://data.humdata.org/dataset/health-facilities-in-sub-saharan-africa', False, str(e)[:200])
+        return []
+
+
+def ghs_facilities():
+    """Ghana Health Service facility list on data.gov.gh (2012; public, CHAG and private, incl. CHPS).
+    Optional: skipped with a logged reason if unavailable."""
+    try:
+        url, _ = _ckan_resource('https://data.gov.gh', 'health-facilities-ghana', want=('csv',))
+        rows = csv.DictReader(io.StringIO(get(url).content.decode('utf-8', 'replace')))
+        out = []
+        for r in rows:
+            r = {k.strip().lower(): v for k, v in r.items() if k}
+            try:
+                lat, lon = float(r.get('latitude')), float(r.get('longitude'))
+            except (TypeError, ValueError):
+                continue
+            if not _in_ghana(lon, lat) and _in_ghana(lat, lon):
+                lon, lat = lat, lon  # some rows have the two swapped
+            if _in_ghana(lon, lat) and (lon, lat) != (0, 0):
+                out.append({'lon': lon, 'lat': lat, 'name': (r.get('facilityname') or r.get('facility name') or '').strip(), 'kind': _fac_kind(r.get('type')), 'lab': False, 'src': 'GHS 2012'})
+        source(f'Ghana Health Service facility list ({len(out)})', 'https://data.gov.gh/dataset/health-facilities-ghana', bool(out), '2012 list incl. CHPS, CHAG and private')
+        return out
+    except Exception as e:
+        source('Ghana Health Service facility list', 'https://data.gov.gh/dataset/health-facilities-ghana', False, str(e)[:200])
+        return []
+
+
+def merge_facilities(osm, others, km=0.1):
+    """One facility list: OpenStreetMap first (newest), then other lists' facilities that are not within 100 m of
+    one already kept. A hospital in any list keeps the hospital type."""
+    keep = [dict(f, src='OpenStreetMap') for f in osm]
+    if not others:
+        return keep
+    lat0 = 7.9
+    tree = cKDTree(km_xy([f['lon'] for f in keep], [f['lat'] for f in keep], lat0))
+    added = []
+    dd, kk = tree.query(km_xy([f['lon'] for f in others], [f['lat'] for f in others], lat0))
+    for f, d, k in zip(others, dd, kk):
+        if d <= km:
+            if f['kind'] == 'hospital' and keep[k]['kind'] != 'hospital':
+                keep[k]['kind'] = 'hospital'
+            if not keep[k]['name'] and f['name']:
+                keep[k]['name'] = f['name']
+            continue
+        added.append(f)
+    # de-duplicate the added facilities among themselves (lists overlap)
+    if added:
+        axy = km_xy([a['lon'] for a in added], [a['lat'] for a in added], lat0)
+        atree, drop = cKDTree(axy), set()
+        for i, j in sorted(atree.query_pairs(km)):
+            if i in drop or j in drop:
+                continue
+            a, b = added[i], added[j]
+            win, lose = (i, j) if a['src'] == 'WHO/KEMRI 2019' or b['src'] != 'WHO/KEMRI 2019' else (j, i)
+            if added[lose]['kind'] == 'hospital':
+                added[win]['kind'] = 'hospital'
+            drop.add(lose)
+        added = [a for i, a in enumerate(added) if i not in drop]
+    log('facilities merged:', len(osm), 'OpenStreetMap +', len(added), 'from other lists =', len(osm) + len(added))
+    return keep + added
+
+
 def main():
     dists = gss_districts()
     years, nat = who_tb()
@@ -275,6 +403,7 @@ def main():
     dhs = dhs_regional()
     cen = census()
     facilities, sites = osm_points()
+    facilities = merge_facilities(facilities, who_kemri_facilities() + ghs_facilities())
     towns, comm = osm_extra()
     reported = dhims_regions()
     # ---- travel: one facility list (OpenStreetMap), times computed to those same facilities ----
@@ -560,7 +689,7 @@ def main():
         for v in keep:
             if v['kind'] in ('prison', 'mine / quarry'):
                 keysites.append({**v, 'district': d['name'], 'district_id': d['id']})
-        fac_out = [{'name': f['name'], 'kind': f['kind'], 'lab': f['lab'], 'lon': round(f['lon'], 5), 'lat': round(f['lat'], 5)} for f in d['facilities']]
+        fac_out = [{'name': f['name'], 'kind': f['kind'], 'lab': f['lab'], 'src': f.get('src'), 'lon': round(f['lon'], 5), 'lat': round(f['lat'], 5)} for f in d['facilities']]
         json.dump({'id': d['id'], 'hexes': hex_out, 'towns': town_out, 'venues': keep, 'facilities': fac_out}, open(os.path.join(DD, f'{d["id"]}.json'), 'w'), separators=(',', ':'), allow_nan=False)
 
         c = d['cen']

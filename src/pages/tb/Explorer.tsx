@@ -21,7 +21,7 @@ const signedPct = (r: number | null | undefined) => (r == null ? '—' : `${r >=
 const SIGNALS: { key: keyof TbDistrict; label: string; fmt: (v: number) => string; worse: 'high' | 'low'; flag: string; source: string }[] = [
   { key: 'poverty', label: 'Multidimensional poverty', fmt: (v) => `${v.toFixed(0)}% of people`, worse: 'high', flag: 'Poorer', source: 'GSS Census 2021' },
   { key: 'crowding', label: 'People per sleeping room', fmt: (v) => v.toFixed(1), worse: 'high', flag: 'Crowded homes', source: 'GSS Census 2021' },
-  { key: 'walk_far', label: 'Over 1 hour walk to care', fmt: (v) => pctFmt(v), worse: 'high', flag: 'Far from care', source: 'Malaria Atlas Project 2020 walking speed map, to OpenStreetMap facilities' },
+  { key: 'walk_far', label: 'Over 1 hour walk to care', fmt: (v) => pctFmt(v), worse: 'high', flag: 'Far from care', source: 'Malaria Atlas Project 2020 walking speed map, to the merged facility list' },
   { key: 'insured', label: 'Health insurance coverage', fmt: (v) => pctFmt(v), worse: 'low', flag: 'Low insurance', source: 'GSS Census 2021' },
   { key: 'fac_100k', label: 'Mapped facilities per 100k', fmt: (v) => v.toFixed(1), worse: 'low', flag: 'Few facilities', source: 'OpenStreetMap' },
 ];
@@ -226,7 +226,7 @@ function HowTag({ b, how }: { b: 'reported' | 'measured' | 'estimated'; how?: st
 }
 
 /** One explanation for every distance and travel time on the dashboard. */
-const TRAVEL_HOW = 'One facility list (OpenStreetMap, refreshed weekly). Distance is the straight line to the facility; travel time is the route to the same facility over the Malaria Atlas Project 2020 walking or driving speed map (~1 km cells).';
+const TRAVEL_HOW = 'One facility list: OpenStreetMap (refreshed weekly) merged with the WHO/KEMRI public facility list (2019) and the Ghana Health Service list (2012), duplicates within 100 m removed. Distance is the straight line to the facility; travel time is the route to the same facility over the Malaria Atlas Project 2020 walking or driving speed map (~1 km cells).';
 
 function Stat({ label, value, sub, basis, how }: { label: string; value: React.ReactNode; sub?: React.ReactNode; basis?: 'reported' | 'measured' | 'estimated'; how?: string }) {
   return (

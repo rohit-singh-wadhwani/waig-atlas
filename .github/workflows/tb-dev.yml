@@ -18,7 +18,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: pip install -q requests numpy rasterio shapely h3 scipy pyshp
+      - run: pip install -q requests numpy rasterio shapely h3 scipy pyshp openpyxl
       - run: python scripts/tb/build_tb3.py
         env:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
