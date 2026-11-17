@@ -10,9 +10,9 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-16T15:59:40.591Z",
+  "last_run": "2026-11-17T02:34:13.155Z",
   "last_status": "ok",
-  "last_message": "60 items, 1 new",
+  "last_message": "60 items, 0 new",
   "item_count": 60
  },
  {
@@ -26,7 +26,7 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-16T15:59:41.594Z",
+  "last_run": "2026-11-17T02:34:10.242Z",
   "last_status": "ok",
   "last_message": "60 items, 0 new",
   "item_count": 60
@@ -42,10 +42,10 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-16T15:59:39.920Z",
+  "last_run": "2026-11-17T02:34:12.324Z",
   "last_status": "ok",
-  "last_message": "3 items, 0 new",
-  "item_count": 3
+  "last_message": "2 items, 2 new",
+  "item_count": 2
  },
  {
   "id": "fundsforngos-health",
@@ -74,9 +74,9 @@
   "kind": null,
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-16T15:59:38.910Z",
+  "last_run": "2026-11-17T02:34:11.607Z",
   "last_status": "ok",
-  "last_message": "20 items, 1 new",
+  "last_message": "20 items, 0 new",
   "item_count": 20
  },
  {
