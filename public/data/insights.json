@@ -1,6 +1,20 @@
 {
- "updated_at": "2026-11-16T22:06:44.548Z",
+ "updated_at": "2026-11-17T01:35:29.402Z",
  "insights": [
+  {
+   "id": "b83d1dba6338a41f",
+   "title": "Nanoparticle therapeutics for infectious diseases integrating AI-guided design, crispr delivery, phage synergy, and immune modulation.",
+   "summary": "This study reviews nanoparticle therapeutics for infectious diseases that combine AI-guided design, CRISPR delivery, phage synergy, and immune modulation.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/43037917/",
+   "published_at": "2026-11-16T17:33:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [],
+   "diseases": [
+    "infectious diseases"
+   ]
+  },
   {
    "id": "08b2a7b1062ca39c",
    "title": "MRI Radiomics and Deep Learning for Differentiating Spinal Tuberculosis from Spinal Metastasis: A Multicenter Study.",
