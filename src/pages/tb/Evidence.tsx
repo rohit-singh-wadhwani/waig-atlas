@@ -22,7 +22,7 @@ const CATALOG: { match: RegExp; group: string; gives: string; use: string }[] = 
   { match: /DHS/i, group: 'Who is at risk', gives: 'HIV, thinness and smoking rates by region', use: 'Which regions carry more risk' },
   { match: /Wealth/i, group: 'Who is at risk', gives: 'Relative wealth of each ~2 km area', use: 'Poorer areas' },
   { match: /WorldPop/i, group: 'Who lives where', gives: 'Population on a 100 m grid', use: 'People in each hexagon, town and spot' },
-  { match: /Malaria Atlas|travel time/i, group: 'Where people live and reach care', gives: 'Travel time to the nearest health facility', use: 'Who is far from care' },
+  { match: /Malaria Atlas|travel time|friction/i, group: 'Where people live and reach care', gives: 'Walking and driving speed for every ~1 km of Ghana (2020)', use: 'Walk and drive time to the OpenStreetMap facilities; who is far from care' },
   { match: /health facilities/i, group: 'Where people live and reach care', gives: 'Clinics and hospitals', use: 'Distance to care, facility counts' },
   { match: /congregate|sites/i, group: 'Where people live and reach care', gives: 'Markets, lorry stations, prisons, mines', use: 'Screening venues and key populations' },
   { match: /geoBoundaries/i, group: 'Boundaries', gives: 'Region and district boundaries', use: 'Map and district totals' },

@@ -9,7 +9,9 @@ Inputs (all open, fetched every run)
                         to HIV, undernourishment, smoking, alcohol, diabetes
   DHS Program           regional HIV, thinness and tobacco use (the only one that is regional, labelled as such)
   WorldPop 2026         population on a 100 m grid
-  Malaria Atlas Project walking and motorised travel time to the nearest health facility
+  Malaria Atlas Project 2020 walking and motorised friction surfaces (travel speed per ~1 km cell); walk and drive
+                        times are computed over them to the OpenStreetMap facilities, so distance and time always
+                        describe the same facility
   OpenStreetMap         health facilities, towns and villages, markets, lorry stations, prisons, mines, schools,
                         places of worship, community centres, pharmacies, NGO offices
   DHIMS II extract      monthly reported TB for Ashanti, Eastern and Volta, 2016-2023 (Mendeley Data, CC BY 4.0)
@@ -44,7 +46,7 @@ from shapely.strtree import STRtree
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from build_tb import (OUT, NOW, SOURCES, S, MIRRORS, get, source, log, r2, km_xy, norm_region, overpass,  # noqa: E402
-                      map_travel_time, dhs_regional, who_tb, osm_points, sb)
+                      map_friction, travel_field, haversine_km, dhs_regional, who_tb, osm_points, sb)
 
 PX = 'https://statsbank.statsghana.gov.gh/api/v1/en/PHC%202021%20StatsBank/'
 FAR_MIN = 60          # minutes on foot that count as "far from care"
@@ -275,19 +277,19 @@ def main():
     facilities, sites = osm_points()
     towns, comm = osm_extra()
     reported = dhims_regions()
-    tt = map_travel_time('Motorized')
-    walk = map_travel_time('Walking')
+    # ---- travel: one facility list (OpenStreetMap), times computed to those same facilities ----
+    hosp = [f for f in facilities if f['kind'] == 'hospital']
+    walk_ds, drive_ds = map_friction('Walking'), map_friction('Motorized')
+    walk_t, walk_f = travel_field(walk_ds, [f['lon'] for f in facilities], [f['lat'] for f in facilities])   # walk to nearest facility
+    drive_t, drive_h = travel_field(drive_ds, [f['lon'] for f in hosp], [f['lat'] for f in hosp])           # drive to nearest hospital
+    walk_fr, drive_fr = walk_ds.read(1).astype('float64'), drive_ds.read(1).astype('float64')
+    walk_fr[~(walk_fr > 0)], drive_fr[~(drive_fr > 0)] = np.nan, np.nan
+    log('travel fields', walk_t.shape, int(np.isfinite(walk_t).sum()), 'cells reachable on foot;', len(facilities), 'facilities,', len(hosp), 'hospitals')
 
-    def band(ds):
-        b = ds.read(1).astype('float32')
-        b[(b < 0) | ~np.isfinite(b)] = np.nan
-        return b
-    tt_b, walk_b = band(tt), band(walk)
-
-    def sample(ds, b, lons, lats):
+    def sample(ds, grid, lons, lats):
         rows, cols = rasterio.transform.rowcol(ds.transform, lons, lats)
-        rows, cols = np.clip(rows, 0, b.shape[0] - 1), np.clip(cols, 0, b.shape[1] - 1)
-        return b[rows, cols]
+        rows, cols = np.clip(rows, 0, grid.shape[0] - 1), np.clip(cols, 0, grid.shape[1] - 1)
+        return grid[rows, cols]
 
     # ---- census join ----
     missing = []
@@ -367,8 +369,8 @@ def main():
     rr, cc = np.nonzero(p1 > 0)
     xs, ys = rasterio.transform.xy(transform, rr * 10 + 5, cc * 10 + 5)
     clon, clat, cpop, clab = np.array(xs), np.array(ys), p1[rr, cc], lab1[rr, cc]
-    mins = sample(tt, tt_b, clon, clat)
-    wmins = sample(walk, walk_b, clon, clat)
+    mins = sample(drive_ds, drive_t, clon, clat)    # drive to nearest hospital
+    wmins = sample(walk_ds, walk_t, clon, clat)     # walk to nearest facility
     n = len(dists) + 1
     ok_m, ok_w = np.isfinite(mins), np.isfinite(wmins)
     cp_m = np.bincount(clab, weights=cpop * ok_m, minlength=n)
@@ -387,9 +389,6 @@ def main():
                 return k
         return None
     lat0 = 7.9
-    fac_tree = cKDTree(km_xy([f['lon'] for f in facilities], [f['lat'] for f in facilities], lat0))
-    hosp = [f for f in facilities if f['kind'] == 'hospital']
-    hosp_tree = cKDTree(km_xy([f['lon'] for f in hosp], [f['lat'] for f in hosp], lat0)) if hosp else None
     for d in dists:
         d.update(facilities=[], venues=[], towns=[], hospitals=0, labs=0, markets=0, hubs=0, prisons=0, mines=0)
     for f in facilities:
@@ -430,13 +429,26 @@ def main():
         m = disk[max(0, -r0):max(0, -r0) + win.shape[0], max(0, -c0):max(0, -c0) + win.shape[1]]
         return float((win * m).sum())
 
-    def near(points, lons, lats):
+    fac_lon, fac_lat = np.array([f['lon'] for f in facilities]), np.array([f['lat'] for f in facilities])
+    hos_lon, hos_lat = np.array([f['lon'] for f in hosp]), np.array([f['lat'] for f in hosp])
+
+    def near(lons, lats):
+        """For each point: the facility reached fastest on foot and the hospital reached fastest by road, with the
+        straight-line distance and the travel time to THAT SAME place (so the two numbers never disagree)."""
+        lons, lats = np.asarray(lons, float), np.asarray(lats, float)
         if not len(lons):
-            return np.array([]), np.array([]), np.array([]), np.array([])
-        xy = km_xy(lons, lats, lat0)
-        fk = fac_tree.query(xy)[0]
-        hk = hosp_tree.query(xy)[0] if hosp_tree is not None else np.full(len(lons), np.nan)
-        return fk, hk, sample(tt, tt_b, lons, lats), sample(walk, walk_b, lons, lats)
+            e = np.array([])
+            return dict(fkm=e, fmin=e, fname=[], hkm=e, hmin=e, hname=[])
+        fi, hi = sample(walk_ds, walk_f, lons, lats), sample(drive_ds, drive_h, lons, lats)
+        fmin, hmin = sample(walk_ds, walk_t, lons, lats), sample(drive_ds, drive_t, lons, lats)
+        fok, hok = fi >= 0, hi >= 0
+        fkm = np.where(fok, haversine_km(lons, lats, fac_lon[np.maximum(fi, 0)], fac_lat[np.maximum(fi, 0)]), np.nan)
+        hkm = np.where(hok, haversine_km(lons, lats, hos_lon[np.maximum(hi, 0)], hos_lat[np.maximum(hi, 0)]), np.nan) if len(hosp) else np.full(len(lons), np.nan)
+        # same ~1 km cell as the facility: the grid says 0 min, so use the straight line at this cell's speed
+        fmin = np.where(fmin < 1e-6, fkm * 1000 * sample(walk_ds, walk_fr, lons, lats), fmin)
+        hmin = np.where(hmin < 1e-6, hkm * 1000 * sample(drive_ds, drive_fr, lons, lats), hmin)
+        return dict(fkm=fkm, fmin=np.where(fok, fmin, np.nan), fname=[facilities[k]['name'] if k >= 0 else None for k in fi],
+                    hkm=hkm, hmin=np.where(hok, hmin, np.nan), hname=[hosp[k]['name'] if k >= 0 else None for k in hi])
 
     # ---- hexagons per district ----
     rr2, cc2 = np.nonzero(pop > 0)
@@ -468,11 +480,11 @@ def main():
         hexes = by_d.get(d['i'], [])
         if hexes:
             cen_ll = np.array([h3.cell_to_latlng(c) for c, _ in hexes])
-            hf, _, hm, hw = near(None, cen_ll[:, 1], cen_ll[:, 0])
+            hn = near(cen_ll[:, 1], cen_ll[:, 0])
         hex_out = []
         for j, (cid, pv) in enumerate(hexes):
             ring = [[round(lng, 4), round(lat, 4)] for lat, lng in h3.cell_to_boundary(cid)]
-            hex_out.append({'h': cid, 'p': round(pv), 'e': r2(pv * d['rate'], 2), 'k': r2(pv * d['rate'] / hex_area, 2), 'f': r2(hf[j], 2), 'w': r2(hw[j], 0), 'r': ring})
+            hex_out.append({'h': cid, 'p': round(pv), 'e': r2(pv * d['rate'], 2), 'k': r2(pv * d['rate'] / hex_area, 2), 'f': r2(hn['fkm'][j], 2), 'w': r2(hn['fmin'][j], 0), 'r': ring})
         rnd = lambda co: [rnd(x) for x in co] if isinstance(co[0], (list, tuple)) else [round(co[0], 4), round(co[1], 4)]
         for h in hex_out:
             h['t'] = -1
@@ -506,7 +518,7 @@ def main():
                 _, idx = cKDTree(txy).query(hxy)
                 for j, k in enumerate(idx):
                     members.setdefault(int(k), []).append(j)
-            tf, th, tm, twk = near(None, np.array([t['lon'] for t in tw]), np.array([t['lat'] for t in tw]))
+            tn = near([t['lon'] for t in tw], [t['lat'] for t in tw])
             order = sorted(range(len(tw)), key=lambda k: -sum(hex_out[j]['p'] for j in members.get(k, [])))
             for k in order:
                 g = areas[k]
@@ -525,18 +537,19 @@ def main():
                 t = tw[k]
                 town_out.append({'id': ti, 'name': t['name'], 'place': t['place'], 'lon': round(t['lon'], 5), 'lat': round(t['lat'], 5), 'pop': round(pp), 'nodata': pp < 1,
                                  'area_km2': r2(area, 1), 'radius_km': r2(math.sqrt(max(area, 0.1) / math.pi), 2), 'expected': r2(ee, 1), 'expected_km2': r2(ee / area, 2) if area else None,
-                                 'facility_km': r2(tf[k], 2), 'hospital_km': r2(th[k], 2), 'drive_min': r2(tm[k], 0), 'walk_min': r2(twk[k], 0),
+                                 'facility': tn['fname'][k], 'facility_km': r2(tn['fkm'][k], 2), 'walk_min': r2(tn['fmin'][k], 0),
+                                 'hospital': tn['hname'][k], 'hospital_km': r2(tn['hkm'][k], 2), 'drive_min': r2(tn['hmin'][k], 0),
                                  'geom': {'type': gj['type'], 'coordinates': rnd(gj['coordinates'])}})
         cell_town = {h['h']: h['t'] for h in hex_out}
         # venues: all congregate sites; community venues limited to the 12 busiest per kind in each town
         vs = d['venues']
-        vf, vh, vm, vw = near(None, np.array([v['lon'] for v in vs]), np.array([v['lat'] for v in vs]))
+        vn = near([v['lon'] for v in vs], [v['lat'] for v in vs])
         ven = []
         for j, v in enumerate(vs):
             pp = people_within(v['lon'], v['lat'], CATCH_KM)
             ven.append({'name': v['name'], 'kind': v['kind'], 'cong': v['cong'], 'lon': round(v['lon'], 5), 'lat': round(v['lat'], 5), 'pop_1km': round(pp),
                         't': cell_town.get(h3.latlng_to_cell(v['lat'], v['lon'], HEX_RES), -1),
-                        'expected_1km': r2(pp * d['rate'], 1), 'facility_km': r2(vf[j], 2), 'hospital_km': r2(vh[j], 2), 'walk_min': r2(vw[j], 0)})
+                        'expected_1km': r2(pp * d['rate'], 1), 'facility': vn['fname'][j], 'facility_km': r2(vn['fkm'][j], 2), 'walk_min': r2(vn['fmin'][j], 0)})
         keep, per_kind = [], {}
         for v in sorted(ven, key=lambda x: -x['pop_1km']):
             if v['cong']:

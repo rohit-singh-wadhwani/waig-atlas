@@ -77,16 +77,19 @@ def r2(x, n=2):
 
 
 # ---------------- sources ----------------
-def map_travel_time(mode='Motorized'):
+def map_friction(mode='Walking'):
+    """Malaria Atlas Project 2020 friction surface for Ghana (minutes needed to cross one metre of each ~1 km cell,
+    walking only or motorised). Travel times are computed from it to OUR facility list, so distance and time
+    always refer to the same facility."""
     caps = get('https://data.malariaatlas.org/geoserver/Accessibility/ows?service=WCS&version=2.0.1&request=GetCapabilities').text
     ids = re.findall(r'<wcs:CoverageId>([^<]+)</wcs:CoverageId>', caps)
-    pick = [i for i in ids if mode.lower() in i.lower() and 'healthcare' in i.lower() and 'travel_time' in i.lower()]
+    pick = [i for i in ids if 'friction' in i.lower() and mode.lower() in i.lower()]
     if not pick:
-        raise RuntimeError(f'no {mode} healthcare travel-time coverage found')
+        raise RuntimeError(f'no {mode} friction surface found')
     cov = sorted(pick)[-1]
     url = (f'https://data.malariaatlas.org/geoserver/Accessibility/ows?service=WCS&version=2.0.1&request=GetCoverage&coverageId={cov}'
            f'&subset=Lat(4.4,11.3)&subset=Long(-3.4,1.3)&format=image/tiff')
-    path = f'/tmp/gha_travel_{mode.lower()}.tif'
+    path = f'/tmp/gha_friction_{mode.lower()}.tif'
     for attempt in range(3):
         with S.get(url, stream=True, timeout=300) as r:
             r.raise_for_status()
@@ -96,12 +99,56 @@ def map_travel_time(mode='Motorized'):
         try:
             ds = rasterio.open(path)
             ds.read(1)  # make sure the whole file is readable
-            source(f'Malaria Atlas Project: {"walking" if mode == "Walking" else "motorised"} travel time to healthcare', url.split('&subset')[0], True, f'coverage {cov}')
+            source(f'Malaria Atlas Project: {"walking" if mode == "Walking" else "motorised"} friction surface (travel speed)', url.split('&subset')[0], True, f'coverage {cov}')
             return ds
         except Exception as e:
-            log('travel-time raster unreadable, retrying', e)
+            log('friction raster unreadable, retrying', e)
             time.sleep(10)
-    raise RuntimeError('travel-time raster download was incomplete three times')
+    raise RuntimeError('friction raster download was incomplete three times')
+
+
+def travel_field(ds, lons, lats):
+    """Minutes from every cell of the friction surface to the nearest of the given points, and which point that is.
+    Multi-source Dijkstra over the 8-neighbour cell graph; an edge costs the mean friction of its two cells x its length."""
+    from scipy.sparse import coo_matrix
+    from scipy.sparse.csgraph import dijkstra
+    f = ds.read(1).astype('float64')
+    f[(f <= 0) | ~np.isfinite(f)] = np.nan
+    H, W = f.shape
+    T = ds.transform
+    lat_rows = T.f + (np.arange(H) + 0.5) * T.e
+    dx = abs(T.a) * 111320 * np.cos(np.radians(lat_rows))  # metres per cell, by row
+    dy = abs(T.e) * 110574
+    idx = np.arange(H * W).reshape(H, W)
+    rows, cols, cost = [], [], []
+    for di, dj in ((0, 1), (1, 0), (1, 1), (1, -1)):
+        c0, c1 = max(0, -dj), W - max(0, dj)
+        A, B = f[0:H - di, c0:c1], f[di:H, c0 + dj:c1 + dj]
+        length = np.sqrt((dj * dx[0:H - di, None]) ** 2 + (di * dy) ** 2)
+        w = (A + B) / 2 * length
+        ok = np.isfinite(w)
+        rows.append(idx[0:H - di, c0:c1][ok]); cols.append(idx[di:H, c0 + dj:c1 + dj][ok]); cost.append(np.maximum(w[ok], 1e-6))
+    G = coo_matrix((np.concatenate(cost), (np.concatenate(rows), np.concatenate(cols))), shape=(H * W, H * W)).tocsr()
+    r, c = rasterio.transform.rowcol(T, np.asarray(lons), np.asarray(lats))
+    r, c = np.asarray(r), np.asarray(c)
+    inside = (r >= 0) & (r < H) & (c >= 0) & (c < W)
+    node_point = {}
+    for k in np.nonzero(inside)[0]:
+        if np.isfinite(f[r[k], c[k]]):
+            node_point.setdefault(int(idx[r[k], c[k]]), int(k))
+    starts = np.array(sorted(node_point))
+    dist, _, src = dijkstra(G, directed=False, indices=starts, min_only=True, return_predecessors=True)
+    point = np.full(H * W, -1, dtype=np.int64)
+    ok = src >= 0
+    point[ok] = np.vectorize(node_point.get)(src[ok])
+    dist[~np.isfinite(dist)] = np.nan
+    return dist.reshape(H, W), point.reshape(H, W)
+
+
+def haversine_km(lon1, lat1, lon2, lat2):
+    lon1, lat1, lon2, lat2 = map(np.radians, (lon1, lat1, lon2, lat2))
+    a = np.sin((lat2 - lat1) / 2) ** 2 + np.cos(lat1) * np.cos(lat2) * np.sin((lon2 - lon1) / 2) ** 2
+    return 6371.0 * 2 * np.arcsin(np.sqrt(a))
 
 
 MIRRORS = ['https://overpass-api.de/api/interpreter', 'https://overpass.private.coffee/api/interpreter',

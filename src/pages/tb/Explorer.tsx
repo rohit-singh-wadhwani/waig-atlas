@@ -21,7 +21,7 @@ const signedPct = (r: number | null | undefined) => (r == null ? '—' : `${r >=
 const SIGNALS: { key: keyof TbDistrict; label: string; fmt: (v: number) => string; worse: 'high' | 'low'; flag: string; source: string }[] = [
   { key: 'poverty', label: 'Multidimensional poverty', fmt: (v) => `${v.toFixed(0)}% of people`, worse: 'high', flag: 'Poorer', source: 'GSS Census 2021' },
   { key: 'crowding', label: 'People per sleeping room', fmt: (v) => v.toFixed(1), worse: 'high', flag: 'Crowded homes', source: 'GSS Census 2021' },
-  { key: 'walk_far', label: 'Over 1 hour walk to care', fmt: (v) => pctFmt(v), worse: 'high', flag: 'Far from care', source: 'Malaria Atlas Project' },
+  { key: 'walk_far', label: 'Over 1 hour walk to care', fmt: (v) => pctFmt(v), worse: 'high', flag: 'Far from care', source: 'Malaria Atlas Project 2020 walking speed map, to OpenStreetMap facilities' },
   { key: 'insured', label: 'Health insurance coverage', fmt: (v) => pctFmt(v), worse: 'low', flag: 'Low insurance', source: 'GSS Census 2021' },
   { key: 'fac_100k', label: 'Mapped facilities per 100k', fmt: (v) => v.toFixed(1), worse: 'low', flag: 'Few facilities', source: 'OpenStreetMap' },
 ];
@@ -105,7 +105,7 @@ export default function Explorer({ data, goTab }: { data: TbData; goTab: (t: str
 
   const tip = (pr: any, layer: string) => {
     if (layer === 'd-fill') return districtId ? '' : `<b>${esc(pr.name)}</b> · ${esc(String(pr.region))}<br/>About <b>${fmtInt(Number(pr.expected))}</b> new TB cases a year<br/>${fmtInt(Number(pr.expected_100k))} per 100,000 (${signedPct(Number(pr.vs_ghana))} vs Ghana)<br/><i>Click to open</i>`;
-    if (layer === 'h-fill') return `${fmtInt(Number(pr.p))} people <span style="color:#6b7280">(WorldPop 2026)</span><br/>≈${Number(pr.e).toFixed(1)} TB cases a year <span style="color:#6b7280">(estimate: people × district rate)</span><br/>Nearest facility ${kmFmt(Number(pr.f))} <span style="color:#6b7280">(OpenStreetMap, straight line)</span><br/><i>${pinMode ? (selHex.includes(pr.h) ? 'Click to drop a screening point here' : 'Select this hexagon first') : selHex.includes(pr.h) ? 'Click to unselect' : 'Click to select'}</i>`;
+    if (layer === 'h-fill') return `${fmtInt(Number(pr.p))} people <span style="color:#6b7280">(WorldPop 2026)</span><br/>≈${Number(pr.e).toFixed(1)} TB cases a year <span style="color:#6b7280">(estimate: people × district rate)</span><br/>Nearest facility ${kmFmt(Number(pr.f))}${pr.w != null && pr.w !== '' ? `, ${fmtInt(Number(pr.w))} min walk` : ''} <span style="color:#6b7280">(same facility for both)</span><br/><i>${pinMode ? (selHex.includes(pr.h) ? 'Click to drop a screening point here' : 'Select this hexagon first') : selHex.includes(pr.h) ? 'Click to unselect' : 'Click to select'}</i>`;
     if (layer === 'pins') return `<b>${esc(pr.name)}</b><br/>Screening point you placed`;
     if (layer === 'town-fill' && (pr.nodata === true || pr.nodata === 'true')) return town ? '' : `<b>${esc(pr.name)}</b> (${esc(pr.place)})<br/>No population mapped in this area<br/><i>Click to open</i>`;
     if (layer === 'town-fill') return town ? '' : `<b>${esc(pr.name)}</b> (${esc(pr.place)})<br/>${fmtInt(Number(pr.pop))} people · ≈${Number(pr.expected).toFixed(0)} TB cases a year<br/><i>Click to open</i>`;
@@ -224,6 +224,9 @@ function HowTag({ b, how }: { b: 'reported' | 'measured' | 'estimated'; how?: st
     </span>
   );
 }
+
+/** One explanation for every distance and travel time on the dashboard. */
+const TRAVEL_HOW = 'One facility list (OpenStreetMap, refreshed weekly). Distance is the straight line to the facility; travel time is the route to the same facility over the Malaria Atlas Project 2020 walking or driving speed map (~1 km cells).';
 
 function Stat({ label, value, sub, basis, how }: { label: string; value: React.ReactNode; sub?: React.ReactNode; basis?: 'reported' | 'measured' | 'estimated'; how?: string }) {
   return (
@@ -471,8 +474,10 @@ function TownPanel({ d, town, venues, hexes, selHex, clearHex, pins, setPins, pi
         <div className="grid grid-cols-2 gap-2.5">
           <Stat label="People living here" value={fmtInt(town.pop)} basis="measured" how="WorldPop 2026 population (100 m grid) summed over this town's area. The town area is the part of the district nearer to this OpenStreetMap place than to any other." sub={town.area_km2 ? `${town.area_km2} km² area` : undefined} />
           <Stat label="Expected TB cases a year" value={`≈${fmtInt(town.expected)}`} basis="estimated" how="People living here × the district's expected rate per person. Assumes TB is spread evenly by population within the district." />
-          <Stat label="Nearest health facility" value={kmFmt(town.facility_km)} how="Straight-line distance from the town centre to the nearest OpenStreetMap clinic or hospital. Walking time from the Malaria Atlas Project walking-only travel-time map (2020)." basis="measured" sub={town.walk_min != null ? `${town.walk_min < 5 ? 'under 5' : fmtInt(town.walk_min)} min walk` : undefined} />
-          <Stat label="Nearest hospital" value={kmFmt(town.hospital_km)} how="Straight-line distance to the nearest OpenStreetMap hospital. Driving time from the Malaria Atlas Project motorised travel-time map (2020)." basis="measured" sub={town.drive_min != null ? `${fmtInt(town.drive_min)} min drive` : undefined} />
+          <Stat label="Nearest health facility" value={kmFmt(town.facility_km)} how={`${TRAVEL_HOW} This is the clinic or hospital reached fastest on foot from the town centre${town.facility ? `: ${town.facility}` : ''}.`} basis="measured"
+            sub={<>{town.walk_min != null ? `${town.walk_min < 5 ? 'under 5' : fmtInt(town.walk_min)} min walk` : null}{town.facility ? <span className="block truncate">{town.facility}</span> : null}</>} />
+          <Stat label="Nearest hospital" value={kmFmt(town.hospital_km)} how={`${TRAVEL_HOW} This is the hospital reached fastest by road from the town centre${town.hospital ? `: ${town.hospital}` : ''}.`} basis="measured"
+            sub={<>{town.drive_min != null ? `${fmtInt(town.drive_min)} min drive` : null}{town.hospital ? <span className="block truncate">{town.hospital}</span> : null}</>} />
         </div>
         {town.nodata && <p className="text-sm mt-3 text-gray-700 bg-gray-50 rounded-lg px-3 py-2">No population is mapped in this area, so there are no estimates. If people live here, screening can still be planned.</p>}
         {campaigns.length > 0 && <p className="text-sm mt-3 text-green-800 bg-green-50 rounded-lg px-3 py-2">✓ {campaigns.length} campaign{campaigns.length > 1 ? 's' : ''} already here: {campaigns.map((c) => c.name).join(', ')}</p>}
@@ -506,7 +511,7 @@ function TownPanel({ d, town, venues, hexes, selHex, clearHex, pins, setPins, pi
                     <input type="checkbox" checked={on} onChange={() => toggle(k)} className="mt-1" />
                     <span className="min-w-0 flex-1">
                       <span className="flex justify-between gap-2"><span className="font-medium truncate">{v.name || `Unnamed ${KIND_LABEL[v.kind]?.toLowerCase() || v.kind}`}</span><span className="text-sm tabular-nums shrink-0">{fmtInt(v.pop_1km)} <span className="text-xs text-gray-500">within 1 km</span></span></span>
-                      <span className="flex items-center gap-1.5 text-xs text-gray-500 mt-0.5"><span className="w-2 h-2 rounded-full" style={{ background: VENUE_COLORS[v.kind] || '#64748b' }} />{KIND_LABEL[v.kind] || v.kind} · facility {kmFmt(v.facility_km)}</span>
+                      <span className="flex items-center gap-1.5 text-xs text-gray-500 mt-0.5"><span className="w-2 h-2 rounded-full" style={{ background: VENUE_COLORS[v.kind] || '#64748b' }} />{KIND_LABEL[v.kind] || v.kind} · facility {kmFmt(v.facility_km)}{v.walk_min != null ? `, ${v.walk_min < 5 ? 'under 5' : fmtInt(v.walk_min)} min walk` : ''}</span>
                     </span>
                   </label>
                 </li>
