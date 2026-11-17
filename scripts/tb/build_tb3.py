@@ -274,7 +274,7 @@ GH_BOX = (-3.4, 4.4, 1.3, 11.3)  # lon_min, lat_min, lon_max, lat_max
 
 def _fac_kind(t):
     t = (t or '').lower()
-    if re.search(r'\bchps\b|\bchip\b|\bchps\w*|community[- ]based', t):
+    if re.search(r'\bchps\b|\bchip\b|\bchps\w*|community[- ]based|health planning', t):
         return 'CHPS'
     if 'hospital' in t:
         return 'hospital'
@@ -323,7 +323,7 @@ def who_kemri_facilities():
             rows = [{k.strip().lower(): v for k, v in r.items()} for r in csv.DictReader(io.StringIO(raw.decode('utf-8', 'replace')))]
         cols = list(rows[0].keys()) if rows else []
         col = lambda *keys: next((c for c in cols if c and all(k in c for k in keys)), None)
-        c_name, c_type, c_lon, c_lat = col('name'), col('type'), col('long'), col('lat')
+        c_name, c_type, c_lon, c_lat = col('name') or col('facility_n'), col('type') or col('facility_t'), col('long'), col('lat')
         log('WHO/KEMRI columns', cols, '->', c_name, c_type, c_lon, c_lat)
         out = []
         for r in rows:
@@ -370,9 +370,13 @@ def ghs_facilities():
 def merge_facilities(osm, others, km=0.1):
     """One facility list: OpenStreetMap first (newest), then other lists' facilities that are not within 100 m of
     one already kept. A hospital in any list keeps the hospital type."""
+    # not places to refer or test someone for TB
+    NOT_TB = re.compile(r'physio|dental|dentist|\beye\b|optic|optical|vision|veterinar|\bvet\b|herbal|massage|spa\b|cosmetic|fertility|orthop', re.I)
+    osm = [f for f in osm if not NOT_TB.search(f['name'] or '')]
+    others = [f for f in others if not NOT_TB.search(f['name'] or '')]
     keep = [dict(f, src='OpenStreetMap') for f in osm]
     for f in keep:  # OpenStreetMap sometimes tags CHPS compounds or clinics as hospitals; the name settles it
-        if f['kind'] == 'hospital' and re.search(r'\bchps\b|\bchip\b|\bclinic\b|health cent|health post|maternity', (f['name'] or '').lower()):
+        if f['kind'] == 'hospital' and re.search(r'\bchps\b|\bchip\b|health planning|\bclinic\b|health cent|health post|maternity', (f['name'] or '').lower()):
             f['kind'] = _fac_kind(f['name'])
     if not others:
         return keep
@@ -587,6 +591,7 @@ def main():
         hmin = np.where(hmin < 1e-6, hkm * 1000 * sample(drive_ds, drive_fr, lons, lats), hmin)
         # the ~1 km grid can undercount short trips; never faster than the straight line at 6 km/h walking, 80 km/h driving
         fmin, hmin = np.maximum(fmin, fkm / WALK_MAX_KMH * 60), np.maximum(hmin, hkm / DRIVE_MAX_KMH * 60)
+        fmin, hmin = np.where(fkm > 0, np.maximum(fmin, 1), fmin), np.where(hkm > 0, np.maximum(hmin, 1), hmin)  # never show 0 min
         return dict(fkm=fkm, fmin=np.where(fok, fmin, np.nan), fname=[facilities[k]['name'] if k >= 0 else None for k in fi],
                     hkm=hkm, hmin=np.where(hok, hmin, np.nan), hname=[hosp[k]['name'] if k >= 0 else None for k in hi])
 
