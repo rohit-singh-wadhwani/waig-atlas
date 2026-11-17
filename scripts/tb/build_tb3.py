@@ -50,6 +50,7 @@ from build_tb import (OUT, NOW, SOURCES, S, MIRRORS, get, source, log, r2, km_xy
 
 PX = 'https://statsbank.statsghana.gov.gh/api/v1/en/PHC%202021%20StatsBank/'
 FAR_MIN = 60          # minutes on foot that count as "far from care"
+WALK_MAX_KMH, DRIVE_MAX_KMH = 6.0, 80.0  # physical floor on travel time over a straight line
 CATCH_KM = 1.0        # walking catchment of a screening spot
 HEX_RES = 8           # ~0.74 km2 hexagons
 MIN_HEX_POP = 30      # skip near-empty hexagons
@@ -273,10 +274,10 @@ GH_BOX = (-3.4, 4.4, 1.3, 11.3)  # lon_min, lat_min, lon_max, lat_max
 
 def _fac_kind(t):
     t = (t or '').lower()
+    if re.search(r'\bchps\b|\bchip\b|\bchps\w*|community[- ]based', t):
+        return 'CHPS'
     if 'hospital' in t:
         return 'hospital'
-    if 'chps' in t or 'community-based' in t or 'community based' in t:
-        return 'CHPS'
     if 'health cent' in t or 'health post' in t:
         return 'health centre'
     if 'maternity' in t:
@@ -320,16 +321,21 @@ def who_kemri_facilities():
                 rows.append(dict(zip(head, r)))
         else:
             rows = [{k.strip().lower(): v for k, v in r.items()} for r in csv.DictReader(io.StringIO(raw.decode('utf-8', 'replace')))]
+        cols = list(rows[0].keys()) if rows else []
+        col = lambda *keys: next((c for c in cols if c and all(k in c for k in keys)), None)
+        c_name, c_type, c_lon, c_lat = col('name'), col('type'), col('long'), col('lat')
+        log('WHO/KEMRI columns', cols, '->', c_name, c_type, c_lon, c_lat)
         out = []
         for r in rows:
             if str(r.get('country') or '').strip().lower() != 'ghana':
                 continue
             try:
-                lon, lat = float(r.get('long') or r.get('longitude')), float(r.get('lat') or r.get('latitude'))
+                lon, lat = float(r.get(c_lon)), float(r.get(c_lat))
             except (TypeError, ValueError):
                 continue
             if _in_ghana(lon, lat):
-                out.append({'lon': lon, 'lat': lat, 'name': str(r.get('facility name') or '').strip(), 'kind': _fac_kind(r.get('facility type')), 'lab': False, 'src': 'WHO/KEMRI 2019'})
+                name = str(r.get(c_name) or '').strip()
+                out.append({'lon': lon, 'lat': lat, 'name': name, 'kind': _fac_kind(f"{r.get(c_type) or ''} {name}"), 'lab': False, 'src': 'WHO/KEMRI 2019'})
         source(f'WHO/KEMRI public health facilities, Ghana ({len(out)})', 'https://data.humdata.org/dataset/health-facilities-in-sub-saharan-africa', bool(out), 'Maina et al. 2019, Scientific Data; public sector only')
         return out
     except Exception as e:
@@ -365,6 +371,9 @@ def merge_facilities(osm, others, km=0.1):
     """One facility list: OpenStreetMap first (newest), then other lists' facilities that are not within 100 m of
     one already kept. A hospital in any list keeps the hospital type."""
     keep = [dict(f, src='OpenStreetMap') for f in osm]
+    for f in keep:  # OpenStreetMap sometimes tags CHPS compounds or clinics as hospitals; the name settles it
+        if f['kind'] == 'hospital' and re.search(r'\bchps\b|\bchip\b|\bclinic\b|health cent|health post|maternity', (f['name'] or '').lower()):
+            f['kind'] = _fac_kind(f['name'])
     if not others:
         return keep
     lat0 = 7.9
@@ -576,6 +585,8 @@ def main():
         # same ~1 km cell as the facility: the grid says 0 min, so use the straight line at this cell's speed
         fmin = np.where(fmin < 1e-6, fkm * 1000 * sample(walk_ds, walk_fr, lons, lats), fmin)
         hmin = np.where(hmin < 1e-6, hkm * 1000 * sample(drive_ds, drive_fr, lons, lats), hmin)
+        # the ~1 km grid can undercount short trips; never faster than the straight line at 6 km/h walking, 80 km/h driving
+        fmin, hmin = np.maximum(fmin, fkm / WALK_MAX_KMH * 60), np.maximum(hmin, hkm / DRIVE_MAX_KMH * 60)
         return dict(fkm=fkm, fmin=np.where(fok, fmin, np.nan), fname=[facilities[k]['name'] if k >= 0 else None for k in fi],
                     hkm=hkm, hmin=np.where(hok, hmin, np.nan), hname=[hosp[k]['name'] if k >= 0 else None for k in hi])
 
