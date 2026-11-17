@@ -122,7 +122,7 @@
   "kind": "news",
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-17T10:26:12.269Z",
+  "last_run": "2026-11-17T13:33:54.631Z",
   "last_status": "ok",
   "last_message": "1 recent items, 0 new",
   "item_count": 1
@@ -138,7 +138,7 @@
   "kind": "outbreak",
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-17T10:25:31.309Z",
+  "last_run": "2026-11-17T13:33:56.838Z",
   "last_status": "ok",
   "last_message": "13 recent items, 0 new",
   "item_count": 13
@@ -154,7 +154,7 @@
   "kind": "news",
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-17T10:26:08.229Z",
+  "last_run": "2026-11-17T13:33:19.304Z",
   "last_status": "ok",
   "last_message": "30 recent items, 0 new",
   "item_count": 30
@@ -170,9 +170,9 @@
   "kind": "research",
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-17T10:26:07.372Z",
+  "last_run": "2026-11-17T13:33:18.248Z",
   "last_status": "ok",
-  "last_message": "20 recent items, 0 new",
+  "last_message": "20 recent items, 1 new",
   "item_count": 20
  },
  {
@@ -186,7 +186,7 @@
   "kind": "research",
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-17T10:26:10.724Z",
+  "last_run": "2026-11-17T13:34:00.083Z",
   "last_status": "ok",
   "last_message": "19 recent items, 0 new",
   "item_count": 19
@@ -202,7 +202,7 @@
   "kind": "social",
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-17T10:26:13.131Z",
+  "last_run": "2026-11-17T13:33:55.885Z",
   "last_status": "ok",
   "last_message": "15 recent items, 1 new",
   "item_count": 15
@@ -218,9 +218,9 @@
   "kind": "social",
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-17T10:26:11.373Z",
+  "last_run": "2026-11-17T13:33:53.001Z",
   "last_status": "error",
-  "last_message": "Gemini failed: no model available",
+  "last_message": "Gemini model gemini-2.5-flash-lite not available",
   "item_count": 0
  },
  {
@@ -234,9 +234,9 @@
   "kind": "tender",
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-17T10:26:04.837Z",
+  "last_run": "2026-11-17T13:33:57.140Z",
   "last_status": "error",
-  "last_message": "Gemini model gemini-2.5-flash-lite not available",
+  "last_message": "Gemini failed: no model available",
   "item_count": 0
  },
  {
@@ -346,9 +346,9 @@
   "kind": "tender",
   "unit": null,
   "display_name": null,
-  "last_run": "2026-11-17T10:26:13.564Z",
+  "last_run": "2026-11-17T13:33:56.452Z",
   "last_status": "ok",
-  "last_message": "40 recent items, 0 new",
+  "last_message": "40 recent items, 28 new",
   "item_count": 40
  },
  {

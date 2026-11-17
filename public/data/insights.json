@@ -1,5 +1,5 @@
 {
- "updated_at": "2026-11-17T10:26:14.870Z",
+ "updated_at": "2026-11-17T13:35:13.338Z",
  "insights": [
   {
    "id": "1331e697ef0d3ee9",
@@ -12,6 +12,20 @@
    "kind": "report",
    "countries": [],
    "diseases": []
+  },
+  {
+   "id": "bfd3c2e5a4cb2958",
+   "title": "AI-assisted evidence map prioritising TB research signals from the Union World Conference on Lung Health 2025 against End TB 2035 priorities.",
+   "summary": "An AI-assisted evidence map prioritizes tuberculosis research signals from a recent lung health conference against global targets.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/43041165/",
+   "published_at": "2026-11-17T05:32:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [],
+   "diseases": [
+    "tuberculosis"
+   ]
   },
   {
    "id": "b83d1dba6338a41f",
@@ -40,6 +54,88 @@
    "diseases": [
     "AMR"
    ]
+  },
+  {
+   "id": "e91bb73f422226b6",
+   "title": "Procurement of IT Equipment / Gadgets for the Implementation of DHIS-2 Daily Reporting in remaining 28 Districts of Sindh",
+   "summary": "Pakistan published a tender for IT equipment to support DHIS-2 daily reporting across multiple districts.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00481855",
+   "published_at": "2026-11-16T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "PAK"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "0da97bc18fedb976",
+   "title": "Consulting services for the development of the National One Health Action Plan including related implementation and monitoring and evaluation documents",
+   "summary": "Central Asia requested consulting services to develop a National One Health Action Plan and monitoring framework.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00481793",
+   "published_at": "2026-11-16T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "dc1e4e2dda61f4c9",
+   "title": "Turkmenistan One Health for Pandemic Prevention, Food Systems Resilience, and Ecosystem Health",
+   "summary": "Turkmenistan issued a general procurement notice for a One Health project focusing on pandemic prevention and food systems.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00456238",
+   "published_at": "2026-11-16T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "TKM"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "e533d1d434db2f98",
+   "title": "Repair and renovation work under ASSIST project for (i) GNM School of Nursing, SMCH, Silchar, Assam (ii) B.Sc. Nursing College, Silchar, Assam (iii) GNM Training Centre, Karimganj Civil Hospital, Sribhumi, Assam",
+   "summary": "Contract award for repair and renovation work of nursing schools and training centers in Assam under a healthcare delivery transformation project.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00481708",
+   "published_at": "2026-11-16T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "IND"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "099abb2eff203e7a",
+   "title": "Expertise in prosthetic devices and rehabilitation equipment",
+   "summary": "Request for expression of interest for expertise in prosthetic devices and rehabilitation equipment in Uzbekistan.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00481780",
+   "published_at": "2026-11-16T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "UZB"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "16df545c4fac6fc4",
+   "title": "Supply of Medical Waste Management and Disposal Consumables",
+   "summary": "Contract award for the supply of medical waste management and disposal consumables in Sudan.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00481760",
+   "published_at": "2026-11-16T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "SDN"
+   ],
+   "diseases": []
   },
   {
    "id": "08b2a7b1062ca39c",
