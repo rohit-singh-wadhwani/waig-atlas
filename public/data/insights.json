@@ -1,6 +1,18 @@
 {
- "updated_at": "2026-11-17T13:35:13.338Z",
+ "updated_at": "2026-11-17T16:17:30.520Z",
  "insights": [
+  {
+   "id": "99f51d2033139c44",
+   "title": "Media briefing on global health issues with Dr Tedros",
+   "summary": "The WHO Director-General held a media briefing discussing current global public health issues.",
+   "url": "https://www.youtube.com/watch?v=9O1HRLnMx84",
+   "published_at": "2026-11-17T15:16:19.000Z",
+   "source_id": "who-youtube",
+   "source_name": "WHO on YouTube",
+   "kind": "social",
+   "countries": [],
+   "diseases": []
+  },
   {
    "id": "1331e697ef0d3ee9",
    "title": "The surprising health payoff of climate action",
