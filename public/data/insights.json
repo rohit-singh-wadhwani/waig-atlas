@@ -1,6 +1,18 @@
 {
- "updated_at": "2026-11-17T07:41:21.197Z",
+ "updated_at": "2026-11-17T10:26:14.870Z",
  "insights": [
+  {
+   "id": "1331e697ef0d3ee9",
+   "title": "The surprising health payoff of climate action",
+   "summary": "A WHO analysis highlights six climate-health actions that protect lives, build resilience, and provide economic benefits.",
+   "url": "https://www.youtube.com/watch?v=-__OMTB3U3A",
+   "published_at": "2026-11-17T10:05:59.000Z",
+   "source_id": "who-youtube",
+   "source_name": "WHO on YouTube",
+   "kind": "report",
+   "countries": [],
+   "diseases": []
+  },
   {
    "id": "b83d1dba6338a41f",
    "title": "Nanoparticle therapeutics for infectious diseases integrating AI-guided design, crispr delivery, phage synergy, and immune modulation.",
