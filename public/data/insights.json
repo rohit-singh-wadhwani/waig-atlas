@@ -1,6 +1,20 @@
 {
- "updated_at": "2026-11-18T19:19:21.459Z",
+ "updated_at": "2026-11-18T22:08:56.577Z",
  "insights": [
+  {
+   "id": "3987956c2ac1efd6",
+   "title": "Patients running out of options as antibiotics stop working against common infections",
+   "summary": "The WHO reported that common bacteria are increasingly resistant to front-line and last-resort antibiotics, making the situation worse than in 2019.",
+   "url": "https://news.un.org/feed/view/en/story/2026/11/1168832",
+   "published_at": "2026-11-18T12:00:00.000Z",
+   "source_id": "un-news-health",
+   "source_name": "UN News: health",
+   "kind": "news",
+   "countries": [],
+   "diseases": [
+    "antibiotic resistance"
+   ]
+  },
   {
    "id": "cc2099fc1b2d485a",
    "title": "Achieving High Tuberculosis Treatment Completion Rates in a Student-Run Free Clinic Model: A Retrospective Observational Study.",
