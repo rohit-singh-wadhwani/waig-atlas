@@ -21,7 +21,7 @@ export default function OrgContextPage() {
         <div className="-mx-2 sm:-mx-4">
           {!ctx.loading && (
             <React.Suspense fallback={<div className="text-sm text-gray-400 py-4 px-4">Loading editor…</div>}>
-              <NotionEditor md={row?.content_md || ''} onSave={save} />
+              <NotionEditor md={row?.content_md || ''} onSave={save} draftKey="org-context" savedAt={row?.updated_at} />
             </React.Suspense>
           )}
         </div>

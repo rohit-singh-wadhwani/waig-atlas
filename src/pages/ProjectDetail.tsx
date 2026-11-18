@@ -262,7 +262,7 @@ function MilestoneView({ project, m, checkpoints, moot, page, me }: { project: P
         )}
         <div className="-mx-2 sm:-mx-4">
           <React.Suspense fallback={<div className="text-sm text-gray-400 py-4 px-4">Loading editor…</div>}>
-            <NotionEditor key={m.id} json={page?.content_json} md={page?.content_md || ''} onSave={savePage} />
+            <NotionEditor key={m.id} json={page?.content_json} md={page?.content_md || ''} onSave={savePage} draftKey={`${project.id}:${m.id}`} savedAt={page?.updated_at} />
           </React.Suspense>
         </div>
       </Card>

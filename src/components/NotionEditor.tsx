@@ -7,6 +7,7 @@ import { createReactBlockSpec, getDefaultReactSlashMenuItems, SuggestionMenuCont
 import { BlockNoteView } from '@blocknote/mantine';
 import { Bar, Doughnut, Line } from 'react-chartjs-2';
 import { SERIES } from './ChartCard';
+import { uploadFile } from '../lib/store';
 
 /* ------------------------------------------------------------------ */
 /* Mermaid diagram block                                                */
@@ -388,9 +389,43 @@ function handlePaste(editor: any, e: ClipboardEvent): boolean {
   return false;
 }
 
-export default function NotionEditor({ json, md, onSave, editable = true }: { json?: any[] | null; md?: string; onSave: (v: EditorSave) => void | Promise<void>; editable?: boolean }) {
-  const editor = useCreateBlockNote({ schema, initialContent: json && json.length ? (json as any) : undefined }) as unknown as Editor;
-  const [ready, setReady] = useState(!!(json && json.length) || !md);
+/** Pasted or dropped images go to file storage; only their link is kept in the page (inline images made saves too big to store). */
+async function uploadImage(file: File) {
+  return uploadFile(file, 'pages');
+}
+
+/** Upload any image still held inline as a data: URL and point its block at the stored copy. */
+async function externaliseImages(editor: Editor) {
+  const walk = (blocks: any[]): any[] => blocks.flatMap((b) => [b, ...walk(b.children || [])]);
+  for (const b of walk((editor as any).document)) {
+    const url: string | undefined = b.props?.url;
+    if (!url || !url.startsWith('data:')) continue;
+    const blob = await (await fetch(url)).blob();
+    const ext = (blob.type.split('/')[1] || 'png').split('+')[0];
+    const stored = await uploadImage(new File([blob], `pasted-${Date.now()}.${ext}`, { type: blob.type }));
+    (editor as any).updateBlock(b, { props: { url: stored } });
+  }
+}
+
+export default function NotionEditor({ json, md, onSave, editable = true, draftKey, savedAt }: { json?: any[] | null; md?: string; onSave: (v: EditorSave) => void | Promise<void>; editable?: boolean; draftKey?: string; savedAt?: string }) {
+  // a local copy of unsaved edits, so nothing is lost if saving fails or the tab closes
+  const draftId = draftKey ? `page-draft:${draftKey}` : '';
+  const draft = useMemo(() => {
+    try {
+      const d = draftId ? JSON.parse(localStorage.getItem(draftId) || 'null') : null;
+      return d && d.at > (savedAt || '') && Array.isArray(d.json) && d.json.length ? d : null;
+    } catch {
+      return null;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draftId]);
+  const start = draft ? draft.json : json && json.length ? json : undefined;
+  const editor = useCreateBlockNote({ schema, initialContent: start as any, uploadFile: uploadImage }) as unknown as Editor;
+  const [restored, setRestored] = useState(!!draft);
+  const [failed, setFailed] = useState(false);
+  const inFlight = useRef(false);
+  const again = useRef(false);
+  const [ready, setReady] = useState(!!(json && json.length) || !md || !!draft);
   const [saving, setSaving] = useState<'idle' | 'saving' | 'saved'>('idle');
   const timer = useRef<any>(null);
   const loadedMd = useRef(false);
@@ -413,7 +448,7 @@ export default function NotionEditor({ json, md, onSave, editable = true }: { js
 
   // Legacy pages only have markdown: convert once on first open.
   useEffect(() => {
-    if (loadedMd.current || (json && json.length) || !md) return;
+    if (loadedMd.current || (json && json.length) || !md || draft) return;
     loadedMd.current = true;
     fromMarkdown(editor, md).then((blocks) => {
       if (blocks.length) (editor as any).replaceBlocks((editor as any).document, blocks);
@@ -421,19 +456,47 @@ export default function NotionEditor({ json, md, onSave, editable = true }: { js
     });
   }, [editor, json, md]);
 
+  // One save at a time: edits made while a save is running are sent right after it, never in parallel
+  // (parallel saves of a big page piled up on the database and timed out).
   const save = useMemo(
     () => () => {
+      if (draftId) {
+        try {
+          localStorage.setItem(draftId, JSON.stringify({ at: new Date().toISOString(), json: (editor as any).document }));
+        } catch { /* storage full or blocked: the server save still runs */ }
+      }
       clearTimeout(timer.current);
-      timer.current = setTimeout(async () => {
+      timer.current = setTimeout(async function run() {
+        if (inFlight.current) {
+          again.current = true;
+          return;
+        }
+        inFlight.current = true;
         setSaving('saving');
-        const doc = (editor as any).document;
-        await onSave({ json: doc, md: await toMarkdown(editor, doc) });
-        setSaving('saved');
-        setTimeout(() => setSaving('idle'), 1500);
-      }, 900);
+        try {
+          await externaliseImages(editor);
+          const doc = (editor as any).document;
+          await onSave({ json: doc, md: await toMarkdown(editor, doc) });
+          if (draftId) try { localStorage.removeItem(draftId); } catch { /* ignore */ }
+          setFailed(false);
+          setSaving('saved');
+          setTimeout(() => setSaving('idle'), 1500);
+        } catch {
+          setFailed(true);
+          setSaving('idle');
+          again.current = true; // retry shortly; the local copy keeps the edits meanwhile
+          await new Promise((r) => setTimeout(r, 5000));
+        } finally {
+          inFlight.current = false;
+          if (again.current) {
+            again.current = false;
+            timer.current = setTimeout(run, 300);
+          }
+        }
+      }, 1500);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [editor]
+    [editor, draftId]
   );
 
   /** Insert a block after the block the cursor is in (or at the end), then place the cursor in it. */
@@ -465,7 +528,14 @@ export default function NotionEditor({ json, md, onSave, editable = true }: { js
           <ToolMenu label="Templates" icon={TPL_ICON} items={TABLE_TEMPLATES} onPick={(t) => insert(t.block)} />
           {/* fixed width so the toolbar never changes size while saving (that shifted the text under a selection) */}
           <span className="ml-auto text-xs text-gray-400 pl-2 w-[150px] shrink-0 text-right whitespace-nowrap">
-            {saving === 'saving' ? 'Saving…' : saving === 'saved' ? 'Saved ✓' : 'Type / for more'}
+            {restored && (
+              <span className="mr-2 text-amber-700">
+                Restored edits that hadn't saved.{' '}
+                <button type="button" className="underline" onClick={() => { setRestored(false); save(); }}>Keep</button>{' · '}
+                <button type="button" className="underline" onClick={() => { try { localStorage.removeItem(draftId); } catch { /* ignore */ } window.location.reload(); }}>Discard</button>
+              </span>
+            )}
+            {saving === 'saving' ? 'Saving…' : saving === 'saved' ? 'Saved ✓' : failed ? 'Not saved yet, retrying (kept on this device)' : 'Type / for more'}
           </span>
         </div>
       )}
