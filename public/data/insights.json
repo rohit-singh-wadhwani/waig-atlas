@@ -1,6 +1,22 @@
 {
- "updated_at": "2026-11-18T04:17:01.145Z",
+ "updated_at": "2026-11-18T07:41:12.181Z",
  "insights": [
+  {
+   "id": "038bce1d8837f2c8",
+   "title": "Chikungunya virus disease - Switzerland",
+   "summary": "Health authorities in Ticino, Switzerland, reported four locally acquired chikungunya cases linked to established Aedes albopictus populations. Public health officials have initiated active case finding and vector control interventions.",
+   "url": "https://www.who.int/emergencies/disease-outbreak-news/item/2026-DON627",
+   "published_at": "2026-11-17T19:00:00.000Z",
+   "source_id": "who-don",
+   "source_name": "WHO Disease Outbreak News",
+   "kind": "outbreak",
+   "countries": [
+    "CHE"
+   ],
+   "diseases": [
+    "Chikungunya"
+   ]
+  },
   {
    "id": "99f51d2033139c44",
    "title": "Media briefing on global health issues with Dr Tedros",
