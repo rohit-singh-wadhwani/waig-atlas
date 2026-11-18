@@ -1,5 +1,5 @@
 {
- "updated_at": "2026-11-18T16:20:12.389Z",
+ "updated_at": "2026-11-18T19:19:21.459Z",
  "insights": [
   {
    "id": "cc2099fc1b2d485a",
@@ -1665,6 +1665,18 @@
    ]
   },
   {
+   "id": "011807d06e76e0bf",
+   "title": "Forecasting viral antigenic evolution from phylogenetic trees.",
+   "summary": "Researchers describe a computational method for forecasting viral antigenic evolution using phylogenetic trees. This approach can support infectious disease surveillance and outbreak preparedness.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/42922681/",
+   "published_at": "2026-10-25T03:36:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [],
+   "diseases": []
+  },
+  {
    "id": "da9f539c100a8429",
    "title": "Ebola disease caused by Bundibugyo virus, Democratic Republic of the Congo, Kenya and Nigeria",
    "summary": "An outbreak of Bundibugyo virus disease continues to expand in the Democratic Republic of the Congo, with imported cases reported in Kenya and Nigeria. High community mortality underscores ongoing challenges in early case detection and access to care.",
@@ -2080,6 +2092,20 @@
    "countries": [
     "UZB"
    ],
+   "diseases": [
+    "tuberculosis"
+   ]
+  },
+  {
+   "id": "5b8875cd1bdbb270",
+   "title": "Development and Prospective Validation of a Machine Learning-Based Mobile Application (CROHN'S AID) for Differentiating Crohn's Disease From Intestinal Tuberculosis in Tuberculosis-Endemic Regions.",
+   "summary": "A machine learning mobile application was developed and validated to help differentiate Crohn's disease from intestinal tuberculosis in endemic settings. The tool aims to improve diagnostic accuracy in resource-constrained regions.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/42768418/",
+   "published_at": "2026-09-22T05:37:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [],
    "diseases": [
     "tuberculosis"
    ]
