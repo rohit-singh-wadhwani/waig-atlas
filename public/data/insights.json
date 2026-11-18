@@ -1,5 +1,5 @@
 {
- "updated_at": "2026-11-17T22:13:06.496Z",
+ "updated_at": "2026-11-18T01:41:00.402Z",
  "insights": [
   {
    "id": "99f51d2033139c44",
@@ -12,6 +12,22 @@
    "kind": "social",
    "countries": [],
    "diseases": []
+  },
+  {
+   "id": "b544152bffcfa64c",
+   "title": "World News in Brief: Ebola cases double in DR Congo, chemical exposure starts before birth, Türk concern over EU-Rwanda transfer plan",
+   "summary": "Ebola cases in the Democratic Republic of the Congo have more than doubled over three months, reaching over 11,000 cases and 5,400 deaths across eight provinces.",
+   "url": "https://news.un.org/feed/view/en/story/2026/11/1168827",
+   "published_at": "2026-11-17T12:00:00.000Z",
+   "source_id": "un-news-health",
+   "source_name": "UN News: health",
+   "kind": "outbreak",
+   "countries": [
+    "COD"
+   ],
+   "diseases": [
+    "Ebola"
+   ]
   },
   {
    "id": "1331e697ef0d3ee9",
