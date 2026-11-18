@@ -1,6 +1,20 @@
 {
- "updated_at": "2026-11-18T10:24:52.906Z",
+ "updated_at": "2026-11-18T13:37:20.191Z",
  "insights": [
+  {
+   "id": "cc2099fc1b2d485a",
+   "title": "Achieving High Tuberculosis Treatment Completion Rates in a Student-Run Free Clinic Model: A Retrospective Observational Study.",
+   "summary": "This retrospective observational study evaluates factors associated with high tuberculosis treatment completion rates in a student-run free clinic model.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/43045904/",
+   "published_at": "2026-11-18T05:33:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [],
+   "diseases": [
+    "tuberculosis"
+   ]
+  },
   {
    "id": "038bce1d8837f2c8",
    "title": "Chikungunya virus disease - Switzerland",
@@ -70,6 +84,76 @@
    "diseases": [
     "tuberculosis"
    ]
+  },
+  {
+   "id": "f284f22ca5af544d",
+   "title": "Déploiement des Equipement médicaux et outils dans les Etablissements des soins de santé au Kasaï",
+   "summary": "A contract award for the deployment of medical equipment and tools to healthcare facilities in the Kasaï province of the Democratic Republic of the Congo.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00482044",
+   "published_at": "2026-11-17T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "COD"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "f58e061e3d520fd4",
+   "title": "Déploiement des Equipement médicaux et outils dans les Etablissements des soins de santé au Kwilu",
+   "summary": "A contract award for deploying medical equipment and tools to healthcare facilities in the Kwilu province of the Democratic Republic of the Congo.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00482004",
+   "published_at": "2026-11-17T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "COD"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "c0ad642be2d55e1f",
+   "title": "Déploiement des Equipement médicaux et outils dans les Etablissements des soins de santé au Kasaï Central",
+   "summary": "A contract award for deploying medical equipment and tools to healthcare facilities in Kasaï Central, Democratic Republic of the Congo.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00482020",
+   "published_at": "2026-11-17T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "COD"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "03f9c9e7811e8026",
+   "title": "Equipment for Antibiotics, Antiviral Drugs and Their Metabolites Detection in Wastewater.（2.4）",
+   "summary": "Invitation for bids to procure equipment for detecting antibiotics, antiviral drugs, and metabolites in wastewater in China under an infectious diseases project.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00481999",
+   "published_at": "2026-11-17T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "CHN"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "0bc28f26ca3337f5",
+   "title": "Procurement of Equipment for Strengthening Rapid Nucleic Acid Testing Capacity at Primary Level.（1.3.6）",
+   "summary": "Invitation for bids to procure equipment for strengthening rapid nucleic acid testing capacity at the primary healthcare level in China.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00482182",
+   "published_at": "2026-11-17T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "CHN"
+   ],
+   "diseases": []
   },
   {
    "id": "b83d1dba6338a41f",
