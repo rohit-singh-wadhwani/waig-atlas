@@ -454,7 +454,7 @@ export default function NotionEditor({ json, md, onSave, editable = true, draftK
       if (blocks.length) (editor as any).replaceBlocks((editor as any).document, blocks);
       setReady(true);
     });
-  }, [editor, json, md]);
+  }, [editor, json, md, draft]);
 
   // One save at a time: edits made while a save is running are sent right after it, never in parallel
   // (parallel saves of a big page piled up on the database and timed out).
