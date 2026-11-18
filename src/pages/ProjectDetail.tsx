@@ -218,7 +218,6 @@ function MilestoneView({ project, m, checkpoints, moot, page, me }: { project: P
     const base: Page = page || { id: pageId.current, project_id: project.id, milestone_id: m.id, title: m.name, content_md: '', updated_at: '' };
     await db.upsert('pages', { ...base, content_md: md, content_json: json, updated_at: new Date().toISOString(), updated_by: me } as any);
   };
-  const headings = (page?.content_md || '').split('\n').filter((l) => /^##\s/.test(l)).map((l) => l.replace(/^##\s+/, ''));
 
   return (
     <>
@@ -253,13 +252,6 @@ function MilestoneView({ project, m, checkpoints, moot, page, me }: { project: P
           title="Page"
           subtitle={page ? `Last edited ${fmtTime(page.updated_at)}${page.updated_by ? ` by ${personName(page.updated_by)}` : ''} · click anywhere to type; use the toolbar to add tables, charts and diagrams` : 'Type / to add a table, chart, diagram or template'}
         />
-        {headings.length > 3 && (
-          <div className="flex flex-wrap gap-1.5 mb-5 pb-4 border-b border-gray-100">
-            {headings.map((h) => (
-              <a key={h} href={`#${slugId(h)}`} onClick={(e) => { e.preventDefault(); const el = Array.from(document.querySelectorAll('.atlas-editor h1, .atlas-editor h2, .atlas-editor h3, .prose-atlas h2')).find((x) => x.textContent?.trim() === h.trim()); el?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }} className="text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1 hover:border-brand-300 hover:text-brand-700">{h}</a>
-            ))}
-          </div>
-        )}
         <div className="-mx-2 sm:-mx-4">
           <React.Suspense fallback={<div className="text-sm text-gray-400 py-4 px-4">Loading editor…</div>}>
             <NotionEditor key={m.id} json={page?.content_json} md={page?.content_md || ''} onSave={savePage} draftKey={`${project.id}:${m.id}`} savedAt={page?.updated_at} />
