@@ -1,5 +1,5 @@
 {
- "updated_at": "2026-11-19T10:25:46.075Z",
+ "updated_at": "2026-11-19T13:39:41.953Z",
  "insights": [
   {
    "id": "0c80b9396f3c462f",
@@ -30,6 +30,20 @@
    "diseases": []
   },
   {
+   "id": "083c170c4bdfb920",
+   "title": "Artificial Intelligence in Lung Diseases: Screening, Diagnosis, Treatment, and Prognosis.",
+   "summary": "This research review covers methodologies for artificial intelligence applications in screening, diagnosis, and treatment of lung diseases.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/43052672/",
+   "published_at": "2026-11-19T05:30:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [],
+   "diseases": [
+    "tuberculosis"
+   ]
+  },
+  {
    "id": "3987956c2ac1efd6",
    "title": "Patients running out of options as antibiotics stop working against common infections",
    "summary": "The WHO reported that common bacteria are increasingly resistant to front-line and last-resort antibiotics, making the situation worse than in 2019.",
@@ -56,6 +70,142 @@
    "diseases": [
     "tuberculosis"
    ]
+  },
+  {
+   "id": "9ffba2aaf581bf6f",
+   "title": "Procurement of Laptop Computers (37 Units) to support Institutionalized Training for 37 (Thirty-Seven) Para-Veterinarians (MoA/UL Basic/Frontline).",
+   "summary": "Laptop computers are being procured to support institutionalized training for frontline para-veterinarians under a regional health security program in Western and Central Africa.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00482376",
+   "published_at": "2026-11-18T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "4ed69776a9dacbc8",
+   "title": "Contractualisation avec l’EUP Tshuapa pour la mise en œuvre de l’Achat stratégique dans la province de la Tshuapa",
+   "summary": "World Bank contract award for strategic health purchasing implementation in the Tshuapa province under the DRC Multisectoral Nutrition and Health Project.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00482441",
+   "published_at": "2026-11-18T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "COD"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "4a5966a55f1cda46",
+   "title": "Contractualisation avec l’EUP Kasaï pour la mise en œuvre de l’Achat stratégique dans la province du Kasaï",
+   "summary": "World Bank contract award for strategic health purchasing implementation in the Kasaï province under the DRC Multisectoral Nutrition and Health Project.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00482458",
+   "published_at": "2026-11-18T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "COD"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "bd1e6d24fcb79e36",
+   "title": "Contractualisation avec l’EUP Mongala pour la mise en œuvre de l’Achat stratégique dans la province de Mongala",
+   "summary": "World Bank contract award for strategic health purchasing implementation in the Mongala province under the DRC Multisectoral Nutrition and Health Project.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00482432",
+   "published_at": "2026-11-18T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "COD"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "ba2a16a15631f710",
+   "title": "Sélection d'un Média Planner pour réaliser les activités de communication de masse",
+   "summary": "World Bank contract award for mass communication activities under the DRC Multisectoral Nutrition and Health Project.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00482319",
+   "published_at": "2026-11-18T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "COD"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "877524456a3c0f91",
+   "title": "Contractualisation avec l’EUP Kasaï Central pour la mise en œuvre de l’Achat stratégique dans la province du Kasaï Central",
+   "summary": "World Bank contract award for strategic health purchasing implementation in the Kasaï Central province under the DRC Multisectoral Nutrition and Health Project.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00482430",
+   "published_at": "2026-11-18T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "COD"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "0457b3ac0ab865de",
+   "title": "Contractualisation avec l’EUP Sud-Ubangi pour la mise en œuvre de l’Achat stratégique dans la province du Sud-Ubangi",
+   "summary": "World Bank contract award for strategic health purchasing implementation in the Sud-Ubangi province under the DRC Multisectoral Nutrition and Health Project.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00482453",
+   "published_at": "2026-11-18T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "COD"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "f8d0c8ef968a439b",
+   "title": "Contractualisation avec l’EUP BANDUNDU pour la mise en œuvre de l’Achat stratégique dans les provinces du Kwilu, Mai Ndombe et du Kwango",
+   "summary": "World Bank contract award for strategic health purchasing implementation in the Kwilu, Mai Ndombe, and Kwango provinces under the DRC Multisectoral Nutrition and Health Project.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00482450",
+   "published_at": "2026-11-18T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "COD"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "0283309ab5087a18",
+   "title": "Provision of Consulting Services to conduct a prefeasibility and feasibility studies including Environmental Impact Assessment for the proposed Eastern Africa Regional Coordinating Centre (EARCC) Regional Headquarters",
+   "summary": "Request for consulting services for feasibility studies and environmental impact assessments for the proposed Africa CDC Eastern Africa Regional Coordinating Centre.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00482390",
+   "published_at": "2026-11-18T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "b73a84bfb3a5a76e",
+   "title": "Sélection d'un transporteur maritime pour l'acheminement des incinérateurs à Kisangani dans la province de la Tshopo",
+   "summary": "World Bank contract award for maritime transport of incinerators to Kisangani under the DRC Health Emergency Preparedness, Response, and Resilience Project.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00482444",
+   "published_at": "2026-11-18T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "COD"
+   ],
+   "diseases": []
   },
   {
    "id": "038bce1d8837f2c8",
