@@ -1,6 +1,18 @@
 {
- "updated_at": "2026-11-19T16:22:12.746Z",
+ "updated_at": "2026-11-19T19:22:20.127Z",
  "insights": [
+  {
+   "id": "4b8799891cb3fe87",
+   "title": "Digital Health and Artificial Intelligence for Public Health Systems in Africa: A Narrative Review.",
+   "summary": "Health science reports. Abdi YH, Abdullahi YB, Abdi MS",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/43054657/",
+   "published_at": "2026-11-19T11:30:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [],
+   "diseases": []
+  },
   {
    "id": "0c80b9396f3c462f",
    "title": "Antimicrobial Resistance (AMR) threatens our health, food security, economies and planet.",
