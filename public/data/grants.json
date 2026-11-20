@@ -1,5 +1,5 @@
 {
- "updated_at": "2026-11-20T02:34:06.615Z",
+ "updated_at": "2026-11-20T03:19:13.042Z",
  "grants": [
   {
    "id": "f4a4ef7d5c8b0fd4",
@@ -2564,6 +2564,40 @@
    "notes": null,
    "added_by": null,
    "updated_at": "2026-11-19T14:36:35.39154+00:00"
+  },
+  {
+   "id": "sc_0664178eb20c4feb",
+   "title": "Prevention and management of chronic non-communicable diseases in children and young people (GACD) (HORIZON-HLTH-2027-01-DISEASE-10)",
+   "funder": "European Commission",
+   "summary": "Expected Outcome: This topic aims at supporting activities that are enabling or contributing to one or several expected impacts of destination “Tackling diseases and reducing disease burden”. To that end, proposals under this topic should aim to deliver results that are directed at, tailored towards and contributing to some of the following expected outcomes: Researchers, healthcare practitioners and providers in low- and middle-income countries (LMICs) [1] and/or those in high-income countries (HICs) serving disadvantaged populations have access to improved insights and evidence on how to equitably promote the early prevention, risk reduction, and timely diagnosis of Non-Communicable Diseases (NCDs) in children and/or young people. Policymakers, public health managers and authorities, parents and their children, and young adults have access to evidence and recommendations for national programmes and policies to improve quality of life in children and/or young people and extend healthy life expectancy. Researchers, clinicians, policymakers, public health managers and authorities have an improved understanding how to effectively adapt and/or scale up interventions for prevention and management of chronic NCDs in children and/or young people at local, regional, and national levels. Communities, parents and their children, young adults, local stakeholders and authorities are fully engaged in implementing and taking up interventions that tackle NCDs in children and/or young peopl",
+   "amount_text": null,
+   "amount_usd": null,
+   "deadline": null,
+   "open_date": null,
+   "eligibility": null,
+   "requirements": null,
+   "countries": [
+    "GLOBAL"
+   ],
+   "regions": [],
+   "themes": [],
+   "url": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-HLTH-2027-01-DISEASE-10",
+   "source_id": "scout-eu-ai-health",
+   "source_name": "EU Funding & Tenders: AI + health",
+   "fetched_at": "2026-11-20T03:17:42.992+00:00",
+   "score": null,
+   "strengths": [],
+   "weaknesses": [],
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": "2027-02-17",
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-20T03:17:42.992+00:00"
   }
  ]
 }
