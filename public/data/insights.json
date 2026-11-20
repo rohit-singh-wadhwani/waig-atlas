@@ -1,6 +1,20 @@
 {
- "updated_at": "2026-11-20T04:15:20.520Z",
+ "updated_at": "2026-11-20T07:41:05.360Z",
  "insights": [
+  {
+   "id": "4206f7c81f6e6d2b",
+   "title": "Optimising Tuberculosis Treatment in Low- and Middle-Income Countries: A Narrative Review of the Role, Challenges, and Innovations in Therapeutic Drug Monitoring.",
+   "summary": "This review discusses the role, challenges, and innovations of therapeutic drug monitoring for optimizing tuberculosis treatment in low- and middle-income countries.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/43057609/",
+   "published_at": "2026-11-19T23:29:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [],
+   "diseases": [
+    "Tuberculosis"
+   ]
+  },
   {
    "id": "3143d3b5e3cf0f88",
    "title": "Applications of computer vision in mosquito-borne diseases: A systematic review.",
@@ -2228,6 +2242,21 @@
     "YEM"
    ],
    "diseases": []
+  },
+  {
+   "id": "35c3863e49198395",
+   "title": "Identification of plasma immune markers associated with latent tuberculosis conversion in HIV-infected individuals who received isoniazid preventive therapy.",
+   "summary": "This study identifies plasma immune markers associated with latent tuberculosis conversion in HIV-infected individuals undergoing isoniazid preventive therapy.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/42838443/",
+   "published_at": "2026-10-06T23:29:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [],
+   "diseases": [
+    "Tuberculosis",
+    "HIV"
+   ]
   },
   {
    "id": "99ccbb710fc47c07",
