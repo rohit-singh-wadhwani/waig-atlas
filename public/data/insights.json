@@ -1,6 +1,22 @@
 {
- "updated_at": "2026-11-20T10:24:52.842Z",
+ "updated_at": "2026-11-20T13:34:22.315Z",
  "insights": [
+  {
+   "id": "13c0a4e5d6b509f1",
+   "title": "Genomic signatures drive the progression of multidrug-resistant tuberculosis to pre-extensively drug-resistant tuberculosis and its global spread.",
+   "summary": "This study analyzes the genomic signatures driving the progression and global spread of multidrug-resistant tuberculosis.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/43059491/",
+   "published_at": "2026-11-20T05:31:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [
+    "CHN"
+   ],
+   "diseases": [
+    "tuberculosis"
+   ]
+  },
   {
    "id": "4206f7c81f6e6d2b",
    "title": "Optimising Tuberculosis Treatment in Low- and Middle-Income Countries: A Narrative Review of the Role, Challenges, and Innovations in Therapeutic Drug Monitoring.",
@@ -85,6 +101,20 @@
    ]
   },
   {
+   "id": "ab4d16bbdd8833ea",
+   "title": "Procurement of ambulances",
+   "summary": "Rwanda has issued a tender for the procurement of ambulances to support its health emergency preparedness and response project.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00482046",
+   "published_at": "2026-11-19T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "RWA"
+   ],
+   "diseases": []
+  },
+  {
    "id": "3987956c2ac1efd6",
    "title": "Patients running out of options as antibiotics stop working against common infections",
    "summary": "The WHO reported that common bacteria are increasingly resistant to front-line and last-resort antibiotics, making the situation worse than in 2019.",
@@ -111,6 +141,20 @@
    "diseases": [
     "tuberculosis"
    ]
+  },
+  {
+   "id": "c6f3d204af7a1753",
+   "title": "Procurement of Ventilator Equipment (1790 units) - 8 Lots (Contracts)",
+   "summary": "Contract award for the procurement of 1,790 ventilator units across eight lots under the Indonesia Health Systems Strengthening Project.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00482517",
+   "published_at": "2026-11-18T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "IDN"
+   ],
+   "diseases": []
   },
   {
    "id": "9ffba2aaf581bf6f",
