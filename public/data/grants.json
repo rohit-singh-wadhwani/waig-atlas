@@ -1,40 +1,6 @@
 {
- "updated_at": "2026-11-19T14:35:43.025Z",
+ "updated_at": "2026-11-20T02:34:06.615Z",
  "grants": [
-  {
-   "id": "78be762fac4e3559",
-   "title": "UKRI translation: MRC proof of concept: stage one",
-   "funder": "Medical Research Council (MRC)",
-   "summary": "Funds the development and testing of novel therapeutics, medical devices, diagnostics, and other health interventions. Aimed at researchers based at organisations eligible for Medical Research Council funding.",
-   "amount_text": null,
-   "amount_usd": null,
-   "deadline": "2027-03-17",
-   "open_date": "2026-11-19",
-   "eligibility": "Employed at a research organisation eligible for MRC funding (primarily UK-based institutions; international partners can join as co-leads/partners).",
-   "requirements": "Develop and test novel diagnostics, medical devices, or interventions from prototype to early clinical studies.",
-   "countries": [
-    "GBR",
-    "GMB",
-    "UGA"
-   ],
-   "regions": [],
-   "themes": [
-    "Diagnostics",
-    "Medical devices",
-    "Translational research"
-   ],
-   "url": "https://www.ukri.org/opportunity/mrc-proof-of-concept-stage-one/",
-   "source_id": "ukri-opportunities",
-   "source_name": "UKRI funding finder",
-   "fetched_at": "2026-11-19T14:35:43.025Z",
-   "score": null,
-   "strengths": [],
-   "weaknesses": [],
-   "score_reason": null,
-   "fit": null,
-   "eligible_as": null,
-   "notes": null
-  },
   {
    "id": "f4a4ef7d5c8b0fd4",
    "title": "Science of Learning and Augmented Intelligence (SL)",
@@ -2558,6 +2524,46 @@
    "notes": null,
    "added_by": null,
    "updated_at": "2026-11-12T14:38:09.152607+00:00"
+  },
+  {
+   "id": "78be762fac4e3559",
+   "title": "UKRI translation: MRC proof of concept: stage one",
+   "funder": "Medical Research Council (MRC)",
+   "summary": "Funds the development and testing of novel therapeutics, medical devices, diagnostics, and other health interventions. Aimed at researchers based at organisations eligible for Medical Research Council funding.",
+   "amount_text": null,
+   "amount_usd": null,
+   "deadline": "2027-03-17",
+   "open_date": "2026-11-19",
+   "eligibility": "Employed at a research organisation eligible for MRC funding (primarily UK-based institutions; international partners can join as co-leads/partners).",
+   "requirements": "Develop and test novel diagnostics, medical devices, or interventions from prototype to early clinical studies.",
+   "countries": [
+    "GBR",
+    "GMB",
+    "UGA"
+   ],
+   "regions": [],
+   "themes": [
+    "Diagnostics",
+    "Medical devices",
+    "Translational research"
+   ],
+   "url": "https://www.ukri.org/opportunity/mrc-proof-of-concept-stage-one/",
+   "source_id": "ukri-opportunities",
+   "source_name": "UKRI funding finder",
+   "fetched_at": "2026-11-19T14:35:43.025+00:00",
+   "score": null,
+   "strengths": [],
+   "weaknesses": [],
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": null,
+   "sector": null,
+   "fit": null,
+   "eligible_as": null,
+   "geography": null,
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-19T14:36:35.39154+00:00"
   }
  ]
 }
