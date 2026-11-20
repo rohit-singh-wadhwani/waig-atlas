@@ -1,6 +1,21 @@
 {
- "updated_at": "2026-11-19T22:08:56.417Z",
+ "updated_at": "2026-11-20T01:31:25.941Z",
  "insights": [
+  {
+   "id": "3143d3b5e3cf0f88",
+   "title": "Applications of computer vision in mosquito-borne diseases: A systematic review.",
+   "summary": "This systematic review examines current applications of computer vision for tracking and studying mosquito-borne diseases.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/43056402/",
+   "published_at": "2026-11-19T17:33:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [],
+   "diseases": [
+    "dengue",
+    "malaria"
+   ]
+  },
   {
    "id": "4b8799891cb3fe87",
    "title": "Digital Health and Artificial Intelligence for Public Health Systems in Africa: A Narrative Review.",
