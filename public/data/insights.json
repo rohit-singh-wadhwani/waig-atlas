@@ -1,5 +1,5 @@
 {
- "updated_at": "2026-11-21T10:06:54.458Z",
+ "updated_at": "2026-11-21T13:21:14.794Z",
  "insights": [
   {
    "id": "93cba8d2c3aa2394",
@@ -62,6 +62,104 @@
    "diseases": [
     "tuberculosis"
    ]
+  },
+  {
+   "id": "281fd425694a5210",
+   "title": "Consulting and supervision of rehabilitation works for  ANARME.",
+   "summary": "Mozambique is seeking consulting and supervision services for health facility rehabilitation works under an emergency preparedness project.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00464431",
+   "published_at": "2026-11-20T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "MOZ"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "0c08a8b0a3b79864",
+   "title": "Acquisition, Installation et mise en service des paillasses  destinés aux  laboratoires de (i) santé publique de Équateur et (ii) bactériologie de l’INRB",
+   "summary": "The Democratic Republic of Congo has awarded a contract for the acquisition and installation of laboratory benches for public health and bacteriology labs.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00482895",
+   "published_at": "2026-11-20T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "COD"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "7e314af7a73e564e",
+   "title": "Regional Coordinator (senior civil engineer) for  Tigray  Region",
+   "summary": "A regional coordinator is appointed for the Africa CDC regional investment financing project in the Tigray region.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00482772",
+   "published_at": "2026-11-20T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "ETH"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "d2d966f52b565783",
+   "title": "Senior civil engineer for Tigray  Region",
+   "summary": "A senior civil engineer has been appointed for the Africa CDC regional project in the Tigray region.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00482802",
+   "published_at": "2026-11-20T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "ETH"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "cc12f6ed007c0f62",
+   "title": "Contractualisation avec Mercy Corps pour l'amélioration de la PCI/WASH dans les établissements de soins de santé et communautés locales au Nord-Kivu",
+   "summary": "Mercy Corps has been contracted to improve infection prevention and control and WASH in health facilities in North Kivu.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00482896",
+   "published_at": "2026-11-20T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "COD"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "a2903d7cee51287a",
+   "title": "Acquisition des matériels roulants en trois (03) lots en faveur des DPS du Nord Kivu,  de la Tshopo et de Haut Uélé: Lot 1 (15 véhicules 4X4 de 5 portières), Lot 2 (15 ambulances médicalisées) et Lot 3 (280 motos)",
+   "summary": "The Democratic Republic of Congo is procuring vehicles, ambulances, and motorcycles for provincial health divisions.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00482911",
+   "published_at": "2026-11-20T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "COD"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "a298c56436d47b36",
+   "title": "Acquisition des Thermoflash et gels hydro alcooliques pour les écoles primaires et secondaires, Camps de concentration, Centres de Santé et Points d'entrée dans les provinces de l'Ituri et de la Tshopo",
+   "summary": "A contract was awarded for the supply of thermometers and hydroalcoholic gels to schools, health centers, and entry points in Ituri and Tshopo.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00482907",
+   "published_at": "2026-11-20T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "COD"
+   ],
+   "diseases": []
   },
   {
    "id": "4206f7c81f6e6d2b",
