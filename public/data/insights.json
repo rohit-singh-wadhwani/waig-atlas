@@ -1,6 +1,20 @@
 {
- "updated_at": "2026-11-20T22:07:19.486Z",
+ "updated_at": "2026-11-21T01:36:14.123Z",
  "insights": [
+  {
+   "id": "b78f269851dbf8fa",
+   "title": "Digital imaging technologies for automated assessment of visible skin conditions: A scoping review with implications for tuberculin skin test reading.",
+   "summary": "This scoping review examines digital imaging technologies for assessing visible skin conditions, with implications for reading tuberculin skin tests.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/43063187/",
+   "published_at": "2026-11-20T17:32:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [],
+   "diseases": [
+    "tuberculosis"
+   ]
+  },
   {
    "id": "13c0a4e5d6b509f1",
    "title": "Genomic signatures drive the progression of multidrug-resistant tuberculosis to pre-extensively drug-resistant tuberculosis and its global spread.",
