@@ -1,6 +1,38 @@
 {
- "updated_at": "2026-11-21T04:13:11.978Z",
+ "updated_at": "2026-11-21T07:32:59.936Z",
  "insights": [
+  {
+   "id": "93cba8d2c3aa2394",
+   "title": "Two-sample machine-learning estimation of rifampicin exposure in tuberculosis: an external validation study.",
+   "summary": "This study externally validates a machine-learning method to estimate rifampicin exposure for tuberculosis treatment.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/43064154/",
+   "published_at": "2026-11-20T23:38:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [],
+   "diseases": [
+    "tuberculosis"
+   ]
+  },
+  {
+   "id": "3822007551ed49dd",
+   "title": "Ebola disease caused by Bundibugyo virus- Democratic Republic of the Congo, Kenya and Nigeria",
+   "summary": "An ongoing outbreak of Ebola disease caused by the Bundibugyo virus continues in the Democratic Republic of the Congo with high community mortality.",
+   "url": "https://www.who.int/emergencies/disease-outbreak-news/item/2026-DON630",
+   "published_at": "2026-11-20T19:00:00.000Z",
+   "source_id": "who-don",
+   "source_name": "WHO Disease Outbreak News",
+   "kind": "outbreak",
+   "countries": [
+    "COD",
+    "KEN",
+    "NGA"
+   ],
+   "diseases": [
+    "Ebola"
+   ]
+  },
   {
    "id": "b78f269851dbf8fa",
    "title": "Digital imaging technologies for automated assessment of visible skin conditions: A scoping review with implications for tuberculin skin test reading.",
