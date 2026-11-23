@@ -1,6 +1,20 @@
 {
- "updated_at": "2026-11-23T10:31:13.773Z",
+ "updated_at": "2026-11-23T13:43:14.852Z",
  "insights": [
+  {
+   "id": "4c8068821e3fc816",
+   "title": "Procurement of Lot-1 Construction of 1 inclusive & improved four-seat Latrine block & Lot-2 Construction of 1 MHM room, in Soyama Zuriya Woreda for Berek Primary School, by Soyama Zuriya Woreda Finance office",
+   "summary": "Contract award for sanitation and hygiene infrastructure construction, including latrines and menstrual hygiene management rooms at an Ethiopian primary school.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00483040",
+   "published_at": "2026-11-22T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "ETH"
+   ],
+   "diseases": []
+  },
   {
    "id": "93cba8d2c3aa2394",
    "title": "Two-sample machine-learning estimation of rifampicin exposure in tuberculosis: an external validation study.",
