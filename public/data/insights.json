@@ -1,6 +1,22 @@
 {
- "updated_at": "2026-11-23T13:43:14.852Z",
+ "updated_at": "2026-11-23T16:25:53.784Z",
  "insights": [
+  {
+   "id": "963c8811d214ca68",
+   "title": "Heavy fighting in Ituri traps DR Congo Ebola responders: WHO",
+   "summary": "Fighting in Ituri province, DR Congo, has disrupted WHO Ebola response operations and forced emergency teams to shelter in place.",
+   "url": "https://news.un.org/feed/view/en/story/2026/11/1168858",
+   "published_at": "2026-11-23T12:00:00.000Z",
+   "source_id": "un-news-health",
+   "source_name": "UN News: health",
+   "kind": "news",
+   "countries": [
+    "COD"
+   ],
+   "diseases": [
+    "Ebola"
+   ]
+  },
   {
    "id": "4c8068821e3fc816",
    "title": "Procurement of Lot-1 Construction of 1 inclusive & improved four-seat Latrine block & Lot-2 Construction of 1 MHM room, in Soyama Zuriya Woreda for Berek Primary School, by Soyama Zuriya Woreda Finance office",
