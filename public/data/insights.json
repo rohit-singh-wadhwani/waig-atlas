@@ -1,5 +1,5 @@
 {
- "updated_at": "2026-11-24T16:30:14.112Z",
+ "updated_at": "2026-11-24T19:22:55.837Z",
  "insights": [
   {
    "id": "ddbbfa24701b8b52",
@@ -12,6 +12,22 @@
    "kind": "outbreak",
    "countries": [],
    "diseases": []
+  },
+  {
+   "id": "f00997e2ed727110",
+   "title": "DR Congo: Concern for trapped Ebola workers as violence against women and girls deepens",
+   "summary": "WHO staff and Ebola responders are trapped in an Ituri province hospital due to ongoing heavy fighting in the Democratic Republic of the Congo.",
+   "url": "https://news.un.org/feed/view/en/story/2026/11/1168865",
+   "published_at": "2026-11-24T12:00:00.000Z",
+   "source_id": "un-news-health",
+   "source_name": "UN News: health",
+   "kind": "news",
+   "countries": [
+    "COD"
+   ],
+   "diseases": [
+    "Ebola"
+   ]
   },
   {
    "id": "5960ee1d8b8fed93",
