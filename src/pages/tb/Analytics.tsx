@@ -103,6 +103,7 @@ function Pair({ label, value }: { label: string; value: React.ReactNode }) {
 /** Horizontal cascade, one hue; widths relative to people screened, with the drop between steps written out. */
 /** Drops that are losses to follow-up (WHO 2.7.2); the other drops are people who tested or screened negative. */
 const LOSS: Record<number, string> = { 3: 'presumptive not tested (lost before diagnosis)', 5: 'confirmed not started on treatment (lost before treatment)' };
+const DROP: Record<number, string> = { 1: 'reached but not screened', 2: 'screened negative', 4: 'tested negative' };
 
 function Cascade({ t }: { t: Record<string, number> }) {
   const base = Math.max(t.people_reached || 0, t.screened || 0, 1);
@@ -110,7 +111,7 @@ function Cascade({ t }: { t: Record<string, number> }) {
     <ol className="space-y-2.5">
       {STEPS.map((s, i) => {
         const v = t[s.key] || 0;
-        const prev = i > 1 ? t[STEPS[i - 1].key] || 0 : null;
+        const prev = i > 0 ? t[STEPS[i - 1].key] || 0 : null;
         const w = Math.min(100, (v / base) * 100);
         return (
           <li key={s.key} title={s.note}>
@@ -119,7 +120,7 @@ function Cascade({ t }: { t: Record<string, number> }) {
               <span className="tabular-nums text-gray-900 font-medium">{fmtInt(v)}{prev != null && <span className="text-xs text-gray-500 font-normal"> · {pct(v, prev)} of previous</span>}</span>
             </div>
             <div className="h-3 mt-1 rounded bg-gray-100 overflow-hidden"><div className={cx('h-full rounded', i === 0 ? 'bg-brand-300' : 'bg-brand-600')} style={{ width: `${Math.max(w, v ? 0.8 : 0)}%` }} /></div>
-            {prev != null && prev > v && <div className={cx('text-xs mt-0.5', LOSS[i] ? 'text-red-700' : 'text-gray-500')}>{fmtInt(prev - v)} {LOSS[i] || (i === 4 ? 'tested negative' : 'screened negative')}</div>}
+            {prev != null && prev > v && <div className={cx('text-xs mt-0.5', LOSS[i] ? 'text-red-700' : 'text-gray-500')}>{fmtInt(prev - v)} {LOSS[i] || DROP[i]}</div>}
           </li>
         );
       })}
