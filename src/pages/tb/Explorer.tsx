@@ -416,7 +416,7 @@ function SignalsPanel({ signals, onPick }: { signals: TbSignal[]; onPick: (s: Tb
   if (!signals.length) return null;
   const items = [...signals].sort((a, b) => String(b.published || '').localeCompare(String(a.published || ''))).slice(0, 5);
   return (
-    <Panel title="TB signals on the map" sub="Recent Ghana TB events tied to a place, found daily by a Gemini agent with Google Search">
+    <Panel title="TB signals on the map" sub="Recent Ghana TB events tied to a place, picked daily from Ghana news feeds by a Gemini agent">
       <ul className="space-y-2.5">
         {items.map((x) => (
           <li key={x.id} className="text-sm">
