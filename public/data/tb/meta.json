@@ -1,5 +1,5 @@
 {
- "updated_at": "2026-11-24T09:43:15.094435+00:00",
+ "updated_at": "2026-11-24T09:50:04.579104+00:00",
  "sources": [
   {
    "name": "Ghana Statistical Service: 2021 Census district boundaries",
@@ -7,7 +7,7 @@
    "page": "https://statsbank.statsghana.gov.gh/",
    "ok": true,
    "note": "261 districts",
-   "at": "2026-11-24T09:43:15.094435+00:00"
+   "at": "2026-11-24T09:50:04.579104+00:00"
   },
   {
    "name": "WHO: Ghana TB cases attributable to risk factors (2024)",
@@ -15,7 +15,7 @@
    "page": "https://www.who.int/teams/global-programme-on-tuberculosis-and-lung-health/data",
    "ok": true,
    "note": "hiv 5,300, und 2,600, smk 500, alc 3,200",
-   "at": "2026-11-24T09:43:15.094435+00:00"
+   "at": "2026-11-24T09:50:04.579104+00:00"
   },
   {
    "name": "WHO Global TB Programme: Ghana estimates and notifications (latest 2024)",
@@ -23,7 +23,7 @@
    "page": "https://www.who.int/teams/global-programme-on-tuberculosis-and-lung-health/data",
    "ok": true,
    "note": "",
-   "at": "2026-11-24T09:43:15.094435+00:00"
+   "at": "2026-11-24T09:50:04.579104+00:00"
   },
   {
    "name": "WHO: Ghana TB incidence by age group and sex (2024)",
@@ -31,7 +31,7 @@
    "page": "https://extranet.who.int/tme/generateCSV.asp?ds=estimates_age_sex",
    "ok": true,
    "note": "0-4, 5-9, 10-14, 15-19, 20-24, 25-34, 35-44, 45-54, 55-64, 65-+",
-   "at": "2026-11-24T09:43:15.094435+00:00"
+   "at": "2026-11-24T09:50:04.579104+00:00"
   },
   {
    "name": "DHS Program API: Ghana DHS 2022 (thinness, tobacco use) and 2014 (HIV), by region",
@@ -39,7 +39,7 @@
    "page": "https://www.statcompiler.com/en/",
    "ok": true,
    "note": "18 regions",
-   "at": "2026-11-24T09:43:15.094435+00:00"
+   "at": "2026-11-24T09:50:04.579104+00:00"
   },
   {
    "name": "GSS 2021 Census: population by district, single age and sex",
@@ -47,7 +47,7 @@
    "page": "https://statsbank.statsghana.gov.gh/pxweb/en/PHC%202021%20StatsBank/Population/",
    "ok": true,
    "note": "289 areas",
-   "at": "2026-11-24T09:43:15.094435+00:00"
+   "at": "2026-11-24T09:50:04.579104+00:00"
   },
   {
    "name": "GSS 2021 Census: household size and sleeping rooms by district",
@@ -55,7 +55,7 @@
    "page": "https://statsbank.statsghana.gov.gh/pxweb/en/PHC%202021%20StatsBank/Housing/",
    "ok": true,
    "note": "",
-   "at": "2026-11-24T09:43:15.094435+00:00"
+   "at": "2026-11-24T09:50:04.579104+00:00"
   },
   {
    "name": "GSS 2021 Census: multidimensional poverty by district",
@@ -63,7 +63,7 @@
    "page": "https://statsbank.statsghana.gov.gh/pxweb/en/PHC%202021%20StatsBank/Multidimensional%20Poverty/",
    "ok": true,
    "note": "",
-   "at": "2026-11-24T09:43:15.094435+00:00"
+   "at": "2026-11-24T09:50:04.579104+00:00"
   },
   {
    "name": "OpenStreetMap (Geofabrik Ghana snapshot)",
@@ -71,7 +71,7 @@
    "page": "https://download.geofabrik.de/africa/ghana.html",
    "ok": true,
    "note": "111 MB: 1345 health facilities, 1888 congregate and occupational sites, 9033 named places, 10686 community venues, 4,671,556 road points",
-   "at": "2026-11-24T09:43:15.094435+00:00"
+   "at": "2026-11-24T09:50:04.579104+00:00"
   },
   {
    "name": "WHO/KEMRI public health facilities, Ghana (1878)",
@@ -79,7 +79,7 @@
    "page": "https://data.humdata.org/dataset/health-facilities-in-sub-saharan-africa",
    "ok": true,
    "note": "Maina et al. 2019, Scientific Data; public sector only",
-   "at": "2026-11-24T09:43:15.094435+00:00"
+   "at": "2026-11-24T09:50:04.579104+00:00"
   },
   {
    "name": "Ghana Health Service facility list",
@@ -87,15 +87,15 @@
    "page": "https://data.gov.gh/dataset/health-facilities-ghana",
    "ok": false,
    "note": "HTTPSConnectionPool(host='data.gov.gh', port=443): Max retries exceeded with url: /api/3/action/package_show?id=health-facilities-ghana (Caused by NewConnectionError(\"HTTPSConnection(host='data.gov.gh",
-   "at": "2026-11-24T09:43:15.094435+00:00"
+   "at": "2026-11-24T09:50:04.579104+00:00"
   },
   {
    "name": "Google-Microsoft Open Buildings (combined by VIDA)",
-   "url": "https://us-west-2.opendata.source.coop.s3.amazonaws.com/vida/google-microsoft-open-buildings/geoparquet/by_country/country_iso=GHA/",
+   "url": "https://s3.us-west-2.amazonaws.com/us-west-2.opendata.source.coop/vida/google-microsoft-open-buildings/geoparquet/by_country/country_iso=GHA/",
    "page": "https://source.coop/vida/google-microsoft-open-buildings",
-   "ok": false,
-   "note": "HTTPSConnectionPool(host='us-west-2.opendata.source.coop.s3.amazonaws.com', port=443): Max retries exceeded with url: /?list-type=2&prefix=vida/google-microsoft-open-buildings/geoparquet/by_country/co",
-   "at": "2026-11-24T09:43:15.094435+00:00"
+   "ok": true,
+   "note": "13,623,299 buildings in Ghana (1707 MB)",
+   "at": "2026-11-24T09:50:04.579104+00:00"
   },
   {
    "name": "DHIMS II extract: monthly reported TB, Ashanti, Eastern and Volta, 2016-2023 (Mendeley Data)",
@@ -103,7 +103,7 @@
    "page": "https://data.mendeley.com/datasets/r3c3cr7x6g/1",
    "ok": true,
    "note": "Volta 96 months, Eastern 96 months, Ashanti 96 months",
-   "at": "2026-11-24T09:43:15.094435+00:00"
+   "at": "2026-11-24T09:50:04.579104+00:00"
   },
   {
    "name": "Malaria Atlas Project: walking friction surface (travel speed)",
@@ -111,7 +111,7 @@
    "page": "https://malariaatlas.org/project-resources/accessibility-to-healthcare/",
    "ok": true,
    "note": "coverage Accessibility__202001_Global_Walking_Only_Friction_Surface",
-   "at": "2026-11-24T09:43:15.094435+00:00"
+   "at": "2026-11-24T09:50:04.579104+00:00"
   },
   {
    "name": "Malaria Atlas Project: motorised friction surface (travel speed)",
@@ -119,7 +119,7 @@
    "page": "https://malariaatlas.org/project-resources/accessibility-to-healthcare/",
    "ok": true,
    "note": "coverage Accessibility__202001_Global_Motorized_Friction_Surface",
-   "at": "2026-11-24T09:43:15.094435+00:00"
+   "at": "2026-11-24T09:50:04.579104+00:00"
   },
   {
    "name": "WorldPop 2026 population (100 m, R2025A)",
@@ -127,7 +127,7 @@
    "page": "https://hub.worldpop.org/project/categories?id=3",
    "ok": true,
    "note": "",
-   "at": "2026-11-24T09:43:15.094435+00:00"
+   "at": "2026-11-24T09:50:04.579104+00:00"
   }
  ],
  "method": {
