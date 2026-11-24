@@ -26,7 +26,7 @@ const SCHEMA = {
         type: 'object',
         properties: {
           text: { type: 'string', description: 'One short sentence: what happened and why it matters.' },
-          scope: { type: 'string', enum: ['Ghana', 'West Africa', 'Global'] },
+          scope: { type: 'string', enum: ['Ghana', 'West Africa', 'Global'], description: 'Where it happened: Ghana only when the article is about Ghana.' },
           kind: { type: 'string', enum: KINDS },
           n: { type: 'array', items: { type: 'integer' }, description: 'Numbers of the articles this comes from.' },
         },
@@ -69,7 +69,8 @@ async function articles(since) {
           const [title, source = ''] = it.title.split(/ - (?=[^-]+$)/);
           const key = title.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
           if (!/tuberculosis|\btb\b/i.test(`${it.title} ${it.text}`) || (it.date && it.date.slice(0, 10) < since) || out.has(key)) continue;
-          out.set(key, { scope, title, source, url: unwrap(it.url), date: it.date ? it.date.slice(0, 10) : null, text: (it.text || '').replace(title, '').slice(0, 300) });
+          const ghana = /ghana/i.test(`${it.title} ${it.text}`); // a story counts as Ghana only if it names Ghana
+          out.set(key, { scope: ghana ? 'Ghana' : scope === 'Ghana' ? 'Global' : scope, title, source, url: unwrap(it.url), date: it.date ? it.date.slice(0, 10) : null, text: (it.text || '').replace(title, '').slice(0, 300) });
         }
       } catch (e) {
         log('feed failed', host, q, e.message);
@@ -93,7 +94,7 @@ async function main() {
   const list = arts.map((a, i) => `[${i}] ${a.date || ''} | ${a.scope} | ${a.source} | ${a.title} | ${a.text}`).join('\n');
   const prompt = `You brief Ghana TB programme staff (district teams, the National TB Programme, partners such as Aurum Institute) on the latest TB news.
 Below are recent news articles, one per line as [number] date | scope | publisher | headline | snippet.
-Write a short, plain-English summary using ONLY these articles: no outside facts, no invented numbers or places. Cite each point's articles by number.
+Write a short, plain-English summary using ONLY these articles: no outside facts, no invented numbers or places. Cite each point's articles by number. A point's scope is where it happened: Ghana only when the article is about Ghana.
 Prefer Ghana, then West Africa, then global items that change what a programme should do (outbreaks, screening drives, new diagnostics or treatment, guideline changes, funding cuts or new funding). Skip awareness pieces and opinion.
 Actions: 2-3, specific and doable, following from the points. Where useful, tie them to the highest-burden districts (${top.join(', ')})${campaigns.length ? ` or our open campaigns (${campaigns.map((c) => `${c.name}, ${c.district_name}`).join('; ')})` : ''}.
 
