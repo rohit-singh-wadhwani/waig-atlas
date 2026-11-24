@@ -8,7 +8,7 @@ import { useData } from '../../lib/hooks';
 import { uid } from '../../lib/store';
 import { peopleOptions, personName, usePeople } from '../../lib/team';
 import { APPROACH, approachOf, createCampaign, expectedPositivity, fmtInt, loadDistrictDetail, loadReportedRegions, rulesFrom, tbSave, TbCampaign, TbDistrict, TbHexRow, TbNews, TbTask, TbTown, TbVenue } from '../../lib/tb';
-import { BasisTag, esc, kmFmt, pctFmt } from './common';
+import { BASIS, BasisTag, esc, kmFmt, pctFmt } from './common';
 import type { TbData } from './TbPage';
 
 const GHANA: [number, number, number, number] = [-3.3, 4.6, 1.3, 11.2];
@@ -16,6 +16,8 @@ const townKey = (t: TbTown) => String(t.id);
 const venueKey = (v: TbVenue) => `${v.kind}|${v.lon}|${v.lat}`;
 const KIND_LABEL: Record<string, string> = { 'transport hub': 'Lorry station', market: 'Market', prison: 'Prison', 'mine / quarry': 'Mine / quarry', port: 'Port', 'industrial zone': 'Industrial zone', school: 'School', 'place of worship': 'Church / mosque', 'community centre': 'Community centre', pharmacy: 'Pharmacy', 'NGO office': 'NGO office' };
 const distKm = (a: { lon: number; lat: number }, b: { lon: number; lat: number }) => Math.hypot((a.lat - b.lat) * 110.57, (a.lon - b.lon) * 111.32 * Math.cos((a.lat * Math.PI) / 180));
+/** A district's rate against Ghana's, in words: "rate 21% above Ghana". */
+const vsGhana = (r: number | null | undefined) => (r == null ? '' : Math.abs(r - 1) < 0.005 ? 'same rate as Ghana' : `rate ${Math.abs(Math.round((r - 1) * 100))}% ${r > 1 ? 'above' : 'below'} Ghana`);
 const signedPct = (r: number | null | undefined) => (r == null ? '—' : `${r >= 1 ? '+' : '−'}${Math.abs(Math.round((r - 1) * 100))}%`);
 
 const WHO_HANDBOOK = 'https://www.who.int/publications-detail-redirect/9789240022614';
@@ -130,7 +132,7 @@ export default function Explorer({ data, goTab }: { data: TbData; goTab: (t: str
   }, [town, d, dist.data.geo]);
 
   const tip = (pr: any, layer: string) => {
-    if (layer === 'd-fill') return districtId ? '' : `<b>${esc(pr.name)}</b> · ${esc(String(pr.region))}<br/>About <b>${fmtInt(Number(pr.expected))}</b> new TB cases a year<br/>${fmtInt(Number(pr.expected_100k))} per 100,000 (${signedPct(Number(pr.vs_ghana))} vs Ghana)<br/><i>Click to open</i>`;
+    if (layer === 'd-fill') return districtId ? '' : `<b>${esc(pr.name)}</b> · ${esc(String(pr.region))}<br/>About <b>${fmtInt(Number(pr.expected))}</b> new TB cases a year<br/>${fmtInt(Number(pr.expected_100k))} per 100,000 people (${vsGhana(Number(pr.vs_ghana))})<br/><i>Click to open</i>`;
     if (layer === 'suggested') return `<b>High density point</b><br/>≈${fmtInt(Number(pr.sp))} people${pr.sb != null && pr.sb !== '' ? ` and ${plural(Number(pr.sb), 'building')}` : ''} within ~350 m, inside this hexagon<br/>${roadWords(pr.rd)}<br/><i>Click to ${pr.used === true || pr.used === 'true' ? 'remove from' : 'add to'} the campaign</i>`;
     if (layer === 'h-fill') return `${fmtInt(Number(pr.p))} people${pr.b != null && pr.b !== '' ? `, ${plural(Number(pr.b), 'building')}` : ''} · ${pr.u === 'd' ? 'dense urban' : pr.u === 't' ? 'town / peri-urban' : 'rural'}<br/>≈${Number(pr.e).toFixed(1)} TB cases a year <span style="color:#6b7280">(estimate: people × district rate)</span><br/>Nearest facility ${kmFmt(Number(pr.f))} from its centre${pr.w != null && pr.w !== '' ? `, ${fmtInt(Number(pr.w))} min walk` : ''}<br/><i>${pinMode ? (selHex.includes(pr.h) ? 'Click to drop a screening point here' : 'Select this hexagon first') : selHex.includes(pr.h) ? 'Click to unselect' : 'Click to select'}</i>`;
     if (layer === 'pins') return `<b>${esc(pr.name)}</b><br/>Screening point you placed`;
@@ -187,7 +189,7 @@ export default function Explorer({ data, goTab }: { data: TbData; goTab: (t: str
         </div>
         <aside ref={panelRef} className="min-w-0 space-y-4 xl:min-h-0 xl:overflow-y-auto xl:pr-1 xl:pb-4">
           {!d && <GhanaPanel list={list} nat={nat} natRate={natRate} rank={rank} campaigns={campaigns.data} notified={dist.data.notifiedDistricts} onOpen={setDistrictId} goTab={goTab} news={data.news.data} />}
-          {d && !town && <DistrictPanel d={d} det={det} loading={detail.loading} rank={rank} n={list.length} venues={venues} campaigns={campaigns.data.filter((c) => c.district_id === d.id)} onTown={(t) => setTKey(townKey(t))} rules={rules} />}
+          {d && !town && <DistrictPanel d={d} det={det} loading={detail.loading} rank={rank} n={list.length} venues={venues} campaigns={campaigns.data.filter((c) => c.district_id === d.id)} onTown={(t) => setTKey(townKey(t))} rules={rules} natRate={natRate} />}
           {d && town && !planning && !created && (
             <TownPanel pickSuggested={pickSuggested} d={d} town={town} venues={hexVenues} hexes={townHexes} selHex={selHex} clearHex={() => { setSelHex([]); setPins([]); }} pins={pins} setPins={setPins} pinMode={pinMode} setPinMode={setPinMode} spots={spots} facilities={det?.facilities.filter((f) => distKm(f, town) <= town.radius_km + 3).sort((a, b) => distKm(a, town) - distKm(b, town)) || []}
               picked={picked} toggle={toggle} campaigns={campaigns.data.filter((c) => c.district_id === d.id && c.town === town.name)} onPlan={() => setPlanning(true)} />
@@ -306,26 +308,41 @@ function Panel({ title, sub, right, children, className }: { title?: React.React
 }
 
 /** The Reported / Measured / Estimated tag; hover (or tap) shows the dataset and calculation in a floating note. */
-function HowTag({ b, how }: { b: 'reported' | 'measured' | 'estimated'; how?: string }) {
+/** One hover/focus popover for an explanation, positioned so it never leaves the screen. */
+function Tip({ text, label, children }: { text: React.ReactNode; label: string; children: React.ReactNode }) {
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
-  if (!how) return <BasisTag b={b} />;
   const show = (el: HTMLElement) => {
     const r = el.getBoundingClientRect();
-    const w = 280;
+    const w = 300;
     setPos({ x: Math.max(8, Math.min(r.right - w, window.innerWidth - w - 8)), y: r.bottom + 6 });
   };
   return (
-    <span className="inline-flex shrink-0 cursor-help" tabIndex={0} aria-label={how}
+    <span className="inline-flex shrink-0 cursor-help" tabIndex={0} aria-label={label}
       onMouseEnter={(e) => show(e.currentTarget)} onMouseLeave={() => setPos(null)}
       onFocus={(e) => show(e.currentTarget)} onBlur={() => setPos(null)}>
-      <BasisTag b={b} />
-      {pos && <span role="tooltip" className="fixed z-50 w-[280px] rounded-lg bg-gray-900 px-3 py-2 text-xs leading-relaxed text-white shadow-lg pointer-events-none" style={{ left: pos.x, top: pos.y }}>{how}</span>}
+      {children}
+      {pos && <span role="tooltip" className="fixed z-50 w-[300px] rounded-lg bg-gray-900 px-3 py-2 text-xs leading-relaxed text-white shadow-lg pointer-events-none" style={{ left: pos.x, top: pos.y }}>{text}</span>}
     </span>
   );
 }
 
+/** The Reported / Measured / Estimated tag; hovering shows what the tag means and how this number was made. */
+function HowTag({ b, how }: { b: 'reported' | 'measured' | 'estimated'; how?: string }) {
+  const x = BASIS[b];
+  return (
+    <Tip label={`${x.label}: ${how || x.title}`} text={<><b>{x.label}:</b> {x.title.charAt(0).toLowerCase() + x.title.slice(1)}.{how && <span className="block mt-1.5">{how}</span>}</>}>
+      <BasisTag b={b} bare />
+    </Tip>
+  );
+}
+
+/** A "?" that explains a term or a figure on hover. */
+function Why({ text }: { text: string }) {
+  return <Tip label={text} text={text}><span className="w-4 h-4 rounded-full border border-gray-400 text-gray-500 text-[10px] font-semibold grid place-items-center hover:border-gray-700 hover:text-gray-800">?</span></Tip>;
+}
+
 /** One explanation for every distance and travel time on the dashboard. */
-const TRAVEL_HOW = 'One facility list: OpenStreetMap (refreshed weekly) merged with the WHO/KEMRI public facility list (2019) and the Ghana Health Service list (2012), duplicates within 100 m removed. Distance is the straight line to the facility; travel time is the route to the same facility over the Malaria Atlas Project 2020 walking or driving speed map (~1 km cells).';
+const TRAVEL_HOW = 'One facility list: OpenStreetMap (refreshed weekly) merged with the WHO/KEMRI public facility list (2019), duplicates within 100 m removed. Distance is the straight line to the facility; travel time is the route to the same facility over the Malaria Atlas Project 2020 walking or driving speed map (~1 km cells).';
 
 function Stat({ label, value, sub, basis, how }: { label: string; value: React.ReactNode; sub?: React.ReactNode; basis?: 'reported' | 'measured' | 'estimated'; how?: string }) {
   return (
@@ -378,10 +395,8 @@ function GhanaPanel({ list, nat, natRate, rank, campaigns, notified, onOpen, goT
         {!notified && <p className="text-xs text-amber-800 bg-amber-50 rounded-lg px-3 py-2 mt-3">District notifications are not connected yet (needs DHIMS2), so district figures are expected cases, not measured gaps.</p>}
       </Panel>
 
-      <TbNewsCard news={news} flat />
-
-      <Panel title="Where TB is most likely" sub="Expected new cases from each district's age and sex mix (Census 2021), WHO's rates, and its region's HIV, undernourishment and smoking."
-        right={<div className="flex rounded-lg bg-gray-100 p-0.5 text-sm shrink-0">{(['count', 'rate'] as const).map((k) => <button key={k} type="button" onClick={() => setSort(k)} className={cx('px-2.5 py-1 rounded-md', sort === k ? 'bg-white shadow-sm font-medium' : 'text-gray-600')}>{k === 'count' ? 'Most cases' : 'Highest rate'}</button>)}</div>}>
+      <Panel title="Where TB is most likely" sub="Estimated new TB cases in a year, by district. Red or green shows the district's rate against Ghana's."
+        right={<div className="flex items-center gap-2 shrink-0"><Why text={`Cases a year = new TB cases expected in this district in one year, not cases counted (district notifications need DHIMS2). Made from WHO's ${nat?.year ?? 'latest'} Ghana rates by age and sex (WHO Global TB Programme) × the district's people by age and sex (GSS Census 2021, grown to 2026 with WorldPop) × its region's HIV, undernourishment and smoking (DHS 2022/2014), scaled so all ${list.length} districts add up to WHO's ${fmtInt(nat?.incidence)}. Per 100k people = cases a year ÷ people living there × 100,000, so districts of different size compare fairly${natRate ? `; Ghana's is ${fmtInt(natRate)}` : ''}.`} /><div className="flex rounded-lg bg-gray-100 p-0.5 text-sm">{(['count', 'rate'] as const).map((k) => <button key={k} type="button" onClick={() => setSort(k)} className={cx('px-2.5 py-1 rounded-md', sort === k ? 'bg-white shadow-sm font-medium' : 'text-gray-600')}>{k === 'count' ? 'Most cases' : 'Highest rate'}</button>)}</div></div>}>
         <Select className="w-full mb-2 [&_select]:h-9 [&_select]:text-sm" value={region} onChange={setRegion} placeholder="All 16 regions" options={regions.map((r) => ({ value: r, label: r }))} />
         <ol className="divide-y divide-gray-100 -mx-1">
           {shown.slice(0, all ? shown.length : 12).map((d, i) => {
@@ -393,11 +408,11 @@ function GhanaPanel({ list, nat, natRate, rank, campaigns, notified, onOpen, goT
                   <span className="min-w-0 flex-1">
                     <span className="flex items-baseline justify-between gap-2">
                       <span className="font-medium text-gray-900 truncate">{d.name}</span>
-                      <span className="shrink-0 tabular-nums font-semibold">{sort === 'count' ? fmtInt(d.expected) : fmtInt(d.expected_100k)}<span className="text-xs font-normal text-gray-500">{sort === 'count' ? ' cases/yr' : ' /100k'}</span></span>
+                      <span className="shrink-0 tabular-nums font-semibold">{sort === 'count' ? fmtInt(d.expected) : fmtInt(d.expected_100k)}<span className="text-xs font-normal text-gray-500">{sort === 'count' ? ' cases a year' : ' per 100k people'}</span></span>
                     </span>
                     <span className="flex items-center justify-between gap-2 text-xs text-gray-500">
-                      <span className="truncate">{d.region} · {(d.share * 100).toFixed(1)}% of Ghana's cases</span>
-                      <span className={cx('shrink-0 font-medium', d.vs_ghana >= 1 ? 'text-red-700' : 'text-green-700')}>{signedPct(d.vs_ghana)} vs Ghana</span>
+                      <span className="truncate">{d.region} · {sort === 'count' ? `${fmtInt(d.expected_100k)} per 100k people` : `${fmtInt(d.expected)} cases a year`}</span>
+                      <span className={cx('shrink-0 font-medium', d.vs_ghana >= 1 ? 'text-red-700' : 'text-green-700')}>{vsGhana(d.vs_ghana)}</span>
                     </span>
                     {flags.length > 0 && <span className="flex flex-wrap gap-1 mt-1">{flags.map((f) => <span key={f} className="text-[11px] px-1.5 py-px rounded bg-orange-50 text-orange-800">{f}</span>)}</span>}
                   </span>
@@ -409,12 +424,13 @@ function GhanaPanel({ list, nat, natRate, rank, campaigns, notified, onOpen, goT
         {shown.length > 12 && <button type="button" className="text-sm text-brand-700 hover:underline mt-2" onClick={() => setAll(!all)}>{all ? 'Show top 12' : `Show all ${shown.length}`}</button>}
       </Panel>
 
+      <TbNewsCard news={news} flat />
     </>
   );
 }
 
 // ---------------- level 2: district ----------------
-function DistrictPanel({ d, det, loading, rank, n, venues, campaigns, onTown, rules }: { d: TbDistrict; det: any; loading: boolean; rank: Record<string, Map<string, number>>; n: number; venues: TbVenue[]; campaigns: TbCampaign[]; onTown: (t: TbTown) => void; rules: any }) {
+function DistrictPanel({ d, det, loading, rank, n, venues, campaigns, onTown, rules, natRate }: { natRate: number | null; d: TbDistrict; det: any; loading: boolean; rank: Record<string, Map<string, number>>; n: number; venues: TbVenue[]; campaigns: TbCampaign[]; onTown: (t: TbTown) => void; rules: any }) {
   const a = APPROACH[d.approach];
   const reported = useData(loadReportedRegions, [], {} as Record<string, { period: string; tb: number }[]>);
   const series = reported.data[d.region] || null;
@@ -428,7 +444,7 @@ function DistrictPanel({ d, det, loading, rank, n, venues, campaigns, onTown, ru
       <Panel title={d.name} sub={`${d.region} · ${fmtInt(d.pop)} people (2026)${d.dense != null ? ` · ${Math.round(d.dense * 100)}% in dense settlements` : ''}`}>
         <div className="grid grid-cols-2 gap-2.5">
           <Stat label="Expected new cases a year" value={fmtInt(d.expected)} basis="estimated" sub={`${(d.share * 100).toFixed(1)}% of Ghana's cases`} how="WHO 2024 rates by age group and sex × this district's population by age and sex (2021 Census), × a regional risk factor (DHS 2022/2014 rates of HIV, thinness and smoking vs Ghana, weighted by WHO's share of cases linked to each), grown to 2026 with WorldPop and scaled so all districts add up to WHO's national total." />
-          <Stat label="Rate per 100,000" value={fmtInt(d.expected_100k)} basis="estimated" how="Expected cases (above) ÷ 2026 population (WorldPop) × 100,000, compared with Ghana's rate." sub={<span className={d.vs_ghana >= 1 ? 'text-red-700' : 'text-green-700'}>{signedPct(d.vs_ghana)} vs Ghana</span>} />
+          <Stat label="Rate per 100,000" value={fmtInt(d.expected_100k)} basis="estimated" how="Expected cases (above) ÷ 2026 population (WorldPop) × 100,000, compared with Ghana's rate." sub={<span className={d.vs_ghana >= 1 ? 'text-red-700' : 'text-green-700'}>{vsGhana(d.vs_ghana)}{natRate ? ` (${fmtInt(natRate)})` : ''}</span>} />
           <Stat label="Notified a year" value={d.notified != null ? fmtInt(d.notified) : 'Not connected'} basis="reported" sub={d.notified != null ? `${pctFmt(d.detection)} of expected` : 'Needs DHIMS2'} how={`From DHIMS2 (live sync) or district reports uploaded on the Data sources tab${d.notified_basis ? ` (${d.notified_basis})` : ', last 12 months'}. Share = notified ÷ expected cases.`} />
           <Stat how="Sum of results entered for campaigns in this district (Campaigns & tasks tab)." label="Our screening here" value={d.screened ? `${fmtInt(d.confirmed)} found` : 'None yet'} basis="reported" sub={d.screened ? `${fmtInt(d.screened)} screened` : `${campaigns.length} campaign${campaigns.length === 1 ? '' : 's'}`} />
         </div>
