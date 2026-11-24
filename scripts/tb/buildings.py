@@ -12,26 +12,32 @@ import shapely
 
 from tblib import S, log, source
 
-BUCKET = 'https://us-west-2.opendata.source.coop.s3.amazonaws.com'
+# path-style S3 address: the bucket name contains dots, which breaks the virtual-hosted (bucket.s3...) form's TLS
+BUCKET = 'https://s3.us-west-2.amazonaws.com/us-west-2.opendata.source.coop'
+MIRROR = 'https://data.source.coop'
 PREFIX = 'vida/google-microsoft-open-buildings/geoparquet/by_country/country_iso=GHA/'
 PAGE = 'https://source.coop/vida/google-microsoft-open-buildings'
 PATH = '/tmp/gha_buildings.parquet'
 
 
 def _ghana_files():
-    xml = S.get(f'{BUCKET}/?list-type=2&prefix={PREFIX}', timeout=60).text
-    keys = re.findall(r'<Key>([^<]+\.parquet)</Key>', xml)
-    if not keys:
-        raise RuntimeError('no Ghana building file listed')
-    return keys
+    """Download addresses of the Ghana partition: listed from the bucket, else the documented file name on the mirror."""
+    try:
+        xml = S.get(f'{BUCKET}?list-type=2&prefix={PREFIX}', timeout=60).text
+        keys = re.findall(r'<Key>([^<]+\.parquet)</Key>', xml)
+        if keys:
+            return [f'{BUCKET}/{k}' for k in keys]
+    except Exception as e:
+        log('building list failed, using mirror', e)
+    return [f'{MIRROR}/{PREFIX}GHA.parquet']
 
 
 def load():
     """Centre points of every building in Ghana as two float arrays (lon, lat), or (None, None) if unavailable."""
     try:
         lons, lats, size = [], [], 0
-        for key in _ghana_files():
-            with S.get(f'{BUCKET}/{key}', stream=True, timeout=1800) as r:
+        for url in _ghana_files():
+            with S.get(url, stream=True, timeout=1800) as r:
                 r.raise_for_status()
                 with open(PATH, 'wb') as f:
                     for chunk in r.iter_content(1 << 22):
