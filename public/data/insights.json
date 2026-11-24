@@ -1,6 +1,30 @@
 {
- "updated_at": "2026-11-24T10:28:31.136Z",
+ "updated_at": "2026-11-24T13:42:00.840Z",
  "insights": [
+  {
+   "id": "ddbbfa24701b8b52",
+   "title": "Influenza A(H5N1) - United States of America",
+   "summary": "Between 16 October and 4 November 2026, the United States of America, through its International Health Regulations (IHR) National Focal Point, notified WHO of three laboratory-confirmed human infections with influenza A(H5) virus in Washington State. These included one fatal case, the first reported",
+   "url": "https://www.who.int/emergencies/disease-outbreak-news/item/2026-DON629",
+   "published_at": "2026-11-24T13:38:28.689Z",
+   "source_id": "who-don",
+   "source_name": "WHO Disease Outbreak News",
+   "kind": "outbreak",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "5960ee1d8b8fed93",
+   "title": "Circulating vaccine-derived poliovirus type 1 – Syrian Arab Republic",
+   "summary": "In October 2026, a cluster of four cases of acute flaccid paralysis (AFP) was identified in Al-Mayadin District, Deir Ez Zor Governorate, Syrian Arab Republic. As of 13 November 2026, three confirmed cases of circulating vaccine-derived poliovirus type 1 (cVDPV1) have been reported. Vaccine-derived ",
+   "url": "https://www.who.int/emergencies/disease-outbreak-news/item/2026-DON628",
+   "published_at": "2026-11-23T19:00:00.000Z",
+   "source_id": "who-don",
+   "source_name": "WHO Disease Outbreak News",
+   "kind": "outbreak",
+   "countries": [],
+   "diseases": []
+  },
   {
    "id": "963c8811d214ca68",
    "title": "Heavy fighting in Ituri traps DR Congo Ebola responders: WHO",
@@ -16,6 +40,206 @@
    "diseases": [
     "Ebola"
    ]
+  },
+  {
+   "id": "e42b28c5a9226b2b",
+   "title": "Procurement of Ventilator Equipment (1790 units) - 8 Lots (Contracts)",
+   "summary": "Contract Award · Indonesia · Indonesia Health Systems Strengthening Project",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00483286",
+   "published_at": "2026-11-23T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "24f0238b97ae9acf",
+   "title": "Procurement of High Flow & NIRS (103 units) - 3 Lots / Contract",
+   "summary": "Contract Award · Indonesia · Indonesia Health Systems Strengthening Project",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00483089",
+   "published_at": "2026-11-23T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "73d726318c12e933",
+   "title": "Procurement of Ventilator Equipment (1790 units) - 8 Lots (Contracts)",
+   "summary": "Contract Award · Indonesia · Indonesia Health Systems Strengthening Project",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00483288",
+   "published_at": "2026-11-23T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "b63fc66cbd74cb14",
+   "title": "Procurement of Ventilator Equipment (1790 units) - 8 Lots (Contracts)",
+   "summary": "Contract Award · Indonesia · Indonesia Health Systems Strengthening Project",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00483287",
+   "published_at": "2026-11-23T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "991ac4b9f6d38030",
+   "title": "Hiring of Firm for Communication for Advocacy & Demand Creation (IPF-Activity # 4.1 & 4.3) Development / Digitalization of IEC Material on PHC Covering UHC Communication & its dissemination through Social & Electronic Media - and for SHCC on awareness",
+   "summary": "Invitation for Bids · Pakistan · National Health Support Program · Deadline 2026-12-17T00:00:00Z",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00483172",
+   "published_at": "2026-11-23T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "4be5ddbc30e6bb73",
+   "title": "Recrutement un consultant individual national pour l’élaboration des supports de sensibilisation sur l’utilisation des sources d’énergie renouvelables dans les structures sanitaires",
+   "summary": "Request for Expression of Interest · Western and Central Africa · Health Security Program in Western and Central Africa - Phase III · Deadline 2026-12-09T00:00:00Z",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00483222",
+   "published_at": "2026-11-23T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "944e2fde12fe4b87",
+   "title": "Procurement of laboratory Equipment, Reagent, and Supplies (4 BD MAX system;  4 BD SARS-CoV-2 Reagents; D MAX™ Enteric Viral Panel,  PCR Cartridge and others as outlined in ths schedule)",
+   "summary": "Contract Award · Sierra Leone · Sierra Leone - Quality Essential Health Services and Systems Support Project",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00483196",
+   "published_at": "2026-11-23T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "9efcc696bd559ec2",
+   "title": "Supply and Delivery of 5 No. dissolution tester units, 1 No. High performance liquid chromatograph (HPLC) with fluorescent detector and 1 No. High performance liquid chromatograph (HPLC) with refractive index detector in 3 No. Lots",
+   "summary": "Contract Award · Eastern and Southern Africa · Health Emergency Preparedness, Response and Resilience Program Using the Multiphase Programmatic App",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00483194",
+   "published_at": "2026-11-23T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "de14f8736b5c3072",
+   "title": "Acquisition d'équipements de détection des résidus de médicaments vétérinaires dans les DAOA",
+   "summary": "Contract Award · Niger · Livestock and Agriculture Modernization Project (LAMP)",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00483170",
+   "published_at": "2026-11-23T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "a936eaf29084ccbc",
+   "title": "Conception, Fourniture, Installation et Maintenance de Systèmes Solaires Photovoltaïques pour l’électrification de 98 Centres de Santé (CS) dans les régions de Bafatá, Biombo, Bolama, Bubaque, Cacheu, Farim, Gabú, Oio, Quinara, Tombali.",
+   "summary": "Invitation for Bids · Guinea-Bissau · Guinea-Bissau: Solar Energy Scale-up and Access Project · Deadline 2027-01-19T00:00:00Z",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00483210",
+   "published_at": "2026-11-23T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "7a8a36a948955f83",
+   "title": "Contracting with External Auditor",
+   "summary": "Contract Award · Egypt, Arab Republic of · Transforming Egypt's Healthcare System Project",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00483123",
+   "published_at": "2026-11-23T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "632be7ce8f91d3ef",
+   "title": "Contractualisation avec PHATKIN pour la fourniture en urgence des médicaments essentiels pour la riposte contre le choléra et la prise en charge des sinistres des inondations",
+   "summary": "Contract Award · Congo, Democratic Republic of · Democratic Republic of Congo Health Emergency Preparedness, Response, and Resilience Project",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00483164",
+   "published_at": "2026-11-23T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "d27674b01f7f8474",
+   "title": "Contractualisation par Entente Directe (ED) avec l’entreprise PRODIMPEX pour l’Acquisition de dix (10) Véhicules LAND CRUISER dont 7 de 5 portières et trois (3) de type ambulances pour la DPS de Bunia dans la province de l'Ituri",
+   "summary": "Contract Award · Congo, Democratic Republic of · Democratic Republic of Congo Health Emergency Preparedness, Response, and Resilience Project",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00483142",
+   "published_at": "2026-11-23T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "9dce2e6d8b6b94f2",
+   "title": "Contractualisation avec la firme ADONIS/SAINT SAUVEUR pour la fourniture des intrants nutritionnels en appui à la continuité de soins dans les ZS des DPS des provinces touchées par la MVE",
+   "summary": "A contract has been awarded for the supply of nutritional inputs to support healthcare continuity in health zones affected by Ebola in the Democratic Republic of Congo.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00483145",
+   "published_at": "2026-11-23T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "COD"
+   ],
+   "diseases": [
+    "Ebola"
+   ]
+  },
+  {
+   "id": "dae185df78e2727f",
+   "title": "Fourniture et installation d'un système photovoltaïque pour le laboratoire provincial de Bunia et l'unité de production d'oxygène",
+   "summary": "A contract was awarded for the supply and installation of a photovoltaic system for the provincial laboratory and oxygen production unit in Bunia, DRC.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00483167",
+   "published_at": "2026-11-23T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "COD"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "db27735a3f328ccf",
+   "title": "Automated External Defibrillator (AED) Live",
+   "summary": "A contract award for automated external defibrillators under the Philippines Health System Resilience Project.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00483064",
+   "published_at": "2026-11-22T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "PHL"
+   ],
+   "diseases": []
   },
   {
    "id": "4c8068821e3fc816",
