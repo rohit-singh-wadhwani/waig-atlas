@@ -657,7 +657,7 @@ function TownPanel({ d, town, venues, hexes, selHex, clearHex, pins, setPins, pi
           <Button icon="pin" disabled={!selHex.length} onClick={() => setPinMode(!pinMode)} className={pinMode ? 'ring-2 ring-red-500' : ''}>{pinMode ? 'Click a selected hexagon… (cancel)' : 'Place a screening point'}</Button>
           {!selHex.length && <p className="text-xs text-gray-500 mt-1">Select a hexagon first to place a point inside it.</p>}
         </div>
-        <div className="sticky bottom-0 bg-white pt-3 mt-3 border-t border-gray-100 flex items-center justify-between gap-3">
+        <div className="pt-3 mt-4 border-t border-gray-100 flex items-center justify-between gap-3">
           <span className="text-sm text-gray-600">{spots.length ? `${spots.length} screening spot${spots.length > 1 ? 's' : ''}` : 'No spots yet: plan for the selected area'}</span>
           <Button variant="primary" icon="target" className="whitespace-nowrap shrink-0" onClick={onPlan}>Plan campaign</Button>
         </div>
