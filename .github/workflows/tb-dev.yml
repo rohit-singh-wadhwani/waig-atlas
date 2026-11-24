@@ -9,7 +9,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 75
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -18,8 +18,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: pip install -q requests numpy rasterio shapely h3 scipy pyshp openpyxl
-      - run: python scripts/tb/build_tb3.py
+      - run: pip install -q requests numpy rasterio shapely h3 scipy pyshp openpyxl osmium pyarrow
+      - run: python scripts/tb/build.py
         env:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       - name: DHIMS2 sync (skips when not configured)
@@ -39,12 +39,14 @@ jobs:
           m = json.load(open('public/data/tb/meta.json')); print(json.dumps({k: m[k] for k in ('method', 'national', 'counts')}, indent=1))
           for s in m['sources']: print('SRC', s['ok'], s['name'], s.get('note', '')[:140])
           d = [f['properties'] for f in json.load(open('public/data/tb/districts.geojson'))['features']]
-          for k in ('expected_100k', 'vs_ghana', 'age_effect', 'risk_effect', 'poverty', 'crowding', 'insured', 'walk_far', 'adults', 'urban'):
+          for k in ('expected_100k', 'vs_ghana', 'age_effect', 'risk_effect', 'poverty', 'crowding', 'dense', 'peri', 'ppb', 'buildings', 'walk_far', 'facilities', 'hospitals'):
               v = np.array([x[k] for x in d if x.get(k) is not None], float); print(k, len(v), np.percentile(v, [0, 10, 50, 90, 100]).round(3) if len(v) else '-')
           top = sorted(d, key=lambda x: -x['expected_100k'])[:10]; print('top rate', [(x['name'], x['expected_100k'], x['vs_ghana']) for x in top])
           top = sorted(d, key=lambda x: -x['expected'])[:10]; print('top count', [(x['name'], x['expected']) for x in top])
           sz = sum(os.path.getsize(os.path.join('public/data/tb/d', f)) for f in os.listdir('public/data/tb/d')); print('district files MB', round(sz / 1e6, 1), len(os.listdir('public/data/tb/d')))
-          x = json.load(open('public/data/tb/d/' + top[0]['id'] + '.json')); print('sample', top[0]['id'], len(x['hexes']), len(x['towns']), len(x['venues']), len(x['facilities'])); print([{k: v for k, v in t.items() if k != 'geom'} for t in x['towns'][:3]]); print(x['venues'][:3])
+          x = json.load(open('public/data/tb/d/' + top[0]['id'] + '.json')); print('sample', top[0]['id'], len(x['hexes']), len(x['towns']), len(x['venues']), len(x['facilities'])); print([{k: v for k, v in t.items() if k != 'geom'} for t in x['towns'][:3]]); print(x['venues'][:3]); print([{k: v for k, v in h.items() if k != 'r'} for h in x['hexes'][:5]])
+          rd = np.array([h['rd'] for f in os.listdir('public/data/tb/d') for h in json.load(open('public/data/tb/d/' + f))['hexes'] if h.get('rd') is not None]); print('spot metres to road', len(rd), np.percentile(rd, [10, 50, 90]) if len(rd) else '-', 'snapped share', round(float((rd == 0).mean()), 3) if len(rd) else '-')
+          print('fac_own', top[0]['fac_own'], 'ports', sum(x['ports'] for x in d), 'industrial', sum(x['industrial'] for x in d))
           PY
       - name: Commit outputs to this branch
         run: |

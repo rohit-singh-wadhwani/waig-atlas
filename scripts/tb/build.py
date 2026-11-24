@@ -4,7 +4,7 @@ Ghana -> district -> town -> screening spots.
 
 Inputs (all open, fetched every run)
   GSS 2021 Census       261 district boundaries; population by district, single age and sex; urban share;
-                        household size and sleeping rooms (crowding); multidimensional poverty; health insurance
+                        household size and sleeping rooms (crowding); multidimensional poverty
   WHO Global TB Prog.   national incidence and notifications; incidence by age group and sex; cases attributable
                         to HIV, undernourishment, smoking, alcohol, diabetes
   DHS Program           regional HIV, thinness and tobacco use (the only one that is regional, labelled as such)
@@ -12,8 +12,12 @@ Inputs (all open, fetched every run)
   Malaria Atlas Project 2020 walking and motorised friction surfaces (travel speed per ~1 km cell); walk and drive
                         times are computed over them to the OpenStreetMap facilities, so distance and time always
                         describe the same facility
-  OpenStreetMap         health facilities, towns and villages, markets, lorry stations, prisons, mines, schools,
-                        places of worship, community centres, pharmacies, NGO offices
+  OpenStreetMap         one Geofabrik snapshot (osm.py): health facilities, towns and villages, markets, lorry
+                        stations, prisons, mines, ports, industrial zones, schools, places of worship, community
+                        centres, pharmacies, NGO offices, and the road network
+  Open Buildings        Google and Microsoft building footprints combined by VIDA (buildings.py): building density,
+                        people per building, and where homes cluster inside each hexagon
+  WHO/KEMRI 2019        public health facilities incl. CHPS, merged with OpenStreetMap (one facility list)
   DHIMS II extract      monthly reported TB for Ashanti, Eastern and Volta, 2016-2023 (Mendeley Data, CC BY 4.0)
 
 Expected cases in a district
@@ -23,6 +27,11 @@ Expected cases in a district
      relative to Ghana's  -> differences in risk.
   3. Grown to 2026 with WorldPop and scaled so all districts add up to WHO's national estimate.
 No hand-set weights.
+
+Suggested screening point in each hexagon
+  The 100 m cell with the most buildings within ~350 m (people, if footprints are unavailable), moved to the nearest
+  road point within 300 m. Settlement density classes use the GHSL Degree of Urbanisation thresholds on WorldPop:
+  1,500+ people per km2 = dense urban, 300+ = town or peri-urban, below = rural.
 """
 import csv
 import io
@@ -39,14 +48,17 @@ import rasterio
 import shapefile
 import h3
 from rasterio.features import rasterize
+from scipy.ndimage import uniform_filter
 from scipy.spatial import cKDTree
 from shapely.geometry import shape, mapping, Point, Polygon, MultiPoint
 from shapely.ops import unary_union, voronoi_diagram
 from shapely.strtree import STRtree
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from build_tb import (OUT, NOW, SOURCES, S, MIRRORS, get, source, log, r2, km_xy, norm_region, overpass,  # noqa: E402
-                      map_friction, travel_field, haversine_km, dhs_regional, who_tb, osm_points, sb)
+from tblib import (OUT, NOW, SOURCES, S, get, source, log, r2, km_xy, norm_region,  # noqa: E402
+                   map_friction, travel_field, haversine_km, dhs_regional, who_tb)
+import osm  # noqa: E402
+import buildings  # noqa: E402
 
 PX = 'https://statsbank.statsghana.gov.gh/api/v1/en/PHC%202021%20StatsBank/'
 FAR_MIN = 60          # minutes on foot that count as "far from care"
@@ -54,7 +66,9 @@ WALK_MAX_KMH, DRIVE_MAX_KMH = 6.0, 80.0  # physical floor on travel time over a 
 CATCH_KM = 1.0        # walking catchment of a screening spot
 HEX_RES = 8           # ~0.74 km2 hexagons
 MIN_HEX_POP = 30      # skip near-empty hexagons
-TOWN_MAX_KM = 5.0     # a hexagon joins its nearest named place if it is within this distance
+DENSE, TOWN = 1500, 300  # people per km2: GHSL Degree of Urbanisation thresholds (urban centre, urban cluster)
+SPOT_WIN = 7          # 100 m cells: the ~700 m square around a cell used to score a screening point
+SNAP_KM = 0.3         # move a suggested point to a road if one is this close
 RF_SURVEY = {'hiv': 'hiv', 'und': 'thin', 'smk': 'smoke'}
 WP_URL = 'https://data.worldpop.org/GIS/Population/Global_2015_2030/R2025A/2026/GHA/v1/100m/constrained/gha_pop_2026_CN_100m_R2025A_v1.tif'
 DD = os.path.join(OUT, 'd')
@@ -86,7 +100,7 @@ def gss_districts():
             g = g.buffer(0)
         c = g.representative_point()
         out.append({'i': i, 'id': slug(r['District']), 'name': r['District'], 'region': r['Region'], 'geom': g, 'lon': c.x, 'lat': c.y})
-    source('Ghana Statistical Service: 2021 Census district boundaries', url, True, f'{len(out)} districts')
+    source('Ghana Statistical Service: 2021 Census district boundaries', url, True, f'{len(out)} districts', page='https://statsbank.statsghana.gov.gh/')
     return out
 
 
@@ -171,14 +185,6 @@ def census():
     for k, val in v.items():
         row(k[gi])['poverty'] = val
     source('GSS 2021 Census: multidimensional poverty by district', src + 'Multidimensional%20Poverty/', True)
-    # health insurance coverage
-    dims, v = px('Population/health_insurance.px', {'Health_Insurance': ['Total', 'Covered'], 'Education': ['Total'], 'Locality': ['All Locality Types'], 'Geographic_Area': '*', 'Sex': ['Both sexes'], 'Age': ['All ages']})
-    hi, gi = dims.index('Health_Insurance'), dims.index('Geographic_Area')
-    tot = {k[gi]: val for k, val in v.items() if k[hi] == 'Total'}
-    for k, val in v.items():
-        if k[hi] == 'Covered' and tot.get(k[gi]):
-            row(k[gi])['insured'] = val / tot[k[gi]]
-    source('GSS 2021 Census: health insurance coverage by district', src + 'Population/', True)
     return D
 
 
@@ -216,35 +222,8 @@ def worldpop_2026():
             with open(path, 'wb') as f:
                 for chunk in r.iter_content(1 << 20):
                     f.write(chunk)
-    source('WorldPop 2026 population (100 m, R2025A)', WP_URL, True)
+    source('WorldPop 2026 population (100 m, R2025A)', WP_URL, True, page='https://hub.worldpop.org/project/categories?id=3')
     return path
-
-
-def osm_extra():
-    area = 'area["ISO3166-1"="GH"][admin_level=2]->.a;'
-    places = overpass(f'[out:json][timeout:300];{area}node["place"~"^(city|town|suburb|village|hamlet)$"](area.a);out;', 'towns and villages') or []
-    comm = overpass(f'[out:json][timeout:300];{area}(nwr["amenity"~"^(school|place_of_worship|community_centre|pharmacy)$"](area.a);nwr["office"="ngo"](area.a););out center tags;', 'schools, places of worship, community centres, pharmacies, NGOs') or []
-
-    def pt(e):
-        if 'lat' in e:
-            return e['lon'], e['lat']
-        c = e.get('center')
-        return (c['lon'], c['lat']) if c else None
-    towns = []
-    for e in places:
-        p, t = pt(e), e.get('tags', {})
-        if p and t.get('name'):
-            towns.append({'lon': p[0], 'lat': p[1], 'name': t['name'], 'place': t['place']})
-    kinds = {'school': 'school', 'place_of_worship': 'place of worship', 'community_centre': 'community centre', 'pharmacy': 'pharmacy'}
-    venues = []
-    for e in comm:
-        p, t = pt(e), e.get('tags', {})
-        if not p:
-            continue
-        kind = 'NGO office' if t.get('office') == 'ngo' else kinds.get(t.get('amenity'))
-        if kind:
-            venues.append({'lon': p[0], 'lat': p[1], 'name': t.get('name') or '', 'kind': kind})
-    return towns, venues
 
 
 def dhims_regions():
@@ -287,6 +266,20 @@ def _fac_kind(t):
     return 'clinic'
 
 
+def _owner(t):
+    """Ownership as recorded by the source: public, faith-based (CHAG), private, or None when not recorded."""
+    t = (t or '').lower()
+    if re.search(r'gov|ministry|moh|ghs|public|district assembly|military|police|quasi', t):
+        return 'public'
+    if re.search(r'chag|faith|mission|church|catholic|methodist|presby|islam|ahmadi|adventist|christian|relig', t):
+        return 'faith-based'
+    if 'private' in t:
+        return 'private'
+    if re.search(r'ngo|community', t):
+        return 'NGO'
+    return None
+
+
 def _in_ghana(lon, lat):
     return GH_BOX[0] <= lon <= GH_BOX[2] and GH_BOX[1] <= lat <= GH_BOX[3]
 
@@ -323,8 +316,8 @@ def who_kemri_facilities():
             rows = [{k.strip().lower(): v for k, v in r.items()} for r in csv.DictReader(io.StringIO(raw.decode('utf-8', 'replace')))]
         cols = list(rows[0].keys()) if rows else []
         col = lambda *keys: next((c for c in cols if c and all(k in c for k in keys)), None)
-        c_name, c_type, c_lon, c_lat = col('name') or col('facility_n'), col('type') or col('facility_t'), col('long'), col('lat')
-        log('WHO/KEMRI columns', cols, '->', c_name, c_type, c_lon, c_lat)
+        c_name, c_type, c_own, c_lon, c_lat = col('name') or col('facility_n'), col('type') or col('facility_t'), col('owner'), col('long'), col('lat')
+        log('WHO/KEMRI columns', cols, '->', c_name, c_type, c_own, c_lon, c_lat)
         out = []
         for r in rows:
             if str(r.get('country') or '').strip().lower() != 'ghana':
@@ -335,7 +328,7 @@ def who_kemri_facilities():
                 continue
             if _in_ghana(lon, lat):
                 name = str(r.get(c_name) or '').strip()
-                out.append({'lon': lon, 'lat': lat, 'name': name, 'kind': _fac_kind(f"{r.get(c_type) or ''} {name}"), 'lab': False, 'src': 'WHO/KEMRI 2019'})
+                out.append({'lon': lon, 'lat': lat, 'name': name, 'kind': _fac_kind(f"{r.get(c_type) or ''} {name}"), 'lab': False, 'own': _owner(r.get(c_own)) or 'public', 'src': 'WHO/KEMRI 2019'})
         source(f'WHO/KEMRI public health facilities, Ghana ({len(out)})', 'https://data.humdata.org/dataset/health-facilities-in-sub-saharan-africa', bool(out), 'Maina et al. 2019, Scientific Data; public sector only')
         return out
     except Exception as e:
@@ -359,7 +352,7 @@ def ghs_facilities():
             if not _in_ghana(lon, lat) and _in_ghana(lat, lon):
                 lon, lat = lat, lon  # some rows have the two swapped
             if _in_ghana(lon, lat) and (lon, lat) != (0, 0):
-                out.append({'lon': lon, 'lat': lat, 'name': (r.get('facilityname') or r.get('facility name') or '').strip(), 'kind': _fac_kind(r.get('type')), 'lab': False, 'src': 'GHS 2012'})
+                out.append({'lon': lon, 'lat': lat, 'name': (r.get('facilityname') or r.get('facility name') or '').strip(), 'kind': _fac_kind(r.get('type')), 'lab': False, 'own': _owner(r.get('ownership')), 'src': 'GHS 2012'})
         source(f'Ghana Health Service facility list ({len(out)})', 'https://data.gov.gh/dataset/health-facilities-ghana', bool(out), '2012 list incl. CHPS, CHAG and private')
         return out
     except Exception as e:
@@ -390,6 +383,8 @@ def merge_facilities(osm, others, km=0.1):
                 keep[k]['kind'] = 'hospital'
             if not keep[k]['name'] and f['name']:
                 keep[k]['name'] = f['name']
+            if not keep[k].get('own') and f.get('own'):
+                keep[k]['own'] = f['own']
             continue
         added.append(f)
     # de-duplicate the added facilities among themselves (lists overlap)
@@ -403,6 +398,7 @@ def merge_facilities(osm, others, km=0.1):
             win, lose = (i, j) if a['src'] == 'WHO/KEMRI 2019' or b['src'] != 'WHO/KEMRI 2019' else (j, i)
             if added[lose]['kind'] == 'hospital':
                 added[win]['kind'] = 'hospital'
+            added[win]['own'] = added[win].get('own') or added[lose].get('own')
             drop.add(lose)
         added = [a for i, a in enumerate(added) if i not in drop]
     log('facilities merged:', len(osm), 'OpenStreetMap +', len(added), 'from other lists =', len(osm) + len(added))
@@ -415,9 +411,9 @@ def main():
     who_year, age_groups = who_age_sex()
     dhs = dhs_regional()
     cen = census()
-    facilities, sites = osm_points()
+    facilities, sites, towns, comm, roads = osm.load()
     facilities = merge_facilities(facilities, who_kemri_facilities() + ghs_facilities())
-    towns, comm = osm_extra()
+    b_lon, b_lat = buildings.load()
     reported = dhims_regions()
     # ---- travel: one facility list (OpenStreetMap), times computed to those same facilities ----
     hosp = [f for f in facilities if f['kind'] == 'hospital']
@@ -454,6 +450,20 @@ def main():
     wp = np.bincount(labels.ravel(), weights=pop.ravel(), minlength=len(dists) + 1)
     for d in dists:
         d['pop'] = float(wp[d['i'] + 1])
+    # buildings per 100 m cell (same grid as WorldPop)
+    bgrid = None
+    if b_lon is not None:
+        bc = np.floor((b_lon.astype('float64') - transform.c) / transform.a).astype(np.int64)
+        br = np.floor((b_lat.astype('float64') - transform.f) / transform.e).astype(np.int64)
+        ok = (br >= 0) & (br < pop.shape[0]) & (bc >= 0) & (bc < pop.shape[1])
+        bgrid = np.bincount(br[ok] * pop.shape[1] + bc[ok], minlength=pop.size).astype('float32').reshape(pop.shape)
+        del b_lon, b_lat, br, bc, ok
+        wb = np.bincount(labels.ravel(), weights=bgrid.ravel(), minlength=len(dists) + 1)
+        for d in dists:
+            d['buildings'] = float(wb[d['i'] + 1])
+    # screening-point score: buildings (else people) in the ~700 m square around each 100 m cell
+    spot_score = uniform_filter(bgrid if bgrid is not None else pop, SPOT_WIN, mode='constant') * SPOT_WIN ** 2
+    spot_pop = uniform_filter(pop, SPOT_WIN, mode='constant') * SPOT_WIN ** 2
 
     # ---- expected cases ----
     gh_age = {'m': {}, 'f': {}}
@@ -520,6 +530,10 @@ def main():
     d_min = np.bincount(clab, weights=cpop * np.where(ok_m, mins, 0), minlength=n) / np.where(cp_m > 0, cp_m, 1)
     d_wmin = np.bincount(clab, weights=cpop * np.where(ok_w, wmins, 0), minlength=n) / np.where(cp_w > 0, cp_w, 1)
     d_wfar = np.bincount(clab, weights=cpop * (ok_w & (wmins > FAR_MIN)), minlength=n) / np.where(cp_w > 0, cp_w, 1)
+    # settlement density (1 km cells): share of people in dense urban and in town / peri-urban areas
+    d_cp = np.bincount(clab, weights=cpop, minlength=n)
+    d_dense = np.bincount(clab, weights=cpop * (cpop >= DENSE), minlength=n) / np.where(d_cp > 0, d_cp, 1)
+    d_town = np.bincount(clab, weights=cpop * ((cpop >= TOWN) & (cpop < DENSE)), minlength=n) / np.where(d_cp > 0, d_cp, 1)
 
     # ---- assign points to districts ----
     tree = STRtree([d['geom'] for d in dists])
@@ -532,14 +546,14 @@ def main():
         return None
     lat0 = 7.9
     for d in dists:
-        d.update(facilities=[], venues=[], towns=[], hospitals=0, labs=0, markets=0, hubs=0, prisons=0, mines=0)
+        d.update(facilities=[], venues=[], towns=[], hospitals=0, labs=0, markets=0, hubs=0, prisons=0, mines=0, ports=0, industrial=0)
     for f in facilities:
         k = which(f['lon'], f['lat'])
         if k is not None:
             dists[k]['facilities'].append(f)
             dists[k]['hospitals'] += f['kind'] == 'hospital'
             dists[k]['labs'] += bool(f['lab'])
-    kindkey = {'market': 'markets', 'transport hub': 'hubs', 'prison': 'prisons', 'mine / quarry': 'mines'}
+    kindkey = {'market': 'markets', 'transport hub': 'hubs', 'prison': 'prisons', 'mine / quarry': 'mines', 'port': 'ports', 'industrial zone': 'industrial'}
     allv = [dict(s, cong=True) for s in sites] + [dict(c, cong=False) for c in comm]
     for v in allv:
         k = which(v['lon'], v['lat'])
@@ -598,25 +612,48 @@ def main():
     # ---- hexagons per district ----
     rr2, cc2 = np.nonzero(pop > 0)
     hx, hy = rasterio.transform.xy(transform, rr2, cc2)
-    hv, hl = pop[rr2, cc2], labels[rr2, cc2]
-    cells = {}
-    for x, y, pv, lb in zip(hx, hy, hv, hl):
+    hv, hl, hsc = pop[rr2, cc2], labels[rr2, cc2], spot_score[rr2, cc2]
+    hb = bgrid[rr2, cc2] if bgrid is not None else np.zeros(len(rr2), 'float32')
+    cells = {}  # hexagon -> [people, {district: people}, buildings, best score, best cell index]
+    for j, (x, y, pv, lb) in enumerate(zip(hx, hy, hv, hl)):
         if lb == 0:
             continue
         cid = h3.latlng_to_cell(y, x, HEX_RES)
         a = cells.get(cid)
         if a is None:
-            cells[cid] = [float(pv), {int(lb): float(pv)}]
+            cells[cid] = [float(pv), {int(lb): float(pv)}, float(hb[j]), float(hsc[j]), j]
         else:
             a[0] += float(pv)
             a[1][int(lb)] = a[1].get(int(lb), 0) + float(pv)
+            a[2] += float(hb[j])
+            if hsc[j] > a[3]:
+                a[3], a[4] = float(hsc[j]), j
     log('hexagons', len(cells))
+    road_tree = cKDTree(km_xy(roads[:, 0], roads[:, 1], lat0)) if len(roads) else None
     by_d = {}
-    for cid, (pv, labs) in cells.items():
+    for cid, (pv, labs, nb, _, best) in cells.items():
         if pv < MIN_HEX_POP:
             continue
-        by_d.setdefault(max(labs, key=labs.get) - 1, []).append((cid, pv))
+        by_d.setdefault(max(labs, key=labs.get) - 1, []).append((cid, pv, nb, best))
     hex_area = h3.average_hexagon_area(HEX_RES, unit='km^2')
+
+    def spot(best):
+        """Suggested screening point for a hexagon: its best-scoring cell, moved to the nearest road within SNAP_KM."""
+        r, c = int(rr2[best]), int(cc2[best])
+        lon, lat = float(hx[best]), float(hy[best])
+        rd = None
+        if road_tree is not None:
+            dkm, k = road_tree.query(km_xy([lon], [lat], lat0)[0])
+            rd = dkm
+            if dkm <= SNAP_KM:
+                lon, lat, rd = float(roads[k, 0]), float(roads[k, 1]), 0.0
+        return {'s': [round(lon, 5), round(lat, 5)], 'sp': round(float(spot_pop[r, c])),
+                'sb': round(float(uniform_filter_at(bgrid, r, c))) if bgrid is not None else None,
+                'rd': None if rd is None else int(round(rd * 1000, -1))}
+
+    def uniform_filter_at(g, r, c):
+        h = SPOT_WIN // 2
+        return g[max(r - h, 0):r + h + 1, max(c - h, 0):c + h + 1].sum()
 
     # ---- write per-district files ----
     feats, keysites = [], []
@@ -624,12 +661,14 @@ def main():
         i = d['i'] + 1
         hexes = by_d.get(d['i'], [])
         if hexes:
-            cen_ll = np.array([h3.cell_to_latlng(c) for c, _ in hexes])
+            cen_ll = np.array([h3.cell_to_latlng(c) for c, *_ in hexes])
             hn = near(cen_ll[:, 1], cen_ll[:, 0])
         hex_out = []
-        for j, (cid, pv) in enumerate(hexes):
+        for j, (cid, pv, nb, best) in enumerate(hexes):
             ring = [[round(lng, 4), round(lat, 4)] for lat, lng in h3.cell_to_boundary(cid)]
-            hex_out.append({'h': cid, 'p': round(pv), 'e': r2(pv * d['rate'], 2), 'k': r2(pv * d['rate'] / hex_area, 2), 'f': r2(hn['fkm'][j], 2), 'w': r2(hn['fmin'][j], 0), 'r': ring})
+            dens = pv / hex_area
+            hex_out.append({'h': cid, 'p': round(pv), 'e': r2(pv * d['rate'], 2), 'k': r2(pv * d['rate'] / hex_area, 2), 'f': r2(hn['fkm'][j], 2), 'w': r2(hn['fmin'][j], 0),
+                            'b': round(nb) if bgrid is not None else None, 'u': 'd' if dens >= DENSE else 't' if dens >= TOWN else 'r', **spot(best), 'r': ring})
         rnd = lambda co: [rnd(x) for x in co] if isinstance(co[0], (list, tuple)) else [round(co[0], 4), round(co[1], 4)]
         for h in hex_out:
             h['t'] = -1
@@ -677,10 +716,11 @@ def main():
                     hex_out[j]['t'] = ti
                 pp = sum(hex_out[j]['p'] for j in js)
                 ee = sum(hex_out[j]['e'] or 0 for j in js)
+                bb = sum(hex_out[j]['b'] or 0 for j in js) if bgrid is not None else None
                 area = g.area * 111.32 * 110.57 * math.cos(math.radians(d['lat']))
                 gj = mapping(g.simplify(0.0008, preserve_topology=True))
                 t = tw[k]
-                town_out.append({'id': ti, 'name': t['name'], 'place': t['place'], 'lon': round(t['lon'], 5), 'lat': round(t['lat'], 5), 'pop': round(pp), 'nodata': pp < 1,
+                town_out.append({'id': ti, 'name': t['name'], 'place': t['place'], 'lon': round(t['lon'], 5), 'lat': round(t['lat'], 5), 'pop': round(pp), 'buildings': bb, 'nodata': pp < 1,
                                  'area_km2': r2(area, 1), 'radius_km': r2(math.sqrt(max(area, 0.1) / math.pi), 2), 'expected': r2(ee, 1), 'expected_km2': r2(ee / area, 2) if area else None,
                                  'facility': tn['fname'][k], 'facility_km': r2(tn['fkm'][k], 2), 'walk_min': r2(tn['fmin'][k], 0),
                                  'hospital': tn['hname'][k], 'hospital_km': r2(tn['hkm'][k], 2), 'drive_min': r2(tn['hmin'][k], 0),
@@ -703,9 +743,12 @@ def main():
                 per_kind[(v['t'], v['kind'])] = per_kind.get((v['t'], v['kind']), 0) + 1
                 keep.append(v)
         for v in keep:
-            if v['kind'] in ('prison', 'mine / quarry'):
+            if v['kind'] in ('prison', 'mine / quarry', 'port', 'industrial zone'):
                 keysites.append({**v, 'district': d['name'], 'district_id': d['id']})
-        fac_out = [{'name': f['name'], 'kind': f['kind'], 'lab': f['lab'], 'src': f.get('src'), 'lon': round(f['lon'], 5), 'lat': round(f['lat'], 5)} for f in d['facilities']]
+        fac_out = [{'name': f['name'], 'kind': f['kind'], 'lab': f['lab'], 'own': f.get('own'), 'src': f.get('src'), 'lon': round(f['lon'], 5), 'lat': round(f['lat'], 5)} for f in d['facilities']]
+        own = {}
+        for f in d['facilities']:
+            own[f.get('own') or 'not recorded'] = own.get(f.get('own') or 'not recorded', 0) + 1
         json.dump({'id': d['id'], 'hexes': hex_out, 'towns': town_out, 'venues': keep, 'facilities': fac_out}, open(os.path.join(DD, f'{d["id"]}.json'), 'w'), separators=(',', ':'), allow_nan=False)
 
         c = d['cen']
@@ -717,22 +760,24 @@ def main():
             'expected': r2(d['expected'], 1), 'expected_100k': r2(d['rate'] * 1e5, 1), 'vs_ghana': r2(d['rate'] / nat_rate, 3), 'share': r2(d['expected'] / inc, 4),
             'age_effect': r2(d['age_effect'], 3), 'risk_effect': r2(d['risk_factor'], 3),
             'adults': r2(d['adults'], 3), 'male': r2(d['male'], 3), 'urban': r2(c.get('urban'), 3),
-            'poverty': r2(c.get('poverty'), 1), 'crowding': r2(c.get('crowding'), 2), 'one_room': r2(c.get('one_room'), 3), 'hh_size': r2(c.get('hh_size'), 2), 'insured': r2(c.get('insured'), 3),
+            'poverty': r2(c.get('poverty'), 1), 'crowding': r2(c.get('crowding'), 2), 'one_room': r2(c.get('one_room'), 3), 'hh_size': r2(c.get('hh_size'), 2),
+            'dense': r2(d_dense[i], 3), 'peri': r2(d_town[i], 3),
+            'buildings': round(d['buildings']) if bgrid is not None else None, 'ppb': r2(d['pop'] / d['buildings'], 2) if bgrid is not None and d.get('buildings') else None,
             'hiv': r2(d['hiv'], 1), 'thin': r2(d['thin'], 1), 'smoke': r2(d['smoke'], 1),
             'drive_min': r2(d_min[i], 0), 'walk_min': r2(d_wmin[i], 0), 'walk_far': r2(d_wfar[i], 3),
-            'facilities': len(d['facilities']), 'hospitals': d['hospitals'], 'labs': d['labs'], 'fac_100k': r2(len(d['facilities']) / max(d['pop'], 1) * 1e5, 2),
-            'markets': d['markets'], 'hubs': d['hubs'], 'prisons': d['prisons'], 'mines': d['mines'], 'towns': len(town_out),
+            'facilities': len(d['facilities']), 'fac_own': own, 'hospitals': d['hospitals'], 'labs': d['labs'], 'fac_100k': r2(len(d['facilities']) / max(d['pop'], 1) * 1e5, 2),
+            'markets': d['markets'], 'hubs': d['hubs'], 'prisons': d['prisons'], 'mines': d['mines'], 'ports': d['ports'], 'industrial': d['industrial'], 'towns': len(town_out),
             'lon': r2(d['lon'], 4), 'lat': r2(d['lat'], 4)}})
     json.dump({'type': 'FeatureCollection', 'features': feats}, open(os.path.join(OUT, 'districts.geojson'), 'w'), separators=(',', ':'), allow_nan=False)
     json.dump(keysites, open(os.path.join(OUT, 'keysites.json'), 'w'), separators=(',', ':'))
     json.dump(reported, open(os.path.join(OUT, 'reported_regions.json'), 'w'), separators=(',', ':'))
     json.dump({'years': years, 'latest': nat}, open(os.path.join(OUT, 'national.json'), 'w'), indent=1)
-    for old in ('cities.geojson', 'sites.geojson', 'facilities.geojson'):
+    for old in ('cities.geojson', 'sites.geojson', 'facilities.geojson', 'meta-error.json'):
         p = os.path.join(OUT, old)
         if os.path.exists(p):
             os.remove(p)
     json.dump({'updated_at': NOW, 'sources': SOURCES,
-               'method': {'far_minutes': FAR_MIN, 'catchment_km': CATCH_KM, 'who_age_year': who_year, 'age_groups': [f'{lo}-{hi if hi < 200 else "+"}' for lo, hi, _ in age_groups],
+               'method': {'far_minutes': FAR_MIN, 'catchment_km': CATCH_KM, 'dense_per_km2': DENSE, 'town_per_km2': TOWN, 'spot_window_m': SPOT_WIN * 100, 'snap_km': SNAP_KM, 'who_age_year': who_year, 'age_groups': [f'{lo}-{hi if hi < 200 else "+"}' for lo, hi, _ in age_groups],
                           'attributable': {k: r2(v, 0) for k, v in attr.items()}, 'attributable_year': nat.get('attributable_year'), 'census_missing': missing},
                'national': {'year': nat['year'], 'incidence': nat['inc_num'], 'incidence_lo': (nat.get('inc_100k_lo') or 0) * nat['pop'] / 1e5 if nat.get('inc_100k_lo') else None,
                             'incidence_hi': (nat.get('inc_100k_hi') or 0) * nat['pop'] / 1e5 if nat.get('inc_100k_hi') else None, 'notified': nat['notified'], 'cdr': r2(nat['cdr'], 3),

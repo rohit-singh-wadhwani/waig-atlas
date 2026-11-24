@@ -30,7 +30,7 @@ env:
 jobs:
   refresh:
     runs-on: ubuntu-latest
-    timeout-minutes: 75
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
         with:
@@ -80,11 +80,11 @@ jobs:
           python-version: "3.11"
       - name: TB surveillance data
         if: contains(steps.pick.outputs.jobs, 'tb')
-        timeout-minutes: 50
+        timeout-minutes: 80
         continue-on-error: true
         run: |
-          pip install -q requests numpy rasterio shapely h3 scipy pyshp openpyxl
-          python scripts/tb/build_tb3.py
+          pip install -q requests numpy rasterio shapely h3 scipy pyshp openpyxl osmium pyarrow
+          python scripts/tb/build.py
         env:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       - name: DHIMS2 district notifications (skips until credentials are set)
