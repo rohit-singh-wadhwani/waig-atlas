@@ -80,7 +80,7 @@ export default function ExplorerMap(p: ExplorerMapProps) {
     m.addControl(new ml.NavigationControl({ showCompass: false }), 'top-right');
     const popup = new ml.Popup({ closeButton: false, closeOnClick: false, maxWidth: '300px', className: 'tb-tip' });
     // if the basemap cannot be reached, fall back to a plain background so the data still shows
-    const fallback = setTimeout(() => { if (!m.isStyleLoaded()) m.setStyle({ version: 8, sources: {}, layers: [{ id: 'bg', type: 'background', paint: { 'background-color': '#eef0f2' } }] }); }, 8000);
+    const fallback = setTimeout(() => { if (!m.isStyleLoaded()) m.setStyle({ version: 8, glyphs: 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf', sources: {}, layers: [{ id: 'bg', type: 'background', paint: { 'background-color': '#eef0f2' } }] }); }, 8000);
     // icons must be in the map's sprite before the layers that use them draw
     const loadIcon = (id: string, src: string) => new Promise<void>((done) => {
       const img = new Image();

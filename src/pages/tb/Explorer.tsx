@@ -343,9 +343,9 @@ function MapLegend({ level, breaks, flags }: { level: 'ghana' | 'district' | 'to
       <span className="font-medium text-gray-700 whitespace-nowrap">{level === 'ghana' ? 'Cases per 100k people a year' : level === 'district' ? 'Town areas: cases per km² a year' : 'Cases per km² a year'}</span>
       {labels.length > 0 && (
         <span className="inline-flex items-center gap-1.5 whitespace-nowrap tabular-nums">
-          <span>{fmt(breaks[0])}</span>
+          <span>&lt; {fmt(breaks[0])}</span>
           <span className="flex h-3 overflow-hidden rounded-sm">{labels.map((l, i) => <span key={i} title={l} className="w-6 h-full" style={{ background: TB_RAMP[Math.min(i, TB_RAMP.length - 1)] }} />)}</span>
-          <span>{fmt(breaks[breaks.length - 1])}+</span>
+          <span>&gt; {fmt(breaks[breaks.length - 1])}</span>
         </span>
       )}
       {(symbols.length > 0 || note) && (
@@ -460,7 +460,7 @@ function GhanaPanel({ list, nat, natRate, rank, campaigns, notified, onOpen, goT
     <>
       <Panel title="Ghana" sub={nat ? `WHO estimate for ${nat.year}` : ''}>
         <div className="grid grid-cols-2 gap-2.5">
-          <Stat label="New TB cases a year" value={fmtInt(nat?.incidence)} basis="reported" sub={natRate ? `${fmtInt(natRate)} per 100,000` : undefined} how={`WHO Global TB Programme estimate for Ghana, ${nat?.year ?? 'latest year'}. WHO's own uncertainty range: ${fmtInt(nat?.incidence_lo)}–${fmtInt(nat?.incidence_hi)}. Rate = cases ÷ WHO population (${fmtInt(nat?.pop)}) × 100,000.`} />
+          <Stat label="New TB cases a year" value={fmtInt(nat?.incidence)} basis="reported" sub={natRate ? `${fmtInt(natRate)} per 100,000 people` : undefined} how={`WHO Global TB Programme estimate for Ghana, ${nat?.year ?? 'latest year'}. WHO's own uncertainty range: ${fmtInt(nat?.incidence_lo)}–${fmtInt(nat?.incidence_hi)}. Rate = cases ÷ WHO population (${fmtInt(nat?.pop)}) × 100,000.`} />
           <Stat label="Found and notified" value={fmtInt(nat?.notified)} basis="reported" sub={nat ? `${Math.round(nat.cdr * 100)}% of expected` : ''} how={`Cases notified to WHO by Ghana's National TB Programme, ${nat?.year ?? ''}. Share found = notified ÷ WHO estimated cases.`} />
           <Stat label="Missed each year" value={fmtInt(nat ? nat.incidence - nat.notified : null)} basis="estimated" sub="Expected minus notified" how="WHO estimated cases minus cases notified, same year. Inherits WHO's wide uncertainty range on the estimate." />
           <Stat label="Campaigns running" value={active.length} sub={<button type="button" className="text-brand-700 hover:underline" onClick={() => goTab('campaigns')}>{campaigns.length} in total</button>} />
