@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { PageHeader, useMe } from '../../components/Layout';
 import { Empty, Segmented } from '../../components/ui';
 import { useData, useLocalPref } from '../../lib/hooks';
-import { loadTbDistricts, tbList, TbCampaign, TbParam, TbPlaybook, TbResult, TbSignal, TbTask, TbTaskUpdate } from '../../lib/tb';
+import { latestTbNews, loadTbDistricts, tbList, TbCampaign, TbParam, TbPlaybook, TbResult, TbTask, TbTaskUpdate } from '../../lib/tb';
 import Explorer from './Explorer';
 import Campaigns, { CampaignForm } from './Campaigns';
 import Evidence from './Evidence';
@@ -20,9 +20,9 @@ export function useTbData() {
   const results = useData(() => tbList<TbResult>('tb_campaign_results'), [], []);
   const tasks = useData(() => tbList<TbTask>('tb_tasks'), [], []);
   const updates = useData(() => tbList<TbTaskUpdate>('tb_task_updates'), [], []);
-  const signals = useData(() => tbList<TbSignal>('tb_signals'), [], []);
+  const news = useData(latestTbNews, [], null);
   const P = useMemo(() => Object.fromEntries(params.data.map((p) => [p.id, Number(p.value)])) as Record<string, number>, [params.data]);
-  return { dist, params, playbooks, campaigns, results, tasks, updates, signals, P };
+  return { dist, params, playbooks, campaigns, results, tasks, updates, news, P };
 }
 export type TbData = ReturnType<typeof useTbData>;
 

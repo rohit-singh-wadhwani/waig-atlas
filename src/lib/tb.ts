@@ -21,8 +21,10 @@ export type TbHexRow = { h: string; p: number; e: number; k: number; f: number |
 export type TbTown = { id: number; nodata?: boolean; name: string; place: string; lon: number; lat: number; radius_km: number; area_km2: number; pop: number; expected: number; expected_km2: number; geom: any; buildings?: number | null; facility?: string | null; hospital?: string | null; facility_km: number | null; hospital_km: number | null; drive_min: number | null; walk_min: number | null };
 export type TbVenue = { name: string; kind: string; cong: boolean; t?: number; lon: number; lat: number; pop_1km: number; expected_1km: number; facility?: string | null; facility_km: number | null; hospital_km?: number | null; walk_min: number | null; district?: string; district_id?: string };
 export type TbFacility = { name: string; kind: string; lab: boolean; own?: string | null; src?: string; lon: number; lat: number };
-/** A place-tied TB event found by the Gemini signals agent (scripts/tb/signals.mjs). */
-export type TbSignal = { id: string; title: string; summary?: string; kind: string; place?: string; district_id?: string; district_name?: string; lon: number; lat: number; precision: 'town' | 'district'; url: string; source?: string; published?: string | null };
+/** One daily TB news summary written by Gemini from news feeds (scripts/tb/news.mjs); every source is a fetched article. */
+export type TbNewsSource = { title: string; url: string; source?: string; date?: string | null };
+export type TbNews = { id: string; generated_at: string; model?: string; headline: string; articles: number;
+  points: { text: string; scope: 'Ghana' | 'West Africa' | 'Global'; kind: string; sources: TbNewsSource[] }[]; actions: { action: string; who: string; why: string }[] };
 export type TbDetail = { id: string; hexes: TbHexRow[]; towns: TbTown[]; venues: TbVenue[]; facilities: TbFacility[] };
 export type TbParam = { id: string; grp: string; label: string; value: number; unit?: string; description?: string; source_title?: string; source_url?: string; status: 'evidence' | 'assumption' | 'policy'; updated_at?: string; updated_by?: string };
 /** A playbook step. `per_spot` steps become one task per screening point ({spot} in the title is replaced); `guide` names the guideline step it follows. */
@@ -33,7 +35,7 @@ export type TbCampaign = {
   id: string; name: string; district_id?: string | null; district_name?: string | null; hex_ids?: string[]; setting?: string | null; playbook_id?: string | null;
   status: 'planned' | 'active' | 'done' | 'cancelled'; start_date?: string | null; end_date?: string | null; owner?: string | null; target_screened?: number | null;
   predicted_positivity?: number | null; notes?: string | null; created_by?: string | null; created_at?: string;
-  town?: string | null; spots?: TbSpot[] | null; is_demo?: boolean;
+  town?: string | null; spots?: TbSpot[] | null;
 };
 export type TbSpot = { name: string; kind: string; lon: number; lat: number; pop_1km?: number };
 export type TbResult = {
@@ -230,3 +232,6 @@ export function cascadeTotals(rows: TbResult[]) {
 
 export const pct = (a: number, b: number) => (b > 0 ? `${((a / b) * 100).toFixed(a / b < 0.1 ? 1 : 0)}%` : '—');
 export const fmtInt = (v: number | null | undefined) => (v == null || !isFinite(v) ? '—' : Math.round(v).toLocaleString('en-GB'));
+
+/** The most recent daily TB news summary, or null if none has been written yet. */
+export const latestTbNews = () => tbList<TbNews>('tb_news').then((r) => [...r].sort((a, b) => String(b.generated_at).localeCompare(String(a.generated_at)))[0] || null);

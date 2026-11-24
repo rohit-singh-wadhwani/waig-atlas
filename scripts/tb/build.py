@@ -48,7 +48,6 @@ import rasterio
 import shapefile
 import h3
 from rasterio.features import rasterize
-from scipy.ndimage import uniform_filter
 from scipy.spatial import cKDTree
 from shapely.geometry import shape, mapping, Point, Polygon, MultiPoint
 from shapely.ops import unary_union, voronoi_diagram
@@ -454,9 +453,6 @@ def main():
         wb = np.bincount(labels.ravel(), weights=bgrid.ravel(), minlength=len(dists) + 1)
         for d in dists:
             d['buildings'] = float(wb[d['i'] + 1])
-    # screening-point score: buildings (else people) in the ~700 m square around each 100 m cell
-    spot_score = uniform_filter(bgrid if bgrid is not None else pop, SPOT_WIN, mode='constant') * SPOT_WIN ** 2
-    spot_pop = uniform_filter(pop, SPOT_WIN, mode='constant') * SPOT_WIN ** 2
 
     # ---- expected cases ----
     gh_age = {'m': {}, 'f': {}}
@@ -603,65 +599,66 @@ def main():
                     hkm=hkm, hmin=np.where(hok, hmin, np.nan), hname=[hosp[k]['name'] if k >= 0 else None for k in hi])
 
     # ---- hexagons per district ----
-    rr2, cc2 = np.nonzero(pop > 0)
-    hx, hy = rasterio.transform.xy(transform, rr2, cc2)
-    hv, hl, hsc = pop[rr2, cc2], labels[rr2, cc2], spot_score[rr2, cc2]
-    hb = bgrid[rr2, cc2] if bgrid is not None else np.zeros(len(rr2), 'float32')
-    cells = {}  # hexagon -> [people, {district: people}, buildings, best score, best cell index]
-    for j, (x, y, pv, lb) in enumerate(zip(hx, hy, hv, hl)):
-        if lb == 0:
-            continue
-        cid = h3.latlng_to_cell(y, x, HEX_RES)
-        a = cells.get(cid)
-        if a is None:
-            cells[cid] = [float(pv), {int(lb): float(pv)}, float(hb[j]), float(hsc[j]), j]
-        else:
-            a[0] += float(pv)
-            a[1][int(lb)] = a[1].get(int(lb), 0) + float(pv)
-            a[2] += float(hb[j])
-            if hsc[j] > a[3]:
-                a[3], a[4] = float(hsc[j]), j
-    log('hexagons', len(cells))
-    road_tree = cKDTree(km_xy(roads[:, 0], roads[:, 1], lat0)) if len(roads) else None
+    # every populated 100 m cell gets its hexagon; cells are then sorted so each hexagon's cells sit together
+    rr2, cc2 = np.nonzero((pop > 0) & (labels > 0))
+    hx, hy = (np.asarray(v) for v in rasterio.transform.xy(transform, rr2, cc2))
+    hid = np.fromiter((h3.str_to_int(h3.latlng_to_cell(y, x, HEX_RES)) for x, y in zip(hx, hy)), dtype=np.uint64, count=len(hx))
+    order = np.argsort(hid, kind='stable')
+    rr2, cc2, hx, hy, hid = rr2[order], cc2[order], hx[order], hy[order], hid[order]
+    hv, hl = pop[rr2, cc2].astype('float64'), labels[rr2, cc2]
+    hb = bgrid[rr2, cc2].astype('float64') if bgrid is not None else None
+    starts = np.r_[0, np.nonzero(np.diff(hid))[0] + 1]
+    ends = np.r_[starts[1:], len(hid)]
+    hpop = np.add.reduceat(hv, starts)
+    log('hexagons', len(starts))
     by_d = {}
-    for cid, (pv, labs, nb, _, best) in cells.items():
-        if pv < MIN_HEX_POP:
-            continue
-        by_d.setdefault(max(labs, key=labs.get) - 1, []).append((cid, pv, nb, best))
+    for k in np.nonzero(hpop >= MIN_HEX_POP)[0]:
+        a, b = starts[k], ends[k]
+        by_d.setdefault(int(np.bincount(hl[a:b], weights=hv[a:b]).argmax()) - 1, []).append(k)  # district holding most of its people
+    road_tree = cKDTree(km_xy(roads[:, 0], roads[:, 1], lat0)) if len(roads) else None
     hex_area = h3.average_hexagon_area(HEX_RES, unit='km^2')
 
-    def spot(best):
-        """Suggested screening point for a hexagon: its best-scoring cell, moved to the nearest road within SNAP_KM."""
-        r, c = int(rr2[best]), int(cc2[best])
-        lon, lat = float(hx[best]), float(hy[best])
-        rd = None
+    def spot(k):
+        """Suggested screening point for hexagon k. Each of its cells is scored by the buildings (else people) in the
+        ~700 m square around it, counting only cells of the same hexagon; the best cell is moved to a road inside the
+        hexagon if one is within SNAP_KM. People and buildings near the point are counted the same way, so they can
+        never exceed the hexagon's own totals."""
+        a, b = starts[k], ends[k]
+        r, c = rr2[a:b].astype(np.int64), cc2[a:b].astype(np.int64)
+        w = SPOT_WIN // 2
+        near = (np.abs(r[:, None] - r[None, :]) <= w) & (np.abs(c[:, None] - c[None, :]) <= w)
+        people = near @ hv[a:b]
+        blds = near @ hb[a:b] if hb is not None else None
+        i = int(np.argmax(blds if blds is not None else people))
+        lon, lat, rd = float(hx[a + i]), float(hy[a + i]), None
         if road_tree is not None:
-            dkm, k = road_tree.query(km_xy([lon], [lat], lat0)[0])
-            rd = dkm
-            if dkm <= SNAP_KM:
-                lon, lat, rd = float(roads[k, 0]), float(roads[k, 1]), 0.0
-        return {'s': [round(lon, 5), round(lat, 5)], 'sp': round(float(spot_pop[r, c])),
-                'sb': round(float(uniform_filter_at(bgrid, r, c))) if bgrid is not None else None,
+            xy = km_xy([lon], [lat], lat0)[0]
+            rd = float(road_tree.query(xy)[0])
+            dk, kk = road_tree.query(xy, k=8, distance_upper_bound=SNAP_KM)
+            for dkm, j in zip(np.atleast_1d(dk), np.atleast_1d(kk)):
+                if np.isfinite(dkm) and h3.str_to_int(h3.latlng_to_cell(roads[j, 1], roads[j, 0], HEX_RES)) == hid[a]:
+                    lon, lat, rd = float(roads[j, 0]), float(roads[j, 1]), 0.0
+                    break
+        return {'s': [round(lon, 5), round(lat, 5)], 'sp': round(float(people[i])), 'sb': round(float(blds[i])) if blds is not None else None,
                 'rd': None if rd is None else int(round(rd * 1000, -1))}
-
-    def uniform_filter_at(g, r, c):
-        h = SPOT_WIN // 2
-        return g[max(r - h, 0):r + h + 1, max(c - h, 0):c + h + 1].sum()
 
     # ---- write per-district files ----
     feats = []
     for d in dists:
         i = d['i'] + 1
         hexes = by_d.get(d['i'], [])
+        cids = [h3.int_to_str(int(hid[starts[k]])) for k in hexes]
         if hexes:
-            cen_ll = np.array([h3.cell_to_latlng(c) for c, *_ in hexes])
+            cen_ll = np.array([h3.cell_to_latlng(c) for c in cids])
             hn = near(cen_ll[:, 1], cen_ll[:, 0])
         hex_out = []
-        for j, (cid, pv, nb, best) in enumerate(hexes):
+        for j, (k, cid) in enumerate(zip(hexes, cids)):
+            pv = float(hpop[k])
             ring = [[round(lng, 4), round(lat, 4)] for lat, lng in h3.cell_to_boundary(cid)]
             dens = pv / hex_area
+            nb = float(hb[starts[k]:ends[k]].sum()) if hb is not None else None
             hex_out.append({'h': cid, 'p': round(pv), 'e': r2(pv * d['rate'], 2), 'k': r2(pv * d['rate'] / hex_area, 2), 'f': r2(hn['fkm'][j], 2), 'w': r2(hn['fmin'][j], 0),
-                            'b': round(nb) if bgrid is not None else None, 'u': 'd' if dens >= DENSE else 't' if dens >= TOWN else 'r', **spot(best), 'r': ring})
+                            'b': round(nb) if nb is not None else None, 'u': 'd' if dens >= DENSE else 't' if dens >= TOWN else 'r', **spot(k), 'r': ring})
         rnd = lambda co: [rnd(x) for x in co] if isinstance(co[0], (list, tuple)) else [round(co[0], 4), round(co[1], 4)]
         for h in hex_out:
             h['t'] = -1

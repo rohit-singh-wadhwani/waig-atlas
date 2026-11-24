@@ -19,9 +19,8 @@ const BASEMAP_STYLE = 'https://tiles.openfreemap.org/styles/positron';
 // Esri World Imagery: free satellite tiles, no key; credited in the map's attribution.
 const SATELLITE = { type: 'raster', tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'], tileSize: 256, maxzoom: 18, attribution: 'Imagery © Esri, Maxar, Earthstar Geographics' };
 const EMPTY = { type: 'FeatureCollection', features: [] };
-export const SIGNAL_COLOR = '#be123c';
 /** Optional layers a user can switch off in the layer control. */
-export const LAYER_GROUPS = { facilities: ['facilities'], venues: ['venues'], suggested: ['suggested'], signals: ['signals'] } as const;
+export const LAYER_GROUPS = { facilities: ['facilities'], venues: ['venues'], suggested: ['suggested'] } as const;
 export type LayerGroup = keyof typeof LAYER_GROUPS;
 
 function step(prop: string, breaks: number[]) {
@@ -47,10 +46,8 @@ export type ExplorerMapProps = {
   selectedHexes?: string[];           // hexagons chosen for a campaign
   pins?: any | null;                  // screening points dropped by the user
   suggested?: any | null;             // suggested screening point of each hexagon
-  signals?: any | null;               // place-tied TB events found by the signals agent
   hidden?: LayerGroup[];
   onSuggested?: (p: any) => void;
-  onSignal?: (p: any) => void;
   pinMode?: boolean;                  // next click inside a selected hexagon drops a pin
   onHex?: (p: any) => void;
   onPin?: (lngLat: [number, number], hex: string) => void;
@@ -84,7 +81,7 @@ export default function ExplorerMap(p: ExplorerMapProps) {
       const below = (m.getStyle().layers || []).find((l: any) => l.type === 'symbol')?.id;
       m.addSource('satellite', SATELLITE);
       m.addLayer({ id: 'satellite', type: 'raster', source: 'satellite', layout: { visibility: 'none' } }, below);
-      for (const id of ['districts', 'towns', 'hexes', 'townlabels', 'venues', 'facilities', 'suggested', 'signals', 'pins']) m.addSource(id, { type: 'geojson', data: EMPTY, ...(id === 'districts' ? { promoteId: 'id' } : {}) });
+      for (const id of ['districts', 'towns', 'hexes', 'townlabels', 'venues', 'facilities', 'suggested', 'pins']) m.addSource(id, { type: 'geojson', data: EMPTY, ...(id === 'districts' ? { promoteId: 'id' } : {}) });
       m.addLayer({ id: 'd-fill', type: 'fill', source: 'districts', paint: { 'fill-color': TB_RAMP[1], 'fill-opacity': 0.75 } }, below);
       m.addLayer({ id: 'd-line', type: 'line', source: 'districts', paint: { 'line-color': '#ffffff', 'line-width': 0.7 } }, below);
       m.addLayer({ id: 'd-focus', type: 'line', source: 'districts', paint: { 'line-color': '#0f172a', 'line-width': 2.5 }, filter: ['==', ['get', 'id'], ''] }, below);
@@ -103,14 +100,10 @@ export default function ExplorerMap(p: ExplorerMapProps) {
         'circle-radius': ['case', ['get', 'sel'], 6, 3.5], 'circle-color': ['case', ['get', 'used'], '#dc2626', '#ffffff'],
         'circle-stroke-color': '#0f172a', 'circle-stroke-width': ['case', ['get', 'sel'], 2, 1.2],
       } });
-      m.addLayer({ id: 'signals', type: 'circle', source: 'signals', paint: {
-        'circle-radius': ['case', ['==', ['get', 'precision'], 'town'], 7, 9], 'circle-color': SIGNAL_COLOR, 'circle-opacity': 0.85,
-        'circle-stroke-color': '#ffffff', 'circle-stroke-width': 2,
-      } });
       m.addLayer({ id: 'pins', type: 'circle', source: 'pins', paint: { 'circle-radius': 8, 'circle-color': '#dc2626', 'circle-stroke-color': '#0f172a', 'circle-stroke-width': 3 } });
       setReady(true);
     });
-    const layers = ['pins', 'signals', 'suggested', 'venues', 'facilities', 'h-fill', 'town-fill', 'd-fill'];
+    const layers = ['pins', 'suggested', 'venues', 'facilities', 'h-fill', 'town-fill', 'd-fill'];
     m.on('mousemove', (e: any) => {
       const f = m.queryRenderedFeatures(e.point, { layers: layers.filter((l) => m.getLayer(l)) })[0];
       m.getCanvas().style.cursor = props.current.pinMode ? 'crosshair' : f ? 'pointer' : '';
@@ -123,9 +116,8 @@ export default function ExplorerMap(p: ExplorerMapProps) {
     m.on('mouseout', () => popup.remove());
     m.on('click', (e: any) => {
       const cur = props.current;
-      const f = m.queryRenderedFeatures(e.point, { layers: ['signals', 'suggested', 'venues', 'h-fill', 'town-fill', 'd-fill'].filter((l) => m.getLayer(l) && m.getLayoutProperty(l, 'visibility') !== 'none') })[0];
+      const f = m.queryRenderedFeatures(e.point, { layers: ['suggested', 'venues', 'h-fill', 'town-fill', 'd-fill'].filter((l) => m.getLayer(l) && m.getLayoutProperty(l, 'visibility') !== 'none') })[0];
       if (!f) return;
-      if (f.layer.id === 'signals') return cur.onSignal?.(f.properties);
       if (f.layer.id === 'suggested') return cur.onSuggested?.(f.properties);
       if (cur.pinMode && f.layer.id === 'h-fill') {
         if ((cur.selectedHexes || []).includes(f.properties.h)) cur.onPin?.([e.lngLat.lng, e.lngLat.lat], f.properties.h);
@@ -151,8 +143,7 @@ export default function ExplorerMap(p: ExplorerMapProps) {
     m.getSource('hexes').setData(p.hexes || EMPTY);
     m.getSource('facilities').setData(p.facilities || EMPTY);
     m.getSource('suggested').setData(p.suggested || EMPTY);
-    m.getSource('signals').setData(p.signals || EMPTY);
-  }, [ready, p.districts, p.hexes, p.facilities, p.suggested, p.signals]);
+  }, [ready, p.districts, p.hexes, p.facilities, p.suggested]);
 
   useEffect(() => {
     const m = map.current;

@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       jobs:
-        description: "Data jobs to run first (comma list: scout,grants,insights,health,tb,signals or none)"
+        description: "Data jobs to run first (comma list: scout,grants,insights,health,tb,news or none)"
         default: "scout,grants,insights,health,tb"
   schedule:
     - cron: "17 */3 * * *"   # insights every 3 hours
@@ -99,11 +99,11 @@ jobs:
           DHIMS2_PASSWORD: ${{ secrets.DHIMS2_PASSWORD }}
           DHIMS2_TOKEN: ${{ secrets.DHIMS2_TOKEN }}
           DHIMS2_DX: ${{ secrets.DHIMS2_DX }}
-      - name: TB map signals (news agent, daily)
-        if: contains(steps.pick.outputs.jobs, 'tb') || contains(steps.pick.outputs.jobs, 'health') || contains(steps.pick.outputs.jobs, 'signals')
+      - name: TB news summary (Gemini, daily)
+        if: contains(steps.pick.outputs.jobs, 'tb') || contains(steps.pick.outputs.jobs, 'health') || contains(steps.pick.outputs.jobs, 'news')
         timeout-minutes: 15
         continue-on-error: true
-        run: node scripts/tb/signals.mjs
+        run: node scripts/tb/news.mjs
         env:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}

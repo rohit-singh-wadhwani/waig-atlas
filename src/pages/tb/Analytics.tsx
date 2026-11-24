@@ -21,14 +21,11 @@ const STATUS_CLS: Record<string, string> = { planned: 'bg-gray-100 text-gray-700
 export default function Analytics({ data }: { data: TbData }) {
   const { campaigns, results } = data;
   const [scope, setScope] = useState('');
-  const hasReal = results.data.some((r) => !campaigns.data.find((c) => c.id === r.campaign_id)?.is_demo);
-  const [demo, setDemo] = useState(true);
-  const shown = useMemo(() => campaigns.data.filter((c) => (demo || !c.is_demo) && (!scope || c.id === scope)), [campaigns.data, demo, scope]);
+  const shown = useMemo(() => campaigns.data.filter((c) => !scope || c.id === scope), [campaigns.data, scope]);
   const ids = new Set(shown.map((c) => c.id));
   const rows = results.data.filter((r) => ids.has(r.campaign_id));
   const t = cascadeTotals(rows);
   const target = shown.reduce((s, c) => s + (c.target_screened || 0), 0);
-  const usesDemo = shown.some((c) => c.is_demo);
 
   if (!campaigns.data.length) return <Empty icon="chart" title="No campaigns yet">Plan a campaign from a town on Find and act; its results show here.</Empty>;
 
@@ -37,9 +34,7 @@ export default function Analytics({ data }: { data: TbData }) {
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center gap-3">
-        <Select className="w-[320px] max-w-full" value={scope} onChange={setScope} placeholder="All campaigns" options={campaigns.data.filter((c) => demo || !c.is_demo).map((c) => ({ value: c.id, label: `${c.name}${c.is_demo ? ' (demo)' : ''}` }))} />
-        <label className="inline-flex items-center gap-2 text-sm text-gray-700"><input type="checkbox" checked={demo} onChange={(e) => { setDemo(e.target.checked); setScope(''); }} />Include demo campaigns</label>
-        {usesDemo && <Badge className="bg-amber-50 text-amber-800">Includes demo data{hasReal ? '' : ': no real results reported yet'}</Badge>}
+        <Select className="w-[320px] max-w-full" value={scope} onChange={setScope} placeholder="All campaigns" options={campaigns.data.map((c) => ({ value: c.id, label: c.name }))} />
         <span className="ml-auto text-xs text-gray-500">Indicators follow the <ExtLink href={WHO_HANDBOOK}>WHO screening handbook, section 2.7.2</ExtLink></span>
       </div>
 
@@ -140,7 +135,7 @@ function ByCampaign({ campaigns, results, onOpen }: { campaigns: TbCampaign[]; r
           const lost = Math.max(0, t.presumptive - t.tested) + Math.max(0, t.confirmed - t.started_treatment);
           return (
             <tr key={c.id} className="hover:bg-gray-50">
-              <td className="px-4 py-2.5 min-w-[220px]"><button type="button" className="text-left font-medium text-gray-900 hover:underline" onClick={() => onOpen(c.id)}>{c.name}</button>{c.is_demo && <Badge className="ml-2 bg-amber-50 text-amber-800">demo</Badge>}<div className="text-xs text-gray-500">{c.district_name}</div></td>
+              <td className="px-4 py-2.5 min-w-[220px]"><button type="button" className="text-left font-medium text-gray-900 hover:underline" onClick={() => onOpen(c.id)}>{c.name}</button><div className="text-xs text-gray-500">{c.district_name}</div></td>
               <td className="px-4 py-2.5"><Badge className={STATUS_CLS[c.status]}>{c.status}</Badge></td>
               <td className="px-4 py-2.5 tabular-nums whitespace-nowrap">{fmtInt(t.screened)}{c.target_screened ? <span className="text-gray-500"> / {fmtInt(c.target_screened)}</span> : null}</td>
               <td className="px-4 py-2.5 tabular-nums">{fmtInt(t.presumptive)}</td>

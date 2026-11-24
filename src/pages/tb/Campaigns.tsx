@@ -37,6 +37,7 @@ export default function Campaigns({ data, onPlan }: { data: TbData; onPlan: (c: 
   const [openCampaign, setOpenCampaign] = useState<string | null>(null);
   const [openTask, setOpenTask] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
+  const [expanded, setExpanded] = useState<string[]>([]);
   const today = day(new Date());
   const weekEnd = day(new Date(Date.now() + 7 * 864e5));
   const byCampaign = useMemo(() => {
@@ -75,7 +76,7 @@ export default function Campaigns({ data, onPlan }: { data: TbData; onPlan: (c: 
       <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_360px] gap-5 items-start">
         <Card pad={false} className="min-w-0">
           <div className="p-5 pb-3">
-            <CardHeader title={FILTERS.find((f) => f.value === filter)!.label + ' tasks'} subtitle="Grouped by campaign. Click a task to add notes, links, files or results."
+            <CardHeader title={FILTERS.find((f) => f.value === filter)!.label + ' tasks'} subtitle="Grouped by campaign: open one to see its tasks, then click a task to add notes, links, files or results."
               right={<><Segmented<'all' | 'mine'> size="sm" value={mine ? 'mine' : 'all'} onChange={(v) => setMine(v === 'mine')} options={[{ value: 'all', label: 'Everyone' }, { value: 'mine', label: 'Mine' }]} />
                 <Select className="w-[200px] [&_select]:h-9 [&_select]:text-sm" value={role} onChange={setRole} placeholder="All roles" options={roles.map((r) => ({ value: r, label: r }))} />
                 <Button icon="plus" onClick={() => setAdding(true)}>Task</Button></>} />
@@ -83,28 +84,38 @@ export default function Campaigns({ data, onPlan }: { data: TbData; onPlan: (c: 
           {!groups.length ? (
             <div className="px-5 pb-5"><Empty icon="checkCircle" title={tasks.data.length ? 'Nothing in this view' : 'No tasks yet'}>{tasks.data.length ? 'Try another filter above.' : 'Tasks are created from the playbook when you plan a campaign on Find and act.'}</Empty></div>
           ) : groups.map(({ c, items }) => {
+            const key = c?.id || 'other';
+            const open = groups.length === 1 || expanded.includes(key);
             const ct = c ? tasks.data.filter((x) => x.campaign_id === c.id) : [];
             const done = ct.filter((x) => x.status === 'done').length;
+            const late = items.filter((t) => t.status !== 'done' && t.due && t.due < today).length;
             return (
-              <section key={c?.id || 'other'} className="border-t border-gray-100">
-                <div className="px-5 py-3 bg-gray-50/70 flex flex-wrap items-center gap-x-3 gap-y-1.5">
-                  {c ? (
-                    <button type="button" className="min-w-0 text-left" onClick={() => setOpenCampaign(c.id)}>
-                      <span className="font-semibold text-gray-900 hover:underline">{c.name}</span>
-                      <span className="text-sm text-gray-500"> · {[c.town, c.district_name].filter(Boolean).join(', ')}{c.start_date ? ` · starts ${c.start_date}` : ''}</span>
-                    </button>
-                  ) : <span className="font-semibold text-gray-900">Other tasks</span>}
-                  {c && <Badge className={STATUS_CLS[c.status]}>{c.status}</Badge>}
+              <section key={key} className="border-t border-gray-100">
+                <div className="px-5 py-3 flex items-center gap-3 hover:bg-gray-50/70">
+                  <button type="button" className="min-w-0 flex-1 flex items-start gap-2.5 text-left" aria-expanded={open} onClick={() => setExpanded((x) => (x.includes(key) ? x.filter((y) => y !== key) : [...x, key]))}>
+                    <Icon name={open ? 'chevronDown' : 'chevronRight'} size={18} className="text-gray-400 mt-0.5 shrink-0" />
+                    <span className="min-w-0">
+                      <span className="block font-semibold text-gray-900 truncate">{c ? c.name : 'Other tasks'}</span>
+                      <span className="block text-xs text-gray-500 truncate">
+                        {c ? [c.town, c.district_name].filter(Boolean).join(', ') + (c.start_date ? ` · starts ${c.start_date}` : '') + ' · ' : ''}
+                        {items.length} {FILTERS.find((f) => f.value === filter)!.label.toLowerCase()}{late ? <span className="text-red-700"> · {late} overdue</span> : null}
+                      </span>
+                    </span>
+                  </button>
+                  {c && <Badge className={cx('shrink-0', STATUS_CLS[c.status])}>{c.status}</Badge>}
                   {c && ct.length > 0 && (
-                    <span className="ml-auto flex items-center gap-2 text-xs text-gray-500">
-                      <span className="w-24 h-1.5 rounded-full bg-gray-200 overflow-hidden"><span className="block h-full bg-green-500" style={{ width: `${(done / ct.length) * 100}%` }} /></span>
-                      {done}/{ct.length} done
+                    <span className="hidden sm:flex items-center gap-2 text-xs text-gray-500 shrink-0">
+                      <span className="w-16 h-1.5 rounded-full bg-gray-200 overflow-hidden"><span className="block h-full bg-green-500" style={{ width: `${(done / ct.length) * 100}%` }} /></span>
+                      {done}/{ct.length}
                     </span>
                   )}
+                  {c && <button type="button" className="text-sm text-brand-700 hover:underline shrink-0" onClick={() => setOpenCampaign(c.id)}>Details</button>}
                 </div>
-                <ul className="divide-y divide-gray-100">
-                  {items.map((t) => <TaskRow key={t.id} t={t} today={today} updates={updates.data.filter((u) => u.task_id === t.id).length} onOpen={() => setOpenTask(t.id)} />)}
-                </ul>
+                {open && (
+                  <ul className="divide-y divide-gray-100 border-t border-gray-100 bg-gray-50/30">
+                    {items.map((t) => <TaskRow key={t.id} t={t} today={today} updates={updates.data.filter((u) => u.task_id === t.id).length} onOpen={() => setOpenTask(t.id)} />)}
+                  </ul>
+                )}
               </section>
             );
           })}
