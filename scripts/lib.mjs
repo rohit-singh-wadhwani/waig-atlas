@@ -174,6 +174,7 @@ export async function gemini(prompt, { json = true, search = false, temperature 
           method: 'POST',
           headers: { 'content-type': 'application/json', 'x-goog-api-key': GEMINI_API_KEY },
           body: JSON.stringify(body),
+          signal: AbortSignal.timeout(120000), // a stalled call gives up instead of hanging the run
         });
       } catch (e) {
         note(new Error(`Gemini network error: ${e.message}`));

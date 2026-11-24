@@ -1,5 +1,5 @@
 // TB news summary (daily): reads the latest TB news from free Google News and Bing News feeds (Ghana first, then West
-// Africa and global), and Gemini writes a short summary: what's new (outbreaks, interventions, diagnostics, policy,
+// Africa and global), and Gemini writes a short summary from the newest 45 of them: what's new (outbreaks, interventions, diagnostics, policy,
 // funding), and 2-3 actions for the Ghana programme. Gemini only reads the fetched articles and cites them by number,
 // so every source link is a real article. Stored in Supabase (tb_news), shown on the TB page and the Overview.
 import path from 'node:path';
@@ -83,7 +83,9 @@ async function articles(since) {
 async function main() {
   if (!HAS_GEMINI || !HAS_SB) throw new Error('needs GEMINI_API_KEY and SUPABASE_SERVICE_ROLE_KEY');
   const since = new Date(Date.now() - DAYS * 864e5).toISOString().slice(0, 10);
-  const arts = (await articles(since)).slice(0, 90);
+  // the newest articles, Ghana first, kept short enough for a fast model
+  const all = await articles(since);
+  const arts = [...all.filter((a) => a.scope === 'Ghana').slice(0, 25), ...all.filter((a) => a.scope !== 'Ghana').slice(0, 20)];
   if (!arts.length) throw new Error('no recent TB articles in the feeds');
   const districts = readJson(path.join(DATA, 'tb', 'districts.geojson'), { features: [] }).features.map((f) => f.properties);
   const top = [...districts].sort((a, b) => b.expected - a.expected).slice(0, 8).map((d) => d.name);
@@ -96,7 +98,7 @@ Prefer Ghana, then West Africa, then global items that change what a programme s
 Actions: 2-3, specific and doable, following from the points. Where useful, tie them to the highest-burden districts (${top.join(', ')})${campaigns.length ? ` or our open campaigns (${campaigns.map((c) => `${c.name}, ${c.district_name}`).join('; ')})` : ''}.
 
 ${list}`;
-  const out = await gemini(prompt, { json: true, schema: SCHEMA, quality: true, temperature: 0.2 });
+  const out = await gemini(prompt, { json: true, schema: SCHEMA, temperature: 0.2 });
   const points = (out.points || [])
     .map((p) => ({ text: p.text, scope: p.scope, kind: p.kind, sources: [...new Set(p.n || [])].map((n) => arts[n]).filter(Boolean).map(({ title, url, source, date }) => ({ title, url, source, date })) }))
     .filter((p) => p.text && p.sources.length);
