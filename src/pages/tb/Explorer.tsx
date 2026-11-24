@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import ExplorerMap, { bboxOf, breaksFor, LayerGroup, TB_RAMP, VENUE_COLORS } from '../../components/ExplorerMap';
 import TbNewsCard from '../../components/TbNewsCard';
 import { Badge, Button, ExtLink, Field, Select, TextInput, cx } from '../../components/ui';
@@ -70,6 +70,16 @@ export default function Explorer({ data, goTab }: { data: TbData; goTab: (t: str
   const det = detail.data && detail.data.id === districtId ? detail.data : null;
   const town = det && tKey ? det.towns.find((t) => townKey(t) === tKey) || null : null;
   useEffect(() => { setTKey(null); setPicked([]); setPlanning(false); setCreated(null); }, [districtId]);
+  // wide screens: map and panel fill the screen; opening a district or town brings that view up and starts the panel at its top
+  const workRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLElement>(null);
+  const opened = useRef(false);
+  useEffect(() => {
+    panelRef.current?.scrollTo({ top: 0 });
+    if (!opened.current) { opened.current = true; return; }
+    const el = workRef.current;
+    if (el && window.matchMedia('(min-width: 1280px)').matches) window.scrollTo({ top: window.scrollY + el.getBoundingClientRect().top - 16, behavior: 'smooth' });
+  }, [districtId, tKey]);
   useEffect(() => { setPicked([]); setSelHex([]); setPins([]); setPinMode(false); setPlanning(false); setCreated(null); }, [tKey]);
 
   // venues: in a town, everything within its radius + 1 km; in a district, only congregate settings
@@ -155,8 +165,8 @@ export default function Explorer({ data, goTab }: { data: TbData; goTab: (t: str
   };
 
   return (
-    <div>
-      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 mb-4">
+    <div ref={workRef} className="xl:sticky xl:top-4 xl:h-[calc(100vh-2rem)] xl:flex xl:flex-col">
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 mb-4 shrink-0">
         <nav className="flex flex-wrap items-center gap-1.5 text-[15px] min-w-0" aria-label="Where you are">
           <Crumb on={() => setDistrictId(null)} active={!d}>Ghana</Crumb>
           {d && <><Sep /><Crumb on={() => setTKey(null)} active={!town}>{d.name}</Crumb><span className="text-gray-400 text-sm">{d.region}</span></>}
@@ -164,9 +174,9 @@ export default function Explorer({ data, goTab }: { data: TbData; goTab: (t: str
         </nav>
         <Steps current={!d ? 1 : !town ? 2 : planning || created ? 4 : 3} />
       </div>
-      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_460px] gap-5 items-start">
-        <div className="xl:sticky xl:top-4">
-          <div className="relative h-[440px] md:h-[560px] xl:h-[calc(100vh-170px)] xl:min-h-[560px]">
+      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_460px] gap-5 items-start xl:items-stretch xl:flex-1 xl:min-h-0">
+        <div className="xl:flex xl:flex-col xl:min-h-0">
+          <div className="relative h-[440px] md:h-[560px] xl:h-auto xl:flex-1 xl:min-h-[360px]">
             <LayerControl satellite={satellite} setSatellite={setSatellite} hidden={hidden} setHidden={setHidden} level={!d ? 'ghana' : town ? 'town' : 'district'} />
             <span className="absolute top-2.5 left-1/2 -translate-x-1/2 z-10 hidden md:block rounded-full bg-white/90 px-3 py-1 text-xs text-gray-600 shadow-sm pointer-events-none">{!d ? 'Click a district to open it' : !town ? 'Click a town to open it' : pinMode ? 'Click inside a selected hexagon to place the point' : 'Select hexagons, then pick spots or place a point'}</span>
             <ExplorerMap districts={geo} districtMetric="expected_100k" districtBreaks={dBreaks} focusId={districtId} hexes={hexFc} hexBreaks={hBreaks} towns={townFc} townBreaks={tBreaks} venues={venueFc} facilities={facFc}
@@ -175,7 +185,7 @@ export default function Explorer({ data, goTab }: { data: TbData; goTab: (t: str
           </div>
           <MapLegend level={!d ? 'ghana' : town ? 'town' : 'district'} breaks={!d ? dBreaks : town ? hBreaks : tBreaks} />
         </div>
-        <aside className="min-w-0 space-y-4">
+        <aside ref={panelRef} className="min-w-0 space-y-4 xl:min-h-0 xl:overflow-y-auto xl:pr-1 xl:pb-4">
           {!d && <GhanaPanel list={list} nat={nat} natRate={natRate} rank={rank} campaigns={campaigns.data} notified={dist.data.notifiedDistricts} onOpen={setDistrictId} goTab={goTab} news={data.news.data} />}
           {d && !town && <DistrictPanel d={d} det={det} loading={detail.loading} rank={rank} n={list.length} venues={venues} campaigns={campaigns.data.filter((c) => c.district_id === d.id)} onTown={(t) => setTKey(townKey(t))} rules={rules} />}
           {d && town && !planning && !created && (

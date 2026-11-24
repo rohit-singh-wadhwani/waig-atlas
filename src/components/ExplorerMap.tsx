@@ -129,7 +129,10 @@ export default function ExplorerMap(p: ExplorerMapProps) {
       else props.current.onDistrict?.(f.properties);
     });
     map.current = m;
+    const fit = new ResizeObserver(() => m.resize()); // the map's box changes with the layout, not only with the window
+    fit.observe(ref.current);
     return () => {
+      fit.disconnect();
       clearTimeout(fallback);
       popup.remove();
       m.remove();
