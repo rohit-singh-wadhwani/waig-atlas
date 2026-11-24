@@ -10,6 +10,7 @@ queries whose answers depended on which server replied. Returns:
   roads       points along motorable roads and tracks (for snapping suggested screening points to a road)
 """
 import os
+import re
 from array import array
 
 import numpy as np
@@ -105,19 +106,32 @@ def _download():
                 f.write(chunk)
 
 
+SAME_KM = 0.3  # one named place mapped twice (a point and a building outline, or two mappers) lies within this distance
+
+
+def dedup(rows):
+    """One row per feature: drops exact repeats (same kind, ~10 m) and named repeats (same kind and name within SAME_KM)."""
+    seen, kept, out = set(), {}, []
+    for r in rows:
+        k = (r.get('kind'), round(r['lon'], 4), round(r['lat'], 4))
+        if k in seen:
+            continue
+        seen.add(k)
+        name = re.sub(r'[^a-z0-9]+', ' ', (r.get('name') or '').lower()).strip()
+        if name:
+            near = kept.setdefault((r.get('kind'), name), [])
+            c = np.cos(np.radians(r['lat']))
+            if any(((r['lon'] - x) * c) ** 2 + (r['lat'] - y) ** 2 < (SAME_KM / 111.32) ** 2 for x, y in near):
+                continue
+            near.append((r['lon'], r['lat']))
+        out.append(r)
+    return out
+
+
 def load():
     _download()
     h = _Handler()
     h.apply_file(PBF_PATH, locations=True, idx='flex_mem')
-    # the same feature can be both a node and an area outline; keep one per ~10 m
-    def dedup(rows):
-        seen, out = set(), []
-        for r in rows:
-            k = (r.get('kind'), round(r['lon'], 4), round(r['lat'], 4))
-            if k not in seen:
-                seen.add(k)
-                out.append(r)
-        return out
     facilities, sites, places, venues = dedup(h.facilities), dedup(h.sites), dedup(h.places), dedup(h.venues)
     roads = np.c_[np.frombuffer(h.road_lon, dtype='float64'), np.frombuffer(h.road_lat, dtype='float64')] if len(h.road_lon) else np.zeros((0, 2))
     size = os.path.getsize(PBF_PATH) // (1 << 20)

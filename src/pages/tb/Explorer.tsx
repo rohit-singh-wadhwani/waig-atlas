@@ -1,33 +1,46 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import ExplorerMap, { bboxOf, breaksFor, TB_RAMP, VENUE_COLORS } from '../../components/ExplorerMap';
-import { Badge, Button, Field, Select, TextInput, cx } from '../../components/ui';
+import ExplorerMap, { bboxOf, breaksFor, LayerGroup, SIGNAL_COLOR, TB_RAMP, VENUE_COLORS } from '../../components/ExplorerMap';
+import { Badge, Button, ExtLink, Field, Select, TextInput, cx } from '../../components/ui';
 import Icon from '../../components/Icon';
 import { useMe } from '../../components/Layout';
 import { useData } from '../../lib/hooks';
 import { uid } from '../../lib/store';
 import { peopleOptions, personName, usePeople } from '../../lib/team';
-import { APPROACH, approachOf, createCampaign, expectedPositivity, fmtInt, loadDistrictDetail, loadReportedRegions, rulesFrom, tbSave, TbCampaign, TbDistrict, TbHexRow, TbTask, TbTown, TbVenue } from '../../lib/tb';
+import { APPROACH, approachOf, createCampaign, expectedPositivity, fmtInt, loadDistrictDetail, loadReportedRegions, rulesFrom, tbSave, TbCampaign, TbDistrict, TbHexRow, TbSignal, TbTask, TbTown, TbVenue } from '../../lib/tb';
 import { BasisTag, esc, kmFmt, pctFmt } from './common';
 import type { TbData } from './TbPage';
 
 const GHANA: [number, number, number, number] = [-3.3, 4.6, 1.3, 11.2];
 const townKey = (t: TbTown) => String(t.id);
 const venueKey = (v: TbVenue) => `${v.kind}|${v.lon}|${v.lat}`;
-const KIND_LABEL: Record<string, string> = { 'transport hub': 'Lorry station', market: 'Market', prison: 'Prison', 'mine / quarry': 'Mine / quarry', school: 'School', 'place of worship': 'Church / mosque', 'community centre': 'Community centre', pharmacy: 'Pharmacy', 'NGO office': 'NGO office' };
+const KIND_LABEL: Record<string, string> = { 'transport hub': 'Lorry station', market: 'Market', prison: 'Prison', 'mine / quarry': 'Mine / quarry', port: 'Port', 'industrial zone': 'Industrial zone', school: 'School', 'place of worship': 'Church / mosque', 'community centre': 'Community centre', pharmacy: 'Pharmacy', 'NGO office': 'NGO office' };
 const distKm = (a: { lon: number; lat: number }, b: { lon: number; lat: number }) => Math.hypot((a.lat - b.lat) * 110.57, (a.lon - b.lon) * 111.32 * Math.cos((a.lat * Math.PI) / 180));
 const signedPct = (r: number | null | undefined) => (r == null ? '—' : `${r >= 1 ? '+' : '−'}${Math.abs(Math.round((r - 1) * 100))}%`);
+
+const WHO_HANDBOOK = 'https://www.who.int/publications-detail-redirect/9789240022614';
+const GH_DAK = 'https://media.path.org/documents/Ghana_Digital_Adaptation_Kit_for_TB_2025.pdf';
+/** The funnel follows WHO's planning and implementation cycle for systematic screening (operational handbook, Module 2, chapter 2). */
+const WHO_STEPS = [
+  { n: 1, label: 'Assess the situation', ref: '2.2' },
+  { n: 2, label: 'Prioritise areas and risk groups', ref: '2.4' },
+  { n: 3, label: 'Choose where and how to screen', ref: '2.5' },
+  { n: 4, label: 'Plan and assign', ref: '2.6' },
+  { n: 5, label: 'Monitor the cascade', ref: '2.7' },
+];
+const SIGNAL_KINDS: Record<string, string> = { 'cluster or outbreak': 'Cluster', 'stock-out': 'Stock-out', 'screening drive': 'Screening drive', 'new diagnostic site': 'New diagnostic site', 'facility problem': 'Facility problem', 'congregate setting': 'Congregate setting', 'funding or policy': 'Funding or policy' };
 
 /** District-level signals: where a district sits among all 261 (1 = worst). Higher is worse unless flipped. */
 const SIGNALS: { key: keyof TbDistrict; label: string; fmt: (v: number) => string; worse: 'high' | 'low'; flag: string; source: string }[] = [
   { key: 'poverty', label: 'Multidimensional poverty', fmt: (v) => `${v.toFixed(0)}% of people`, worse: 'high', flag: 'Poorer', source: 'GSS Census 2021' },
   { key: 'crowding', label: 'People per sleeping room', fmt: (v) => v.toFixed(1), worse: 'high', flag: 'Crowded homes', source: 'GSS Census 2021' },
   { key: 'walk_far', label: 'Over 1 hour walk to care', fmt: (v) => pctFmt(v), worse: 'high', flag: 'Far from care', source: 'Malaria Atlas Project 2020 walking speed map, to the merged facility list' },
-  { key: 'insured', label: 'Health insurance coverage', fmt: (v) => pctFmt(v), worse: 'low', flag: 'Low insurance', source: 'GSS Census 2021' },
-  { key: 'fac_100k', label: 'Mapped facilities per 100k', fmt: (v) => v.toFixed(1), worse: 'low', flag: 'Few facilities', source: 'OpenStreetMap' },
+  { key: 'dense', label: 'Living in dense settlements', fmt: (v) => pctFmt(v), worse: 'high', flag: 'Dense settlements', source: 'WorldPop 2026: people in 1 km cells with 1,500+ people per km² (GHSL urban-centre threshold)' },
+  { key: 'ppb', label: 'People per building', fmt: (v) => v.toFixed(1), worse: 'high', flag: 'Crowded buildings', source: 'WorldPop 2026 ÷ Google-Microsoft Open Buildings' },
+  { key: 'fac_100k', label: 'Health facilities per 100,000 people', fmt: (v) => v.toFixed(1), worse: 'low', flag: 'Few facilities', source: 'OpenStreetMap + WHO/KEMRI facility list' },
 ];
 
 export default function Explorer({ data, goTab }: { data: TbData; goTab: (t: string) => void }) {
-  const { dist, campaigns, P } = data;
+  const { dist, campaigns, signals, P } = data;
   const rules = rulesFrom(P);
   const nat = dist.data.meta?.national;
   const natRate = nat?.rate_100k ?? (nat ? (nat.incidence / nat.pop) * 1e5 : null);
@@ -49,6 +62,8 @@ export default function Explorer({ data, goTab }: { data: TbData; goTab: (t: str
   const [pins, setPins] = useState<Pin[]>([]);
   const [pinMode, setPinMode] = useState(false);
   const [satellite, setSatellite] = useState(false);
+  const [hidden, setHidden] = useState<LayerGroup[]>([]);
+  const [signal, setSignal] = useState<TbSignal | null>(null);
   const [planning, setPlanning] = useState(false);
   const [created, setCreated] = useState<string | null>(null);
   const d = districtId ? byId.get(districtId) || null : null;
@@ -86,7 +101,10 @@ export default function Explorer({ data, goTab }: { data: TbData; goTab: (t: str
   const pickedVenues = hexVenues.filter((v) => picked.includes(venueKey(v)));
   const spots: Spot[] = [...pickedVenues.map((v) => ({ name: v.name || KIND_LABEL[v.kind] || v.kind, kind: v.kind, lon: v.lon, lat: v.lat, pop_1km: v.pop_1km })), ...pins.map((x) => ({ name: x.name, kind: 'screening point', lon: x.lon, lat: x.lat }))];
   const pinFc = useMemo(() => ({ type: 'FeatureCollection', features: pins.map((x) => ({ type: 'Feature', properties: { id: x.id, name: x.name }, geometry: { type: 'Point', coordinates: [x.lon, x.lat] } })) }), [pins]);
-  const hexFc = useMemo(() => (town ? { type: 'FeatureCollection', features: townHexes.map((h) => ({ type: 'Feature', properties: { h: h.h, p: h.p, e: h.e, k: h.k, f: h.f, w: h.w }, geometry: { type: 'Polygon', coordinates: [[...h.r, h.r[0]]] } })) } : null), [town, townHexes]);
+  const hexFc = useMemo(() => (town ? { type: 'FeatureCollection', features: townHexes.map((h) => ({ type: 'Feature', properties: { h: h.h, p: h.p, e: h.e, k: h.k, f: h.f, w: h.w, b: h.b, u: h.u, sp: h.sp, sb: h.sb, rd: h.rd }, geometry: { type: 'Polygon', coordinates: [[...h.r, h.r[0]]] } })) } : null), [town, townHexes]);
+  // the suggested screening point of each hexagon in the open town (filled red once added to the campaign)
+  const suggestedFc = useMemo(() => (town ? { type: 'FeatureCollection', features: townHexes.filter((h) => h.s).map((h) => ({ type: 'Feature', properties: { h: h.h, sp: h.sp, sb: h.sb, rd: h.rd, sel: selHex.includes(h.h), used: pins.some((x) => x.h === h.h && x.lon === h.s[0] && x.lat === h.s[1]) }, geometry: { type: 'Point', coordinates: h.s } })) } : null), [town, townHexes, selHex, pins]);
+  const signalFc = useMemo(() => ({ type: 'FeatureCollection', features: signals.data.filter((x) => x.lon != null && (!d || x.district_id === d.id)).map((x) => ({ type: 'Feature', properties: { ...x }, geometry: { type: 'Point', coordinates: [x.lon, x.lat] } })) }), [signals.data, d]);
   const hBreaks = useMemo(() => breaksFor(townHexes.map((h) => h.k)), [townHexes]);
   const townFc = useMemo(() => (det ? { type: 'FeatureCollection', features: det.towns.filter((t) => t.geom).map((t) => ({ type: 'Feature', properties: { key: townKey(t), nodata: !!t.nodata, name: t.name, place: t.place, pop: t.pop, expected: t.expected, expected_km2: t.expected_km2, lon: t.lon, lat: t.lat }, geometry: t.geom })) } : null), [det]);
   const tBreaks = useMemo(() => (det ? breaksFor(det.towns.filter((t) => !t.nodata).map((t) => t.expected_km2)) : []), [det]);
@@ -105,7 +123,9 @@ export default function Explorer({ data, goTab }: { data: TbData; goTab: (t: str
 
   const tip = (pr: any, layer: string) => {
     if (layer === 'd-fill') return districtId ? '' : `<b>${esc(pr.name)}</b> · ${esc(String(pr.region))}<br/>About <b>${fmtInt(Number(pr.expected))}</b> new TB cases a year<br/>${fmtInt(Number(pr.expected_100k))} per 100,000 (${signedPct(Number(pr.vs_ghana))} vs Ghana)<br/><i>Click to open</i>`;
-    if (layer === 'h-fill') return `${fmtInt(Number(pr.p))} people <span style="color:#6b7280">(WorldPop 2026)</span><br/>≈${Number(pr.e).toFixed(1)} TB cases a year <span style="color:#6b7280">(estimate: people × district rate)</span><br/>Nearest facility ${kmFmt(Number(pr.f))}${pr.w != null && pr.w !== '' ? `, ${fmtInt(Number(pr.w))} min walk` : ''} <span style="color:#6b7280">(same facility for both)</span><br/><i>${pinMode ? (selHex.includes(pr.h) ? 'Click to drop a screening point here' : 'Select this hexagon first') : selHex.includes(pr.h) ? 'Click to unselect' : 'Click to select'}</i>`;
+    if (layer === 'suggested') return `<b>Suggested screening point</b><br/>≈${fmtInt(Number(pr.sp))} people${pr.sb != null && pr.sb !== '' ? ` and ${fmtInt(Number(pr.sb))} buildings` : ''} within ~350 m<br/>${roadWords(pr.rd)}<br/><i>Click to ${pr.used === true || pr.used === 'true' ? 'remove from' : 'add to'} the campaign</i>`;
+    if (layer === 'signals') return `<b>${esc(pr.title)}</b><br/><span style="color:#6b7280">${esc(SIGNAL_KINDS[pr.kind] || pr.kind)} · ${esc(pr.place || '')}${pr.published ? ` · ${esc(pr.published)}` : ''}</span><br/>${esc(pr.summary || '')}<br/><i>Click for the source</i>`;
+    if (layer === 'h-fill') return `${fmtInt(Number(pr.p))} people${pr.b != null && pr.b !== '' ? `, ${fmtInt(Number(pr.b))} buildings` : ''} · ${pr.u === 'd' ? 'dense urban' : pr.u === 't' ? 'town / peri-urban' : 'rural'}<br/>≈${Number(pr.e).toFixed(1)} TB cases a year <span style="color:#6b7280">(estimate: people × district rate)</span><br/>Nearest facility ${kmFmt(Number(pr.f))}${pr.w != null && pr.w !== '' ? `, ${fmtInt(Number(pr.w))} min walk` : ''} <span style="color:#6b7280">(same facility for both)</span><br/><i>${pinMode ? (selHex.includes(pr.h) ? 'Click to drop a screening point here' : 'Select this hexagon first') : selHex.includes(pr.h) ? 'Click to unselect' : 'Click to select'}</i>`;
     if (layer === 'pins') return `<b>${esc(pr.name)}</b><br/>Screening point you placed`;
     if (layer === 'town-fill' && (pr.nodata === true || pr.nodata === 'true')) return town ? '' : `<b>${esc(pr.name)}</b> (${esc(pr.place)})<br/>No population mapped in this area<br/><i>Click to open</i>`;
     if (layer === 'town-fill') return town ? '' : `<b>${esc(pr.name)}</b> (${esc(pr.place)})<br/>${fmtInt(Number(pr.pop))} people · ≈${Number(pr.expected).toFixed(0)} TB cases a year<br/><i>Click to open</i>`;
@@ -123,6 +143,13 @@ export default function Explorer({ data, goTab }: { data: TbData; goTab: (t: str
     setPinMode(false);
   };
   const toggle = (k: string) => setPicked((x) => (x.includes(k) ? x.filter((y) => y !== k) : [...x, k]));
+  // a hexagon's suggested point becomes a screening point (and its hexagon is selected); clicking again removes it
+  const pickSuggested = (h: TbHexRow) => {
+    const has = pins.find((x) => x.h === h.h && x.lon === h.s[0] && x.lat === h.s[1]);
+    if (has) return setPins((x) => x.filter((y) => y.id !== has.id));
+    setSelHex((x) => (x.includes(h.h) ? x : [...x, h.h]));
+    setPins((x) => [...x, { id: uid('pin'), name: `${town?.name || 'Point'} point ${x.length + 1}`, lon: h.s[0], lat: h.s[1], h: h.h }]);
+  };
   const onVenue = (pr: any) => {
     if (town) return toggle(pr.key);
     if (!det) return;
@@ -138,22 +165,23 @@ export default function Explorer({ data, goTab }: { data: TbData; goTab: (t: str
         {town && <><Sep /><Crumb active>{town.name}</Crumb></>}
         <span className="ml-auto text-sm text-gray-500 hidden md:inline">{!d ? 'Click a district on the map or in the list' : !town ? 'Click a town to open it' : pinMode ? 'Click inside a selected hexagon to place the point' : 'Select hexagons, then pick spots or place a point'}</span>
       </nav>
+      <Steps current={!d ? 1 : !town ? 2 : planning || created ? 4 : 3} />
       <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_460px] gap-5 items-start">
         <div className="xl:sticky xl:top-4">
           <div className="relative h-[440px] md:h-[560px] xl:h-[calc(100vh-170px)] xl:min-h-[560px]">
-            <div className="absolute top-2.5 left-2.5 z-10 inline-flex rounded-lg border border-gray-200 bg-white p-0.5 text-sm shadow-sm">
-              {[['Map', false], ['Satellite', true]].map(([l, v]) => <button key={String(l)} type="button" onClick={() => setSatellite(v as boolean)} className={cx('px-2.5 py-1 rounded-md', satellite === v ? 'bg-gray-900 text-white' : 'text-gray-700 hover:bg-gray-50')}>{l}</button>)}
-            </div>
+            <LayerControl satellite={satellite} setSatellite={setSatellite} hidden={hidden} setHidden={setHidden} level={!d ? 'ghana' : town ? 'town' : 'district'} signals={signalFc.features.length} />
             <ExplorerMap districts={geo} districtMetric="expected_100k" districtBreaks={dBreaks} focusId={districtId} hexes={hexFc} hexBreaks={hBreaks} towns={townFc} townBreaks={tBreaks} venues={venueFc} facilities={facFc}
-              picked={picked} focusTown={tKey} selectedHexes={selHex} pins={pinFc} pinMode={pinMode} onHex={toggleHex} onPin={dropPin} satellite={satellite} fit={fit} onDistrict={(pr) => setDistrictId(pr.id)} onTown={(pr) => setTKey(pr.key)} onVenue={onVenue} tooltip={tip} />
+              picked={picked} focusTown={tKey} selectedHexes={selHex} pins={pinFc} pinMode={pinMode} onHex={toggleHex} onPin={dropPin} satellite={satellite} fit={fit}
+              suggested={suggestedFc} signals={signalFc} hidden={hidden} onSignal={(pr) => setSignal(signals.data.find((x) => x.id === pr.id) || null)} onSuggested={(pr) => { const h = townHexes.find((x) => x.h === pr.h); if (h) pickSuggested(h); }} onDistrict={(pr) => setDistrictId(pr.id)} onTown={(pr) => setTKey(pr.key)} onVenue={onVenue} tooltip={tip} />
           </div>
           <MapLegend level={!d ? 'ghana' : town ? 'town' : 'district'} breaks={!d ? dBreaks : town ? hBreaks : tBreaks} />
         </div>
         <aside className="min-w-0 space-y-4">
-          {!d && <GhanaPanel list={list} nat={nat} natRate={natRate} rank={rank} campaigns={campaigns.data} notified={dist.data.notifiedDistricts} onOpen={setDistrictId} goTab={goTab} data={data} />}
+          {signal && <SignalCard s={signal} onClose={() => setSignal(null)} onOpen={() => { if (signal.district_id) setDistrictId(signal.district_id); setSignal(null); }} />}
+          {!d && <GhanaPanel list={list} nat={nat} natRate={natRate} rank={rank} campaigns={campaigns.data} notified={dist.data.notifiedDistricts} onOpen={setDistrictId} goTab={goTab} data={data} onSignal={setSignal} />}
           {d && !town && <DistrictPanel d={d} det={det} loading={detail.loading} rank={rank} n={list.length} venues={venues} campaigns={campaigns.data.filter((c) => c.district_id === d.id)} onTown={(t) => setTKey(townKey(t))} rules={rules} />}
           {d && town && !planning && !created && (
-            <TownPanel d={d} town={town} venues={hexVenues} hexes={townHexes} selHex={selHex} clearHex={() => { setSelHex([]); setPins([]); }} pins={pins} setPins={setPins} pinMode={pinMode} setPinMode={setPinMode} spots={spots} facilities={det?.facilities.filter((f) => distKm(f, town) <= town.radius_km + 3).sort((a, b) => distKm(a, town) - distKm(b, town)) || []}
+            <TownPanel pickSuggested={pickSuggested} d={d} town={town} venues={hexVenues} hexes={townHexes} selHex={selHex} clearHex={() => { setSelHex([]); setPins([]); }} pins={pins} setPins={setPins} pinMode={pinMode} setPinMode={setPinMode} spots={spots} facilities={det?.facilities.filter((f) => distKm(f, town) <= town.radius_km + 3).sort((a, b) => distKm(a, town) - distKm(b, town)) || []}
               picked={picked} toggle={toggle} campaigns={campaigns.data.filter((c) => c.district_id === d.id && c.town === town.name)} onPlan={() => setPlanning(true)} />
           )}
           {d && town && planning && !created && <PlanPanel d={d} town={town} spots={spots} hexIds={selHex} reachHex={townHexes.filter((h) => selHex.includes(h.h)).reduce((a, h) => a + h.p, 0)} data={data} onCancel={() => setPlanning(false)} onCreated={(id) => { setCreated(id); setPlanning(false); }} natRate={natRate} />}
@@ -165,6 +193,70 @@ export default function Explorer({ data, goTab }: { data: TbData; goTab: (t: str
 }
 
 const Sep = () => <Icon name="chevronRight" size={16} className="text-gray-400" />;
+const roadWords = (rd: any) => (rd === 0 || rd === '0' ? 'On a road (OpenStreetMap)' : rd != null && rd !== '' ? `${fmtInt(Number(rd))} m from the nearest road` : 'No road data');
+
+/** Where the user is in WHO's screening cycle; step 5 (monitor) lives on the Analytics tab. */
+function Steps({ current }: { current: number }) {
+  return (
+    <div className="flex flex-wrap items-center gap-x-1 gap-y-1.5 text-xs mb-4">
+      {WHO_STEPS.map((s, i) => (
+        <React.Fragment key={s.n}>
+          {i > 0 && <span className="text-gray-300">—</span>}
+          <span className={cx('inline-flex items-center gap-1.5 rounded-full px-2 py-0.5', s.n === current ? 'bg-gray-900 text-white' : s.n < current ? 'text-gray-700' : 'text-gray-400')}>
+            <span className={cx('w-4 h-4 rounded-full grid place-items-center text-[10px] font-semibold', s.n === current ? 'bg-white text-gray-900' : 'border border-current')}>{s.n}</span>{s.label}
+          </span>
+        </React.Fragment>
+      ))}
+      <span className="ml-auto text-gray-500">Steps from the <ExtLink href={WHO_HANDBOOK}>WHO screening handbook</ExtLink>; roles from <ExtLink href={GH_DAK}>Ghana's TB adaptation kit</ExtLink></span>
+    </div>
+  );
+}
+
+/** One control for the basemap and the optional layers, in the corner of the map. */
+function LayerControl({ satellite, setSatellite, hidden, setHidden, level, signals }: { satellite: boolean; setSatellite: (b: boolean) => void; hidden: LayerGroup[]; setHidden: (h: LayerGroup[]) => void; level: 'ghana' | 'district' | 'town'; signals: number }) {
+  const [open, setOpen] = useState(false);
+  const groups: { g: LayerGroup; label: string; color: string; show: boolean }[] = [
+    { g: 'signals', label: `TB signals from news (${signals})`, color: SIGNAL_COLOR, show: true },
+    { g: 'facilities', label: 'Health facilities', color: '#1d4ed8', show: level === 'town' },
+    { g: 'venues', label: 'Gathering places', color: '#7c3aed', show: level === 'town' },
+    { g: 'suggested', label: 'Suggested screening points', color: '#ffffff', show: level === 'town' },
+  ];
+  const flip = (g: LayerGroup) => setHidden(hidden.includes(g) ? hidden.filter((x) => x !== g) : [...hidden, g]);
+  return (
+    <div className="absolute top-2.5 left-2.5 z-10 text-sm">
+      <button type="button" onClick={() => setOpen(!open)} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 shadow-sm hover:bg-gray-50" aria-expanded={open}>
+        <Icon name="layers" size={15} />Layers
+      </button>
+      {open && (
+        <div className="mt-1.5 w-[250px] rounded-xl border border-gray-200 bg-white p-3 shadow-lg space-y-2.5">
+          <div className="inline-flex w-full rounded-lg bg-gray-100 p-0.5">
+            {([['Map', false], ['Satellite', true]] as const).map(([l, v]) => <button key={l} type="button" onClick={() => setSatellite(v)} className={cx('flex-1 px-2 py-1 rounded-md', satellite === v ? 'bg-white shadow-sm font-medium' : 'text-gray-600')}>{l}</button>)}
+          </div>
+          {groups.filter((x) => x.show).map((x) => (
+            <label key={x.g} className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" checked={!hidden.includes(x.g)} onChange={() => flip(x.g)} />
+              <span className="w-3 h-3 rounded-full border border-gray-700" style={{ background: x.color }} />{x.label}
+            </label>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SignalCard({ s, onClose, onOpen }: { s: TbSignal; onClose: () => void; onOpen: () => void }) {
+  return (
+    <Panel title={s.title} sub={`${SIGNAL_KINDS[s.kind] || s.kind} · ${s.place || s.district_name || ''}${s.published ? ` · ${s.published}` : ''}`}
+      right={<button type="button" aria-label="Close" className="text-gray-400 hover:text-gray-700" onClick={onClose}><Icon name="x" size={16} /></button>}>
+      {s.summary && <p className="text-sm text-gray-700">{s.summary}</p>}
+      <div className="flex flex-wrap items-center gap-3 mt-3 text-sm">
+        <ExtLink href={s.url}>{s.source || 'Source'}</ExtLink>
+        {s.district_id && <button type="button" className="text-brand-700 hover:underline" onClick={onOpen}>Open {s.district_name}</button>}
+        <span className="text-xs text-gray-500">Found by the Gemini news agent; placed at the {s.precision === 'town' ? 'named town' : 'district centre'}</span>
+      </div>
+    </Panel>
+  );
+}
 function Crumb({ children, on, active }: { children: React.ReactNode; on?: () => void; active?: boolean }) {
   return active ? <span className="font-semibold text-gray-900">{children}</span> : <button type="button" onClick={on} className="text-brand-700 hover:underline">{children}</button>;
 }
@@ -182,7 +274,8 @@ function MapLegend({ level, breaks }: { level: 'ghana' | 'district' | 'town'; br
       {level === 'town' && (
         <>
           <span className="inline-flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-[#1d4ed8]" />Health facility</span>
-          <span className="inline-flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-[#7c3aed]" />Screening spot</span>
+          <span className="inline-flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-[#7c3aed]" />Gathering place</span>
+          <span className="inline-flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-white border border-gray-900" />Suggested point</span>
         </>
       )}
     </div>
@@ -238,19 +331,29 @@ function Stat({ label, value, sub, basis, how }: { label: string; value: React.R
   );
 }
 
+/** Facility count in words, with ownership where the source recorded it: "3 health facilities (2 public, 1 faith-based)". */
+function facilityWords(d: TbDistrict) {
+  const own = Object.entries(d.fac_own || {}).filter(([k, n]) => k !== 'not recorded' && n > 0).sort((a, b) => b[1] - a[1]);
+  const split = own.length ? ` (${own.map(([k, n]) => `${n} ${k}`).join(', ')}${d.fac_own?.['not recorded'] ? `, ${d.fac_own['not recorded']} not recorded` : ''})` : '';
+  return `${d.facilities} health facilit${d.facilities === 1 ? 'y' : 'ies'}${split}`;
+}
+
 function flagsFor(d: TbDistrict, rank: Record<string, Map<string, number>>) {
   const out: string[] = [];
   for (const s of SIGNALS) {
     const r = rank[s.key as string]?.get(d.id);
-    if (r != null && r <= 0.2) out.push(s.flag);
+    if (r == null || r > 0.2) continue;
+    out.push(s.key === 'fac_100k' ? `Only ${d.facilities} health facilit${d.facilities === 1 ? 'y' : 'ies'} for ${fmtInt(d.pop)} people` : s.flag);
   }
+  if (!d.hospitals) out.push('No hospital');
   if (d.prisons) out.push(`${d.prisons} prison${d.prisons > 1 ? 's' : ''}`);
-  if (d.mines) out.push(`${d.mines} mine/quarry`);
+  if (d.mines) out.push(`${d.mines} mine/quarry site${d.mines > 1 ? 's' : ''}`);
+  if (d.ports) out.push(`${d.ports} port${d.ports > 1 ? 's' : ''}`);
   return out;
 }
 
 // ---------------- level 1: Ghana ----------------
-function GhanaPanel({ list, nat, natRate, rank, campaigns, notified, onOpen, goTab, data }: { list: TbDistrict[]; nat: any; natRate: number | null; rank: Record<string, Map<string, number>>; campaigns: TbCampaign[]; notified: number; onOpen: (id: string) => void; goTab: (t: string) => void; data: TbData }) {
+function GhanaPanel({ list, nat, natRate, rank, campaigns, notified, onOpen, goTab, data, onSignal }: { list: TbDistrict[]; nat: any; natRate: number | null; rank: Record<string, Map<string, number>>; campaigns: TbCampaign[]; notified: number; onOpen: (id: string) => void; goTab: (t: string) => void; data: TbData; onSignal: (s: TbSignal) => void }) {
   const [sort, setSort] = useState<'count' | 'rate'>('count');
   const [region, setRegion] = useState('');
   const [all, setAll] = useState(false);
@@ -303,19 +406,25 @@ function GhanaPanel({ list, nat, natRate, rank, campaigns, notified, onOpen, goT
           <ul className="space-y-2">{active.slice(0, 5).map((c) => <li key={c.id} className="text-sm flex justify-between gap-3"><button type="button" className="text-left text-gray-900 hover:underline truncate" onClick={() => c.district_id && onOpen(c.district_id)}>{c.name}</button><Badge className="bg-green-50 text-green-700 shrink-0">{c.status}</Badge></li>)}</ul>
         </Panel>
       )}
-      <NewsPanel data={data} />
+      <SignalsPanel signals={data.signals.data} onPick={onSignal} />
     </>
   );
 }
 
-function NewsPanel({ data }: { data: TbData }) {
-  const news = useData(() => fetch(`${process.env.PUBLIC_URL || ''}/data/insights.json`).then((r) => r.json()).catch(() => ({ insights: [] })), [], { insights: [] } as any);
-  const items = (news.data.insights || []).filter((i: any) => /tuberc|\btb\b/i.test(`${i.title} ${i.summary || ''}`) || (i.diseases || []).some((x: string) => /tuberc|^tb$/i.test(x)))
-    .sort((a: any, b: any) => Number((b.countries || []).includes('GHA')) - Number((a.countries || []).includes('GHA')) || String(b.published_at || '').localeCompare(String(a.published_at || ''))).slice(0, 4);
-  if (!items.length) return null;
+/** Latest place-tied TB events found by the Gemini news agent; each is also a pin on the map. */
+function SignalsPanel({ signals, onPick }: { signals: TbSignal[]; onPick: (s: TbSignal) => void }) {
+  if (!signals.length) return null;
+  const items = [...signals].sort((a, b) => String(b.published || '').localeCompare(String(a.published || ''))).slice(0, 5);
   return (
-    <Panel title="TB news and research" sub="From the Latest Insights feed">
-      <ul className="space-y-2.5">{items.map((i: any) => <li key={i.id} className="text-sm"><a href={i.url} target="_blank" rel="noreferrer" className="text-gray-900 hover:underline">{i.title}</a><span className="block text-xs text-gray-500">{i.source_name}{i.published_at ? ` · ${String(i.published_at).slice(0, 10)}` : ''}</span></li>)}</ul>
+    <Panel title="TB signals on the map" sub="Recent Ghana TB events tied to a place, found daily by a Gemini agent with Google Search">
+      <ul className="space-y-2.5">
+        {items.map((x) => (
+          <li key={x.id} className="text-sm">
+            <button type="button" className="text-left text-gray-900 hover:underline" onClick={() => onPick(x)}>{x.title}</button>
+            <span className="block text-xs text-gray-500"><span className="inline-block w-2 h-2 rounded-full mr-1 align-middle" style={{ background: SIGNAL_COLOR }} />{SIGNAL_KINDS[x.kind] || x.kind} · {x.place || x.district_name}{x.published ? ` · ${x.published}` : ''}</span>
+          </li>
+        ))}
+      </ul>
     </Panel>
   );
 }
@@ -329,14 +438,14 @@ function DistrictPanel({ d, det, loading, rank, n, venues, campaigns, onTown, ru
   const [tSort, setTSort] = useState<'cases' | 'far'>('cases');
   const noData: TbTown[] = det ? det.towns.filter((t: TbTown) => t.nodata) : [];
   const towns: TbTown[] = det ? [...det.towns].filter((t: TbTown) => !t.nodata).sort((x: TbTown, y: TbTown) => (tSort === 'cases' ? y.expected - x.expected : (y.facility_km ?? 0) - (x.facility_km ?? 0))) : [];
-  const key = (det?.venues || []).filter((v: TbVenue) => v.kind === 'prison' || v.kind === 'mine / quarry');
+  const key = (det?.venues || []).filter((v: TbVenue) => ['prison', 'mine / quarry', 'port'].includes(v.kind));
   return (
     <>
-      <Panel title={d.name} sub={`${d.region} · ${fmtInt(d.pop)} people (2026) · ${d.urban != null ? `${Math.round(d.urban * 100)}% urban` : ''}`}>
+      <Panel title={d.name} sub={`${d.region} · ${fmtInt(d.pop)} people (2026)${d.dense != null ? ` · ${Math.round(d.dense * 100)}% in dense settlements` : ''}`}>
         <div className="grid grid-cols-2 gap-2.5">
           <Stat label="Expected new cases a year" value={fmtInt(d.expected)} basis="estimated" sub={`${(d.share * 100).toFixed(1)}% of Ghana's cases`} how="WHO 2024 rates by age group and sex × this district's population by age and sex (2021 Census), × a regional risk factor (DHS 2022/2014 rates of HIV, thinness and smoking vs Ghana, weighted by WHO's share of cases linked to each), grown to 2026 with WorldPop and scaled so all districts add up to WHO's national total." />
           <Stat label="Rate per 100,000" value={fmtInt(d.expected_100k)} basis="estimated" how="Expected cases (above) ÷ 2026 population (WorldPop) × 100,000, compared with Ghana's rate." sub={<span className={d.vs_ghana >= 1 ? 'text-red-700' : 'text-green-700'}>{signedPct(d.vs_ghana)} vs Ghana</span>} />
-          <Stat label="Notified a year" value={d.notified != null ? fmtInt(d.notified) : 'Not connected'} basis="reported" sub={d.notified != null ? `${pctFmt(d.detection)} of expected` : 'Needs DHIMS2'} how="From DHIMS2 (live sync) or district reports uploaded on the Data sources tab, last 12 months. Share = notified ÷ expected cases." />
+          <Stat label="Notified a year" value={d.notified != null ? fmtInt(d.notified) : 'Not connected'} basis="reported" sub={d.notified != null ? `${pctFmt(d.detection)} of expected` : 'Needs DHIMS2'} how={`From DHIMS2 (live sync) or district reports uploaded on the Data sources tab${d.notified_basis ? ` (${d.notified_basis})` : ', last 12 months'}. Share = notified ÷ expected cases.`} />
           <Stat how="Sum of results entered for campaigns in this district (Campaigns & tasks tab)." label="Our screening here" value={d.screened ? `${fmtInt(d.confirmed)} found` : 'None yet'} basis="reported" sub={d.screened ? `${fmtInt(d.screened)} screened` : `${campaigns.length} campaign${campaigns.length === 1 ? '' : 's'}`} />
         </div>
       </Panel>
@@ -373,7 +482,7 @@ function DistrictPanel({ d, det, loading, rank, n, venues, campaigns, onTown, ru
         <ul className="space-y-3">
           <Driver label="Age and sex mix" value={d.age_effect != null ? `${signedPct(d.age_effect)} TB vs Ghana` : '—'} note={d.adults != null ? `${Math.round(d.adults * 100)}% adults, ${Math.round((d.male || 0) * 100)}% male · Census 2021` : 'Census 2021'} />
           <Driver label="Regional HIV, undernourishment, smoking" value={d.risk_effect != null ? `${signedPct(d.risk_effect)} TB vs Ghana` : '—'} note={`${d.region} region (DHS): HIV ${d.hiv ?? '—'}%, thin adults ${d.thin ?? '—'}%, tobacco ${d.smoke ?? '—'}%`} />
-          {SIGNALS.map((s) => {
+          {SIGNALS.filter((s) => d[s.key] != null).map((s) => {
             const v = d[s.key] as number | null;
             const r = rank[s.key as string]?.get(d.id);
             return <Driver key={s.key as string} label={s.label} value={v != null ? s.fmt(v) : '—'} note={s.source} pos={r} />;
@@ -388,9 +497,9 @@ function DistrictPanel({ d, det, loading, rank, n, venues, campaigns, onTown, ru
       </Panel>
 
       {det && (key.length > 0 || d.facilities > 0) && (
-        <Panel title="Settings and services" sub="OpenStreetMap; may be incomplete">
+        <Panel title="Settings and services" sub={facilityWords(d)}>
           <div className="grid grid-cols-3 gap-2.5 mb-3">
-            <Stat label="Facilities" value={d.facilities} sub={`${d.hospitals} hospitals`} basis="measured" how="Count of health facilities mapped in OpenStreetMap inside the district boundary. OpenStreetMap can miss small facilities." />
+            <Stat label="Health facilities" value={d.facilities} sub={`${d.hospitals ? `${d.hospitals} hospital${d.hospitals > 1 ? 's' : ''}` : 'no hospital'}`} basis="measured" how={`${facilityWords(d)}. One list: OpenStreetMap merged with the WHO/KEMRI public facility list (2019), duplicates within 100 m removed. Ownership is shown only where a source records it.`} />
             <Stat label="Labs" value={d.labs} basis="measured" how="OpenStreetMap facilities tagged as a laboratory inside the district. Does not show GeneXpert sites specifically." />
             <Stat label="Markets, stations" value={d.markets + d.hubs} basis="measured" how="Markets plus lorry/bus stations mapped in OpenStreetMap inside the district." />
           </div>
@@ -460,20 +569,26 @@ function inRing(pt: [number, number], ring: [number, number][]) {
 type TownPanelProps = {
   d: TbDistrict; town: TbTown; venues: TbVenue[]; hexes: TbHexRow[]; selHex: string[]; clearHex: () => void; pins: Pin[]; setPins: React.Dispatch<React.SetStateAction<Pin[]>>;
   pinMode: boolean; setPinMode: (b: boolean) => void; spots: Spot[]; facilities: any[]; picked: string[]; toggle: (k: string) => void; campaigns: TbCampaign[]; onPlan: () => void;
+  pickSuggested: (h: TbHexRow) => void;
 };
-function TownPanel({ d, town, venues, hexes, selHex, clearHex, pins, setPins, pinMode, setPinMode, spots, facilities, picked, toggle, campaigns, onPlan }: TownPanelProps) {
+function TownPanel({ d, town, venues, hexes, selHex, clearHex, pins, setPins, pinMode, setPinMode, spots, facilities, picked, toggle, campaigns, onPlan, pickSuggested }: TownPanelProps) {
   const [kind, setKind] = useState('');
   const kinds = Array.from(new Set(venues.map((v) => v.kind)));
   const shown = venues.filter((v) => !kind || v.kind === kind);
   const ordered = [...shown.filter((v) => picked.includes(venueKey(v))), ...shown.filter((v) => !picked.includes(venueKey(v)))];
   const sel = hexes.filter((h) => selHex.includes(h.h));
   const selPop = sel.reduce((a, h) => a + h.p, 0), selExp = sel.reduce((a, h) => a + h.e, 0);
+  // suggested points: in the selected hexagons, or the busiest hexagons of the town when none is selected
+  const suggest = (sel.length ? sel : [...hexes].sort((a, b) => b.sp - a.sp).slice(0, 5)).filter((h) => h.s);
+  const usedAt = (h: TbHexRow) => pins.some((x) => x.h === h.h && x.lon === h.s[0] && x.lat === h.s[1]);
+  const dens = town.area_km2 ? town.pop / town.area_km2 : 0;
   return (
     <>
       <Panel title={town.name} sub={`${town.place} in ${d.name}`}>
         <div className="grid grid-cols-2 gap-2.5">
           <Stat label="People living here" value={fmtInt(town.pop)} basis="measured" how="WorldPop 2026 population (100 m grid) summed over this town's area. The town area is the part of the district nearer to this OpenStreetMap place than to any other." sub={town.area_km2 ? `${town.area_km2} km² area` : undefined} />
           <Stat label="Expected TB cases a year" value={`≈${fmtInt(town.expected)}`} basis="estimated" how="People living here × the district's expected rate per person. Assumes TB is spread evenly by population within the district." />
+          {town.buildings != null && <Stat label="Buildings" value={fmtInt(town.buildings)} basis="measured" sub={town.buildings ? `${(town.pop / town.buildings).toFixed(1)} people per building · ${dens >= 1500 ? 'dense urban' : dens >= 300 ? 'town / peri-urban' : 'rural'}` : undefined} how="Google and Microsoft building footprints (combined by VIDA) inside the town's hexagons. People per building = WorldPop people ÷ buildings, a crowding proxy. Settlement type uses the GHSL Degree of Urbanisation thresholds: 1,500+ people per km² dense urban, 300+ town or peri-urban." />}
           <Stat label="Nearest health facility" value={kmFmt(town.facility_km)} how={`${TRAVEL_HOW} This is the clinic or hospital reached fastest on foot from the town centre${town.facility ? `: ${town.facility}` : ''}.`} basis="measured"
             sub={<>{town.walk_min != null ? `${town.walk_min < 5 ? 'under 5' : fmtInt(town.walk_min)} min walk` : null}{town.facility ? <span className="block truncate">{town.facility}</span> : null}</>} />
           <Stat label="Nearest hospital" value={kmFmt(town.hospital_km)} how={`${TRAVEL_HOW} This is the hospital reached fastest by road from the town centre${town.hospital ? `: ${town.hospital}` : ''}.`} basis="measured"
@@ -483,7 +598,7 @@ function TownPanel({ d, town, venues, hexes, selHex, clearHex, pins, setPins, pi
         {campaigns.length > 0 && <p className="text-sm mt-3 text-green-800 bg-green-50 rounded-lg px-3 py-2">✓ {campaigns.length} campaign{campaigns.length > 1 ? 's' : ''} already here: {campaigns.map((c) => c.name).join(', ')}</p>}
       </Panel>
 
-      <Panel title="1. Select hexagons" sub="Click hexagons on the map to choose the areas to cover. Darker ones are expected to have more TB per km²."
+      <Panel title="1. Select hexagons" sub="Click hexagons on the map to choose the areas to cover. Darker ones are expected to have more TB per km²; white dots are each hexagon's suggested screening point."
         right={selHex.length > 0 && <button type="button" className="text-sm text-brand-700 hover:underline" onClick={clearHex}>Clear</button>}>
         {!selHex.length ? <p className="text-sm text-gray-500">None selected: the whole town is covered.</p> : (
           <div className="grid grid-cols-3 gap-2.5">
@@ -494,14 +609,14 @@ function TownPanel({ d, town, venues, hexes, selHex, clearHex, pins, setPins, pi
         )}
       </Panel>
 
-      <Panel title="2. Choose where to screen" sub={selHex.length ? 'Gathering places inside the selected hexagons. Tick one, or place your own point if there is none.' : 'Gathering places in this town, ranked by people living within 1 km.'}>
+      <Panel title="2. Choose where to screen" sub={selHex.length ? 'Gathering places inside the selected hexagons, then suggested points. Tick any, or place your own.' : 'Gathering places in this town, ranked by people living within 1 km, then suggested points.'}>
         {venues.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mb-3">
             <Chip on={!kind} onClick={() => setKind('')}>All ({venues.length})</Chip>
             {kinds.map((k) => <Chip key={k} on={kind === k} onClick={() => setKind(k)} color={VENUE_COLORS[k]}>{KIND_LABEL[k] || k} ({venues.filter((v) => v.kind === k).length})</Chip>)}
           </div>
         )}
-        {!venues.length ? <p className="text-sm text-gray-700 bg-amber-50 rounded-lg px-3 py-2">No gathering places are mapped {selHex.length ? 'inside these hexagons' : `in ${town.name}`} in OpenStreetMap. Place a screening point where the team will set up (a junction, a chief's house, a borehole).</p> : (
+        {!venues.length ? <p className="text-sm text-gray-700 bg-amber-50 rounded-lg px-3 py-2">No gathering places are mapped {selHex.length ? 'inside these hexagons' : `in ${town.name}`} in OpenStreetMap. Use a suggested point below, or place your own (a junction, a chief's house, a borehole).</p> : (
           <ul className="divide-y divide-gray-100 -mx-1 max-h-[360px] overflow-y-auto">
             {ordered.slice(0, 40).map((v) => {
               const k = venueKey(v), on = picked.includes(k);
@@ -518,6 +633,30 @@ function TownPanel({ d, town, venues, hexes, selHex, clearHex, pins, setPins, pi
               );
             })}
           </ul>
+        )}
+        {suggest.length > 0 && (
+          <div className="mt-4">
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="text-sm font-medium text-gray-900">Suggested points {sel.length ? 'in the selected hexagons' : 'in the busiest hexagons'}</span>
+              <HowTag b="measured" how="For each hexagon: the 100 m spot with the most buildings within ~350 m (Google-Microsoft Open Buildings; people from WorldPop if footprints are missing), moved to the nearest road point within 300 m (OpenStreetMap). Use it when no gathering place is mapped, then confirm on the ground." />
+            </div>
+            <ul className="divide-y divide-gray-100 -mx-1 mt-1">
+              {suggest.map((h, i) => {
+                const on = usedAt(h);
+                return (
+                  <li key={h.h}>
+                    <label className={cx('flex gap-3 px-1 py-2 rounded-lg cursor-pointer', on ? 'bg-red-50' : 'hover:bg-gray-50')}>
+                      <input type="checkbox" checked={on} onChange={() => pickSuggested(h)} className="mt-1" />
+                      <span className="min-w-0 flex-1 text-sm">
+                        <span className="flex justify-between gap-2"><span className="font-medium">Point {i + 1}</span><span className="tabular-nums">≈{fmtInt(h.sp)} <span className="text-xs text-gray-500">people within 350 m</span></span></span>
+                        <span className="block text-xs text-gray-500">{h.sb != null ? `${fmtInt(h.sb)} buildings · ` : ''}{roadWords(h.rd)} · {h.u === 'd' ? 'dense urban' : h.u === 't' ? 'town / peri-urban' : 'rural'}</span>
+                      </span>
+                    </label>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
         )}
         <div className="mt-3">
           {pins.length > 0 && (
@@ -586,7 +725,13 @@ function PlanPanel({ d, town, spots, hexIds, reachHex, data, onCancel, onCreated
       <div className="space-y-3">
         <Field label="Campaign name"><TextInput className="w-full" value={name} onChange={(e) => setName(e.target.value)} /></Field>
         <Field label="Playbook (what the team will do)"><Select value={pb} onChange={setPb} options={data.playbooks.data.filter((p) => p.enabled !== false).map((p) => ({ value: p.id, label: p.name }))} placeholder="No playbook" /></Field>
-        {playbook && <p className="text-xs text-gray-500 -mt-1">{playbook.steps.length} tasks will be created: {playbook.steps.map((s) => s.role).filter((r, i, a) => a.indexOf(r) === i).join(', ')}.</p>}
+        {playbook && (
+          <div className="text-xs text-gray-600 -mt-1 rounded-lg bg-gray-50 px-3 py-2 space-y-1">
+            <p>{playbook.description}</p>
+            <p><b>{playbook.steps.reduce((n, st) => n + (st.per_spot ? Math.max(spots.length, 1) : 1), 0)} tasks</b> for {playbook.steps.map((st) => st.role).filter((r, i, a) => a.indexOf(r) === i).join(', ')}{spots.length ? `; community and screening tasks are created for each of the ${spots.length} point${spots.length > 1 ? 's' : ''}, with its location` : ''}.</p>
+            <p className="text-gray-500">Follows {playbook.sources.map((x, i) => <span key={x.url}>{i > 0 && ' and '}<ExtLink href={x.url}>{x.title}</ExtLink></span>)}</p>
+          </div>
+        )}
         <div className="grid grid-cols-2 gap-3">
           <Field label="Start"><TextInput type="date" className="w-full" value={start} onChange={(e) => setStart(e.target.value)} /></Field>
           <Field label="Lead"><Select value={owner} onChange={setOwner} options={peopleOptions(people, owner)} /></Field>

@@ -10,22 +10,18 @@ import type { TbData } from './TbPage';
 const CATALOG: { match: RegExp; group: string; gives: string; use: string }[] = [
   { match: /DHIMS/i, group: 'TB numbers', gives: 'Monthly reported TB cases for Ashanti, Eastern and Volta, 2016-2023', use: 'Reported trend in those regions' },
   { match: /age group and sex/i, group: 'TB numbers', gives: 'Ghana TB cases by age group and sex', use: 'Expected cases from each district\'s age and sex mix' },
-  { match: /Census: population/i, group: 'Who lives where', gives: 'Population by district, single age and sex; urban share', use: 'Age and sex mix of each district' },
+  { match: /attributable/i, group: 'TB numbers', gives: 'TB cases linked to HIV, undernourishment, smoking, alcohol', use: 'Regional risk adjustment' },
+  { match: /WHO Global/i, group: 'TB numbers', gives: 'Ghana\'s estimated and notified TB cases, by year', use: 'National totals: expected, found, missed' },
+  { match: /Census: population/i, group: 'Who lives where', gives: 'Population by district, single age and sex', use: 'Age and sex mix of each district' },
+  { match: /WorldPop/i, group: 'Who lives where', gives: 'Population on a 100 m grid, 2026', use: 'People in each hexagon, town and spot; settlement density' },
+  { match: /Open Buildings/i, group: 'Who lives where', gives: 'Every building footprint in Ghana (Google and Microsoft, combined by VIDA)', use: 'Buildings and people per building; suggested screening points' },
   { match: /Census district boundaries/i, group: 'Boundaries', gives: 'The 261 districts used by GHS and DHIMS2', use: 'Map, district totals, joining DHIMS2' },
   { match: /sleeping rooms/i, group: 'Who is at risk', gives: 'Household size and sleeping rooms by district', use: 'Crowded homes' },
   { match: /poverty/i, group: 'Who is at risk', gives: 'Share of people in multidimensional poverty, by district', use: 'Poorer districts' },
-  { match: /insurance/i, group: 'Who is at risk', gives: 'Share of people with health insurance, by district', use: 'Barriers to care' },
-  { match: /towns and villages/i, group: 'Where people live and reach care', gives: 'Named towns, villages and suburbs', use: 'Towns to visit in each district' },
-  { match: /schools|worship/i, group: 'Where people live and reach care', gives: 'Schools, churches, mosques, community centres, pharmacies, NGO offices', use: 'Screening spots and referral points' },
-  { match: /WHO\/KEMRI|Ghana Health Service facility/i, group: 'Where people live and reach care', gives: 'Health facilities incl. CHPS compounds (WHO/KEMRI 2019, GHS 2012), merged with OpenStreetMap, duplicates within 100 m removed', use: 'One facility list for every distance, travel time and facility count' },
-  { match: /attributable/i, group: 'TB numbers', gives: 'TB cases linked to HIV, undernourishment, smoking, alcohol, diabetes', use: 'Splitting expected cases by risk' },
-  { match: /WHO/i, group: 'TB numbers', gives: 'Ghana\'s estimated and notified TB cases, by year', use: 'National totals: expected, found, missed' },
   { match: /DHS/i, group: 'Who is at risk', gives: 'HIV, thinness and smoking rates by region', use: 'Which regions carry more risk' },
-  { match: /WorldPop/i, group: 'Who lives where', gives: 'Population on a 100 m grid', use: 'People in each hexagon, town and spot' },
-  { match: /Malaria Atlas|travel time|friction/i, group: 'Where people live and reach care', gives: 'Walking and driving speed for every ~1 km of Ghana (2020)', use: 'Walk and drive time to the same merged facility list; who is far from care' },
-  { match: /health facilities/i, group: 'Where people live and reach care', gives: 'Clinics and hospitals', use: 'Distance to care, facility counts' },
-  { match: /congregate|sites/i, group: 'Where people live and reach care', gives: 'Markets, lorry stations, prisons, mines', use: 'Screening venues and key populations' },
-  { match: /geoBoundaries/i, group: 'Boundaries', gives: 'Region and district boundaries', use: 'Map and district totals' },
+  { match: /OpenStreetMap/i, group: 'Places and access', gives: 'Health facilities, towns and villages, markets, lorry stations, prisons, mines, ports, industrial zones, schools, places of worship, roads', use: 'Town areas, screening spots, congregate sites, road access' },
+  { match: /WHO\/KEMRI|Ghana Health Service facility/i, group: 'Places and access', gives: 'Public health facilities incl. CHPS compounds, merged with OpenStreetMap (duplicates within 100 m removed)', use: 'One facility list for every distance, travel time and facility count' },
+  { match: /Malaria Atlas|friction/i, group: 'Places and access', gives: 'Walking and driving speed for every ~1 km of Ghana (2020)', use: 'Walk and drive time to the merged facility list; who is far from care' },
 ];
 const describe = (name: string) => CATALOG.find((c) => c.match.test(name)) || { group: 'Other', gives: '', use: '' };
 const cleanName = (n: string) => n.replace(/\s*\((\d[\d,]*)\s*\w*\)$/, '').replace(/^OpenStreetMap: /, 'OpenStreetMap · ');
@@ -72,7 +68,7 @@ export default function Evidence({ data }: { data: TbData }) {
                   const count = s.name.match(/\((\d[\d,]*)\s+([a-z]+)\)$/i);
                   return (
                     <tr key={i} className="border-b border-gray-100 align-top">
-                      <td className="px-6 py-3 min-w-[260px]"><ExtLink href={s.url}>{cleanName(s.name)}</ExtLink>{count && <span className="block text-xs text-gray-500">{count[1]} {count[2] || 'records'}</span>}</td>
+                      <td className="px-6 py-3 min-w-[260px]"><ExtLink href={s.page || s.url}>{cleanName(s.name)}</ExtLink>{count && <span className="block text-xs text-gray-500">{count[1]} {count[2] || 'records'}</span>}</td>
                       <td className="px-3 py-3 text-sm text-gray-700 min-w-[220px]">{d.gives}</td>
                       <td className="px-3 py-3 text-sm text-gray-700 min-w-[200px]">{d.use}</td>
                       <td className="px-6 py-3 text-right whitespace-nowrap">
@@ -93,9 +89,9 @@ export default function Evidence({ data }: { data: TbData }) {
           <CardHeader title="How the numbers are made" />
           <ol className="space-y-2.5 text-[15px] text-gray-700">
             <Step n={1}><b>Expected cases:</b> WHO's TB rates for each age group and sex, applied to each district's Census 2021 population, grown to 2026 with WorldPop. The cases WHO links to HIV, undernourishment and smoking are scaled by the region's survey rates. All districts add up to WHO's {fmtInt(meta?.national?.incidence)}.</Step>
-            <Step n={2}><b>Found:</b> district notifications from DHIMS2 or uploads. Until connected, Ghana's national rate ({meta?.national ? `${Math.round(meta.national.cdr * 100)}%` : '—'}) is used everywhere.</Step>
-            <Step n={3}><b>Missed:</b> expected minus found. Districts are ranked by this.</Step>
-            <Step n={4}><b>Approach:</b> found below {P.rule_low_detection != null ? `${Math.round(P.rule_low_detection * 100)}%` : '—'} of expected → fix detection; {P.rule_walk_far_share != null ? `${Math.round(P.rule_walk_far_share * 100)}%` : '—'}+ of people over an hour's walk from care → mobile outreach; otherwise clinics and household contacts.</Step>
+            <Step n={2}><b>Inside a district:</b> towns are the area nearest each OpenStreetMap place; hexagons (H3, ~0.74 km²) carry WorldPop people, buildings and expected cases (people × district rate). Each hexagon's suggested screening point is the spot with the most buildings within ~350 m, moved to the nearest road.</Step>
+            <Step n={3}><b>Access:</b> one facility list (OpenStreetMap + WHO/KEMRI). Distance is the straight line to the facility reached fastest; walk and drive time is the route to that same facility over Malaria Atlas travel speeds.</Step>
+            <Step n={4}><b>Approach:</b> notified below {P.rule_low_detection != null ? `${Math.round(P.rule_low_detection * 100)}%` : '—'} of expected → fix detection (needs DHIMS2); {P.rule_walk_far_share != null ? `${Math.round(P.rule_walk_far_share * 100)}%` : '—'}+ of people over an hour's walk from care → mobile outreach; otherwise community and contact screening. Playbooks follow the <ExtLink href="https://www.who.int/publications-detail-redirect/9789240022614">WHO screening handbook</ExtLink> and <ExtLink href="https://media.path.org/documents/Ghana_Digital_Adaptation_Kit_for_TB_2025.pdf">Ghana's TB adaptation kit</ExtLink>.</Step>
           </ol>
         </Card>
         <Card>

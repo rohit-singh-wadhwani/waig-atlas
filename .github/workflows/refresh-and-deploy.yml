@@ -99,15 +99,15 @@ jobs:
           DHIMS2_PASSWORD: ${{ secrets.DHIMS2_PASSWORD }}
           DHIMS2_TOKEN: ${{ secrets.DHIMS2_TOKEN }}
           DHIMS2_DX: ${{ secrets.DHIMS2_DX }}
-      - name: TB summary (daily, after the news feed)
-        if: contains(steps.pick.outputs.jobs, 'tb') || contains(steps.pick.outputs.jobs, 'insights')
+      - name: TB map signals (Gemini agent, daily)
+        if: contains(steps.pick.outputs.jobs, 'tb') || contains(steps.pick.outputs.jobs, 'health')
         timeout-minutes: 15
         continue-on-error: true
-        run: node scripts/tb/brief.mjs
+        run: node scripts/tb/signals.mjs
         env:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GEMINI_BUDGET_MIN: 12
+          GEMINI_BUDGET_MIN: 10
       - name: Grant scout
         timeout-minutes: 25
         continue-on-error: true

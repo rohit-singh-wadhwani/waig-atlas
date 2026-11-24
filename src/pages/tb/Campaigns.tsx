@@ -17,14 +17,20 @@ type Filter = 'open' | 'overdue' | 'week' | 'doing' | 'blocked' | 'done';
 const TASK_STATUS = [{ value: 'todo', label: 'To do' }, { value: 'doing', label: 'In progress' }, { value: 'blocked', label: 'Blocked' }, { value: 'done', label: 'Done' }];
 const STATUS_DOT: Record<string, string> = { todo: 'bg-gray-300', doing: 'bg-brand-500', blocked: 'bg-red-500', done: 'bg-green-500' };
 // playbook steps where screening numbers are produced, so the task offers "Enter results"
-const RESULT_STEPS = ['screen', 'test', 'link', 'contacts', 'outreach', 'report', 'track'];
+const RESULT_STEPS = ['screen', 'sputum', 'test', 'treat', 'contacts', 'outreach', 'report', 'track', 'opd'];
 const day = (d: Date) => d.toISOString().slice(0, 10);
+// the guideline documents playbook steps cite (see tb_playbooks.sources)
+const GUIDES: { prefix: string; title: string; url: string }[] = [
+  { prefix: 'WHO', title: 'WHO operational handbook on TB, Module 2', url: 'https://www.who.int/publications-detail-redirect/9789240022614' },
+  { prefix: 'DAK', title: 'Ghana TB Digital Adaptation Kit', url: 'https://media.path.org/documents/Ghana_Digital_Adaptation_Kit_for_TB_2025.pdf' },
+];
+const mapsLink = (lat: number, lon: number) => `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`;
 
 /** Campaigns & tasks: what is active, who owns it, what is late; each task opens into a workspace. */
 export default function Campaigns({ data, onPlan }: { data: TbData; onPlan: (c: Partial<TbCampaign>) => void }) {
   const me = useMe();
   const people = usePeople();
-  const { campaigns, results, tasks, updates, playbooks, dist, P } = data;
+  const { campaigns, results, tasks, updates, playbooks, dist } = data;
   const [filter, setFilter] = useState<Filter>('open');
   const [mine, setMine] = useState(false);
   const [role, setRole] = useState('');
@@ -47,12 +53,6 @@ export default function Campaigns({ data, onPlan }: { data: TbData; onPlan: (c: 
   const shown = scoped.filter((t) => match(t, filter)).sort((x, y) => (x.due || '9999').localeCompare(y.due || '9999'));
   const camps = [...campaigns.data].sort((x, y) => (y.start_date || y.created_at || '').localeCompare(x.start_date || x.created_at || ''));
   const groups = [...camps.map((c) => ({ c, items: shown.filter((t) => t.campaign_id === c.id) })), { c: null as TbCampaign | null, items: shown.filter((t) => !t.campaign_id || !campaigns.data.some((c) => c.id === t.campaign_id)) }].filter((g) => g.items.length);
-  const all = cascadeTotals(results.data);
-  const predicted = campaigns.data.reduce((sum, c) => {
-    const t = cascadeTotals(byCampaign[c.id] || []);
-    const d = dist.data.list.find((x) => x.id === c.district_id);
-    return sum + t.screened * (expectedPositivity(c.setting, d, P, natRateOf(data)) ?? 0);
-  }, 0);
   const curCampaign = campaigns.data.find((c) => c.id === openCampaign) || null;
   const curTask = tasks.data.find((t) => t.id === openTask) || null;
   const FILTERS: { value: Filter; label: string; tone?: string }[] = [
@@ -131,20 +131,6 @@ export default function Campaigns({ data, onPlan }: { data: TbData; onPlan: (c: 
               </ul>
             )}
           </Card>
-          {all.screened > 0 && (
-            <Card>
-              <CardHeader title="Results so far" subtitle="All campaigns" />
-              <div className="grid grid-cols-2 gap-2.5">
-                <Mini label="People screened" value={fmtInt(all.screened)} />
-                <Mini label="Confirmed TB" value={fmtInt(all.confirmed)} sub={predicted ? `≈${predicted.toFixed(0)} expected*` : undefined} />
-                <Mini label="Screened per case" value={all.confirmed ? fmtInt(all.screened / all.confirmed) : '—'} />
-                <Mini label="Started treatment" value={pct(all.started_treatment, all.confirmed)} />
-                <Mini label="Cough AI flags confirmed" value={pct(all.cough_flagged_confirmed, all.cough_flagged)} />
-                <Mini label="X-ray AI flags confirmed" value={pct(all.cxr_flagged_confirmed, all.cxr_flagged)} />
-              </div>
-              {predicted > 0 && <p className="text-xs text-gray-500 mt-2">* Expected = people screened × published yield for the setting (Kranzer 2010), scaled by district rate.</p>}
-            </Card>
-          )}
         </div>
       </div>
 
@@ -170,6 +156,7 @@ function TaskRow({ t, today, updates, onOpen }: { t: TbTask; today: string; upda
         <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 mt-1 text-xs text-gray-500">
           <span className="inline-flex items-center gap-1"><span className={cx('w-2 h-2 rounded-full', STATUS_DOT[t.status])} />{TASK_STATUS.find((x) => x.value === t.status)?.label}</span>
           <span>{t.assignee ? personName(t.assignee) : <span className="text-amber-700">Unassigned</span>}{t.role ? ` · ${t.role}` : ''}</span>
+          {t.spot && <span className="inline-flex items-center gap-0.5"><Icon name="pin" size={12} />{t.spot}</span>}
           {t.due && <span className={cx(late && 'text-red-600 font-medium')}>{late ? 'Overdue · ' : 'Due '}{t.due}</span>}
           {(t.links?.length || 0) > 0 && <span className="inline-flex items-center gap-0.5"><Icon name="link" size={12} />{t.links!.length}</span>}
           {(t.attachments?.length || 0) > 0 && <span className="inline-flex items-center gap-0.5"><Icon name="paperclip" size={12} />{t.attachments!.length}</span>}
@@ -237,6 +224,22 @@ function TaskWorkspace({ t, c, data }: { t: TbTask; c: TbCampaign | null; data: 
           <Field label="Owner"><Select value={t.assignee || ''} onChange={(v) => save({ assignee: v || null })} placeholder="Unassigned" options={peopleOptions(people, t.assignee)} /></Field>
           <Field label="Due"><TextInput type="date" className="w-full" value={t.due || ''} onChange={(e) => save({ due: e.target.value || null })} /></Field>
         </div>
+        {(t.spot || t.guide) && (
+          <div className="mt-3 rounded-lg bg-gray-50 px-3 py-2.5 text-sm space-y-1">
+            {t.spot && (
+              <div className="flex flex-wrap items-center gap-x-2">
+                <Icon name="pin" size={14} className="text-gray-500" /><span className="font-medium text-gray-900">{t.spot}</span>
+                {t.lat != null && t.lon != null && <><span className="text-xs text-gray-500 tabular-nums">{t.lat.toFixed(5)}, {t.lon.toFixed(5)}</span><ExtLink href={mapsLink(t.lat, t.lon)} className="text-xs">Directions</ExtLink></>}
+              </div>
+            )}
+            {t.guide && (
+              <div className="text-xs text-gray-600">
+                Follows {t.guide}
+                {GUIDES.filter((g) => t.guide!.includes(g.prefix)).map((g) => <span key={g.prefix}> · <ExtLink href={g.url}>{g.title}</ExtLink></span>)}
+              </div>
+            )}
+          </div>
+        )}
         <div className="mt-3" />
         <Field label="Notes"><TextArea rows={3} value={note} onChange={(e) => setNote(e.target.value)} onBlur={() => note !== (t.detail || '') && save({ detail: note || null })} placeholder="What needs doing, decisions, contacts on the ground" /></Field>
       </Card>
@@ -419,6 +422,7 @@ function CampaignDetail({ c, data, rows, tasks, onOpenTask, onDeleted }: { c: Tb
 }
 
 const FIELDS: { key: keyof TbResult; label: string; hint?: string }[] = [
+  { key: 'outreach_sessions', label: 'Community outreach sessions' }, { key: 'people_reached', label: 'People reached by outreach' },
   { key: 'screened', label: 'People screened' }, { key: 'cough_flagged', label: 'Flagged by cough AI (HeAR)' }, { key: 'cxr_flagged', label: 'Flagged by X-ray AI' },
   { key: 'presumptive', label: 'Presumptive TB (any flag or symptoms)' }, { key: 'tested', label: 'Tested with GeneXpert' }, { key: 'confirmed', label: 'Confirmed TB' },
   { key: 'rr_confirmed', label: 'Rifampicin-resistant' }, { key: 'cough_flagged_confirmed', label: 'Confirmed among cough-AI flagged' }, { key: 'cxr_flagged_confirmed', label: 'Confirmed among X-ray-AI flagged' },
@@ -432,7 +436,7 @@ function ResultsForm({ c, task, me, onClose }: { c: TbCampaign; task?: TbTask; m
     const n = (k: string) => Number(v[k] || 0);
     if (n('confirmed') > n('screened') || n('tested') > n('screened')) return setErr('Confirmed and tested cannot exceed people screened.');
     if (n('cough_flagged_confirmed') > n('cough_flagged') || n('cxr_flagged_confirmed') > n('cxr_flagged')) return setErr('Confirmed among flagged cannot exceed the number flagged.');
-    const row: any = { id: uid('tbr'), campaign_id: c.id, task_id: task?.id || null, report_date: v.report_date, notes: v.notes || null, reported_by: me };
+    const row: any = { id: uid('tbr'), campaign_id: c.id, task_id: task?.id || null, spot: v.spot || task?.spot || null, report_date: v.report_date, notes: v.notes || null, reported_by: me };
     for (const f of FIELDS) row[f.key] = n(f.key as string);
     await tbSave('tb_campaign_results', row);
     onClose();
@@ -440,7 +444,10 @@ function ResultsForm({ c, task, me, onClose }: { c: TbCampaign; task?: TbTask; m
   return (
     <Modal open onClose={onClose} title="Add campaign results" footer={<><Button onClick={onClose}>Cancel</Button><Button variant="primary" onClick={save}>Save</Button></>}>
       <p className="text-sm text-gray-500">Enter the numbers for this reporting day or week. Leave unknown fields empty.</p>
-      <Field label="Report date"><TextInput type="date" className="w-full" value={v.report_date} onChange={(e) => setV({ ...v, report_date: e.target.value })} /></Field>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <Field label="Report date"><TextInput type="date" className="w-full" value={v.report_date} onChange={(e) => setV({ ...v, report_date: e.target.value })} /></Field>
+        {(c.spots || []).length > 0 && <Field label="Screening point"><Select value={v.spot ?? task?.spot ?? ''} onChange={(x) => setV({ ...v, spot: x })} placeholder="Whole campaign" options={(c.spots || []).map((sp) => ({ value: sp.name, label: sp.name }))} /></Field>}
+      </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {FIELDS.map((f) => (
           <Field key={f.key as string} label={f.label}><TextInput type="number" min={0} className="w-full" value={v[f.key as string] ?? ''} onChange={(e) => setV({ ...v, [f.key]: e.target.value })} /></Field>

@@ -2,14 +2,14 @@ import React, { useMemo, useState } from 'react';
 import { PageHeader, useMe } from '../../components/Layout';
 import { Empty, Segmented } from '../../components/ui';
 import { useData, useLocalPref } from '../../lib/hooks';
-import { loadTbDistricts, tbList, TbCampaign, TbParam, TbPlaybook, TbResult, TbTask, TbTaskUpdate } from '../../lib/tb';
+import { loadTbDistricts, tbList, TbCampaign, TbParam, TbPlaybook, TbResult, TbSignal, TbTask, TbTaskUpdate } from '../../lib/tb';
 import Explorer from './Explorer';
 import Campaigns, { CampaignForm } from './Campaigns';
 import Evidence from './Evidence';
-import Brief from './Brief';
+import Analytics from './Analytics';
 
-type Tab = 'explore' | 'campaigns' | 'data' | 'brief';
-const TABS: Tab[] = ['explore', 'campaigns', 'data', 'brief'];
+type Tab = 'explore' | 'campaigns' | 'analytics' | 'data';
+const TABS: Tab[] = ['explore', 'campaigns', 'analytics', 'data'];
 
 /** Shared data for every TB tab, loaded once. */
 export function useTbData() {
@@ -20,8 +20,9 @@ export function useTbData() {
   const results = useData(() => tbList<TbResult>('tb_campaign_results'), [], []);
   const tasks = useData(() => tbList<TbTask>('tb_tasks'), [], []);
   const updates = useData(() => tbList<TbTaskUpdate>('tb_task_updates'), [], []);
+  const signals = useData(() => tbList<TbSignal>('tb_signals'), [], []);
   const P = useMemo(() => Object.fromEntries(params.data.map((p) => [p.id, Number(p.value)])) as Record<string, number>, [params.data]);
-  return { dist, params, playbooks, campaigns, results, tasks, updates, P };
+  return { dist, params, playbooks, campaigns, results, tasks, updates, signals, P };
 }
 export type TbData = ReturnType<typeof useTbData>;
 
@@ -52,8 +53,8 @@ export default function TbPage() {
               options={[
                 { value: 'explore', label: 'Find and act' },
                 { value: 'campaigns', label: `Campaigns & tasks${open.length ? ` (${open.length} open)` : ''}` },
+                { value: 'analytics', label: 'Analytics' },
                 { value: 'data', label: 'Data sources' },
-                { value: 'brief', label: 'Summary' },
               ]}
             />
           </div>
@@ -62,7 +63,7 @@ export default function TbPage() {
             <Campaigns data={data} onPlan={setPlan} />
           )}
           {tab === 'data' && <Evidence data={data} />}
-          {tab === 'brief' && <Brief />}
+          {tab === 'analytics' && <Analytics data={data} />}
         </>
       )}
       {plan && <CampaignForm data={data} initial={plan} me={me.email} onClose={() => setPlan(null)} onSaved={() => { setPlan(null); setTab('campaigns'); }} />}

@@ -7,35 +7,45 @@ export type Basis = 'reported' | 'measured' | 'estimated';
 export type TbDistrict = {
   id: string; name: string; region: string; pop: number; census_pop: number | null; area_km2: number;
   expected: number; expected_100k: number; vs_ghana: number; share: number; age_effect: number | null; risk_effect: number | null;
-  adults: number | null; male: number | null; urban: number | null; poverty: number | null; crowding: number | null; one_room: number | null; hh_size: number | null; insured: number | null;
+  adults: number | null; male: number | null; poverty: number | null; crowding: number | null; one_room: number | null; hh_size: number | null;
+  dense: number | null; peri: number | null; buildings: number | null; ppb: number | null;
   hiv: number | null; thin: number | null; smoke: number | null; drive_min: number | null; walk_min: number | null; walk_far: number | null;
-  facilities: number; hospitals: number; labs: number; fac_100k: number; markets: number; hubs: number; prisons: number; mines: number; towns: number; lon: number; lat: number;
+  facilities: number; fac_own: Record<string, number>; hospitals: number; labs: number; fac_100k: number;
+  markets: number; hubs: number; prisons: number; mines: number; ports: number; industrial: number; towns: number; lon: number; lat: number;
   // joined in the app (members only)
-  notified: number | null; notified_basis: string | null; detection: number | null; missed: number; screened: number; confirmed: number; rank: number; approach: ApproachKey;
+  notified: number | null; notified_basis: string | null; detection: number | null; screened: number; confirmed: number; approach: ApproachKey;
 };
-export type TbHexRow = { h: string; p: number; e: number; k: number; f: number | null; w: number | null; t: number; r: [number, number][] };
-export type TbTown = { id: number; nodata?: boolean; name: string; place: string; lon: number; lat: number; radius_km: number; area_km2: number; pop: number; expected: number; expected_km2: number; geom: any; facility?: string | null; hospital?: string | null; facility_km: number | null; hospital_km: number | null; drive_min: number | null; walk_min: number | null };
+/** One H3 hexagon. b = buildings; u = settlement density (d dense urban, t town/peri-urban, r rural);
+ *  s = suggested screening point, sp/sb = people/buildings within ~350 m of it, rd = metres from it to a road. */
+export type TbHexRow = { h: string; p: number; e: number; k: number; f: number | null; w: number | null; t: number; b: number | null; u: 'd' | 't' | 'r'; s: [number, number]; sp: number; sb: number | null; rd: number | null; r: [number, number][] };
+export type TbTown = { id: number; nodata?: boolean; name: string; place: string; lon: number; lat: number; radius_km: number; area_km2: number; pop: number; expected: number; expected_km2: number; geom: any; buildings?: number | null; facility?: string | null; hospital?: string | null; facility_km: number | null; hospital_km: number | null; drive_min: number | null; walk_min: number | null };
 export type TbVenue = { name: string; kind: string; cong: boolean; t?: number; lon: number; lat: number; pop_1km: number; expected_1km: number; facility?: string | null; facility_km: number | null; hospital_km?: number | null; walk_min: number | null; district?: string; district_id?: string };
-export type TbFacility = { name: string; kind: string; lab: boolean; lon: number; lat: number };
+export type TbFacility = { name: string; kind: string; lab: boolean; own?: string | null; src?: string; lon: number; lat: number };
+/** A place-tied TB event found by the Gemini signals agent (scripts/tb/signals.mjs). */
+export type TbSignal = { id: string; title: string; summary?: string; kind: string; place?: string; district_id?: string; district_name?: string; lon: number; lat: number; precision: 'town' | 'district'; url: string; source?: string; published?: string | null };
 export type TbDetail = { id: string; hexes: TbHexRow[]; towns: TbTown[]; venues: TbVenue[]; facilities: TbFacility[] };
 export type TbParam = { id: string; grp: string; label: string; value: number; unit?: string; description?: string; source_title?: string; source_url?: string; status: 'evidence' | 'assumption' | 'policy'; updated_at?: string; updated_by?: string };
-export type TbStep = { key: string; title: string; role: string; due_days: number; detail?: string };
-export type TbPlaybook = { id: string; name: string; trigger?: string; description?: string; setting?: string; steps: TbStep[]; source_title?: string; source_url?: string; enabled: boolean };
+/** A playbook step. `per_spot` steps become one task per screening point ({spot} in the title is replaced); `guide` names the guideline step it follows. */
+export type TbStep = { key: string; title: string; role: string; due_days: number; detail?: string; guide?: string; per_spot?: boolean };
+export type TbSourceRef = { title: string; url: string };
+export type TbPlaybook = { id: string; name: string; trigger?: string; description?: string; setting?: string; steps: TbStep[]; sources: TbSourceRef[]; enabled: boolean };
 export type TbCampaign = {
-  id: string; name: string; city?: string | null; district_id?: string | null; district_name?: string | null; hex_ids?: string[]; setting?: string | null; playbook_id?: string | null;
+  id: string; name: string; district_id?: string | null; district_name?: string | null; hex_ids?: string[]; setting?: string | null; playbook_id?: string | null;
   status: 'planned' | 'active' | 'done' | 'cancelled'; start_date?: string | null; end_date?: string | null; owner?: string | null; target_screened?: number | null;
   predicted_positivity?: number | null; notes?: string | null; created_by?: string | null; created_at?: string;
-  town?: string | null; spots?: { name: string; kind: string; lon: number; lat: number; pop_1km?: number }[] | null;
+  town?: string | null; spots?: TbSpot[] | null; is_demo?: boolean;
 };
+export type TbSpot = { name: string; kind: string; lon: number; lat: number; pop_1km?: number };
 export type TbResult = {
   id: string; campaign_id: string; report_date: string; screened: number; cough_flagged: number; cxr_flagged: number; presumptive: number; tested: number; confirmed: number;
   rr_confirmed: number; started_treatment: number; contacts_identified: number; contacts_screened: number; tpt_started: number; cough_flagged_confirmed: number; cxr_flagged_confirmed: number;
+  outreach_sessions: number; people_reached: number; spot?: string | null;
   notes?: string; reported_by?: string; task_id?: string | null;
 };
 export type TbTask = {
   id: string; campaign_id?: string | null; title: string; detail?: string | null; role?: string | null; assignee?: string | null; district_id?: string | null; district_name?: string | null;
   due?: string | null; status: 'todo' | 'doing' | 'done' | 'blocked'; priority?: string; step_key?: string | null; outcome?: string | null; created_by?: string | null; created_at?: string; updated_at?: string;
-  links?: TbLink[]; attachments?: TbFile[];
+  links?: TbLink[]; attachments?: TbFile[]; spot?: string | null; lon?: number | null; lat?: number | null; guide?: string | null;
 };
 export type TbLink = { url: string; label?: string | null; added_by?: string | null; at?: string };
 export type TbFile = { name: string; url: string; size?: number; added_by?: string | null; at?: string };
@@ -43,7 +53,7 @@ export type TbFile = { name: string; url: string; size?: number; added_by?: stri
 export type TbTaskUpdate = { id: string; task_id: string; campaign_id?: string | null; author?: string | null; body?: string | null; created_at: string };
 export type TbMeta = {
   updated_at: string; error?: string;
-  sources: { name: string; url: string; ok: boolean; note?: string; at: string }[];
+  sources: { name: string; url: string; page?: string; ok: boolean; note?: string; at: string }[];
   method?: { far_minutes: number; catchment_km: number; who_age_year?: number; age_groups?: string[]; attributable: Record<string, number>; attributable_year: number | null; census_missing?: string[] };
   national?: { year: number; incidence: number; incidence_lo?: number | null; incidence_hi?: number | null; notified: number; cdr: number; pop: number; rate_100k?: number; tbhiv_pct?: number | null };
   counts?: Record<string, number>;
@@ -141,21 +151,17 @@ export async function loadTbDistricts(): Promise<{ geo: any | null; list: TbDist
     y.c += Number(r.confirmed) || 0;
     yieldBy.set(did, y);
   }
-  const cdr = meta?.national?.cdr ?? null;
   for (const f of districts.features) {
     const pr = f.properties;
     const a = annual.get(pr.id);
     pr.notified = a ? a.value : null;
     pr.notified_basis = a ? a.basis : null;
     pr.detection = a && pr.expected ? a.value / pr.expected : null;
-    pr.missed = a ? Math.max(pr.expected - a.value, 0) : cdr != null ? pr.expected * (1 - cdr) : pr.expected;
-    pr.missed_100k = pr.pop ? (pr.missed / pr.pop) * 1e5 : 0;
     const y = yieldBy.get(pr.id);
     pr.screened = y?.s || 0;
     pr.confirmed = y?.c || 0;
   }
-  const list = districts.features.map((f: any) => f.properties as TbDistrict).sort((a: TbDistrict, b: TbDistrict) => b.missed - a.missed);
-  list.forEach((d: TbDistrict, i: number) => (d.rank = i + 1));
+  const list = districts.features.map((f: any) => f.properties as TbDistrict).sort((a: TbDistrict, b: TbDistrict) => b.expected - a.expected);
   return { geo: districts, list, meta, national, dhims2, notifiedDistricts: annual.size, notifRows: notif.length };
 }
 
@@ -197,20 +203,26 @@ export async function createCampaign(c: TbCampaign, playbook: TbPlaybook | undef
   const saved = await tbSave('tb_campaigns', { ...c, created_by: me });
   if (playbook) {
     const start = c.start_date || new Date().toISOString().slice(0, 10);
+    // per-spot steps become one task per screening point, carrying the point's location, so each goes to a place
+    const spots: (TbSpot | null)[] = c.spots?.length ? c.spots : [null];
+    const area = c.town ? `${c.town}` : c.district_name || 'the selected area';
     for (const s of playbook.steps) {
       const holders = people.filter((p) => p.role && p.role.toLowerCase() === s.role.toLowerCase());
       const who = holders.find((p) => p.district && c.district_name && p.district.toLowerCase() === c.district_name.toLowerCase()) || holders[0];
-      await tbSave('tb_tasks', {
-        id: uid('tbt'), campaign_id: c.id, title: s.title, detail: s.detail || null, role: s.role, assignee: who?.email || null, district_id: c.district_id || null,
-        district_name: c.district_name || null, due: addDays(start, s.due_days), status: 'todo', step_key: s.key, created_by: me,
-      } as TbTask);
+      for (const sp of s.per_spot ? spots : [null]) {
+        await tbSave('tb_tasks', {
+          id: uid('tbt'), campaign_id: c.id, title: s.title.replace('{spot}', sp?.name || area), detail: s.detail || null, role: s.role, assignee: who?.email || null,
+          district_id: c.district_id || null, district_name: c.district_name || null, due: addDays(start, s.due_days), status: 'todo', step_key: s.key, created_by: me,
+          guide: s.guide || null, spot: sp?.name || null, lon: sp?.lon ?? null, lat: sp?.lat ?? null,
+        } as TbTask);
+      }
     }
   }
   return saved;
 }
 
 export function cascadeTotals(rows: TbResult[]) {
-  const keys: (keyof TbResult)[] = ['screened', 'cough_flagged', 'cxr_flagged', 'presumptive', 'tested', 'confirmed', 'rr_confirmed', 'started_treatment', 'contacts_identified', 'contacts_screened', 'tpt_started', 'cough_flagged_confirmed', 'cxr_flagged_confirmed'];
+  const keys: (keyof TbResult)[] = ['outreach_sessions', 'people_reached', 'screened', 'cough_flagged', 'cxr_flagged', 'presumptive', 'tested', 'confirmed', 'rr_confirmed', 'started_treatment', 'contacts_identified', 'contacts_screened', 'tpt_started', 'cough_flagged_confirmed', 'cxr_flagged_confirmed'];
   const t: Record<string, number> = {};
   for (const k of keys) t[k as string] = rows.reduce((s, r) => s + (Number(r[k]) || 0), 0);
   return t;

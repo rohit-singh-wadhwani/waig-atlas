@@ -3,7 +3,7 @@ TB surveillance pipeline v3 (Ghana): district-level, real data only. Feeds the d
 Ghana -> district -> town -> screening spots.
 
 Inputs (all open, fetched every run)
-  GSS 2021 Census       261 district boundaries; population by district, single age and sex; urban share;
+  GSS 2021 Census       261 district boundaries; population by district, single age and sex;
                         household size and sleeping rooms (crowding); multidimensional poverty
   WHO Global TB Prog.   national incidence and notifications; incidence by age group and sex; cases attributable
                         to HIV, undernourishment, smoking, alcohol, diabetes
@@ -145,13 +145,6 @@ def census():
         r.setdefault('ages', {}).setdefault(k[si][0].lower(), {})
         a = int(m.group(1))
         r['ages'][k[si][0].lower()][a] = r['ages'][k[si][0].lower()].get(a, 0) + val
-    # urban share
-    dims, v = px('Population/population_table2_locality2.px', {'Locality': ['All Locality Types', 'Urban2'], 'District': '*', 'Sex': ['Both sexes'], 'Age': ['All ages']})
-    li, di = dims.index('Locality'), dims.index('District')
-    tot = {k[di]: val for k, val in v.items() if k[li] == 'All Locality Types'}
-    for k, val in v.items():
-        if k[li] == 'Urban2' and tot.get(k[di]):
-            row(k[di])['urban'] = val / tot[k[di]]
     source('GSS 2021 Census: population by district, single age and sex', src + 'Population/', True, f'{sum(1 for r in D.values() if r.get("ages"))} areas')
     # crowding: household size / mean sleeping rooms
     dims, v = px('Population/avg_hhsize_table.px', {'Locality': ['All Locality Types'], 'Geographic_Area': '*'})
@@ -656,7 +649,7 @@ def main():
         return g[max(r - h, 0):r + h + 1, max(c - h, 0):c + h + 1].sum()
 
     # ---- write per-district files ----
-    feats, keysites = [], []
+    feats = []
     for d in dists:
         i = d['i'] + 1
         hexes = by_d.get(d['i'], [])
@@ -742,9 +735,6 @@ def main():
             elif per_kind.get((v['t'], v['kind']), 0) < 12:
                 per_kind[(v['t'], v['kind'])] = per_kind.get((v['t'], v['kind']), 0) + 1
                 keep.append(v)
-        for v in keep:
-            if v['kind'] in ('prison', 'mine / quarry', 'port', 'industrial zone'):
-                keysites.append({**v, 'district': d['name'], 'district_id': d['id']})
         fac_out = [{'name': f['name'], 'kind': f['kind'], 'lab': f['lab'], 'own': f.get('own'), 'src': f.get('src'), 'lon': round(f['lon'], 5), 'lat': round(f['lat'], 5)} for f in d['facilities']]
         own = {}
         for f in d['facilities']:
@@ -759,7 +749,7 @@ def main():
             'area_km2': r2(d['geom'].area * 111.32 * 110.57 * math.cos(math.radians(d['lat'])), 0),
             'expected': r2(d['expected'], 1), 'expected_100k': r2(d['rate'] * 1e5, 1), 'vs_ghana': r2(d['rate'] / nat_rate, 3), 'share': r2(d['expected'] / inc, 4),
             'age_effect': r2(d['age_effect'], 3), 'risk_effect': r2(d['risk_factor'], 3),
-            'adults': r2(d['adults'], 3), 'male': r2(d['male'], 3), 'urban': r2(c.get('urban'), 3),
+            'adults': r2(d['adults'], 3), 'male': r2(d['male'], 3),
             'poverty': r2(c.get('poverty'), 1), 'crowding': r2(c.get('crowding'), 2), 'one_room': r2(c.get('one_room'), 3), 'hh_size': r2(c.get('hh_size'), 2),
             'dense': r2(d_dense[i], 3), 'peri': r2(d_town[i], 3),
             'buildings': round(d['buildings']) if bgrid is not None else None, 'ppb': r2(d['pop'] / d['buildings'], 2) if bgrid is not None and d.get('buildings') else None,
@@ -769,7 +759,6 @@ def main():
             'markets': d['markets'], 'hubs': d['hubs'], 'prisons': d['prisons'], 'mines': d['mines'], 'ports': d['ports'], 'industrial': d['industrial'], 'towns': len(town_out),
             'lon': r2(d['lon'], 4), 'lat': r2(d['lat'], 4)}})
     json.dump({'type': 'FeatureCollection', 'features': feats}, open(os.path.join(OUT, 'districts.geojson'), 'w'), separators=(',', ':'), allow_nan=False)
-    json.dump(keysites, open(os.path.join(OUT, 'keysites.json'), 'w'), separators=(',', ':'))
     json.dump(reported, open(os.path.join(OUT, 'reported_regions.json'), 'w'), separators=(',', ':'))
     json.dump({'years': years, 'latest': nat}, open(os.path.join(OUT, 'national.json'), 'w'), indent=1)
     for old in ('cities.geojson', 'sites.geojson', 'facilities.geojson', 'meta-error.json'):
