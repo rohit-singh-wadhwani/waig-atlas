@@ -24,7 +24,7 @@ const GH_DAK = 'https://media.path.org/documents/Ghana_Digital_Adaptation_Kit_fo
 const WHO_STEPS = [
   { n: 1, short: 'Assess', label: 'Assess the situation', ref: '2.2', where: 'Ghana view: national figures and districts ranked' },
   { n: 2, short: 'Prioritise', label: 'Prioritise areas and risk groups', ref: '2.4', where: 'District view: towns ranked, key populations' },
-  { n: 3, short: 'Choose spots', label: 'Choose where and how to screen', ref: '2.5', where: 'Town view: hexagons, gathering places, suggested points' },
+  { n: 3, short: 'Choose spots', label: 'Choose where and how to screen', ref: '2.5', where: 'Town view: hexagons, gathering places, high density points' },
   { n: 4, short: 'Plan', label: 'Plan and assign', ref: '2.6', where: 'Campaign plan: tasks per spot, by role' },
   { n: 5, short: 'Monitor', label: 'Monitor the cascade', ref: '2.7', where: 'Analytics tab: screening cascade and losses' },
 ];
@@ -131,7 +131,7 @@ export default function Explorer({ data, goTab }: { data: TbData; goTab: (t: str
 
   const tip = (pr: any, layer: string) => {
     if (layer === 'd-fill') return districtId ? '' : `<b>${esc(pr.name)}</b> · ${esc(String(pr.region))}<br/>About <b>${fmtInt(Number(pr.expected))}</b> new TB cases a year<br/>${fmtInt(Number(pr.expected_100k))} per 100,000 (${signedPct(Number(pr.vs_ghana))} vs Ghana)<br/><i>Click to open</i>`;
-    if (layer === 'suggested') return `<b>Suggested screening point</b><br/>≈${fmtInt(Number(pr.sp))} people${pr.sb != null && pr.sb !== '' ? ` and ${plural(Number(pr.sb), 'building')}` : ''} within ~350 m, inside this hexagon<br/>${roadWords(pr.rd)}<br/><i>Click to ${pr.used === true || pr.used === 'true' ? 'remove from' : 'add to'} the campaign</i>`;
+    if (layer === 'suggested') return `<b>High density point</b><br/>≈${fmtInt(Number(pr.sp))} people${pr.sb != null && pr.sb !== '' ? ` and ${plural(Number(pr.sb), 'building')}` : ''} within ~350 m, inside this hexagon<br/>${roadWords(pr.rd)}<br/><i>Click to ${pr.used === true || pr.used === 'true' ? 'remove from' : 'add to'} the campaign</i>`;
     if (layer === 'h-fill') return `${fmtInt(Number(pr.p))} people${pr.b != null && pr.b !== '' ? `, ${plural(Number(pr.b), 'building')}` : ''} · ${pr.u === 'd' ? 'dense urban' : pr.u === 't' ? 'town / peri-urban' : 'rural'}<br/>≈${Number(pr.e).toFixed(1)} TB cases a year <span style="color:#6b7280">(estimate: people × district rate)</span><br/>Nearest facility ${kmFmt(Number(pr.f))} from its centre${pr.w != null && pr.w !== '' ? `, ${fmtInt(Number(pr.w))} min walk` : ''}<br/><i>${pinMode ? (selHex.includes(pr.h) ? 'Click to drop a screening point here' : 'Select this hexagon first') : selHex.includes(pr.h) ? 'Click to unselect' : 'Click to select'}</i>`;
     if (layer === 'pins') return `<b>${esc(pr.name)}</b><br/>Screening point you placed`;
     if (layer === 'town-fill' && (pr.nodata === true || pr.nodata === 'true')) return town ? '' : `<b>${esc(pr.name)}</b> (${esc(pr.place)})<br/>No population mapped in this area<br/><i>Click to open</i>`;
@@ -238,7 +238,7 @@ function LayerControl({ satellite, setSatellite, hidden, setHidden, level }: { s
   const groups: { g: LayerGroup; label: string; color: string; show: boolean }[] = [
     { g: 'facilities', label: 'Health facilities', color: '#1d4ed8', show: level === 'town' },
     { g: 'venues', label: 'Gathering places', color: '#7c3aed', show: level === 'town' },
-    { g: 'suggested', label: 'Suggested screening points', color: '#ffffff', show: level === 'town' },
+    { g: 'suggested', label: 'High density points', color: '#ffffff', show: level === 'town' },
   ];
   const flip = (g: LayerGroup) => setHidden(hidden.includes(g) ? hidden.filter((x) => x !== g) : [...hidden, g]);
   return (
@@ -252,7 +252,7 @@ function LayerControl({ satellite, setSatellite, hidden, setHidden, level }: { s
             {([['Map', false], ['Satellite', true]] as const).map(([l, v]) => <button key={l} type="button" onClick={() => setSatellite(v)} className={cx('flex-1 px-2 py-1 rounded-md', satellite === v ? 'bg-white shadow-sm font-medium' : 'text-gray-600')}>{l}</button>)}
           </div>
           {groups.filter((x) => x.show).map((x) => (
-            <label key={x.g} className="flex items-center gap-2 cursor-pointer">
+            <label key={x.g} className="flex items-center gap-2 cursor-pointer whitespace-nowrap">
               <input type="checkbox" checked={!hidden.includes(x.g)} onChange={() => flip(x.g)} />
               <span className="w-3 h-3 rounded-full border border-gray-700" style={{ background: x.color }} />{x.label}
             </label>
@@ -281,7 +281,7 @@ function MapLegend({ level, breaks }: { level: 'ghana' | 'district' | 'town'; br
         <>
           <span className="inline-flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-[#1d4ed8]" />Health facility</span>
           <span className="inline-flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-[#7c3aed]" />Gathering place</span>
-          <span className="inline-flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-white border border-gray-900" />Suggested point</span>
+          <span className="inline-flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-white border border-gray-900" />High density point</span>
         </>
       )}
     </div>
@@ -582,7 +582,7 @@ function TownPanel({ d, town, venues, hexes, selHex, clearHex, pins, setPins, pi
         {campaigns.length > 0 && <p className="text-sm mt-3 text-green-800 bg-green-50 rounded-lg px-3 py-2">✓ {campaigns.length} campaign{campaigns.length > 1 ? 's' : ''} already here: {campaigns.map((c) => c.name).join(', ')}</p>}
       </Panel>
 
-      <Panel title="1. Select hexagons" sub="Click hexagons on the map to choose the areas to cover. Darker ones are expected to have more TB per km²; white dots are each hexagon's suggested screening point."
+      <Panel title="1. Select hexagons" sub="Click hexagons on the map to choose the areas to cover. Darker ones are expected to have more TB per km²; white dots are each hexagon's high density point."
         right={selHex.length > 0 && <button type="button" className="text-sm text-brand-700 hover:underline" onClick={clearHex}>Clear</button>}>
         {!selHex.length ? <p className="text-sm text-gray-500">None selected: the whole town is covered.</p> : (
           <div className="grid grid-cols-2 gap-2.5">
@@ -592,14 +592,14 @@ function TownPanel({ d, town, venues, hexes, selHex, clearHex, pins, setPins, pi
         )}
       </Panel>
 
-      <Panel title="2. Choose where to screen" sub={selHex.length ? 'Gathering places inside the selected hexagons, then suggested points. Tick any, or place your own.' : 'Gathering places in this town, ranked by people living within 1 km, then suggested points.'}>
+      <Panel title="2. Choose where to screen" sub={selHex.length ? 'Gathering places inside the selected hexagons, then high density points. Tick any, or place your own.' : 'Gathering places in this town, ranked by people living within 1 km, then high density points.'}>
         {venues.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mb-3">
             <Chip on={!kind} onClick={() => setKind('')}>All ({venues.length})</Chip>
             {kinds.map((k) => <Chip key={k} on={kind === k} onClick={() => setKind(k)} color={VENUE_COLORS[k]}>{KIND_LABEL[k] || k} ({venues.filter((v) => v.kind === k).length})</Chip>)}
           </div>
         )}
-        {!venues.length ? <p className="text-sm text-gray-700 bg-amber-50 rounded-lg px-3 py-2">No gathering places are mapped {selHex.length ? 'inside these hexagons' : `in ${town.name}`} in OpenStreetMap. Use a suggested point below, or place your own (a junction, a chief's house, a borehole).</p> : (
+        {!venues.length ? <p className="text-sm text-gray-700 bg-amber-50 rounded-lg px-3 py-2">No gathering places are mapped {selHex.length ? 'inside these hexagons' : `in ${town.name}`} in OpenStreetMap. Use a high density point below, or place your own (a junction, a chief's house, a borehole).</p> : (
           <ul className="divide-y divide-gray-100 -mx-1 max-h-[360px] overflow-y-auto">
             {ordered.slice(0, 40).map((v) => {
               const k = venueKey(v), on = picked.includes(k);
@@ -620,7 +620,7 @@ function TownPanel({ d, town, venues, hexes, selHex, clearHex, pins, setPins, pi
         {suggest.length > 0 && (
           <div className="mt-4">
             <div className="flex items-baseline justify-between gap-2">
-              <span className="text-sm font-medium text-gray-900">Suggested points {sel.length ? 'in the selected hexagons' : 'in the busiest hexagons'}</span>
+              <span className="text-sm font-medium text-gray-900">High density points {sel.length ? 'in the selected hexagons' : 'in the busiest hexagons'}</span>
               <HowTag b="measured" how="For each hexagon: the 100 m spot with the most buildings within ~350 m (Google-Microsoft Open Buildings; people from WorldPop if footprints are missing), moved to a road inside the same hexagon if one is within 300 m (OpenStreetMap). People and buildings are counted only inside that hexagon, so they never exceed the hexagon's own totals. Use it when no gathering place is mapped, then confirm on the ground." />
             </div>
             <ul className="divide-y divide-gray-100 -mx-1 mt-1">

@@ -2,7 +2,7 @@ name: TB pipeline (dev)
 on:
   push:
     branches: [tb-dev]
-    paths: ['scripts/tb/**', '.github/workflows/tb-dev.yml']
+    paths: ['scripts/tb/*.py', '.github/workflows/tb-dev.yml']
   workflow_dispatch:
 permissions:
   contents: write
@@ -18,6 +18,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+      - name: Restore the last OpenStreetMap snapshot (fallback if Geofabrik is down)
+        uses: actions/cache@v4
+        with:
+          path: /tmp/ghana-latest.osm.pbf
+          key: osm-ghana-${{ github.run_id }}
+          restore-keys: osm-ghana-
       - run: pip install -q requests numpy rasterio shapely h3 scipy pyshp openpyxl osmium pyarrow
       - run: python scripts/tb/build.py
         env:

@@ -11,6 +11,7 @@ queries whose answers depended on which server replied. Returns:
 """
 import os
 import re
+import time
 from array import array
 
 import numpy as np
@@ -99,11 +100,26 @@ class _Handler(osmium.SimpleHandler):
 
 
 def _download():
-    with S.get(PBF_URL, stream=True, timeout=900) as r:
-        r.raise_for_status()
-        with open(PBF_PATH, 'wb') as f:
-            for chunk in r.iter_content(1 << 20):
-                f.write(chunk)
+    """Fetch the latest snapshot, retrying when Geofabrik is briefly unreachable. If every try fails, the previous
+    snapshot restored from the CI cache is used and the source log says so. Returns a note for that log."""
+    err = None
+    for wait in (0, 30, 90, 180):
+        time.sleep(wait)
+        try:
+            with S.get(PBF_URL, stream=True, timeout=900) as r:
+                r.raise_for_status()
+                with open(PBF_PATH + '.part', 'wb') as f:
+                    for chunk in r.iter_content(1 << 20):
+                        f.write(chunk)
+            os.replace(PBF_PATH + '.part', PBF_PATH)  # a broken download never replaces the cached copy
+            return ''
+        except Exception as e:
+            err = e
+            log('Geofabrik download failed, retrying', str(e)[:160])
+    if os.path.exists(PBF_PATH):
+        day = time.strftime('%Y-%m-%d', time.gmtime(os.path.getmtime(PBF_PATH)))
+        return f'Geofabrik unreachable this run; used the cached snapshot from {day}. '
+    raise err
 
 
 SAME_KM = 0.3  # one named place mapped twice (a point and a building outline, or two mappers) lies within this distance
@@ -129,14 +145,14 @@ def dedup(rows):
 
 
 def load():
-    _download()
+    note = _download()
     h = _Handler()
     h.apply_file(PBF_PATH, locations=True, idx='flex_mem')
     facilities, sites, places, venues = dedup(h.facilities), dedup(h.sites), dedup(h.places), dedup(h.venues)
     roads = np.c_[np.frombuffer(h.road_lon, dtype='float64'), np.frombuffer(h.road_lat, dtype='float64')] if len(h.road_lon) else np.zeros((0, 2))
     size = os.path.getsize(PBF_PATH) // (1 << 20)
     source('OpenStreetMap (Geofabrik Ghana snapshot)', PBF_URL, True,
-           f'{size} MB: {len(facilities)} health facilities, {len(sites)} congregate and occupational sites, {len(places)} named places, '
+           f'{note}{size} MB: {len(facilities)} health facilities, {len(sites)} congregate and occupational sites, {len(places)} named places, '
            f'{len(venues)} community venues, {len(roads):,} road points', page=PBF_PAGE)
     log('osm', {k: sum(1 for s in sites if s['kind'] == k) for k in {s['kind'] for s in sites}})
     return facilities, sites, places, venues, roads

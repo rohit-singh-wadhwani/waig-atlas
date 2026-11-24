@@ -78,6 +78,13 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+      - name: Restore the last OpenStreetMap snapshot (fallback if Geofabrik is down)
+        if: contains(steps.pick.outputs.jobs, 'tb')
+        uses: actions/cache@v4
+        with:
+          path: /tmp/ghana-latest.osm.pbf
+          key: osm-ghana-${{ github.run_id }}
+          restore-keys: osm-ghana-
       - name: TB surveillance data
         if: contains(steps.pick.outputs.jobs, 'tb')
         timeout-minutes: 80
