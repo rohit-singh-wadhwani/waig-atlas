@@ -1,5 +1,5 @@
 {
- "updated_at": "2026-11-24T02:38:40.448Z",
+ "updated_at": "2026-11-24T03:46:10.299Z",
  "grants": [
   {
    "id": "f4a4ef7d5c8b0fd4",
@@ -2598,6 +2598,40 @@
    "notes": null,
    "added_by": null,
    "updated_at": "2026-11-20T03:17:42.992+00:00"
+  },
+  {
+   "id": "sc_7ed0dfeec7993081",
+   "title": "European partnership fostering a European Research Area (ERA) for health research (HORIZON-HLTH-2022-DISEASE-03-01)",
+   "funder": "European Commission",
+   "summary": "This Horizon Europe partnership call funds multinational investigator-initiated clinical studies across cardiovascular, autoimmune, metabolic, and non-communicable respiratory diseases, including underrepresented populations. It aligns moderately with WAIG's respiratory health initiatives like TB triage, though clinical trial requirements represent a current organizational gap.",
+   "amount_text": null,
+   "amount_usd": null,
+   "deadline": "2027-01-14",
+   "open_date": null,
+   "eligibility": "Research Consortium Partner",
+   "requirements": "Multi-national investigator-initiated clinical studies focus; consortium partnership required.",
+   "countries": [
+    "GLOBAL"
+   ],
+   "regions": [],
+   "themes": [],
+   "url": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-HLTH-2022-DISEASE-03-01",
+   "source_id": "scout-eu-ai-health",
+   "source_name": "EU Funding & Tenders: AI + health",
+   "fetched_at": "2026-11-24T03:29:37.585+00:00",
+   "score": null,
+   "strengths": [],
+   "weaknesses": [],
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": "2027-01-14",
+   "sector": "Healthcare (Clinical Research / Respiratory)",
+   "fit": null,
+   "eligible_as": null,
+   "geography": "Global",
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-24T03:29:37.585+00:00"
   }
  ]
 }

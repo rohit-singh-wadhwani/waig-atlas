@@ -2,6 +2,18 @@
  "runs": [
   {
    "job": "grants",
+   "at": "2026-11-24T03:46:15.421Z",
+   "ok": true,
+   "message": "0 new calls added (6 candidates), 90 tracked · Gemini 1/1 calls ok"
+  },
+  {
+   "job": "scout",
+   "at": "2026-11-24T03:46:05.345Z",
+   "ok": true,
+   "message": "1 new opportunities written up (1 rated High/Medium) from 3 candidates (1 queued for the next run) · Gemini 2/14 calls ok (last error: Gemini gemini-3.8-flash quota: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://aist"
+  },
+  {
+   "job": "grants",
    "at": "2026-11-24T02:39:10.647Z",
    "ok": true,
    "message": "0 new calls added (9 candidates), 89 tracked · Gemini 2/4 calls ok (last error: Gemini gemini-flash-lite-latest 503)"
@@ -347,18 +359,6 @@
    "at": "2026-11-19T16:22:12.748Z",
    "ok": true,
    "message": "0 new insights (0 candidates), 186 kept · Gemini 0/6 calls ok (last error: Gemini gemini-3.1-flash-lite-preview (search) quota: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://aistudio.google.com/docs/rate-)"
-  },
-  {
-   "job": "grants",
-   "at": "2026-11-19T14:36:35.558Z",
-   "ok": true,
-   "message": "1 new calls added (8 candidates), 88 tracked · Gemini 2/4 calls ok (last error: Gemini gemini-flash-lite-latest 503)"
-  },
-  {
-   "job": "insights",
-   "at": "2026-11-19T13:39:41.954Z",
-   "ok": true,
-   "message": "11 new insights (27 candidates), 186 kept · Gemini 2/9 calls ok (last error: Gemini gemini-flash-lite-latest 503)"
   }
  ]
 }

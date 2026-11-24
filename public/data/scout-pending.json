@@ -1,3 +1,15 @@
 {
- "items": []
+ "items": [
+  {
+   "title": "OpenAI Foundation and Rockefeller Foundation launch $50 million 'Cities Deliver' initiative",
+   "url": "https://www.newsbytesapp.com/news/science/openai-foundation-and-rockefeller-foundation-launch-50-million-cities-deliver-initiative/tldr",
+   "funder": "",
+   "deadline_text": null,
+   "amount": null,
+   "text": "The OpenAI Foundation and Rockefeller Foundation have launched a $50 million initiative to fund AI-based public service projects in cities, offering grants up to $2 million.",
+   "source_id": "scout-web-foundations",
+   "source_name": "Foundation & tech-philanthropy calls (free web search)",
+   "id": "sc_9bc821dfa1d6d9bb"
+  }
+ ]
 }
