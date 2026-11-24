@@ -326,30 +326,38 @@ function Crumb({ children, on, active }: { children: React.ReactNode; on?: () =>
 const MapIconImg = ({ k, size = 16 }: { k: MapIcon; size?: number }) => <img src={iconUrl(k)} alt="" width={size} height={size} className="shrink-0" />;
 
 function MapLegend({ level, breaks, flags }: { level: 'ghana' | 'district' | 'town'; breaks: number[]; flags: boolean }) {
+  const [open, setOpen] = useState(false);
   const fmt = (v: number) => (level === 'ghana' ? fmtInt(v) : v < 1 ? v.toFixed(2) : v.toFixed(1));
   const labels = breaks.length ? [`< ${fmt(breaks[0])}`, ...breaks.slice(0, -1).map((b, i) => `${fmt(b)}–${fmt(breaks[i + 1])}`), `> ${fmt(breaks[breaks.length - 1])}`] : [];
+  const symbols: [React.ReactNode, string][] = [
+    ...(flags ? ([[<img src={iconUrl('flag-green')} alt="" width={11} height={14} />, 'Campaign under way'], [<img src={iconUrl('flag-red')} alt="" width={11} height={14} />, 'Campaign not started']] as [React.ReactNode, string][]) : []),
+    ...(level === 'town' ? ([
+      [<MapIconImg k="building" size={14} />, 'High density point'], [<MapIconImg k="hospital" size={14} />, 'Hospital'], [<MapIconImg k="clinic" size={14} />, 'Clinic or CHPS'],
+      [<span className="w-3 h-3 rounded-full bg-[#7c3aed]" />, 'Gathering place'], [<MapIconImg k="prison" size={14} />, 'Prison'], [<MapIconImg k="mine" size={14} />, 'Mine or quarry'],
+    ] as [React.ReactNode, string][]) : []),
+  ];
+  const note = level === 'district' ? 'Each area is the part of the district nearest to that town, village or suburb (OpenStreetMap). Grey: no people mapped.'
+    : level === 'town' ? 'Blank parts of the town area have no people mapped by WorldPop (farmland, forest, water).' : null;
   return (
-    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-gray-600 mt-3">
-      <span className="font-medium text-gray-700">{level === 'ghana' ? 'Expected TB cases per 100,000 people a year' : level === 'district' ? 'Town areas: expected cases per km² a year' : 'Expected cases per km² a year'}</span>
-      {labels.map((l, i) => <span key={i} className="inline-flex items-center gap-1.5"><span className="w-3.5 h-3.5 rounded-sm" style={{ background: TB_RAMP[Math.min(i, TB_RAMP.length - 1)] }} />{l}</span>)}
-      {level === 'district' && <span className="inline-flex items-center gap-1.5"><span className="w-3.5 h-3.5 rounded-sm bg-[#d1d5db]" />No population mapped</span>}
-      {level === 'district' && <span className="w-full text-gray-500">Each area is the part of the district nearest to that town, village or suburb (OpenStreetMap).</span>}
-      {level === 'town' && <span className="w-full text-gray-500">Blank parts of the town area have no people mapped by WorldPop (farmland, forest, water).</span>}
-      {level === 'town' && (
-        <>
-          <span className="inline-flex items-center gap-1.5"><MapIconImg k="hospital" size={14} />Hospital</span>
-          <span className="inline-flex items-center gap-1.5"><MapIconImg k="clinic" size={14} />Clinic or CHPS</span>
-          <span className="inline-flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-[#7c3aed]" />Gathering place</span>
-          <span className="inline-flex items-center gap-1.5"><MapIconImg k="prison" size={14} />Prison</span>
-          <span className="inline-flex items-center gap-1.5"><MapIconImg k="mine" size={14} />Mine or quarry</span>
-          <span className="inline-flex items-center gap-1.5"><MapIconImg k="building" size={14} />High density point</span>
-        </>
+    <div className="relative flex items-center gap-x-2.5 text-xs text-gray-600 mt-2.5 shrink-0">
+      <span className="font-medium text-gray-700 whitespace-nowrap">{level === 'ghana' ? 'Cases per 100k people a year' : level === 'district' ? 'Town areas: cases per km² a year' : 'Cases per km² a year'}</span>
+      {labels.length > 0 && (
+        <span className="inline-flex items-center gap-1.5 whitespace-nowrap tabular-nums">
+          <span>{fmt(breaks[0])}</span>
+          <span className="flex h-3 overflow-hidden rounded-sm">{labels.map((l, i) => <span key={i} title={l} className="w-6 h-full" style={{ background: TB_RAMP[Math.min(i, TB_RAMP.length - 1)] }} />)}</span>
+          <span>{fmt(breaks[breaks.length - 1])}+</span>
+        </span>
       )}
-      {flags && (
-        <>
-          <span className="inline-flex items-center gap-1"><img src={iconUrl('flag-green')} alt="" width={11} height={14} />Campaign under way</span>
-          <span className="inline-flex items-center gap-1"><img src={iconUrl('flag-red')} alt="" width={11} height={14} />Campaign not started</span>
-        </>
+      {(symbols.length > 0 || note) && (
+        <button type="button" onClick={() => setOpen(!open)} aria-expanded={open} className="ml-auto inline-flex items-center gap-1 whitespace-nowrap rounded-md border border-gray-200 bg-white px-2 py-1 text-gray-700 hover:bg-gray-50">
+          Map key <Icon name="chevronDown" size={13} className={open ? '' : 'rotate-180'} />
+        </button>
+      )}
+      {open && (
+        <div className="absolute right-0 bottom-full mb-2 z-30 w-[340px] max-w-[calc(100vw-32px)] rounded-xl border border-gray-200 bg-white p-3 shadow-lg">
+          {symbols.length > 0 && <ul className="grid grid-cols-2 gap-x-3 gap-y-1.5">{symbols.map(([ic, l]) => <li key={l} className="inline-flex items-center gap-1.5"><span className="w-4 grid place-items-center">{ic}</span>{l}</li>)}</ul>}
+          {note && <p className={cx('text-gray-500', symbols.length > 0 && 'mt-2.5 pt-2.5 border-t border-gray-100')}>{note}</p>}
+        </div>
       )}
     </div>
   );
