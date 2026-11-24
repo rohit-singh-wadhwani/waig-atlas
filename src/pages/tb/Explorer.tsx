@@ -1,13 +1,14 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import ExplorerMap, { bboxOf, breaksFor, LayerGroup, TB_RAMP, VENUE_COLORS } from '../../components/ExplorerMap';
 import TbNewsCard from '../../components/TbNewsCard';
+import { iconUrl, MapIcon } from '../../components/mapIcons';
 import { Badge, Button, ExtLink, Field, Select, TextInput, cx } from '../../components/ui';
 import Icon from '../../components/Icon';
 import { useMe } from '../../components/Layout';
 import { useData } from '../../lib/hooks';
 import { uid } from '../../lib/store';
 import { peopleOptions, personName, usePeople } from '../../lib/team';
-import { APPROACH, approachOf, createCampaign, expectedPositivity, fmtInt, loadDistrictDetail, loadReportedRegions, rulesFrom, tbSave, TbCampaign, TbDistrict, TbHexRow, TbNews, TbTask, TbTown, TbVenue } from '../../lib/tb';
+import { APPROACH, approachOf, cascadeTotals, createCampaign, expectedPositivity, fmtInt, loadDistrictDetail, loadReportedRegions, rulesFrom, tbSave, TbCampaign, TbDistrict, TbHexRow, TbNews, TbTask, TbTown, TbVenue } from '../../lib/tb';
 import { BASIS, BasisTag, esc, kmFmt, pctFmt } from './common';
 import type { TbData } from './TbPage';
 
@@ -41,8 +42,8 @@ const SIGNALS: { key: keyof TbDistrict; label: string; fmt: (v: number) => strin
   { key: 'fac_100k', label: 'Health facilities per 100,000 people', fmt: (v) => v.toFixed(1), worse: 'low', flag: 'Few facilities', source: 'OpenStreetMap + WHO/KEMRI facility list' },
 ];
 
-export default function Explorer({ data, goTab }: { data: TbData; goTab: (t: string) => void }) {
-  const { dist, campaigns, P } = data;
+export default function Explorer({ data, goTab }: { data: TbData; goTab: (t: string, campaignId?: string) => void }) {
+  const { dist, campaigns, tasks, results, P } = data;
   const rules = rulesFrom(P);
   const nat = dist.data.meta?.national;
   const natRate = nat?.rate_100k ?? (nat ? (nat.incidence / nat.pop) * 1e5 : null);
@@ -131,7 +132,24 @@ export default function Explorer({ data, goTab }: { data: TbData; goTab: (t: str
     return GHANA;
   }, [town, d, dist.data.geo]);
 
+  // one flag per campaign spot (or at its town, else its district, when it has no spots): green once any task has
+  // moved or any result is in, red while nothing has happened since it was created
+  const [flag, setFlag] = useState<string | null>(null);
+  const flagFc = useMemo(() => {
+    const features: any[] = [];
+    for (const c of campaigns.data) {
+      if (c.status === 'cancelled') continue;
+      const progress = results.data.some((r) => r.campaign_id === c.id) || tasks.data.some((t) => t.campaign_id === c.id && (t.status === 'doing' || t.status === 'done'));
+      const t = det && det.id === c.district_id && c.town ? det.towns.find((x) => x.name === c.town) : null;
+      const dd = c.district_id ? byId.get(c.district_id) : null;
+      const at = c.spots?.length ? c.spots.map((sp) => ({ lon: sp.lon, lat: sp.lat, spot: sp.name })) : t ? [{ lon: t.lon, lat: t.lat, spot: '' }] : dd && dd.lon != null ? [{ lon: dd.lon, lat: dd.lat, spot: '' }] : [];
+      for (const a of at) features.push({ type: 'Feature', properties: { id: c.id, name: c.name, status: c.status, progress, spot: a.spot }, geometry: { type: 'Point', coordinates: [a.lon, a.lat] } });
+    }
+    return { type: 'FeatureCollection', features };
+  }, [campaigns.data, tasks.data, results.data, det, byId]);
+
   const tip = (pr: any, layer: string) => {
+    if (layer === 'campaigns') return `<b>${esc(pr.name)}</b>${pr.spot ? `<br/>Spot: ${esc(pr.spot)}` : ''}<br/><span style="color:${pr.progress === true || pr.progress === 'true' ? '#15803d' : '#b91c1c'}">${pr.progress === true || pr.progress === 'true' ? 'Under way' : 'Not started yet'}</span> · ${esc(pr.status)}<br/><i>Click for its progress</i>`;
     if (layer === 'd-fill') return districtId ? '' : `<b>${esc(pr.name)}</b> · ${esc(String(pr.region))}<br/>About <b>${fmtInt(Number(pr.expected))}</b> new TB cases a year<br/>${fmtInt(Number(pr.expected_100k))} per 100,000 people (${vsGhana(Number(pr.vs_ghana))})<br/><i>Click to open</i>`;
     if (layer === 'suggested') return `<b>High density point</b><br/>≈${fmtInt(Number(pr.sp))} people${pr.sb != null && pr.sb !== '' ? ` and ${plural(Number(pr.sb), 'building')}` : ''} within ~350 m, inside this hexagon<br/>${roadWords(pr.rd)}<br/><i>Click to ${pr.used === true || pr.used === 'true' ? 'remove from' : 'add to'} the campaign</i>`;
     if (layer === 'h-fill') return `${fmtInt(Number(pr.p))} people${pr.b != null && pr.b !== '' ? `, ${plural(Number(pr.b), 'building')}` : ''} · ${pr.u === 'd' ? 'dense urban' : pr.u === 't' ? 'town / peri-urban' : 'rural'}<br/>≈${Number(pr.e).toFixed(1)} TB cases a year <span style="color:#6b7280">(estimate: people × district rate)</span><br/>Nearest facility ${kmFmt(Number(pr.f))} from its centre${pr.w != null && pr.w !== '' ? `, ${fmtInt(Number(pr.w))} min walk` : ''}<br/><i>${pinMode ? (selHex.includes(pr.h) ? 'Click to drop a screening point here' : 'Select this hexagon first') : selHex.includes(pr.h) ? 'Click to unselect' : 'Click to select'}</i>`;
@@ -183,9 +201,10 @@ export default function Explorer({ data, goTab }: { data: TbData; goTab: (t: str
             <span className="absolute top-2.5 left-1/2 -translate-x-1/2 z-10 hidden md:block rounded-full bg-white/90 px-3 py-1 text-xs text-gray-600 shadow-sm pointer-events-none">{!d ? 'Click a district to open it' : !town ? 'Click a town to open it' : pinMode ? 'Click inside a selected hexagon to place the point' : 'Select hexagons, then pick spots or place a point'}</span>
             <ExplorerMap districts={geo} districtMetric="expected_100k" districtBreaks={dBreaks} focusId={districtId} hexes={hexFc} hexBreaks={hBreaks} towns={townFc} townBreaks={tBreaks} venues={venueFc} facilities={facFc}
               picked={picked} focusTown={tKey} selectedHexes={selHex} pins={pinFc} pinMode={pinMode} onHex={toggleHex} onPin={dropPin} satellite={satellite} fit={fit}
-              suggested={suggestedFc} hidden={hidden} onSuggested={(pr) => { const h = townHexes.find((x) => x.h === pr.h); if (h) pickSuggested(h); }} onDistrict={(pr) => setDistrictId(pr.id)} onTown={(pr) => setTKey(pr.key)} onVenue={onVenue} tooltip={tip} />
+              suggested={suggestedFc} campaigns={flagFc} onCampaign={(pr) => setFlag(pr.id)} hidden={hidden} onSuggested={(pr) => { const h = townHexes.find((x) => x.h === pr.h); if (h) pickSuggested(h); }} onDistrict={(pr) => setDistrictId(pr.id)} onTown={(pr) => setTKey(pr.key)} onVenue={onVenue} tooltip={tip} />
           </div>
-          <MapLegend level={!d ? 'ghana' : town ? 'town' : 'district'} breaks={!d ? dBreaks : town ? hBreaks : tBreaks} />
+          {flag && <CampaignFlagCard id={flag} data={data} onClose={() => setFlag(null)} onOpen={() => goTab('campaigns', flag)} />}
+          <MapLegend level={!d ? 'ghana' : town ? 'town' : 'district'} breaks={!d ? dBreaks : town ? hBreaks : tBreaks} flags={flagFc.features.length > 0 && !hidden.includes('campaigns')} />
         </div>
         <aside ref={panelRef} className="min-w-0 space-y-4 xl:min-h-0 xl:overflow-y-auto xl:pr-1 xl:pb-4">
           {!d && <GhanaPanel list={list} nat={nat} natRate={natRate} rank={rank} campaigns={campaigns.data} notified={dist.data.notifiedDistricts} onOpen={setDistrictId} goTab={goTab} news={data.news.data} />}
@@ -234,13 +253,47 @@ function Steps({ current }: { current: number }) {
   );
 }
 
+/** What a campaign flag opens: where the campaign stands, its tasks and its cascade so far. */
+function CampaignFlagCard({ id, data, onClose, onOpen }: { id: string; data: TbData; onClose: () => void; onOpen: () => void }) {
+  const c = data.campaigns.data.find((x) => x.id === id);
+  if (!c) return null;
+  const ct = data.tasks.data.filter((t) => t.campaign_id === id);
+  const cr = data.results.data.filter((r) => r.campaign_id === id);
+  const done = ct.filter((t) => t.status === 'done').length;
+  const doing = ct.filter((t) => t.status === 'doing').length;
+  const today = new Date().toISOString().slice(0, 10);
+  const late = ct.filter((t) => t.status !== 'done' && t.due && t.due < today).length;
+  const tot = cascadeTotals(cr);
+  const started = cr.length > 0 || done + doing > 0;
+  const rows: [string, number][] = [['Screened', tot.screened], ['Presumptive', tot.presumptive], ['Tested', tot.tested], ['Confirmed', tot.confirmed], ['Started treatment', tot.started_treatment]];
+  return (
+    <div className="absolute left-2.5 bottom-2.5 z-20 w-[320px] max-w-[calc(100%-20px)] rounded-xl border border-gray-200 bg-white p-4 shadow-lg text-sm">
+      <div className="flex items-start gap-2">
+        <img src={iconUrl(started ? 'flag-green' : 'flag-red')} alt="" width={14} height={18} className="mt-0.5" />
+        <div className="min-w-0 flex-1">
+          <div className="font-semibold text-gray-900">{c.name}</div>
+          <div className="text-xs text-gray-500">{[c.town, c.district_name].filter(Boolean).join(', ')}{c.start_date ? ` · starts ${c.start_date}` : ''} · {c.status}</div>
+        </div>
+        <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-700" aria-label="Close"><Icon name="x" size={16} /></button>
+      </div>
+      <p className={cx('mt-2 text-xs font-medium', started ? 'text-green-700' : 'text-red-700')}>{started ? 'Under way' : 'Not started: no task moved and no results since it was created'}</p>
+      <div className="mt-2 text-xs text-gray-600">{done} of {ct.length} tasks done{doing ? ` · ${doing} in progress` : ''}{late ? <span className="text-red-700"> · {late} overdue</span> : null}{c.spots?.length ? ` · ${c.spots.length} spot${c.spots.length > 1 ? 's' : ''}` : ''}</div>
+      {cr.length > 0 ? (
+        <dl className="mt-2 grid grid-cols-5 gap-1 text-center">{rows.map(([k, v]) => <div key={k} className="rounded-lg bg-gray-50 px-1 py-1.5"><dt className="text-[10px] leading-tight text-gray-500">{k}</dt><dd className="font-semibold tabular-nums">{fmtInt(v)}</dd></div>)}</dl>
+      ) : <p className="mt-2 text-xs text-gray-500">No results reported yet.</p>}
+      <div className="mt-3 flex justify-end"><Button variant="primary" onClick={onOpen}>Open campaign</Button></div>
+    </div>
+  );
+}
+
 /** One control for the basemap and the optional layers, in the corner of the map. */
 function LayerControl({ satellite, setSatellite, hidden, setHidden, level }: { satellite: boolean; setSatellite: (b: boolean) => void; hidden: LayerGroup[]; setHidden: (h: LayerGroup[]) => void; level: 'ghana' | 'district' | 'town' }) {
   const [open, setOpen] = useState(false);
-  const groups: { g: LayerGroup; label: string; color: string; show: boolean }[] = [
-    { g: 'facilities', label: 'Health facilities', color: '#1d4ed8', show: level === 'town' },
-    { g: 'venues', label: 'Gathering places', color: '#7c3aed', show: level === 'town' },
-    { g: 'suggested', label: 'High density points', color: '#ffffff', show: level === 'town' },
+  const groups: { g: LayerGroup; label: string; icon: React.ReactNode; show: boolean }[] = [
+    { g: 'campaigns', label: 'Campaigns', icon: <img src={iconUrl('flag-green')} alt="" width={11} height={14} />, show: true },
+    { g: 'facilities', label: 'Health facilities', icon: <MapIconImg k="hospital" size={14} />, show: level === 'town' },
+    { g: 'venues', label: 'Gathering places', icon: <span className="w-3 h-3 rounded-full bg-[#7c3aed]" />, show: level === 'town' },
+    { g: 'suggested', label: 'High density points', icon: <MapIconImg k="building" size={14} />, show: level === 'town' },
   ];
   const flip = (g: LayerGroup) => setHidden(hidden.includes(g) ? hidden.filter((x) => x !== g) : [...hidden, g]);
   return (
@@ -256,7 +309,7 @@ function LayerControl({ satellite, setSatellite, hidden, setHidden, level }: { s
           {groups.filter((x) => x.show).map((x) => (
             <label key={x.g} className="flex items-center gap-2 cursor-pointer whitespace-nowrap">
               <input type="checkbox" checked={!hidden.includes(x.g)} onChange={() => flip(x.g)} />
-              <span className="w-3 h-3 rounded-full border border-gray-700" style={{ background: x.color }} />{x.label}
+              <span className="w-4 grid place-items-center">{x.icon}</span>{x.label}
             </label>
           ))}
         </div>
@@ -269,21 +322,33 @@ function Crumb({ children, on, active }: { children: React.ReactNode; on?: () =>
   return active ? <span className="font-semibold text-gray-900">{children}</span> : <button type="button" onClick={on} className="text-brand-700 hover:underline">{children}</button>;
 }
 
-function MapLegend({ level, breaks }: { level: 'ghana' | 'district' | 'town'; breaks: number[] }) {
+/** A map icon at legend size. */
+const MapIconImg = ({ k, size = 16 }: { k: MapIcon; size?: number }) => <img src={iconUrl(k)} alt="" width={size} height={size} className="shrink-0" />;
+
+function MapLegend({ level, breaks, flags }: { level: 'ghana' | 'district' | 'town'; breaks: number[]; flags: boolean }) {
   const fmt = (v: number) => (level === 'ghana' ? fmtInt(v) : v < 1 ? v.toFixed(2) : v.toFixed(1));
   const labels = breaks.length ? [`< ${fmt(breaks[0])}`, ...breaks.slice(0, -1).map((b, i) => `${fmt(b)}–${fmt(breaks[i + 1])}`), `> ${fmt(breaks[breaks.length - 1])}`] : [];
   return (
     <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-gray-600 mt-3">
-      <span className="font-medium text-gray-700">{level === 'ghana' ? 'Expected TB cases per 100,000 a year' : level === 'district' ? 'Town areas: expected cases per km² a year' : 'Expected cases per km² a year'}</span>
+      <span className="font-medium text-gray-700">{level === 'ghana' ? 'Expected TB cases per 100,000 people a year' : level === 'district' ? 'Town areas: expected cases per km² a year' : 'Expected cases per km² a year'}</span>
       {labels.map((l, i) => <span key={i} className="inline-flex items-center gap-1.5"><span className="w-3.5 h-3.5 rounded-sm" style={{ background: TB_RAMP[Math.min(i, TB_RAMP.length - 1)] }} />{l}</span>)}
       {level === 'district' && <span className="inline-flex items-center gap-1.5"><span className="w-3.5 h-3.5 rounded-sm bg-[#d1d5db]" />No population mapped</span>}
       {level === 'district' && <span className="w-full text-gray-500">Each area is the part of the district nearest to that town, village or suburb (OpenStreetMap).</span>}
       {level === 'town' && <span className="w-full text-gray-500">Blank parts of the town area have no people mapped by WorldPop (farmland, forest, water).</span>}
       {level === 'town' && (
         <>
-          <span className="inline-flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-[#1d4ed8]" />Health facility</span>
+          <span className="inline-flex items-center gap-1.5"><MapIconImg k="hospital" size={14} />Hospital</span>
+          <span className="inline-flex items-center gap-1.5"><MapIconImg k="clinic" size={14} />Clinic or CHPS</span>
           <span className="inline-flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-[#7c3aed]" />Gathering place</span>
-          <span className="inline-flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-white border border-gray-900" />High density point</span>
+          <span className="inline-flex items-center gap-1.5"><MapIconImg k="prison" size={14} />Prison</span>
+          <span className="inline-flex items-center gap-1.5"><MapIconImg k="mine" size={14} />Mine or quarry</span>
+          <span className="inline-flex items-center gap-1.5"><MapIconImg k="building" size={14} />High density point</span>
+        </>
+      )}
+      {flags && (
+        <>
+          <span className="inline-flex items-center gap-1"><img src={iconUrl('flag-green')} alt="" width={11} height={14} />Campaign under way</span>
+          <span className="inline-flex items-center gap-1"><img src={iconUrl('flag-red')} alt="" width={11} height={14} />Campaign not started</span>
         </>
       )}
     </div>
@@ -745,7 +810,7 @@ function PlanPanel({ d, town, spots, hexIds, reachHex, data, onCancel, onCreated
   );
 }
 
-function CreatedPanel({ id, data, onDone, goTab }: { id: string; data: TbData; onDone: () => void; goTab: (t: string) => void }) {
+function CreatedPanel({ id, data, onDone, goTab }: { id: string; data: TbData; onDone: () => void; goTab: (t: string, campaignId?: string) => void }) {
   const people = usePeople();
   const c = data.campaigns.data.find((x) => x.id === id);
   const tasks = data.tasks.data.filter((t) => t.campaign_id === id).sort((a, b) => (a.due || '').localeCompare(b.due || ''));
@@ -767,7 +832,7 @@ function CreatedPanel({ id, data, onDone, goTab }: { id: string; data: TbData; o
           ))}
         </ul>
       )}
-      <div className="flex justify-end gap-2 pt-3"><Button onClick={() => goTab('campaigns')}>Open in Campaigns</Button><Button variant="primary" onClick={onDone}>Done</Button></div>
+      <div className="flex justify-end gap-2 pt-3"><Button onClick={() => goTab('campaigns', id)}>Open in Campaigns</Button><Button variant="primary" onClick={onDone}>Done</Button></div>
     </Panel>
   );
 }

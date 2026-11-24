@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { MAP_ICONS, iconUrl } from './mapIcons';
 
 export const VENUE_COLORS: Record<string, string> = {
   market: '#7c3aed', 'transport hub': '#0891b2', prison: '#111827', 'mine / quarry': '#a16207', port: '#1e3a8a', 'industrial zone': '#57534e',
@@ -20,7 +21,9 @@ const BASEMAP_STYLE = 'https://tiles.openfreemap.org/styles/positron';
 const SATELLITE = { type: 'raster', tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'], tileSize: 256, maxzoom: 18, attribution: 'Imagery © Esri, Maxar, Earthstar Geographics' };
 const EMPTY = { type: 'FeatureCollection', features: [] };
 /** Optional layers a user can switch off in the layer control. */
-export const LAYER_GROUPS = { facilities: ['facilities'], venues: ['venues'], suggested: ['suggested'] } as const;
+export const LAYER_GROUPS = { campaigns: ['campaigns'], facilities: ['facilities'], venues: ['venues', 'venue-icons'], suggested: ['suggested'] } as const;
+/** Gathering places drawn as icons rather than dots. */
+const ICON_KINDS = ['prison', 'mine / quarry'];
 export type LayerGroup = keyof typeof LAYER_GROUPS;
 
 function step(prop: string, breaks: number[]) {
@@ -45,7 +48,9 @@ export type ExplorerMapProps = {
   focusTown?: string | null;
   selectedHexes?: string[];           // hexagons chosen for a campaign
   pins?: any | null;                  // screening points dropped by the user
-  suggested?: any | null;             // suggested screening point of each hexagon
+  suggested?: any | null;             // high density point of each hexagon
+  campaigns?: any | null;             // a flag per campaign spot; `progress` picks green or red
+  onCampaign?: (p: any) => void;
   hidden?: LayerGroup[];
   onSuggested?: (p: any) => void;
   pinMode?: boolean;                  // next click inside a selected hexagon drops a pin
@@ -76,12 +81,20 @@ export default function ExplorerMap(p: ExplorerMapProps) {
     const popup = new ml.Popup({ closeButton: false, closeOnClick: false, maxWidth: '300px', className: 'tb-tip' });
     // if the basemap cannot be reached, fall back to a plain background so the data still shows
     const fallback = setTimeout(() => { if (!m.isStyleLoaded()) m.setStyle({ version: 8, sources: {}, layers: [{ id: 'bg', type: 'background', paint: { 'background-color': '#eef0f2' } }] }); }, 8000);
-    m.on('load', () => {
+    // icons must be in the map's sprite before the layers that use them draw
+    const loadIcon = (id: string, src: string) => new Promise<void>((done) => {
+      const img = new Image();
+      img.onload = () => { if (!m.hasImage(id)) m.addImage(id, img, { pixelRatio: 2 }); done(); };
+      img.onerror = () => done();
+      img.src = src;
+    });
+    m.on('load', async () => {
       clearTimeout(fallback);
+      await Promise.all(MAP_ICONS.map((k) => loadIcon(k, iconUrl(k, 2))));
       const below = (m.getStyle().layers || []).find((l: any) => l.type === 'symbol')?.id;
       m.addSource('satellite', SATELLITE);
       m.addLayer({ id: 'satellite', type: 'raster', source: 'satellite', layout: { visibility: 'none' } }, below);
-      for (const id of ['districts', 'towns', 'hexes', 'townlabels', 'venues', 'facilities', 'suggested', 'pins']) m.addSource(id, { type: 'geojson', data: EMPTY, ...(id === 'districts' ? { promoteId: 'id' } : {}) });
+      for (const id of ['districts', 'towns', 'hexes', 'townlabels', 'venues', 'facilities', 'suggested', 'pins', 'campaigns']) m.addSource(id, { type: 'geojson', data: EMPTY, ...(id === 'districts' ? { promoteId: 'id' } : {}) });
       m.addLayer({ id: 'd-fill', type: 'fill', source: 'districts', paint: { 'fill-color': TB_RAMP[1], 'fill-opacity': 0.75 } }, below);
       m.addLayer({ id: 'd-line', type: 'line', source: 'districts', paint: { 'line-color': '#ffffff', 'line-width': 0.7 } }, below);
       m.addLayer({ id: 'd-focus', type: 'line', source: 'districts', paint: { 'line-color': '#0f172a', 'line-width': 2.5 }, filter: ['==', ['get', 'id'], ''] }, below);
@@ -89,42 +102,52 @@ export default function ExplorerMap(p: ExplorerMapProps) {
       m.addLayer({ id: 'h-fill', type: 'fill', source: 'hexes', paint: { 'fill-color': TB_RAMP[1], 'fill-opacity': 0.75 } }, below);
       m.addLayer({ id: 'h-sel', type: 'line', source: 'hexes', paint: { 'line-color': '#0f172a', 'line-width': 2.5 }, filter: ['in', ['get', 'h'], ['literal', []]] }, below);
       m.addLayer({ id: 'town-line', type: 'line', source: 'towns', paint: { 'line-color': ['case', ['get', 'focus'], '#0f172a', '#ffffff'], 'line-width': ['case', ['get', 'focus'], 3, 1.2] } }, below);
-      m.addLayer({ id: 'facilities', type: 'circle', source: 'facilities', paint: { 'circle-radius': ['match', ['get', 'kind'], 'hospital', 6, 4], 'circle-color': '#1d4ed8', 'circle-stroke-color': '#fff', 'circle-stroke-width': 1.5 } });
+      m.addLayer({ id: 'facilities', type: 'symbol', source: 'facilities', layout: {
+        'icon-image': ['match', ['get', 'kind'], 'hospital', 'hospital', 'clinic'], 'icon-size': ['match', ['get', 'kind'], 'hospital', 0.8, 0.6], 'icon-allow-overlap': true,
+      } });
       m.addLayer({ id: 'town-labels', type: 'symbol', source: 'townlabels', layout: { 'text-field': ['get', 'name'], 'text-font': ['Noto Sans Regular'], 'text-size': 12, 'text-anchor': 'center', 'text-optional': true }, paint: { 'text-color': '#0f172a', 'text-halo-color': '#fff', 'text-halo-width': 1.5 } });
-      m.addLayer({ id: 'venues', type: 'circle', source: 'venues', paint: {
+      m.addLayer({ id: 'venues', type: 'circle', source: 'venues', filter: ['!', ['in', ['get', 'kind'], ['literal', ICON_KINDS]]], paint: {
         'circle-radius': ['case', ['get', 'picked'], 9, 6],
         'circle-color': ['match', ['get', 'kind'], ...Object.entries(VENUE_COLORS).flat(), '#64748b'],
         'circle-stroke-color': ['case', ['get', 'picked'], '#0f172a', '#ffffff'], 'circle-stroke-width': ['case', ['get', 'picked'], 3, 1.5],
       } });
-      m.addLayer({ id: 'suggested', type: 'circle', source: 'suggested', paint: {
-        'circle-radius': ['case', ['get', 'sel'], 6, 3.5], 'circle-color': ['case', ['get', 'used'], '#dc2626', '#ffffff'],
-        'circle-stroke-color': '#0f172a', 'circle-stroke-width': ['case', ['get', 'sel'], 2, 1.2],
+      m.addLayer({ id: 'venue-icons', type: 'symbol', source: 'venues', filter: ['in', ['get', 'kind'], ['literal', ICON_KINDS]], layout: {
+        'icon-image': ['match', ['get', 'kind'], 'prison', 'prison', 'mine'], 'icon-size': ['case', ['get', 'picked'], 1.15, 0.85], 'icon-allow-overlap': true, 'icon-ignore-placement': true,
+      } });
+      m.addLayer({ id: 'suggested', type: 'symbol', source: 'suggested', layout: {
+        'icon-image': ['case', ['get', 'used'], 'building-used', 'building'], 'icon-size': ['case', ['get', 'sel'], 1, 0.7], 'icon-allow-overlap': true, 'icon-ignore-placement': true,
       } });
       m.addLayer({ id: 'pins', type: 'circle', source: 'pins', paint: { 'circle-radius': 8, 'circle-color': '#dc2626', 'circle-stroke-color': '#0f172a', 'circle-stroke-width': 3 } });
+      // campaign flags stand just right of their spot, so a high density point or pin under them stays visible
+      m.addLayer({ id: 'campaigns', type: 'symbol', source: 'campaigns', layout: {
+        'icon-image': ['case', ['get', 'progress'], 'flag-green', 'flag-red'], 'icon-anchor': 'bottom-left', 'icon-offset': [9, 1],
+        'icon-allow-overlap': true, 'icon-ignore-placement': true,
+      } });
       setReady(true);
     });
-    const layers = ['pins', 'suggested', 'venues', 'facilities', 'h-fill', 'town-fill', 'd-fill'];
+    const layers = ['campaigns', 'pins', 'suggested', 'venue-icons', 'venues', 'facilities', 'h-fill', 'town-fill', 'd-fill'];
     m.on('mousemove', (e: any) => {
       const f = m.queryRenderedFeatures(e.point, { layers: layers.filter((l) => m.getLayer(l)) })[0];
       m.getCanvas().style.cursor = props.current.pinMode ? 'crosshair' : f ? 'pointer' : '';
       const tip = props.current.tooltip;
       if (!f || !tip) return popup.remove();
-      const html = tip(f.properties, f.layer.id);
+      const html = tip(f.properties, f.layer.id === 'venue-icons' ? 'venues' : f.layer.id);
       if (!html) return popup.remove();
       popup.setLngLat(e.lngLat).setHTML(html).addTo(m);
     });
     m.on('mouseout', () => popup.remove());
     m.on('click', (e: any) => {
       const cur = props.current;
-      const f = m.queryRenderedFeatures(e.point, { layers: ['suggested', 'venues', 'h-fill', 'town-fill', 'd-fill'].filter((l) => m.getLayer(l) && m.getLayoutProperty(l, 'visibility') !== 'none') })[0];
+      const f = m.queryRenderedFeatures(e.point, { layers: ['campaigns', 'suggested', 'venue-icons', 'venues', 'h-fill', 'town-fill', 'd-fill'].filter((l) => m.getLayer(l) && m.getLayoutProperty(l, 'visibility') !== 'none') })[0];
       if (!f) return;
+      if (f.layer.id === 'campaigns') return cur.onCampaign?.(f.properties);
       if (f.layer.id === 'suggested') return cur.onSuggested?.(f.properties);
       if (cur.pinMode && f.layer.id === 'h-fill') {
         if ((cur.selectedHexes || []).includes(f.properties.h)) cur.onPin?.([e.lngLat.lng, e.lngLat.lat], f.properties.h);
         return;
       }
       if (f.layer.id === 'h-fill') cur.onHex?.(f.properties);
-      else if (f.layer.id === 'venues') props.current.onVenue?.(f.properties);
+      else if (f.layer.id === 'venues' || f.layer.id === 'venue-icons') props.current.onVenue?.(f.properties);
       else if (f.layer.id === 'town-fill') props.current.onTown?.(f.properties);
       else props.current.onDistrict?.(f.properties);
     });
@@ -146,7 +169,8 @@ export default function ExplorerMap(p: ExplorerMapProps) {
     m.getSource('hexes').setData(p.hexes || EMPTY);
     m.getSource('facilities').setData(p.facilities || EMPTY);
     m.getSource('suggested').setData(p.suggested || EMPTY);
-  }, [ready, p.districts, p.hexes, p.facilities, p.suggested]);
+    m.getSource('campaigns').setData(p.campaigns || EMPTY);
+  }, [ready, p.districts, p.hexes, p.facilities, p.suggested, p.campaigns]);
 
   useEffect(() => {
     const m = map.current;

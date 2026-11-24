@@ -32,6 +32,7 @@ export default function TbPage() {
   const [pref, setTab] = useLocalPref<Tab>('tb-tab-v3', 'explore');
   const tab: Tab = TABS.includes(pref) ? pref : 'explore';
   const [plan, setPlan] = useState<Partial<TbCampaign> | null>(null);
+  const [openId, setOpenId] = useState<string | null>(null); // campaign to open when arriving from a map flag
   const { dist, tasks } = data;
   const open = tasks.data.filter((t) => t.status !== 'done');
 
@@ -58,9 +59,9 @@ export default function TbPage() {
               ]}
             />
           </div>
-          {tab === 'explore' && <Explorer data={data} goTab={(t) => setTab(t as Tab)} />}
+          {tab === 'explore' && <Explorer data={data} goTab={(t, id) => { setOpenId(id || null); setTab(t as Tab); }} />}
           {tab === 'campaigns' && (
-            <Campaigns data={data} onPlan={setPlan} />
+            <Campaigns data={data} onPlan={setPlan} openId={openId} />
           )}
           {tab === 'data' && <Evidence data={data} />}
           {tab === 'analytics' && <Analytics data={data} />}

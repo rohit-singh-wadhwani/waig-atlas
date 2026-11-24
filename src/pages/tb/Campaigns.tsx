@@ -27,14 +27,14 @@ const GUIDES: { prefix: string; title: string; url: string }[] = [
 const mapsLink = (lat: number, lon: number) => `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`;
 
 /** Campaigns & tasks: what is active, who owns it, what is late; each task opens into a workspace. */
-export default function Campaigns({ data, onPlan }: { data: TbData; onPlan: (c: Partial<TbCampaign>) => void }) {
+export default function Campaigns({ data, onPlan, openId }: { data: TbData; onPlan: (c: Partial<TbCampaign>) => void; openId?: string | null }) {
   const me = useMe();
   const people = usePeople();
   const { campaigns, results, tasks, updates, playbooks, dist } = data;
   const [filter, setFilter] = useState<Filter>('open');
   const [mine, setMine] = useState(false);
   const [role, setRole] = useState('');
-  const [openCampaign, setOpenCampaign] = useState<string | null>(null);
+  const [openCampaign, setOpenCampaign] = useState<string | null>(openId || null);
   const [openTask, setOpenTask] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
   const [expanded, setExpanded] = useState<string[]>([]);
