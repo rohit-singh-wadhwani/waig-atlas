@@ -28,11 +28,15 @@ function unwrap(u) {
 /** Recent articles from the news feeds, one per headline. */
 async function articles(since) {
   const out = new Map();
+  const got = {};
   for (const q of QUERIES) {
     for (const feed of FEEDS) {
+      const host = new URL(feed(q)).hostname;
       try {
         const xml = await (await http(feed(q), {}, 30000)).text();
-        for (const it of parseFeed(xml)) {
+        const items = parseFeed(xml);
+        got[host] = (got[host] || 0) + items.length;
+        for (const it of items) {
           const [title, source = ''] = it.title.split(/ - (?=[^-]+$)/);
           const key = title.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
           if (!/tuberculosis|\btb\b/i.test(`${it.title} ${it.text}`) || (it.date && it.date.slice(0, 10) < since) || out.has(key)) continue;
@@ -43,6 +47,7 @@ async function articles(since) {
       }
     }
   }
+  log('feed items', got, '→', out.size, 'recent TB articles');
   return [...out.values()];
 }
 
@@ -88,7 +93,9 @@ Use only what the headline and snippet say; skip national items with no place, i
 
 ${list}`;
     const out = await gemini(prompt, { json: true, temperature: 0.1 });
-    for (const it of Array.isArray(out) ? out : Array.isArray(out?.items) ? out.items : []) {
+    const picks = Array.isArray(out) ? out : Array.isArray(out?.items) ? out.items : [];
+    log('Gemini picked', picks.length, 'place-tied articles of', arts.length);
+    for (const it of picks) {
       const a = arts[Number(it?.n)];
       if (!a || !KINDS.includes(it.kind)) continue;
       const p = place(it, gz);
