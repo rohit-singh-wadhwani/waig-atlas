@@ -112,7 +112,9 @@ export default function Explorer({ data, goTab }: { data: TbData; goTab: (t: str
   }, [venues, selHex, townHexes]);
   const pickedVenues = hexVenues.filter((v) => picked.includes(venueKey(v)));
   const spots: Spot[] = [...pickedVenues.map((v) => ({ name: v.name || KIND_LABEL[v.kind] || v.kind, kind: v.kind, lon: v.lon, lat: v.lat, pop_1km: v.pop_1km })), ...pins.map((x) => ({ name: x.name, kind: 'screening point', lon: x.lon, lat: x.lat }))];
-  const pinFc = useMemo(() => ({ type: 'FeatureCollection', features: pins.map((x) => ({ type: 'Feature', properties: { id: x.id, name: x.name }, geometry: { type: 'Point', coordinates: [x.lon, x.lat] } })) }), [pins]);
+  // a placed point that is a hexagon's high density point is already drawn as that (red) pin, so it gets no second marker
+  const isPointPin = (x: { h?: string; lon: number; lat: number }) => { const s = townHexes.find((h) => h.h === x.h)?.s; return !!s && s[0] === x.lon && s[1] === x.lat; };
+  const pinFc = useMemo(() => ({ type: 'FeatureCollection', features: pins.filter((x) => !isPointPin(x)).map((x) => ({ type: 'Feature', properties: { id: x.id, name: x.name }, geometry: { type: 'Point', coordinates: [x.lon, x.lat] } })) }), [pins, townHexes]); // eslint-disable-line react-hooks/exhaustive-deps
   const hexFc = useMemo(() => (town ? { type: 'FeatureCollection', features: townHexes.map((h) => ({ type: 'Feature', properties: { h: h.h, p: h.p, e: h.e, k: h.k, f: h.f, w: h.w, b: h.b, u: h.u, sp: h.sp, sb: h.sb, rd: h.rd }, geometry: { type: 'Polygon', coordinates: [[...h.r, h.r[0]]] } })) } : null), [town, townHexes]);
   // the suggested screening point of each hexagon in the open town (filled red once added to the campaign)
   const suggestedFc = useMemo(() => (town ? { type: 'FeatureCollection', features: townHexes.filter((h) => h.s).map((h) => ({ type: 'Feature', properties: { h: h.h, sp: h.sp, sb: h.sb, rd: h.rd, sel: selHex.includes(h.h), used: pins.some((x) => x.h === h.h && x.lon === h.s[0] && x.lat === h.s[1]) }, geometry: { type: 'Point', coordinates: h.s } })) } : null), [town, townHexes, selHex, pins]);

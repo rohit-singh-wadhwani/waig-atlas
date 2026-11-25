@@ -81,7 +81,8 @@ export default function ExplorerMap(p: ExplorerMapProps) {
     const popup = new ml.Popup({ closeButton: false, closeOnClick: false, maxWidth: '300px', className: 'tb-tip' });
     // if the basemap cannot be reached, fall back to a plain background so the data still shows
     const fallback = setTimeout(() => { if (!m.isStyleLoaded()) m.setStyle({ version: 8, glyphs: 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf', sources: {}, layers: [{ id: 'bg', type: 'background', paint: { 'background-color': '#eef0f2' } }] }); }, 8000);
-    // icons must be in the map's sprite before the layers that use them draw
+    // icons must be in the map's sprite before the layers that use them draw. They are named tb-… because the
+    // basemap's own sprite already has icons called building, hospital and so on, which would be shown instead.
     const loadIcon = (id: string, src: string) => new Promise<void>((done) => {
       const img = new Image();
       img.onload = () => { if (!m.hasImage(id)) m.addImage(id, img, { pixelRatio: 2 }); done(); };
@@ -90,7 +91,7 @@ export default function ExplorerMap(p: ExplorerMapProps) {
     });
     m.on('load', async () => {
       clearTimeout(fallback);
-      await Promise.all(MAP_ICONS.map((k) => loadIcon(k, iconUrl(k, 2))));
+      await Promise.all(MAP_ICONS.map((k) => loadIcon(`tb-${k}`, iconUrl(k, 2))));
       const below = (m.getStyle().layers || []).find((l: any) => l.type === 'symbol')?.id;
       m.addSource('satellite', SATELLITE);
       m.addLayer({ id: 'satellite', type: 'raster', source: 'satellite', layout: { visibility: 'none' } }, below);
@@ -103,7 +104,7 @@ export default function ExplorerMap(p: ExplorerMapProps) {
       m.addLayer({ id: 'h-sel', type: 'line', source: 'hexes', paint: { 'line-color': '#0f172a', 'line-width': 2.5 }, filter: ['in', ['get', 'h'], ['literal', []]] }, below);
       m.addLayer({ id: 'town-line', type: 'line', source: 'towns', paint: { 'line-color': ['case', ['get', 'focus'], '#0f172a', '#ffffff'], 'line-width': ['case', ['get', 'focus'], 3, 1.2] } }, below);
       m.addLayer({ id: 'facilities', type: 'symbol', source: 'facilities', layout: {
-        'icon-image': ['match', ['get', 'kind'], 'hospital', 'hospital', 'clinic'], 'icon-size': ['match', ['get', 'kind'], 'hospital', 0.8, 0.6], 'icon-allow-overlap': true,
+        'icon-image': ['match', ['get', 'kind'], 'hospital', 'tb-hospital', 'tb-clinic'], 'icon-size': ['match', ['get', 'kind'], 'hospital', 0.8, 0.6], 'icon-allow-overlap': true,
       } });
       m.addLayer({ id: 'town-labels', type: 'symbol', source: 'townlabels', layout: { 'text-field': ['get', 'name'], 'text-font': ['Noto Sans Regular'], 'text-size': 12, 'text-anchor': 'center', 'text-optional': true }, paint: { 'text-color': '#0f172a', 'text-halo-color': '#fff', 'text-halo-width': 1.5 } });
       m.addLayer({ id: 'venues', type: 'circle', source: 'venues', filter: ['!', ['in', ['get', 'kind'], ['literal', ICON_KINDS]]], paint: {
@@ -112,16 +113,16 @@ export default function ExplorerMap(p: ExplorerMapProps) {
         'circle-stroke-color': ['case', ['get', 'picked'], '#0f172a', '#ffffff'], 'circle-stroke-width': ['case', ['get', 'picked'], 3, 1.5],
       } });
       m.addLayer({ id: 'venue-icons', type: 'symbol', source: 'venues', filter: ['in', ['get', 'kind'], ['literal', ICON_KINDS]], layout: {
-        'icon-image': ['match', ['get', 'kind'], 'prison', 'prison', 'mine'], 'icon-size': ['case', ['get', 'picked'], 1.15, 0.85], 'icon-allow-overlap': true, 'icon-ignore-placement': true,
+        'icon-image': ['match', ['get', 'kind'], 'prison', 'tb-prison', 'tb-mine'], 'icon-size': ['case', ['get', 'picked'], 1.15, 0.85], 'icon-allow-overlap': true, 'icon-ignore-placement': true,
       } });
       m.addLayer({ id: 'suggested', type: 'symbol', source: 'suggested', layout: {
-        'icon-image': ['case', ['get', 'used'], 'building-used', 'building'], 'icon-anchor': 'bottom', 'icon-size': ['case', ['get', 'sel'], 1.1, 0.85],
+        'icon-image': ['case', ['get', 'used'], 'tb-building-used', 'tb-building'], 'icon-anchor': 'bottom', 'icon-size': ['case', ['get', 'sel'], 1.1, 0.85],
         'icon-allow-overlap': true, 'icon-ignore-placement': true,
       } });
       m.addLayer({ id: 'pins', type: 'circle', source: 'pins', paint: { 'circle-radius': 8, 'circle-color': '#dc2626', 'circle-stroke-color': '#0f172a', 'circle-stroke-width': 3 } });
       // campaign flags stand just right of their spot, clear of a high density pin or placed pin on the same spot
       m.addLayer({ id: 'campaigns', type: 'symbol', source: 'campaigns', layout: {
-        'icon-image': ['case', ['get', 'progress'], 'flag-green', 'flag-red'], 'icon-anchor': 'bottom-left', 'icon-offset': [17, 1],
+        'icon-image': ['case', ['get', 'progress'], 'tb-flag-green', 'tb-flag-red'], 'icon-anchor': 'bottom-left', 'icon-offset': [17, 1],
         'icon-allow-overlap': true, 'icon-ignore-placement': true,
       } });
       setReady(true);
