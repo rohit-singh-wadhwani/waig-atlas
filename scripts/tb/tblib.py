@@ -23,6 +23,7 @@ def log(*a):
     print(time.strftime('%H:%M:%S'), *a, flush=True)
 
 
+RISK_NAMES = {'hiv': 'HIV', 'und': 'undernourishment', 'smk': 'smoking', 'alc': 'alcohol', 'dia': 'diabetes'}
 GROUPS = ('TB numbers', 'Who lives where', 'Who is at risk', 'Places and access', 'Boundaries', 'Not used yet')
 
 
@@ -105,7 +106,7 @@ def map_friction(mode='Walking'):
         try:
             ds = rasterio.open(path)
             ds.read(1)  # make sure the whole file is readable
-            source(f'Malaria Atlas Project: {"walking" if mode == "Walking" else "motorised"} friction surface (travel speed)', url.split('&subset')[0], True, f'coverage {cov}', group='Places and access', gives=f'{"Walking" if mode == "Walking" else "Driving"} speed for every ~1 km of Ghana (2020)', use='Minutes to the nearest clinic (walk) or hospital (drive)', aurum=7, page='https://malariaatlas.org/project-resources/accessibility-to-healthcare/')
+            source(f'Malaria Atlas Project: {"walking" if mode == "Walking" else "motorised"} friction surface (travel speed)', url.split('&subset')[0], True, f'{(re.search(r"(20\d\d)", cov) or [None, "latest"])[1]} surface, clipped to Ghana', group='Places and access', gives=f'{"Walking" if mode == "Walking" else "Driving"} speed for every ~1 km of Ghana (2020)', use='Minutes to the nearest clinic (walk) or hospital (drive)', aurum=7, page='https://malariaatlas.org/project-resources/accessibility-to-healthcare/')
             return ds
         except Exception as e:
             log('friction raster unreadable, retrying', e)
@@ -210,7 +211,7 @@ def who_tb():
                 pick = next((r for ag in ('all', 'a', '15plus') for r in cand if r.get('age_group') == ag), None)
                 if pick and pick.get('best') not in (None, '', 'NA'):
                     attr[rf] = float(pick['best'])
-        source(f'WHO: Ghana TB cases attributable to risk factors ({attr_year})', 'https://extranet.who.int/tme/generateCSV.asp?ds=estimates_age_sex', bool(attr), ', '.join(f'{k} {round(v):,}' for k, v in attr.items()), page=WHO_PAGE, group='TB numbers', gives='TB cases linked to HIV, undernourishment, smoking, alcohol', use='Weights for the regional risk adjustment')
+        source(f'WHO: Ghana TB cases attributable to risk factors ({attr_year})', 'https://extranet.who.int/tme/generateCSV.asp?ds=estimates_age_sex', bool(attr), ' · '.join(f'{RISK_NAMES.get(k, k)} {round(v):,}' for k, v in attr.items()), page=WHO_PAGE, group='TB numbers', gives='TB cases linked to HIV, undernourishment, smoking, alcohol', use='Weights for the regional risk adjustment')
     except Exception as e:
         source('WHO: Ghana TB cases attributable to risk factors', 'https://extranet.who.int/tme/generateCSV.asp?ds=estimates_age_sex', False, str(e)[:160], page=WHO_PAGE, group='TB numbers', gives='TB cases linked to HIV, undernourishment, smoking, alcohol', use='Weights for the regional risk adjustment')
     latest['attributable'], latest['attributable_year'] = attr, attr_year

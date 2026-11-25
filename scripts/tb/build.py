@@ -54,7 +54,7 @@ from shapely.ops import unary_union, voronoi_diagram
 from shapely.strtree import STRtree
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from tblib import (OUT, NOW, SOURCES, S, get, source, not_used, log, r2, km_xy, norm_region,  # noqa: E402
+from tblib import (OUT, NOW, SOURCES, GROUPS, S, get, source, not_used, log, r2, km_xy, norm_region,  # noqa: E402
                    map_friction, travel_field, haversine_km, dhs_regional, who_tb)
 import osm  # noqa: E402
 import buildings  # noqa: E402
@@ -170,13 +170,13 @@ def census():
             r['one_room'] = one / hh
             if r.get('hh_size'):
                 r['crowding'] = r['hh_size'] / r['rooms']
-    source('GSS 2021 Census: household size and sleeping rooms by district', src + 'Housing/', True, group='Who is at risk', gives='Household size and sleeping rooms by district', use='Crowded homes flag', page='https://statsbank.statsghana.gov.gh/')
+    source('GSS 2021 Census: household size and sleeping rooms by district', src + 'Housing/', True, f'{sum(1 for r in D.values() if r.get("crowding"))} areas', group='Who is at risk', gives='Household size and sleeping rooms by district', use='Crowded homes flag', page='https://statsbank.statsghana.gov.gh/')
     # multidimensional poverty
     dims, v = px('Multidimensional%20Poverty/MPI_by_locality.px', {'poverty_measure': ['Incidence of Poverty (H)'], 'locality': ['All locality types'], 'Geographic_Area': '*'})
     gi = dims.index('Geographic_Area')
     for k, val in v.items():
         row(k[gi])['poverty'] = val
-    source('GSS 2021 Census: multidimensional poverty by district', src + 'Multidimensional%20Poverty/', True, group='Who is at risk', gives='Share of people in multidimensional poverty, by district', use='Poorer districts flag', page='https://statsbank.statsghana.gov.gh/')
+    source('GSS 2021 Census: multidimensional poverty by district', src + 'Multidimensional%20Poverty/', True, f'{sum(1 for r in D.values() if r.get("poverty") is not None)} areas', group='Who is at risk', gives='Share of people in multidimensional poverty, by district', use='Poorer districts flag', page='https://statsbank.statsghana.gov.gh/')
     return D
 
 
@@ -740,7 +740,7 @@ def main():
         p = os.path.join(OUT, old)
         if os.path.exists(p):
             os.remove(p)
-    json.dump({'updated_at': NOW, 'sources': SOURCES,
+    json.dump({'updated_at': NOW, 'sources': SOURCES, 'source_groups': GROUPS,
                'method': {'far_minutes': FAR_MIN, 'catchment_km': CATCH_KM, 'dense_per_km2': DENSE, 'town_per_km2': TOWN, 'spot_window_m': SPOT_WIN * 100, 'snap_km': SNAP_KM, 'who_age_year': who_year, 'age_groups': [f'{lo}-{hi if hi < 200 else "+"}' for lo, hi, _ in age_groups],
                           'attributable': {k: r2(v, 0) for k, v in attr.items()}, 'attributable_year': nat.get('attributable_year'), 'census_missing': missing},
                'national': {'year': nat['year'], 'incidence': nat['inc_num'], 'incidence_lo': (nat.get('inc_100k_lo') or 0) * nat['pop'] / 1e5 if nat.get('inc_100k_lo') else None,

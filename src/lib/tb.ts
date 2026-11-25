@@ -56,6 +56,7 @@ export type TbTaskUpdate = { id: string; task_id: string; campaign_id?: string |
 export type TbMeta = {
   updated_at: string; error?: string;
   /** Every dataset the pipeline pulled or considered: ok true = pulled, false = failed this run, null = not used (note says why). */
+  source_groups?: string[];
   sources: { name: string; url: string; page?: string; ok: boolean | null; note?: string; at: string; group?: string; gives?: string; use?: string; aurum?: number | null }[];
   method?: { far_minutes: number; catchment_km: number; who_age_year?: number; age_groups?: string[]; attributable: Record<string, number>; attributable_year: number | null; census_missing?: string[] };
   national?: { year: number; incidence: number; incidence_lo?: number | null; incidence_hi?: number | null; notified: number; cdr: number; pop: number; rate_100k?: number; tbhiv_pct?: number | null };

@@ -24,8 +24,11 @@ export default function Evidence({ data }: { data: TbData }) {
   const groups = useMemo(() => {
     const g = new Map<string, typeof sources>();
     for (const s of sources) g.set(s.group || 'Other', [...(g.get(s.group || 'Other') || []), s]);
-    return [...g.entries()].sort((a, b) => Number(a[0] === 'Not used yet') - Number(b[0] === 'Not used yet'));
-  }, [sources]);
+    // the pipeline sets the order; anything it doesn't name (the news feed) comes before "Not used yet"
+    const order = [...(meta?.source_groups || []).filter((x) => x !== 'Not used yet'), 'News', 'Not used yet'];
+    const at = (k: string) => (order.indexOf(k) < 0 ? order.length - 1.5 : order.indexOf(k));
+    return [...g.entries()].sort((a, b) => at(a[0]) - at(b[0]));
+  }, [sources, meta]);
   const notifDistricts = dist.data.notifiedDistricts;
   const dh = dist.data.dhims2;
   const P = data.P;
