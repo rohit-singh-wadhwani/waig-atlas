@@ -32,7 +32,7 @@ const WHO_STEPS = [
   { n: 5, short: 'Monitor', label: 'Monitor the cascade', ref: '2.7', where: 'Analytics tab: screening cascade and losses' },
 ];
 
-/** District-level signals: where a district sits among all 261 (1 = worst). Higher is worse unless flipped. */
+/** District-level signals: where a district sits among all districts (1 = worst). Higher is worse unless flipped. */
 const SIGNALS: { key: keyof TbDistrict; label: string; fmt: (v: number) => string; worse: 'high' | 'low'; flag: string; source: string }[] = [
   { key: 'poverty', label: 'Multidimensional poverty', fmt: (v) => `${v.toFixed(0)}% of people`, worse: 'high', flag: 'Poorer', source: 'GSS Census 2021' },
   { key: 'crowding', label: 'People per sleeping room', fmt: (v) => v.toFixed(1), worse: 'high', flag: 'Crowded homes', source: 'GSS Census 2021' },
