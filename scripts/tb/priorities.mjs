@@ -135,7 +135,8 @@ async function news(queries) {
           const [title, source = ''] = it.title.split(/ - (?=[^-]+$)/);
           const key = title.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
           if (!/tuberculosis|\btb\b/i.test(`${it.title} ${it.text}`) || (it.date && it.date.slice(0, 10) < since) || out.has(key)) continue;
-          out.set(key, { kind: 'news', title, source, url: unwrap(it.url), date: it.date ? it.date.slice(0, 10) : null, text: (it.text || '').replace(title, '').slice(0, 300) });
+          const url = unwrap(it.url);
+          out.set(key, { kind: 'news', title, source: source || new URL(url).hostname.replace(/^(www|mobile)\./, ''), url, date: it.date ? it.date.slice(0, 10) : null, text: (it.text || '').replace(title, '').slice(0, 300) });
         }
       } catch (e) {
         log('feed failed', host, q, e.message);
