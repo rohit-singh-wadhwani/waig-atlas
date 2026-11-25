@@ -99,7 +99,7 @@ def gss_districts():
             g = g.buffer(0)
         c = g.representative_point()
         out.append({'i': i, 'id': slug(r['District']), 'name': r['District'], 'region': r['Region'], 'geom': g, 'lon': c.x, 'lat': c.y})
-    source('Ghana Statistical Service: 2021 Census district boundaries', url, True, f'{len(out)} districts', page='https://statsbank.statsghana.gov.gh/', group='Boundaries', gives='The 261 districts used by GHS and DHIMS2', use='Map, district totals, joining DHIMS2')
+    source('Ghana Statistical Service: 2021 Census district boundaries', url, True, f'{len(out)} districts', page='https://statsbank.statsghana.gov.gh/', group='Boundaries', gives=f'The {len(out)} districts used by GHS and DHIMS2', use='Map, district totals, joining DHIMS2')
     return out
 
 
@@ -321,7 +321,7 @@ def who_kemri_facilities():
             if _in_ghana(lon, lat):
                 name = str(r.get(c_name) or '').strip()
                 out.append({'lon': lon, 'lat': lat, 'name': name, 'kind': _fac_kind(f"{r.get(c_type) or ''} {name}"), 'lab': False, 'own': _owner(r.get(c_own)) or 'public', 'src': 'WHO/KEMRI 2019'})
-        source(f'WHO/KEMRI public health facilities, Ghana ({len(out)})', 'https://data.humdata.org/dataset/health-facilities-in-sub-saharan-africa', bool(out), 'Maina et al. 2019, Scientific Data; public sector only', group='Places and access', gives='Public health facilities incl. CHPS (2019), merged with OpenStreetMap, duplicates within 100 m removed', use='Nearest clinic, hospital and lab; referral')
+        source(f'WHO/KEMRI public health facilities, Ghana ({len(out)})', 'https://data.humdata.org/dataset/health-facilities-in-sub-saharan-africa', bool(out), f'{len(out):,} facilities · Maina et al. 2019, Scientific Data; public sector only', group='Places and access', gives='Public health facilities incl. CHPS (2019), merged with OpenStreetMap, duplicates within 100 m removed', use='Nearest clinic, hospital and lab; referral')
         return out
     except Exception as e:
         source('WHO/KEMRI public health facilities, Ghana', 'https://data.humdata.org/dataset/health-facilities-in-sub-saharan-africa', False, str(e)[:200], group='Places and access', gives='Public health facilities incl. CHPS (2019)', use='Nearest clinic, hospital and lab; referral')

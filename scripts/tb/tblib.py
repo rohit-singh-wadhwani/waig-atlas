@@ -112,7 +112,7 @@ def map_friction(mode='Walking'):
         try:
             ds = rasterio.open(path)
             ds.read(1)  # make sure the whole file is readable
-            source(f'Malaria Atlas Project: {"walking" if mode == "Walking" else "motorised"} friction surface (travel speed)', url.split('&subset')[0], True, f'{_year(cov)} surface, clipped to Ghana', group='Places and access', gives=f'{"Walking" if mode == "Walking" else "Driving"} speed for every ~1 km of Ghana (2020)', use='Minutes to the nearest clinic (walk) or hospital (drive)', aurum=7, page='https://malariaatlas.org/project-resources/accessibility-to-healthcare/')
+            source(f'Malaria Atlas Project: {"walking" if mode == "Walking" else "motorised"} friction surface (travel speed)', url.split('&subset')[0], True, f'{_year(cov)} surface, clipped to Ghana', group='Places and access', gives=f'{"Walking" if mode == "Walking" else "Driving"} speed for every ~1 km of Ghana', use='Minutes to the nearest clinic (walk) or hospital (drive)', aurum=7, page='https://malariaatlas.org/project-resources/accessibility-to-healthcare/')
             return ds
         except Exception as e:
             log('friction raster unreadable, retrying', e)
