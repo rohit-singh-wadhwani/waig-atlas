@@ -1,13 +1,101 @@
 {
- "updated_at": "2026-11-24T11:30:16.068625+00:00",
+ "updated_at": "2026-11-25T07:36:14.364048+00:00",
  "sources": [
+  {
+   "name": "VIIRS night-time lights",
+   "url": "https://eogdata.mines.edu/products/vnl/",
+   "page": "https://eogdata.mines.edu/products/vnl/",
+   "ok": null,
+   "note": "Downloads need a registered account, so the automatic weekly refresh cannot fetch them. Poverty comes from Census 2021; urbanicity from population and building density.",
+   "at": "2026-11-25T07:36:14.364048+00:00",
+   "group": "Not used yet",
+   "gives": "Night-time light intensity, ~500 m",
+   "use": "Poverty and urbanicity proxy",
+   "aurum": 12
+  },
+  {
+   "name": "ESA WorldCover land use",
+   "url": "https://esa-worldcover.org/",
+   "page": "https://esa-worldcover.org/",
+   "ok": null,
+   "note": "Not needed for current outputs; blank areas are already explained by WorldPop (no people mapped). Can be added to name what blank areas are.",
+   "at": "2026-11-25T07:36:14.364048+00:00",
+   "group": "Not used yet",
+   "gives": "Land cover classes, 10 m",
+   "use": "Urbanicity; what blank areas are",
+   "aurum": 12
+  },
+  {
+   "name": "HRSL and GHSL gridded population",
+   "url": "https://human-settlement.emergency.copernicus.eu/",
+   "page": "https://human-settlement.emergency.copernicus.eu/",
+   "ok": null,
+   "note": "WorldPop 2026 is used instead: a second population layer would give two totals for the same place. GHSL density thresholds are applied to WorldPop.",
+   "at": "2026-11-25T07:36:14.364048+00:00",
+   "group": "Not used yet",
+   "gives": "Population on 30-100 m grids",
+   "use": "Population denominators",
+   "aurum": 10
+  },
+  {
+   "name": "DHS 2022 cluster data (GPS)",
+   "url": "https://dhsprogram.com/data/Access-Instructions.cfm",
+   "page": "https://dhsprogram.com/data/Access-Instructions.cfm",
+   "ok": null,
+   "note": "Cluster files need an approved DHS data request. Regional DHS 2022 indicators are used meanwhile.",
+   "at": "2026-11-25T07:36:14.364048+00:00",
+   "group": "Not used yet",
+   "gives": "Survey clusters with nutrition and wealth, GPS displaced",
+   "use": "Covariates and validation",
+   "aurum": 15
+  },
+  {
+   "name": "District Assembly lists of markets, stations, ports, prisons, mines",
+   "url": "https://www.ghanadistricts.gov.gh/",
+   "page": "https://www.ghanadistricts.gov.gh/",
+   "ok": null,
+   "note": "No public machine-readable lists found; OpenStreetMap is used. AIG to supply or verify.",
+   "at": "2026-11-25T07:36:14.364048+00:00",
+   "group": "Not used yet",
+   "gives": "Official points of interest",
+   "use": "Congregate and occupational exposure",
+   "aurum": 14
+  },
+  {
+   "name": "Ghana Health Service facility list (2012)",
+   "url": "https://data.gov.gh/dataset/health-facilities-ghana",
+   "page": "https://data.gov.gh/dataset/health-facilities-ghana",
+   "ok": null,
+   "note": "data.gov.gh is not reachable from the automatic refresh. The WHO/KEMRI list covers public facilities including CHPS.",
+   "at": "2026-11-25T07:36:14.364048+00:00",
+   "group": "Not used yet",
+   "gives": "Public, CHAG and private facilities",
+   "use": "Facility list",
+   "aurum": null
+  },
+  {
+   "name": "DHIMS2, TB e-Tracker, GxAlert",
+   "url": "https://dhims.chimgh.org/",
+   "page": "https://dhims.chimgh.org/",
+   "ok": null,
+   "note": "Need data-sharing agreements with NTP / GHS. The DHIMS2 connector is built and waiting for a read-only account.",
+   "at": "2026-11-25T07:36:14.364048+00:00",
+   "group": "Not used yet",
+   "gives": "District TB notifications, case records, GeneXpert results",
+   "use": "Measured district gaps and outcomes",
+   "aurum": null
+  },
   {
    "name": "Ghana Statistical Service: 2021 Census district boundaries",
    "url": "https://statsbank.statsghana.gov.gh/assets/geofiles.zip",
    "page": "https://statsbank.statsghana.gov.gh/",
    "ok": true,
    "note": "261 districts",
-   "at": "2026-11-24T11:30:16.068625+00:00"
+   "at": "2026-11-25T07:36:14.364048+00:00",
+   "group": "Boundaries",
+   "gives": "The 261 districts used by GHS and DHIMS2",
+   "use": "Map, district totals, joining DHIMS2",
+   "aurum": null
   },
   {
    "name": "WHO: Ghana TB cases attributable to risk factors (2024)",
@@ -15,15 +103,23 @@
    "page": "https://www.who.int/teams/global-programme-on-tuberculosis-and-lung-health/data",
    "ok": true,
    "note": "hiv 5,300, und 2,600, smk 500, alc 3,200",
-   "at": "2026-11-24T11:30:16.068625+00:00"
+   "at": "2026-11-25T07:36:14.364048+00:00",
+   "group": "TB numbers",
+   "gives": "TB cases linked to HIV, undernourishment, smoking, alcohol",
+   "use": "Weights for the regional risk adjustment",
+   "aurum": null
   },
   {
    "name": "WHO Global TB Programme: Ghana estimates and notifications (latest 2024)",
    "url": "https://www.who.int/teams/global-programme-on-tuberculosis-and-lung-health/data",
    "page": "https://www.who.int/teams/global-programme-on-tuberculosis-and-lung-health/data",
    "ok": true,
-   "note": "",
-   "at": "2026-11-24T11:30:16.068625+00:00"
+   "note": "43,000 estimated, 20,009 notified in 2024",
+   "at": "2026-11-25T07:36:14.364048+00:00",
+   "group": "TB numbers",
+   "gives": "Ghana's estimated and notified TB cases, by year",
+   "use": "National totals: expected, found, missed",
+   "aurum": null
   },
   {
    "name": "WHO: Ghana TB incidence by age group and sex (2024)",
@@ -31,7 +127,11 @@
    "page": "https://extranet.who.int/tme/generateCSV.asp?ds=estimates_age_sex",
    "ok": true,
    "note": "0-4, 5-9, 10-14, 15-19, 20-24, 25-34, 35-44, 45-54, 55-64, 65-+",
-   "at": "2026-11-24T11:30:16.068625+00:00"
+   "at": "2026-11-25T07:36:14.364048+00:00",
+   "group": "TB numbers",
+   "gives": "Ghana TB cases by age group and sex",
+   "use": "Expected cases from each district's age and sex mix",
+   "aurum": null
   },
   {
    "name": "DHS Program API: Ghana DHS 2022 (thinness, tobacco use) and 2014 (HIV), by region",
@@ -39,39 +139,59 @@
    "page": "https://www.statcompiler.com/en/",
    "ok": true,
    "note": "18 regions",
-   "at": "2026-11-24T11:30:16.068625+00:00"
+   "at": "2026-11-25T07:36:14.364048+00:00",
+   "group": "Who is at risk",
+   "gives": "HIV, thinness and tobacco use by region",
+   "use": "Regional risk adjustment of expected cases",
+   "aurum": null
   },
   {
    "name": "GSS 2021 Census: population by district, single age and sex",
    "url": "https://statsbank.statsghana.gov.gh/pxweb/en/PHC%202021%20StatsBank/Population/",
-   "page": "https://statsbank.statsghana.gov.gh/pxweb/en/PHC%202021%20StatsBank/Population/",
+   "page": "https://statsbank.statsghana.gov.gh/",
    "ok": true,
    "note": "289 areas",
-   "at": "2026-11-24T11:30:16.068625+00:00"
+   "at": "2026-11-25T07:36:14.364048+00:00",
+   "group": "Who lives where",
+   "gives": "Population by district, single age and sex",
+   "use": "Each district's age and sex mix",
+   "aurum": null
   },
   {
    "name": "GSS 2021 Census: household size and sleeping rooms by district",
    "url": "https://statsbank.statsghana.gov.gh/pxweb/en/PHC%202021%20StatsBank/Housing/",
-   "page": "https://statsbank.statsghana.gov.gh/pxweb/en/PHC%202021%20StatsBank/Housing/",
+   "page": "https://statsbank.statsghana.gov.gh/",
    "ok": true,
    "note": "",
-   "at": "2026-11-24T11:30:16.068625+00:00"
+   "at": "2026-11-25T07:36:14.364048+00:00",
+   "group": "Who is at risk",
+   "gives": "Household size and sleeping rooms by district",
+   "use": "Crowded homes flag",
+   "aurum": null
   },
   {
    "name": "GSS 2021 Census: multidimensional poverty by district",
    "url": "https://statsbank.statsghana.gov.gh/pxweb/en/PHC%202021%20StatsBank/Multidimensional%20Poverty/",
-   "page": "https://statsbank.statsghana.gov.gh/pxweb/en/PHC%202021%20StatsBank/Multidimensional%20Poverty/",
+   "page": "https://statsbank.statsghana.gov.gh/",
    "ok": true,
    "note": "",
-   "at": "2026-11-24T11:30:16.068625+00:00"
+   "at": "2026-11-25T07:36:14.364048+00:00",
+   "group": "Who is at risk",
+   "gives": "Share of people in multidimensional poverty, by district",
+   "use": "Poorer districts flag",
+   "aurum": null
   },
   {
    "name": "OpenStreetMap (Geofabrik Ghana snapshot)",
    "url": "https://download.geofabrik.de/africa/ghana-latest.osm.pbf",
    "page": "https://download.geofabrik.de/africa/ghana.html",
    "ok": true,
-   "note": "111 MB: 1332 health facilities, 1875 congregate and occupational sites, 9033 named places, 10597 community venues, 4,671,556 road points",
-   "at": "2026-11-24T11:30:16.068625+00:00"
+   "note": "111 MB: 1332 health facilities, 1875 congregate and occupational sites, 9033 named places, 10597 community venues, 4,675,138 road points",
+   "at": "2026-11-25T07:36:14.364048+00:00",
+   "group": "Places and access",
+   "gives": "Health facilities, towns and villages, markets, lorry stations, ports, industrial zones, prisons, mines, schools, places of worship, roads",
+   "use": "Town areas, gathering places, key populations, road snapping",
+   "aurum": 14
   },
   {
    "name": "WHO/KEMRI public health facilities, Ghana (1878)",
@@ -79,15 +199,11 @@
    "page": "https://data.humdata.org/dataset/health-facilities-in-sub-saharan-africa",
    "ok": true,
    "note": "Maina et al. 2019, Scientific Data; public sector only",
-   "at": "2026-11-24T11:30:16.068625+00:00"
-  },
-  {
-   "name": "Ghana Health Service facility list",
-   "url": "https://data.gov.gh/dataset/health-facilities-ghana",
-   "page": "https://data.gov.gh/dataset/health-facilities-ghana",
-   "ok": false,
-   "note": "HTTPSConnectionPool(host='data.gov.gh', port=443): Max retries exceeded with url: /api/3/action/package_show?id=health-facilities-ghana (Caused by SSLError(SSLCertVerificationError(1, '[SSL: CERTIFICA",
-   "at": "2026-11-24T11:30:16.068625+00:00"
+   "at": "2026-11-25T07:36:14.364048+00:00",
+   "group": "Places and access",
+   "gives": "Public health facilities incl. CHPS (2019), merged with OpenStreetMap, duplicates within 100 m removed",
+   "use": "Nearest clinic, hospital and lab; referral",
+   "aurum": null
   },
   {
    "name": "Google-Microsoft Open Buildings (combined by VIDA)",
@@ -95,7 +211,11 @@
    "page": "https://source.coop/vida/google-microsoft-open-buildings",
    "ok": true,
    "note": "13,623,299 buildings in Ghana (1707 MB)",
-   "at": "2026-11-24T11:30:16.068625+00:00"
+   "at": "2026-11-25T07:36:14.364048+00:00",
+   "group": "Who lives where",
+   "gives": "Every building footprint in Ghana (Google + Microsoft, combined by VIDA)",
+   "use": "Buildings per hexagon, people per building, high density points",
+   "aurum": 11
   },
   {
    "name": "DHIMS II extract: monthly reported TB, Ashanti, Eastern and Volta, 2016-2023 (Mendeley Data)",
@@ -103,7 +223,11 @@
    "page": "https://data.mendeley.com/datasets/r3c3cr7x6g/1",
    "ok": true,
    "note": "Volta 96 months, Eastern 96 months, Ashanti 96 months",
-   "at": "2026-11-24T11:30:16.068625+00:00"
+   "at": "2026-11-25T07:36:14.364048+00:00",
+   "group": "TB numbers",
+   "gives": "Monthly reported TB, Ashanti, Eastern and Volta, 2016-2023",
+   "use": "Reported trend in those regions",
+   "aurum": null
   },
   {
    "name": "Malaria Atlas Project: walking friction surface (travel speed)",
@@ -111,7 +235,11 @@
    "page": "https://malariaatlas.org/project-resources/accessibility-to-healthcare/",
    "ok": true,
    "note": "coverage Accessibility__202001_Global_Walking_Only_Friction_Surface",
-   "at": "2026-11-24T11:30:16.068625+00:00"
+   "at": "2026-11-25T07:36:14.364048+00:00",
+   "group": "Places and access",
+   "gives": "Walking speed for every ~1 km of Ghana (2020)",
+   "use": "Minutes to the nearest clinic (walk) or hospital (drive)",
+   "aurum": 7
   },
   {
    "name": "Malaria Atlas Project: motorised friction surface (travel speed)",
@@ -119,15 +247,23 @@
    "page": "https://malariaatlas.org/project-resources/accessibility-to-healthcare/",
    "ok": true,
    "note": "coverage Accessibility__202001_Global_Motorized_Friction_Surface",
-   "at": "2026-11-24T11:30:16.068625+00:00"
+   "at": "2026-11-25T07:36:14.364048+00:00",
+   "group": "Places and access",
+   "gives": "Driving speed for every ~1 km of Ghana (2020)",
+   "use": "Minutes to the nearest clinic (walk) or hospital (drive)",
+   "aurum": 7
   },
   {
    "name": "WorldPop 2026 population (100 m, R2025A)",
    "url": "https://data.worldpop.org/GIS/Population/Global_2015_2030/R2025A/2026/GHA/v1/100m/constrained/gha_pop_2026_CN_100m_R2025A_v1.tif",
    "page": "https://hub.worldpop.org/project/categories?id=3",
    "ok": true,
-   "note": "",
-   "at": "2026-11-24T11:30:16.068625+00:00"
+   "note": "35,370,229 people across the 261 districts",
+   "at": "2026-11-25T07:36:14.364048+00:00",
+   "group": "Who lives where",
+   "gives": "Population on a 100 m grid, 2026",
+   "use": "People in every district, town, hexagon and spot; settlement density",
+   "aurum": 10
   }
  ],
  "method": {
