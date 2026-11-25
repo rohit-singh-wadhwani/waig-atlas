@@ -214,7 +214,7 @@ def worldpop_2026():
             with open(path, 'wb') as f:
                 for chunk in r.iter_content(1 << 20):
                     f.write(chunk)
-    source('WorldPop 2026 population (100 m, R2025A)', WP_URL, True, page='https://hub.worldpop.org/project/categories?id=3', group='Who lives where', gives='Population on a 100 m grid, 2026', use='People in every district, town, hexagon and spot; settlement density', aurum=10)
+    source('WorldPop 2026 population (100 m, R2025A)', WP_URL, True, page='https://hub.worldpop.org/project/categories?id=3', group='Who lives where', gives='Population on a 100 m grid, 2026', use='People in every district, town, hexagon and spot; settlement density', aurum='used')
     return path
 
 

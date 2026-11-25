@@ -33,10 +33,16 @@ RISK_NAMES = {'hiv': 'HIV', 'und': 'undernourishment', 'smk': 'smoking', 'alc': 
 GROUPS = ('TB numbers', 'Who lives where', 'Who is at risk', 'Places and access', 'Boundaries', 'Not used yet')
 
 
+AURUM = ('used', 'replaced', 'share')  # recommended by Aurum and in use · recommended but better data used · Aurum to share
+
+
 def source(name, url, ok, note='', page=None, group='Other', gives='', use='', aurum=None):
     """Log a dataset for the Data sources page. `ok` True = pulled, False = failed this run, None = not used (the note
     says why). `page` is the dataset's landing page (shown to users), `url` what the pipeline fetched; `gives` and
-    `use` say what it holds and what Atlas does with it; `aurum` is its row number in Aurum's data list, if it has one."""
+    `use` say what it holds and what Atlas does with it. `aurum` ties it to Aurum: 'used' = on Aurum's recommended
+    list and in use, 'replaced' = recommended but better data is used (the note says which), 'share' = data Aurum
+    or its partners need to share."""
+    assert aurum in (None, *AURUM), aurum
     SOURCES.append({'name': name, 'url': url, 'page': page or url, 'ok': ok, 'note': note, 'at': NOW, 'group': group, 'gives': gives, 'use': use, 'aurum': aurum})
     log('SOURCE', name, {True: 'OK', False: 'FAILED', None: 'NOT USED'}[ok], note)
 
@@ -44,14 +50,14 @@ def source(name, url, ok, note='', page=None, group='Other', gives='', use='', a
 def not_used():
     """Datasets considered (most from Aurum's list) but not pulled, with the reason, so the Data sources page shows them."""
     NU = 'Not used yet'
-    source('VIIRS night-time lights', 'https://eogdata.mines.edu/products/vnl/', None, 'Downloads need a registered account, so the automatic weekly refresh cannot fetch them. Poverty comes from Census 2021; urbanicity from population and building density.', group=NU, gives='Night-time light intensity, ~500 m', use='Poverty and urbanicity proxy', aurum=12)
-    source('ESA WorldCover land use', 'https://esa-worldcover.org/', None, 'Not needed for current outputs; blank areas are already explained by WorldPop (no people mapped). Can be added to name what blank areas are.', group=NU, gives='Land cover classes, 10 m', use='Urbanicity; what blank areas are', aurum=12)
-    source('HRSL and GHSL gridded population', 'https://human-settlement.emergency.copernicus.eu/', None, 'WorldPop 2026 is used instead: a second population layer would give two totals for the same place. GHSL density thresholds are applied to WorldPop.', group=NU, gives='Population on 30-100 m grids', use='Population denominators', aurum=10)
-    source('DHS 2022 cluster data (GPS)', 'https://dhsprogram.com/data/Access-Instructions.cfm', None, 'Cluster files need an approved DHS data request. Regional DHS 2022 indicators are used meanwhile.', group=NU, gives='Survey clusters with nutrition and wealth, GPS displaced', use='Covariates and validation', aurum=15)
-    source('District Assembly lists of markets, stations, ports, prisons, mines', 'https://www.ghanadistricts.gov.gh/', None, 'No public machine-readable lists found; OpenStreetMap is used. AIG to supply or verify.', group=NU, gives='Official points of interest', use='Congregate and occupational exposure', aurum=14)
-    source('Ghana Health Service facility list (2012)', 'https://data.gov.gh/dataset/health-facilities-ghana', None, 'data.gov.gh is not reachable from the automatic refresh. The WHO/KEMRI list covers public facilities including CHPS.', group=NU, gives='Public, CHAG and private facilities', use='Facility list')
+    source('VIIRS night-time lights', 'https://eogdata.mines.edu/products/vnl/', None, 'Downloads need a registered account, so the automatic weekly refresh cannot fetch them. Poverty comes from Census 2021; urbanicity from population and building density.', group=NU, gives='Night-time light intensity, ~500 m', use='Poverty and urbanicity proxy', aurum='replaced')
+    source('ESA WorldCover land use', 'https://esa-worldcover.org/', None, 'Not needed for current outputs; blank areas are already explained by WorldPop (no people mapped). Can be added to name what blank areas are.', group=NU, gives='Land cover classes, 10 m', use='Urbanicity; what blank areas are', aurum='replaced')
+    source('HRSL and GHSL gridded population', 'https://human-settlement.emergency.copernicus.eu/', None, 'WorldPop 2026 is used instead: a second population layer would give two totals for the same place. GHSL density thresholds are applied to WorldPop.', group=NU, gives='Population on 30-100 m grids', use='Population denominators', aurum='replaced')
+    source('DHS 2022 cluster data (GPS)', 'https://dhsprogram.com/data/Access-Instructions.cfm', None, 'Cluster files need an approved DHS data request. Regional DHS 2022 indicators are used meanwhile.', group=NU, gives='Survey clusters with nutrition and wealth, GPS displaced', use='Covariates and validation', aurum='replaced')
+    source('District Assembly lists of markets, stations, ports, prisons, mines', 'https://www.ghanadistricts.gov.gh/', None, 'No public machine-readable lists found; OpenStreetMap is used. AIG to supply or verify.', group=NU, gives='Official points of interest', use='Congregate and occupational exposure', aurum='share')
+    source('Ghana Health Service facility list (2012)', 'https://data.gov.gh/dataset/health-facilities-ghana', None, 'data.gov.gh is not reachable from the automatic refresh, and the 2012 list is old. The WHO/KEMRI list covers public facilities including CHPS; a current GHS list with private and CHAG facilities would fill the gap.', group=NU, gives='Public, CHAG and private facilities', use='Facility list', aurum='share')
     source('X (Twitter) posts', 'https://developer.x.com/en/products/x-api', None, 'Reading posts needs a paid X API plan. The AI ranking reads news and research instead.', group=NU, gives='Public posts naming Ghanaian places', use='Early reports of TB clusters')
-    source('DHIMS2, TB e-Tracker, GxAlert', 'https://dhims.chimgh.org/', None, 'Need data-sharing agreements with NTP / GHS. The DHIMS2 connector is built and waiting for a read-only account.', group=NU, gives='District TB notifications, case records, GeneXpert results', use='Measured district gaps and outcomes')
+    source('DHIMS2, TB e-Tracker, GxAlert', 'https://dhims.chimgh.org/', None, 'Need data-sharing agreements with NTP / GHS. The DHIMS2 connector is built and waiting for a read-only account.', group=NU, gives='District TB notifications, case records, GeneXpert results', use='Measured district gaps and outcomes', aurum='share')
 
 
 def get(url, **kw):
@@ -113,7 +119,7 @@ def map_friction(mode='Walking'):
         try:
             ds = rasterio.open(path)
             ds.read(1)  # make sure the whole file is readable
-            source(f'Malaria Atlas Project: {"walking" if mode == "Walking" else "motorised"} friction surface (travel speed)', url.split('&subset')[0], True, f'{_year(cov)} surface, clipped to Ghana', group='Places and access', gives=f'{"Walking" if mode == "Walking" else "Driving"} speed for every ~1 km of Ghana', use='Minutes to the nearest clinic (walk) or hospital (drive)', aurum=7, page='https://malariaatlas.org/project-resources/accessibility-to-healthcare/')
+            source(f'Malaria Atlas Project: {"walking" if mode == "Walking" else "motorised"} friction surface (travel speed)', url.split('&subset')[0], True, f'{_year(cov)} surface, clipped to Ghana', group='Places and access', gives=f'{"Walking" if mode == "Walking" else "Driving"} speed for every ~1 km of Ghana', use='Minutes to the nearest clinic (walk) or hospital (drive)', aurum='used', page='https://malariaatlas.org/project-resources/accessibility-to-healthcare/')
             return ds
         except Exception as e:
             log('friction raster unreadable, retrying', e)

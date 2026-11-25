@@ -6,6 +6,13 @@ import { fmtTime } from '../../lib/format';
 import { fmtInt, tbSave } from '../../lib/tb';
 import type { TbData } from './TbPage';
 
+/** How a dataset relates to Aurum: on its recommended list (in use, or replaced by better data) or data it should share. */
+const AURUM: Record<'used' | 'replaced' | 'share', { label: string; cls: string }> = {
+  used: { label: 'Aurum recommended · in use', cls: 'bg-green-50 text-green-800' },
+  replaced: { label: 'Aurum recommended · better data used', cls: 'bg-sky-50 text-sky-800' },
+  share: { label: 'Aurum to share', cls: 'bg-amber-50 text-amber-800' },
+};
+
 const cleanName = (n: string) => n.replace(/\s*\((\d[\d,]*)\s*\w*\)$/, '');
 
 export default function Evidence({ data }: { data: TbData }) {
@@ -49,7 +56,7 @@ export default function Evidence({ data }: { data: TbData }) {
       </div>
 
       <Card pad={false}>
-        <div className="p-6 pb-2"><CardHeader title="Datasets" subtitle="Listed straight from the weekly pipeline run: what it pulled, the counts it got, and what it chose not to use and why. Tagged rows come from Aurum's data list. Click a name to open the source." /></div>
+        <div className="p-6 pb-2"><CardHeader title="Datasets" subtitle="Listed straight from the weekly pipeline run: what it pulled, the counts it got, and what it chose not to use and why. Tags show Aurum's part: datasets it recommended (in use, or replaced by better data, with the reason under This run) and data it needs to share. Click a name to open the source." /></div>
         <div className="overflow-x-auto">
           <table className="w-full text-[15px]">
             <thead>
@@ -64,7 +71,7 @@ export default function Evidence({ data }: { data: TbData }) {
                   <tr key={i} className="border-b border-gray-100 align-top">
                     <td className="px-6 py-3 min-w-[240px]">
                       <ExtLink href={s.page || s.url}>{cleanName(s.name)}</ExtLink>
-                      {s.aurum != null && <span className="ml-2 inline-block rounded bg-amber-50 px-1.5 py-px text-[11px] font-medium text-amber-800 align-[1px]">Aurum #{s.aurum}</span>}
+                      {s.aurum && <span className={cx('mt-1 block w-fit rounded px-1.5 py-px text-[11px] font-medium', AURUM[s.aurum].cls)}>{AURUM[s.aurum].label}</span>}
                     </td>
                     <td className="px-3 py-3 text-sm text-gray-700 min-w-[200px]">{s.gives}</td>
                     <td className="px-3 py-3 text-sm text-gray-700 min-w-[180px]">{s.use}</td>

@@ -50,9 +50,9 @@ def load():
                 lons.append(xy[:, 0].astype('float32'))
                 lats.append(xy[:, 1].astype('float32'))
         lon, lat = np.concatenate(lons), np.concatenate(lats)
-        source('Google-Microsoft Open Buildings (combined by VIDA)', f'{BUCKET}/{PREFIX}', True, f'{len(lon):,} buildings in Ghana ({size >> 20} MB)', page=PAGE, group='Who lives where', gives='Every building footprint in Ghana (Google + Microsoft, combined by VIDA)', use='Buildings per hexagon, people per building, high density points', aurum=11)
+        source('Google-Microsoft Open Buildings (combined by VIDA)', f'{BUCKET}/{PREFIX}', True, f'{len(lon):,} buildings in Ghana ({size >> 20} MB)', page=PAGE, group='Who lives where', gives='Every building footprint in Ghana (Google + Microsoft, combined by VIDA)', use='Buildings per hexagon, people per building, high density points', aurum='used')
         log('buildings', len(lon))
         return lon, lat
     except Exception as e:
-        source('Google-Microsoft Open Buildings (combined by VIDA)', f'{BUCKET}/{PREFIX}', False, str(e)[:200], page=PAGE, group='Who lives where', gives='Every building footprint in Ghana', use='Buildings per hexagon, people per building, high density points', aurum=11)
+        source('Google-Microsoft Open Buildings (combined by VIDA)', f'{BUCKET}/{PREFIX}', False, str(e)[:200], page=PAGE, group='Who lives where', gives='Every building footprint in Ghana', use='Buildings per hexagon, people per building, high density points', aurum='used')
         return None, None
