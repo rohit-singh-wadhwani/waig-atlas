@@ -135,6 +135,14 @@ export default function Explorer({ data, goTab }: { data: TbData; goTab: (t: str
   // one flag per campaign spot (or at its town, else its district, when it has no spots): green once any task has
   // moved or any result is in, red while nothing has happened since it was created
   const [flag, setFlag] = useState<string | null>(null);
+  // "Go to its town" from a campaign: the district opens first, then the town once that district's detail has loaded
+  const [goTown, setGoTown] = useState<{ district: string; town: string } | null>(null);
+  useEffect(() => {
+    if (!goTown || !det || det.id !== goTown.district) return;
+    const t = det.towns.find((x) => x.name === goTown.town);
+    if (t) setTKey(townKey(t));
+    setGoTown(null);
+  }, [goTown, det]);
   const flagFc = useMemo(() => {
     const features: any[] = [];
     for (const c of campaigns.data) {
@@ -201,12 +209,13 @@ export default function Explorer({ data, goTab }: { data: TbData; goTab: (t: str
             <span className="absolute top-2.5 left-1/2 -translate-x-1/2 z-10 hidden md:block rounded-full bg-white/90 px-3 py-1 text-xs text-gray-600 shadow-sm pointer-events-none">{!d ? 'Click a district to open it' : !town ? 'Click a town to open it' : pinMode ? 'Click inside a selected hexagon to place the point' : 'Select hexagons, then pick spots or place a point'}</span>
             <ExplorerMap districts={geo} districtMetric="expected_100k" districtBreaks={dBreaks} focusId={districtId} hexes={hexFc} hexBreaks={hBreaks} towns={townFc} townBreaks={tBreaks} venues={venueFc} facilities={facFc}
               picked={picked} focusTown={tKey} selectedHexes={selHex} pins={pinFc} pinMode={pinMode} onHex={toggleHex} onPin={dropPin} satellite={satellite} fit={fit}
-              suggested={suggestedFc} campaigns={flagFc} onCampaign={(pr) => setFlag(pr.id)} hidden={hidden} onSuggested={(pr) => { const h = townHexes.find((x) => x.h === pr.h); if (h) pickSuggested(h); }} onDistrict={(pr) => setDistrictId(pr.id)} onTown={(pr) => setTKey(pr.key)} onVenue={onVenue} tooltip={tip} />
+              suggested={suggestedFc} campaigns={flagFc} onCampaign={(pr) => { setFlag(pr.id); panelRef.current?.scrollTo({ top: 0, behavior: 'smooth' }); }} hidden={hidden} onSuggested={(pr) => { const h = townHexes.find((x) => x.h === pr.h); if (h) pickSuggested(h); }} onDistrict={(pr) => setDistrictId(pr.id)} onTown={(pr) => setTKey(pr.key)} onVenue={onVenue} tooltip={tip} />
           </div>
-          {flag && <CampaignFlagCard id={flag} data={data} onClose={() => setFlag(null)} onOpen={() => goTab('campaigns', flag)} />}
           <MapLegend level={!d ? 'ghana' : town ? 'town' : 'district'} breaks={!d ? dBreaks : town ? hBreaks : tBreaks} flags={flagFc.features.length > 0 && !hidden.includes('campaigns')} />
         </div>
         <aside ref={panelRef} className="min-w-0 space-y-4 xl:min-h-0 xl:overflow-y-auto xl:pr-1 xl:pb-4">
+          {flag && <CampaignPanel id={flag} data={data} onClose={() => setFlag(null)} onOpen={() => goTab('campaigns', flag)}
+            onGo={(c) => { if (c.district_id) { setDistrictId(c.district_id); if (c.town) setGoTown({ district: c.district_id, town: c.town }); } }} />}
           {!d && <GhanaPanel list={list} nat={nat} natRate={natRate} rank={rank} campaigns={campaigns.data} notified={dist.data.notifiedDistricts} onOpen={setDistrictId} goTab={goTab} news={data.news.data} />}
           {d && !town && <DistrictPanel d={d} det={det} loading={detail.loading} rank={rank} n={list.length} venues={venues} campaigns={campaigns.data.filter((c) => c.district_id === d.id)} onTown={(t) => setTKey(townKey(t))} rules={rules} natRate={natRate} />}
           {d && town && !planning && !created && (
@@ -253,8 +262,8 @@ function Steps({ current }: { current: number }) {
   );
 }
 
-/** What a campaign flag opens: where the campaign stands, its tasks and its cascade so far. */
-function CampaignFlagCard({ id, data, onClose, onOpen }: { id: string; data: TbData; onClose: () => void; onOpen: () => void }) {
+/** What clicking a campaign flag shows in the side panel: where the campaign stands, its spots, tasks and cascade. */
+function CampaignPanel({ id, data, onClose, onOpen, onGo }: { id: string; data: TbData; onClose: () => void; onOpen: () => void; onGo: (c: TbCampaign) => void }) {
   const c = data.campaigns.data.find((x) => x.id === id);
   if (!c) return null;
   const ct = data.tasks.data.filter((t) => t.campaign_id === id);
@@ -265,24 +274,25 @@ function CampaignFlagCard({ id, data, onClose, onOpen }: { id: string; data: TbD
   const late = ct.filter((t) => t.status !== 'done' && t.due && t.due < today).length;
   const tot = cascadeTotals(cr);
   const started = cr.length > 0 || done + doing > 0;
-  const rows: [string, number][] = [['Screened', tot.screened], ['Presumptive', tot.presumptive], ['Tested', tot.tested], ['Confirmed', tot.confirmed], ['Started treatment', tot.started_treatment]];
+  const steps: [string, number][] = [['Screened', tot.screened], ['Presumptive', tot.presumptive], ['Tested', tot.tested], ['Confirmed', tot.confirmed], ['Treated', tot.started_treatment]];
   return (
-    <div className="absolute left-2.5 bottom-2.5 z-20 w-[320px] max-w-[calc(100%-20px)] rounded-xl border border-gray-200 bg-white p-4 shadow-lg text-sm">
-      <div className="flex items-start gap-2">
-        <img src={iconUrl(started ? 'flag-green' : 'flag-red')} alt="" width={14} height={18} className="mt-0.5" />
-        <div className="min-w-0 flex-1">
-          <div className="font-semibold text-gray-900">{c.name}</div>
-          <div className="text-xs text-gray-500">{[c.town, c.district_name].filter(Boolean).join(', ')}{c.start_date ? ` · starts ${c.start_date}` : ''} · {c.status}</div>
-        </div>
-        <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-700" aria-label="Close"><Icon name="x" size={16} /></button>
+    <Panel title={<span className="inline-flex items-center gap-2"><img src={iconUrl(started ? 'flag-green' : 'flag-red')} alt="" width={13} height={17} />{c.name}</span>}
+      sub={`${[c.town, c.district_name].filter(Boolean).join(', ')}${c.start_date ? ` · starts ${c.start_date}` : ''} · ${c.status}`}
+      right={<button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-700" aria-label="Close campaign"><Icon name="x" size={18} /></button>}>
+      <p className={cx('text-sm font-medium', started ? 'text-green-700' : 'text-red-700')}>{started ? 'Under way' : 'Not started: no task moved and no results since it was created'}</p>
+      <div className="mt-3">
+        <div className="flex justify-between text-xs text-gray-600"><span>{done} of {ct.length} tasks done{doing ? ` · ${doing} in progress` : ''}</span>{late > 0 && <span className="text-red-700">{late} overdue</span>}</div>
+        <div className="mt-1 h-1.5 rounded-full bg-gray-100 overflow-hidden"><div className="h-full bg-green-500" style={{ width: `${ct.length ? (done / ct.length) * 100 : 0}%` }} /></div>
       </div>
-      <p className={cx('mt-2 text-xs font-medium', started ? 'text-green-700' : 'text-red-700')}>{started ? 'Under way' : 'Not started: no task moved and no results since it was created'}</p>
-      <div className="mt-2 text-xs text-gray-600">{done} of {ct.length} tasks done{doing ? ` · ${doing} in progress` : ''}{late ? <span className="text-red-700"> · {late} overdue</span> : null}{c.spots?.length ? ` · ${c.spots.length} spot${c.spots.length > 1 ? 's' : ''}` : ''}</div>
-      {cr.length > 0 ? (
-        <dl className="mt-2 grid grid-cols-5 gap-1 text-center">{rows.map(([k, v]) => <div key={k} className="rounded-lg bg-gray-50 px-1 py-1.5"><dt className="text-[10px] leading-tight text-gray-500">{k}</dt><dd className="font-semibold tabular-nums">{fmtInt(v)}</dd></div>)}</dl>
-      ) : <p className="mt-2 text-xs text-gray-500">No results reported yet.</p>}
-      <div className="mt-3 flex justify-end"><Button variant="primary" onClick={onOpen}>Open campaign</Button></div>
-    </div>
+      {c.spots?.length ? <div className="mt-3 text-xs text-gray-600"><span className="font-medium text-gray-700">Spots:</span> {c.spots.map((sp) => sp.name).join(' · ')}</div> : null}
+      {cr.length > 0
+        ? <dl className="mt-3 grid grid-cols-5 gap-1.5 text-center">{steps.map(([k, v]) => <div key={k} className="rounded-lg bg-gray-50 px-1 py-2"><dt className="text-[11px] text-gray-500">{k}</dt><dd className="font-semibold tabular-nums">{fmtInt(v)}</dd></div>)}</dl>
+        : <p className="mt-3 text-xs text-gray-500">No results reported yet.</p>}
+      <div className="mt-4 flex flex-wrap justify-end gap-2">
+        {c.district_id && <Button onClick={() => onGo(c)}>Go to {c.town ? 'its town' : 'its district'}</Button>}
+        <Button variant="primary" onClick={onOpen}>Open campaign</Button>
+      </div>
+    </Panel>
   );
 }
 
@@ -323,7 +333,7 @@ function Crumb({ children, on, active }: { children: React.ReactNode; on?: () =>
 }
 
 /** A map icon at legend size. */
-const MapIconImg = ({ k, size = 16 }: { k: MapIcon; size?: number }) => <img src={iconUrl(k)} alt="" width={size} height={size} className="shrink-0" />;
+const MapIconImg = ({ k, size = 16 }: { k: MapIcon; size?: number }) => <img src={iconUrl(k)} alt="" height={size} className="shrink-0 w-auto" style={{ height: size }} />;
 
 function MapLegend({ level, breaks, flags }: { level: 'ghana' | 'district' | 'town'; breaks: number[]; flags: boolean }) {
   const [open, setOpen] = useState(false);

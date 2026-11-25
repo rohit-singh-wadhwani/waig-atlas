@@ -115,12 +115,13 @@ export default function ExplorerMap(p: ExplorerMapProps) {
         'icon-image': ['match', ['get', 'kind'], 'prison', 'prison', 'mine'], 'icon-size': ['case', ['get', 'picked'], 1.15, 0.85], 'icon-allow-overlap': true, 'icon-ignore-placement': true,
       } });
       m.addLayer({ id: 'suggested', type: 'symbol', source: 'suggested', layout: {
-        'icon-image': ['case', ['get', 'used'], 'building-used', 'building'], 'icon-size': ['case', ['get', 'sel'], 1, 0.7], 'icon-allow-overlap': true, 'icon-ignore-placement': true,
+        'icon-image': ['case', ['get', 'used'], 'building-used', 'building'], 'icon-anchor': 'bottom', 'icon-size': ['case', ['get', 'sel'], 1.1, 0.85],
+        'icon-allow-overlap': true, 'icon-ignore-placement': true,
       } });
       m.addLayer({ id: 'pins', type: 'circle', source: 'pins', paint: { 'circle-radius': 8, 'circle-color': '#dc2626', 'circle-stroke-color': '#0f172a', 'circle-stroke-width': 3 } });
-      // campaign flags stand just right of their spot, so a high density point or pin under them stays visible
+      // campaign flags stand just right of their spot, clear of a high density pin or placed pin on the same spot
       m.addLayer({ id: 'campaigns', type: 'symbol', source: 'campaigns', layout: {
-        'icon-image': ['case', ['get', 'progress'], 'flag-green', 'flag-red'], 'icon-anchor': 'bottom-left', 'icon-offset': [9, 1],
+        'icon-image': ['case', ['get', 'progress'], 'flag-green', 'flag-red'], 'icon-anchor': 'bottom-left', 'icon-offset': [17, 1],
         'icon-allow-overlap': true, 'icon-ignore-placement': true,
       } });
       setReady(true);

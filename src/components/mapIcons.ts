@@ -1,15 +1,16 @@
 // Icons drawn on the TB map, kept in one place so the map and its legend show the same pictures.
-// Each is an SVG on a 24 x 24 grid (flags 22 x 28); the map loads them at twice the size for sharp edges.
+// Each is an SVG on a 24 x 24 grid (pins 30 x 38, flags 22 x 28); the map loads them at twice the size for sharp edges.
 
 const svg = (w: number, h: number, body: string, scale: number) =>
   `<svg xmlns="http://www.w3.org/2000/svg" width="${w * scale}" height="${h * scale}" viewBox="0 0 ${w} ${h}">${body}</svg>`;
 
-const BUILDING = (bg: string, ink: string) =>
-  `<circle cx="12" cy="12" r="10.5" fill="${bg}" stroke="#0f172a" stroke-width="1.5"/>` +
-  `<rect x="8" y="6.5" width="8" height="11.5" rx="0.6" fill="${ink}"/>` +
-  `<rect x="9.4" y="8.2" width="1.9" height="1.9" fill="${bg}"/><rect x="12.7" y="8.2" width="1.9" height="1.9" fill="${bg}"/>` +
-  `<rect x="9.4" y="11.4" width="1.9" height="1.9" fill="${bg}"/><rect x="12.7" y="11.4" width="1.9" height="1.9" fill="${bg}"/>` +
-  `<rect x="11.1" y="14.8" width="1.8" height="3.2" fill="${bg}"/>`;
+// a map pin with a building inside: big and dark enough to read on satellite imagery; its tip marks the spot
+const PIN = (fill: string) =>
+  `<path d="M15 37C15 37 3 23.6 3 14.5A12 12 0 0 1 27 14.5C27 23.6 15 37 15 37Z" fill="${fill}" stroke="#ffffff" stroke-width="2"/>` +
+  `<rect x="10" y="7.5" width="10" height="13" rx="0.8" fill="#ffffff"/>` +
+  `<rect x="11.8" y="9.5" width="2.4" height="2.4" fill="${fill}"/><rect x="15.8" y="9.5" width="2.4" height="2.4" fill="${fill}"/>` +
+  `<rect x="11.8" y="13.4" width="2.4" height="2.4" fill="${fill}"/><rect x="15.8" y="13.4" width="2.4" height="2.4" fill="${fill}"/>` +
+  `<rect x="13.8" y="17" width="2.4" height="3.5" fill="${fill}"/>`;
 
 const FLAG = (fill: string) =>
   `<line x1="2.5" y1="2" x2="2.5" y2="27" stroke="#0f172a" stroke-width="2" stroke-linecap="round"/>` +
@@ -17,9 +18,9 @@ const FLAG = (fill: string) =>
 
 const BODIES = {
   /** a hexagon's high density point */
-  building: [24, 24, BUILDING('#ffffff', '#0f172a')],
+  building: [30, 38, PIN('#0f172a')],
   /** a high density point already chosen for a campaign */
-  'building-used': [24, 24, BUILDING('#dc2626', '#ffffff')],
+  'building-used': [30, 38, PIN('#dc2626')],
   /** a hospital */
   hospital: [24, 24, `<rect x="2" y="2" width="20" height="20" rx="4" fill="#1d4ed8" stroke="#ffffff" stroke-width="1.5"/><path d="M12 6.5V17.5M6.5 12H17.5" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>`],
   /** a clinic, CHPS compound or other facility */
