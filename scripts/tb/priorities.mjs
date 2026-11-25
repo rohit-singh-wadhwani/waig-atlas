@@ -25,7 +25,7 @@ const FEEDS = [
   (q) => `https://www.bing.com/news/search?format=rss&count=30&q=${encodeURIComponent(q)}`,
 ];
 // Ghanaian outlets often leave the country out of a local headline, so their reports count as Ghanaian
-const GH_OUTLETS = /ghana|myjoyonline|joynews|citi ?newsroom|(daily )?graphic( online)?$|graphic\.com\.gh|3news|adom|starr ?fm|peace ?fm|pulse\.com\.gh|\bgna\b|asaase|todaygh|norvanreports/i;
+const GH_OUTLETS = /ghana|myjoyonline|joynews|citi ?newsroom|^(daily )?graphic( online)?$|graphic\.com\.gh|3news|adom|starr ?fm|peace ?fm|pulse\.com\.gh|\bgna\b|asaase|todaygh|norvanreports/i;
 const isGhanaian = (it) => /ghana/i.test(`${it.title} ${it.text}`) || GH_OUTLETS.test(it.source) || /\.gh(\/|$)/.test((() => { try { return new URL(it.url).hostname; } catch { return ''; } })());
 const NATIONAL = ['tuberculosis Ghana', 'TB screening Ghana', 'TB outbreak Ghana', 'Ghana Health Service tuberculosis', 'tuberculosis Ghana prison OR mine OR market'];
 
