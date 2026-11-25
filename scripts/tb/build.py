@@ -54,7 +54,7 @@ from shapely.ops import unary_union, voronoi_diagram
 from shapely.strtree import STRtree
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from tblib import (OUT, NOW, SOURCES, S, get, source, log, r2, km_xy, norm_region,  # noqa: E402
+from tblib import (OUT, NOW, SOURCES, S, get, source, not_used, log, r2, km_xy, norm_region,  # noqa: E402
                    map_friction, travel_field, haversine_km, dhs_regional, who_tb)
 import osm  # noqa: E402
 import buildings  # noqa: E402
@@ -99,7 +99,7 @@ def gss_districts():
             g = g.buffer(0)
         c = g.representative_point()
         out.append({'i': i, 'id': slug(r['District']), 'name': r['District'], 'region': r['Region'], 'geom': g, 'lon': c.x, 'lat': c.y})
-    source('Ghana Statistical Service: 2021 Census district boundaries', url, True, f'{len(out)} districts', page='https://statsbank.statsghana.gov.gh/')
+    source('Ghana Statistical Service: 2021 Census district boundaries', url, True, f'{len(out)} districts', page='https://statsbank.statsghana.gov.gh/', group='Boundaries', gives='The 261 districts used by GHS and DHIMS2', use='Map, district totals, joining DHIMS2')
     return out
 
 
@@ -144,7 +144,7 @@ def census():
         r.setdefault('ages', {}).setdefault(k[si][0].lower(), {})
         a = int(m.group(1))
         r['ages'][k[si][0].lower()][a] = r['ages'][k[si][0].lower()].get(a, 0) + val
-    source('GSS 2021 Census: population by district, single age and sex', src + 'Population/', True, f'{sum(1 for r in D.values() if r.get("ages"))} areas')
+    source('GSS 2021 Census: population by district, single age and sex', src + 'Population/', True, f'{sum(1 for r in D.values() if r.get("ages"))} areas', group='Who lives where', gives='Population by district, single age and sex', use='Each district\'s age and sex mix', page='https://statsbank.statsghana.gov.gh/')
     # crowding: household size / mean sleeping rooms
     dims, v = px('Population/avg_hhsize_table.px', {'Locality': ['All Locality Types'], 'Geographic_Area': '*'})
     gi = dims.index('Geographic_Area')
@@ -170,13 +170,13 @@ def census():
             r['one_room'] = one / hh
             if r.get('hh_size'):
                 r['crowding'] = r['hh_size'] / r['rooms']
-    source('GSS 2021 Census: household size and sleeping rooms by district', src + 'Housing/', True)
+    source('GSS 2021 Census: household size and sleeping rooms by district', src + 'Housing/', True, group='Who is at risk', gives='Household size and sleeping rooms by district', use='Crowded homes flag', page='https://statsbank.statsghana.gov.gh/')
     # multidimensional poverty
     dims, v = px('Multidimensional%20Poverty/MPI_by_locality.px', {'poverty_measure': ['Incidence of Poverty (H)'], 'locality': ['All locality types'], 'Geographic_Area': '*'})
     gi = dims.index('Geographic_Area')
     for k, val in v.items():
         row(k[gi])['poverty'] = val
-    source('GSS 2021 Census: multidimensional poverty by district', src + 'Multidimensional%20Poverty/', True)
+    source('GSS 2021 Census: multidimensional poverty by district', src + 'Multidimensional%20Poverty/', True, group='Who is at risk', gives='Share of people in multidimensional poverty, by district', use='Poorer districts flag', page='https://statsbank.statsghana.gov.gh/')
     return D
 
 
@@ -202,7 +202,7 @@ def who_age_sex():
             break
         groups.append(cand[0])
         age = cand[0][1] + 1
-    source(f'WHO: Ghana TB incidence by age group and sex ({yr})', 'https://extranet.who.int/tme/generateCSV.asp?ds=estimates_age_sex', bool(groups), ', '.join(f'{lo}-{hi if hi < 200 else "+"}' for lo, hi in groups))
+    source(f'WHO: Ghana TB incidence by age group and sex ({yr})', 'https://extranet.who.int/tme/generateCSV.asp?ds=estimates_age_sex', bool(groups), ', '.join(f'{lo}-{hi if hi < 200 else "+"}' for lo, hi in groups), group='TB numbers', gives='Ghana TB cases by age group and sex', use='Expected cases from each district\'s age and sex mix')
     return yr, [(lo, hi, ints[(lo, hi)]) for lo, hi in groups]
 
 
@@ -214,7 +214,7 @@ def worldpop_2026():
             with open(path, 'wb') as f:
                 for chunk in r.iter_content(1 << 20):
                     f.write(chunk)
-    source('WorldPop 2026 population (100 m, R2025A)', WP_URL, True, page='https://hub.worldpop.org/project/categories?id=3')
+    source('WorldPop 2026 population (100 m, R2025A)', WP_URL, True, page='https://hub.worldpop.org/project/categories?id=3', group='Who lives where', gives='Population on a 100 m grid, 2026', use='People in every district, town, hexagon and spot; settlement density', aurum=10)
     return path
 
 
@@ -232,10 +232,10 @@ def dhims_regions():
             out.setdefault(r['Region'].strip(), []).append({'period': f'20{m.group(2)}-{months[m.group(1).lower()]:02d}', 'tb': int(float(r['TB']))})
         for k in out:
             out[k].sort(key=lambda x: x['period'])
-        source('DHIMS II extract: monthly reported TB, Ashanti, Eastern and Volta, 2016-2023 (Mendeley Data)', 'https://data.mendeley.com/datasets/r3c3cr7x6g/1', bool(out), ', '.join(f'{k} {len(v)} months' for k, v in out.items()))
+        source('DHIMS II extract: monthly reported TB, Ashanti, Eastern and Volta, 2016-2023 (Mendeley Data)', 'https://data.mendeley.com/datasets/r3c3cr7x6g/1', bool(out), ', '.join(f'{k} {len(v)} months' for k, v in out.items()), group='TB numbers', gives='Monthly reported TB, Ashanti, Eastern and Volta, 2016-2023', use='Reported trend in those regions')
         return out
     except Exception as e:
-        source('DHIMS II extract (Mendeley Data)', 'https://data.mendeley.com/datasets/r3c3cr7x6g/1', False, str(e)[:160])
+        source('DHIMS II extract (Mendeley Data)', 'https://data.mendeley.com/datasets/r3c3cr7x6g/1', False, str(e)[:160], group='TB numbers', gives='Monthly reported TB, Ashanti, Eastern and Volta, 2016-2023', use='Reported trend in those regions')
         return {}
 
 
@@ -321,34 +321,10 @@ def who_kemri_facilities():
             if _in_ghana(lon, lat):
                 name = str(r.get(c_name) or '').strip()
                 out.append({'lon': lon, 'lat': lat, 'name': name, 'kind': _fac_kind(f"{r.get(c_type) or ''} {name}"), 'lab': False, 'own': _owner(r.get(c_own)) or 'public', 'src': 'WHO/KEMRI 2019'})
-        source(f'WHO/KEMRI public health facilities, Ghana ({len(out)})', 'https://data.humdata.org/dataset/health-facilities-in-sub-saharan-africa', bool(out), 'Maina et al. 2019, Scientific Data; public sector only')
+        source(f'WHO/KEMRI public health facilities, Ghana ({len(out)})', 'https://data.humdata.org/dataset/health-facilities-in-sub-saharan-africa', bool(out), 'Maina et al. 2019, Scientific Data; public sector only', group='Places and access', gives='Public health facilities incl. CHPS (2019), merged with OpenStreetMap, duplicates within 100 m removed', use='Nearest clinic, hospital and lab; referral')
         return out
     except Exception as e:
-        source('WHO/KEMRI public health facilities, Ghana', 'https://data.humdata.org/dataset/health-facilities-in-sub-saharan-africa', False, str(e)[:200])
-        return []
-
-
-def ghs_facilities():
-    """Ghana Health Service facility list on data.gov.gh (2012; public, CHAG and private, incl. CHPS).
-    Optional: skipped with a logged reason if unavailable."""
-    try:
-        url, _ = _ckan_resource('https://data.gov.gh', 'health-facilities-ghana', want=('csv',))
-        rows = csv.DictReader(io.StringIO(get(url).content.decode('utf-8', 'replace')))
-        out = []
-        for r in rows:
-            r = {k.strip().lower(): v for k, v in r.items() if k}
-            try:
-                lat, lon = float(r.get('latitude')), float(r.get('longitude'))
-            except (TypeError, ValueError):
-                continue
-            if not _in_ghana(lon, lat) and _in_ghana(lat, lon):
-                lon, lat = lat, lon  # some rows have the two swapped
-            if _in_ghana(lon, lat) and (lon, lat) != (0, 0):
-                out.append({'lon': lon, 'lat': lat, 'name': (r.get('facilityname') or r.get('facility name') or '').strip(), 'kind': _fac_kind(r.get('type')), 'lab': False, 'own': _owner(r.get('ownership')), 'src': 'GHS 2012'})
-        source(f'Ghana Health Service facility list ({len(out)})', 'https://data.gov.gh/dataset/health-facilities-ghana', bool(out), '2012 list incl. CHPS, CHAG and private')
-        return out
-    except Exception as e:
-        source('Ghana Health Service facility list', 'https://data.gov.gh/dataset/health-facilities-ghana', False, str(e)[:200])
+        source('WHO/KEMRI public health facilities, Ghana', 'https://data.humdata.org/dataset/health-facilities-in-sub-saharan-africa', False, str(e)[:200], group='Places and access', gives='Public health facilities incl. CHPS (2019)', use='Nearest clinic, hospital and lab; referral')
         return []
 
 
@@ -398,13 +374,14 @@ def merge_facilities(osm, others, km=0.1):
 
 
 def main():
+    not_used()
     dists = gss_districts()
     years, nat = who_tb()
     who_year, age_groups = who_age_sex()
     dhs = dhs_regional()
     cen = census()
     facilities, sites, towns, comm, roads = osm.load()
-    facilities = merge_facilities(facilities, who_kemri_facilities() + ghs_facilities())
+    facilities = merge_facilities(facilities, who_kemri_facilities())
     b_lon, b_lat = buildings.load()
     reported = dhims_regions()
     # ---- travel: one facility list (OpenStreetMap), times computed to those same facilities ----
@@ -440,6 +417,7 @@ def main():
         transform = src.transform
     labels = rasterize([(d['geom'], d['i'] + 1) for d in dists], out_shape=pop.shape, transform=transform, dtype='int16')
     wp = np.bincount(labels.ravel(), weights=pop.ravel(), minlength=len(dists) + 1)
+    next(x for x in SOURCES if x['name'].startswith('WorldPop'))['note'] = f'{wp[1:].sum():,.0f} people across the {len(dists)} districts'
     for d in dists:
         d['pop'] = float(wp[d['i'] + 1])
     # buildings per 100 m cell (same grid as WorldPop)

@@ -153,6 +153,8 @@ def load():
     size = os.path.getsize(PBF_PATH) // (1 << 20)
     source('OpenStreetMap (Geofabrik Ghana snapshot)', PBF_URL, True,
            f'{note}{size} MB: {len(facilities)} health facilities, {len(sites)} congregate and occupational sites, {len(places)} named places, '
-           f'{len(venues)} community venues, {len(roads):,} road points', page=PBF_PAGE)
+           f'{len(venues)} community venues, {len(roads):,} road points', page=PBF_PAGE, group='Places and access',
+           gives='Health facilities, towns and villages, markets, lorry stations, ports, industrial zones, prisons, mines, schools, places of worship, roads',
+           use='Town areas, gathering places, key populations, road snapping', aurum=14)
     log('osm', {k: sum(1 for s in sites if s['kind'] == k) for k in {s['kind'] for s in sites}})
     return facilities, sites, places, venues, roads

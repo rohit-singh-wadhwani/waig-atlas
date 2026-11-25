@@ -53,7 +53,10 @@ export default function Campaigns({ data, onPlan, openId }: { data: TbData; onPl
   const count = (f: Filter) => scoped.filter((t) => match(t, f)).length;
   const shown = scoped.filter((t) => match(t, filter)).sort((x, y) => (x.due || '9999').localeCompare(y.due || '9999'));
   const camps = [...campaigns.data].sort((x, y) => (y.start_date || y.created_at || '').localeCompare(x.start_date || x.created_at || ''));
-  const groups = [...camps.map((c) => ({ c, items: shown.filter((t) => t.campaign_id === c.id) })), { c: null as TbCampaign | null, items: shown.filter((t) => !t.campaign_id || !campaigns.data.some((c) => c.id === t.campaign_id)) }].filter((g) => g.items.length);
+  // one list: every campaign (with the tasks that match the tiles above inside it), plus tasks that belong to none.
+  // The default "Open" view lists all campaigns, done ones too; any other tile narrows it to campaigns with matching tasks.
+  const groups = [...camps.map((c) => ({ c, items: shown.filter((t) => t.campaign_id === c.id) })), { c: null as TbCampaign | null, items: shown.filter((t) => !t.campaign_id || !campaigns.data.some((c) => c.id === t.campaign_id)) }]
+    .filter((g) => (g.c && filter === 'open') || g.items.length);
   const curCampaign = campaigns.data.find((c) => c.id === openCampaign) || null;
   const curTask = tasks.data.find((t) => t.id === openTask) || null;
   const FILTERS: { value: Filter; label: string; tone?: string }[] = [
@@ -73,77 +76,55 @@ export default function Campaigns({ data, onPlan, openId }: { data: TbData; onPl
         ))}
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_360px] gap-5 items-start">
-        <Card pad={false} className="min-w-0">
-          <div className="p-5 pb-3">
-            <CardHeader title={FILTERS.find((f) => f.value === filter)!.label + ' tasks'} subtitle="Grouped by campaign: open one to see its tasks, then click a task to add notes, links, files or results."
-              right={<><Segmented<'all' | 'mine'> size="sm" value={mine ? 'mine' : 'all'} onChange={(v) => setMine(v === 'mine')} options={[{ value: 'all', label: 'Everyone' }, { value: 'mine', label: 'Mine' }]} />
-                <Select className="w-[200px] [&_select]:h-9 [&_select]:text-sm" value={role} onChange={setRole} placeholder="All roles" options={roles.map((r) => ({ value: r, label: r }))} />
-                <Button icon="plus" onClick={() => setAdding(true)}>Task</Button></>} />
-          </div>
-          {!groups.length ? (
-            <div className="px-5 pb-5"><Empty icon="checkCircle" title={tasks.data.length ? 'Nothing in this view' : 'No tasks yet'}>{tasks.data.length ? 'Try another filter above.' : 'Tasks are created from the playbook when you plan a campaign on Find and act.'}</Empty></div>
-          ) : groups.map(({ c, items }) => {
-            const key = c?.id || 'other';
-            const open = groups.length === 1 || expanded.includes(key);
-            const ct = c ? tasks.data.filter((x) => x.campaign_id === c.id) : [];
-            const done = ct.filter((x) => x.status === 'done').length;
-            const late = items.filter((t) => t.status !== 'done' && t.due && t.due < today).length;
-            return (
-              <section key={key} className="border-t border-gray-100">
-                <div className="px-5 py-3 flex items-center gap-3 hover:bg-gray-50/70">
-                  <button type="button" className="min-w-0 flex-1 flex items-start gap-2.5 text-left" aria-expanded={open} onClick={() => setExpanded((x) => (x.includes(key) ? x.filter((y) => y !== key) : [...x, key]))}>
-                    <Icon name={open ? 'chevronDown' : 'chevronRight'} size={18} className="text-gray-400 mt-0.5 shrink-0" />
-                    <span className="min-w-0">
-                      <span className="block font-semibold text-gray-900 truncate">{c ? c.name : 'Other tasks'}</span>
-                      <span className="block text-xs text-gray-500 truncate">
-                        {c ? [c.town, c.district_name].filter(Boolean).join(', ') + (c.start_date ? ` · starts ${c.start_date}` : '') + ' · ' : ''}
-                        {items.length} {FILTERS.find((f) => f.value === filter)!.label.toLowerCase()}{late ? <span className="text-red-700"> · {late} overdue</span> : null}
-                      </span>
-                    </span>
-                  </button>
-                  {c && <Badge className={cx('shrink-0', STATUS_CLS[c.status])}>{c.status}</Badge>}
-                  {c && ct.length > 0 && (
-                    <span className="hidden sm:flex items-center gap-2 text-xs text-gray-500 shrink-0">
-                      <span className="w-16 h-1.5 rounded-full bg-gray-200 overflow-hidden"><span className="block h-full bg-green-500" style={{ width: `${(done / ct.length) * 100}%` }} /></span>
-                      {done}/{ct.length}
-                    </span>
-                  )}
-                  {c && <button type="button" className="text-sm text-brand-700 hover:underline shrink-0" onClick={() => setOpenCampaign(c.id)}>Details</button>}
-                </div>
-                {open && (
-                  <ul className="divide-y divide-gray-100 border-t border-gray-100 bg-gray-50/30">
-                    {items.map((t) => <TaskRow key={t.id} t={t} today={today} updates={updates.data.filter((u) => u.task_id === t.id).length} onOpen={() => setOpenTask(t.id)} />)}
-                  </ul>
-                )}
-              </section>
-            );
-          })}
-        </Card>
-
-        <div className="space-y-5 min-w-0">
-          <Card>
-            <CardHeader title="Campaigns" right={<Button variant="primary" icon="plus" onClick={() => onPlan({ setting: 'community', playbook_id: 'acf_community' })}>New</Button>} />
-            {!camps.length ? <p className="text-sm text-gray-500">None yet. Plan one from a town on Find and act.</p> : (
-              <ul className="divide-y divide-gray-100 -mx-1">
-                {camps.map((c) => {
-                  const ct = tasks.data.filter((x) => x.campaign_id === c.id);
-                  const late = ct.filter((x) => x.status !== 'done' && x.due && x.due < today).length;
-                  const tt = cascadeTotals(byCampaign[c.id] || []);
-                  return (
-                    <li key={c.id}>
-                      <button type="button" onClick={() => setOpenCampaign(c.id)} className="w-full text-left px-1 py-2.5 rounded-lg hover:bg-gray-50">
-                        <div className="flex items-center justify-between gap-2"><span className="font-medium text-gray-900 truncate">{c.name}</span><Badge className={STATUS_CLS[c.status]}>{c.status}</Badge></div>
-                        <div className="text-xs text-gray-500 mt-0.5">{[c.town, c.district_name].filter(Boolean).join(', ')} · {ct.filter((x) => x.status === 'done').length}/{ct.length} tasks{late ? <span className="text-red-600"> · {late} late</span> : null}{tt.screened ? ` · ${fmtInt(tt.screened)} screened, ${fmtInt(tt.confirmed)} confirmed` : ''}</div>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </Card>
+      <Card pad={false} className="min-w-0">
+        <div className="p-5 pb-3">
+          <CardHeader title="Campaigns" subtitle={`${camps.length} campaign${camps.length === 1 ? '' : 's'}. Open one to see its ${FILTERS.find((f) => f.value === filter)!.label.toLowerCase()} tasks, then click a task to add notes, links, files or results.`}
+            right={<><Segmented<'all' | 'mine'> size="sm" value={mine ? 'mine' : 'all'} onChange={(v) => setMine(v === 'mine')} options={[{ value: 'all', label: 'Everyone' }, { value: 'mine', label: 'Mine' }]} />
+              <Select className="w-[200px] [&_select]:h-9 [&_select]:text-sm" value={role} onChange={setRole} placeholder="All roles" options={roles.map((r) => ({ value: r, label: r }))} />
+              <Button icon="plus" onClick={() => setAdding(true)}>Task</Button>
+              <Button variant="primary" icon="plus" onClick={() => onPlan({ setting: 'community', playbook_id: 'acf_community' })}>Campaign</Button></>} />
         </div>
-      </div>
+        {!groups.length ? (
+          <div className="px-5 pb-5"><Empty icon="checkCircle" title={camps.length ? 'Nothing in this view' : 'No campaigns yet'}>{camps.length ? 'Try another filter above.' : 'Plan one from a town on Find and act; its tasks are created from the playbook.'}</Empty></div>
+        ) : groups.map(({ c, items }) => {
+          const key = c?.id || 'other';
+          const open = groups.length === 1 || expanded.includes(key);
+          const ct = c ? tasks.data.filter((x) => x.campaign_id === c.id) : [];
+          const done = ct.filter((x) => x.status === 'done').length;
+          const late = (c ? ct : items).filter((t) => t.status !== 'done' && t.due && t.due < today).length;
+          const tt = c ? cascadeTotals(byCampaign[c.id] || []) : null;
+          return (
+            <section key={key} className="border-t border-gray-100">
+              <div className="px-5 py-3 flex items-center gap-3 hover:bg-gray-50/70">
+                <button type="button" className="min-w-0 flex-1 flex items-start gap-2.5 text-left" aria-expanded={open} onClick={() => setExpanded((x) => (x.includes(key) ? x.filter((y) => y !== key) : [...x, key]))}>
+                  <Icon name={open ? 'chevronDown' : 'chevronRight'} size={18} className="text-gray-400 mt-0.5 shrink-0" />
+                  <span className="min-w-0">
+                    <span className="block font-semibold text-gray-900 truncate">{c ? c.name : 'Tasks outside a campaign'}</span>
+                    <span className="block text-xs text-gray-500 truncate">
+                      {c ? [c.town, c.district_name].filter(Boolean).join(', ') + (c.start_date ? ` · starts ${c.start_date}` : '') + ' · ' : ''}
+                      {items.length} {FILTERS.find((f) => f.value === filter)!.label.toLowerCase()}{late ? <span className="text-red-700"> · {late} overdue</span> : null}
+                      {tt && tt.screened > 0 ? ` · ${fmtInt(tt.screened)} screened, ${fmtInt(tt.confirmed)} confirmed` : ''}
+                    </span>
+                  </span>
+                </button>
+                {c && <Badge className={cx('shrink-0', STATUS_CLS[c.status])}>{c.status}</Badge>}
+                {c && ct.length > 0 && (
+                  <span className="hidden sm:flex items-center gap-2 text-xs text-gray-500 shrink-0">
+                    <span className="w-16 h-1.5 rounded-full bg-gray-200 overflow-hidden"><span className="block h-full bg-green-500" style={{ width: `${(done / ct.length) * 100}%` }} /></span>
+                    {done}/{ct.length}
+                  </span>
+                )}
+                {c && <button type="button" className="text-sm text-brand-700 hover:underline shrink-0" onClick={() => setOpenCampaign(c.id)}>Details</button>}
+              </div>
+              {open && (items.length ? (
+                <ul className="divide-y divide-gray-100 border-t border-gray-100 bg-gray-50/30">
+                  {items.map((t) => <TaskRow key={t.id} t={t} today={today} updates={updates.data.filter((u) => u.task_id === t.id).length} onOpen={() => setOpenTask(t.id)} />)}
+                </ul>
+              ) : <p className="border-t border-gray-100 bg-gray-50/30 px-12 py-3 text-sm text-gray-500">No {FILTERS.find((f) => f.value === filter)!.label.toLowerCase()} tasks in this campaign.</p>)}
+            </section>
+          );
+        })}
+      </Card>
 
       <Drawer open={!!curCampaign} onClose={() => setOpenCampaign(null)} title={curCampaign?.name} subtitle={curCampaign ? [curCampaign.town, curCampaign.district_name, SETTINGS.find((x) => x.value === curCampaign.setting)?.label].filter(Boolean).join(' · ') : ''}>
         {curCampaign && <CampaignDetail c={curCampaign} data={data} rows={byCampaign[curCampaign.id] || []} tasks={tasks.data.filter((x) => x.campaign_id === curCampaign.id)} onOpenTask={(id) => { setOpenCampaign(null); setOpenTask(id); }} onDeleted={() => setOpenCampaign(null)} />}

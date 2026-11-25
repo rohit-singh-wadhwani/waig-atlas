@@ -23,10 +23,27 @@ def log(*a):
     print(time.strftime('%H:%M:%S'), *a, flush=True)
 
 
-def source(name, url, ok, note='', page=None):
-    """Log a dataset pull. `page` is the dataset's landing page (shown to users); `url` is what the pipeline fetched."""
-    SOURCES.append({'name': name, 'url': url, 'page': page or url, 'ok': ok, 'note': note, 'at': NOW})
-    log('SOURCE', name, 'OK' if ok else 'FAILED', note)
+GROUPS = ('TB numbers', 'Who lives where', 'Who is at risk', 'Places and access', 'Boundaries', 'Not used yet')
+
+
+def source(name, url, ok, note='', page=None, group='Other', gives='', use='', aurum=None):
+    """Log a dataset for the Data sources page. `ok` True = pulled, False = failed this run, None = not used (the note
+    says why). `page` is the dataset's landing page (shown to users), `url` what the pipeline fetched; `gives` and
+    `use` say what it holds and what Atlas does with it; `aurum` is its row number in Aurum's data list, if it has one."""
+    SOURCES.append({'name': name, 'url': url, 'page': page or url, 'ok': ok, 'note': note, 'at': NOW, 'group': group, 'gives': gives, 'use': use, 'aurum': aurum})
+    log('SOURCE', name, {True: 'OK', False: 'FAILED', None: 'NOT USED'}[ok], note)
+
+
+def not_used():
+    """Datasets considered (most from Aurum's list) but not pulled, with the reason, so the Data sources page shows them."""
+    NU = 'Not used yet'
+    source('VIIRS night-time lights', 'https://eogdata.mines.edu/products/vnl/', None, 'Downloads need a registered account, so the automatic weekly refresh cannot fetch them. Poverty comes from Census 2021; urbanicity from population and building density.', group=NU, gives='Night-time light intensity, ~500 m', use='Poverty and urbanicity proxy', aurum=12)
+    source('ESA WorldCover land use', 'https://esa-worldcover.org/', None, 'Not needed for current outputs; blank areas are already explained by WorldPop (no people mapped). Can be added to name what blank areas are.', group=NU, gives='Land cover classes, 10 m', use='Urbanicity; what blank areas are', aurum=12)
+    source('HRSL and GHSL gridded population', 'https://human-settlement.emergency.copernicus.eu/', None, 'WorldPop 2026 is used instead: a second population layer would give two totals for the same place. GHSL density thresholds are applied to WorldPop.', group=NU, gives='Population on 30-100 m grids', use='Population denominators', aurum=10)
+    source('DHS 2022 cluster data (GPS)', 'https://dhsprogram.com/data/Access-Instructions.cfm', None, 'Cluster files need an approved DHS data request. Regional DHS 2022 indicators are used meanwhile.', group=NU, gives='Survey clusters with nutrition and wealth, GPS displaced', use='Covariates and validation', aurum=15)
+    source('District Assembly lists of markets, stations, ports, prisons, mines', 'https://www.ghanadistricts.gov.gh/', None, 'No public machine-readable lists found; OpenStreetMap is used. AIG to supply or verify.', group=NU, gives='Official points of interest', use='Congregate and occupational exposure', aurum=14)
+    source('Ghana Health Service facility list (2012)', 'https://data.gov.gh/dataset/health-facilities-ghana', None, 'data.gov.gh is not reachable from the automatic refresh. The WHO/KEMRI list covers public facilities including CHPS.', group=NU, gives='Public, CHAG and private facilities', use='Facility list')
+    source('DHIMS2, TB e-Tracker, GxAlert', 'https://dhims.chimgh.org/', None, 'Need data-sharing agreements with NTP / GHS. The DHIMS2 connector is built and waiting for a read-only account.', group=NU, gives='District TB notifications, case records, GeneXpert results', use='Measured district gaps and outcomes')
 
 
 def get(url, **kw):
@@ -88,7 +105,7 @@ def map_friction(mode='Walking'):
         try:
             ds = rasterio.open(path)
             ds.read(1)  # make sure the whole file is readable
-            source(f'Malaria Atlas Project: {"walking" if mode == "Walking" else "motorised"} friction surface (travel speed)', url.split('&subset')[0], True, f'coverage {cov}', page='https://malariaatlas.org/project-resources/accessibility-to-healthcare/')
+            source(f'Malaria Atlas Project: {"walking" if mode == "Walking" else "motorised"} friction surface (travel speed)', url.split('&subset')[0], True, f'coverage {cov}', group='Places and access', gives=f'{"Walking" if mode == "Walking" else "Driving"} speed for every ~1 km of Ghana (2020)', use='Minutes to the nearest clinic (walk) or hospital (drive)', aurum=7, page='https://malariaatlas.org/project-resources/accessibility-to-healthcare/')
             return ds
         except Exception as e:
             log('friction raster unreadable, retrying', e)
@@ -162,7 +179,7 @@ def dhs_regional():
         v['hiv'] = hiv.get(reg, hiv.get(parent_of.get(reg, ''), None))
         v['thin'] = np.nanmean([x for x in [v.get('thin_w'), v.get('thin_m')] if x is not None]) if (v.get('thin_w') or v.get('thin_m')) else None
         v['smoke'] = np.nanmean([x for x in [v.get('smoke_w'), v.get('smoke_m')] if x is not None]) if (v.get('smoke_w') is not None or v.get('smoke_m') is not None) else None
-    source('DHS Program API: Ghana DHS 2022 (thinness, tobacco use) and 2014 (HIV), by region', 'https://api.dhsprogram.com', True, f'{len(out)} regions', page='https://www.statcompiler.com/en/')
+    source('DHS Program API: Ghana DHS 2022 (thinness, tobacco use) and 2014 (HIV), by region', 'https://api.dhsprogram.com', True, f'{len(out)} regions', group='Who is at risk', gives='HIV, thinness and tobacco use by region', use='Regional risk adjustment of expected cases', page='https://www.statcompiler.com/en/')
     return out
 
 
@@ -193,11 +210,13 @@ def who_tb():
                 pick = next((r for ag in ('all', 'a', '15plus') for r in cand if r.get('age_group') == ag), None)
                 if pick and pick.get('best') not in (None, '', 'NA'):
                     attr[rf] = float(pick['best'])
-        source(f'WHO: Ghana TB cases attributable to risk factors ({attr_year})', 'https://extranet.who.int/tme/generateCSV.asp?ds=estimates_age_sex', bool(attr), ', '.join(f'{k} {round(v):,}' for k, v in attr.items()), page=WHO_PAGE)
+        source(f'WHO: Ghana TB cases attributable to risk factors ({attr_year})', 'https://extranet.who.int/tme/generateCSV.asp?ds=estimates_age_sex', bool(attr), ', '.join(f'{k} {round(v):,}' for k, v in attr.items()), page=WHO_PAGE, group='TB numbers', gives='TB cases linked to HIV, undernourishment, smoking, alcohol', use='Weights for the regional risk adjustment')
     except Exception as e:
-        source('WHO: Ghana TB cases attributable to risk factors', 'https://extranet.who.int/tme/generateCSV.asp?ds=estimates_age_sex', False, str(e)[:160], page=WHO_PAGE)
+        source('WHO: Ghana TB cases attributable to risk factors', 'https://extranet.who.int/tme/generateCSV.asp?ds=estimates_age_sex', False, str(e)[:160], page=WHO_PAGE, group='TB numbers', gives='TB cases linked to HIV, undernourishment, smoking, alcohol', use='Weights for the regional risk adjustment')
     latest['attributable'], latest['attributable_year'] = attr, attr_year
-    source(f'WHO Global TB Programme: Ghana estimates and notifications (latest {latest["year"]})', 'https://www.who.int/teams/global-programme-on-tuberculosis-and-lung-health/data', True)
+    source(f'WHO Global TB Programme: Ghana estimates and notifications (latest {latest["year"]})', 'https://www.who.int/teams/global-programme-on-tuberculosis-and-lung-health/data', True,
+           f'{round(latest["inc_num"]):,} estimated, {round(latest["notified"]):,} notified in {latest["year"]}', group='TB numbers',
+           gives="Ghana's estimated and notified TB cases, by year", use='National totals: expected, found, missed')
     return years, latest
 
 

@@ -6,36 +6,25 @@ import { fmtTime } from '../../lib/format';
 import { fmtInt, tbSave } from '../../lib/tb';
 import type { TbData } from './TbPage';
 
-/** What each feed gives us and what it is used for, matched on the feed name the pipeline reports. */
-const CATALOG: { match: RegExp; group: string; gives: string; use: string }[] = [
-  { match: /DHIMS/i, group: 'TB numbers', gives: 'Monthly reported TB cases for Ashanti, Eastern and Volta, 2016-2023', use: 'Reported trend in those regions' },
-  { match: /age group and sex/i, group: 'TB numbers', gives: 'Ghana TB cases by age group and sex', use: 'Expected cases from each district\'s age and sex mix' },
-  { match: /attributable/i, group: 'TB numbers', gives: 'TB cases linked to HIV, undernourishment, smoking, alcohol', use: 'Regional risk adjustment' },
-  { match: /WHO Global/i, group: 'TB numbers', gives: 'Ghana\'s estimated and notified TB cases, by year', use: 'National totals: expected, found, missed' },
-  { match: /Census: population/i, group: 'Who lives where', gives: 'Population by district, single age and sex', use: 'Age and sex mix of each district' },
-  { match: /WorldPop/i, group: 'Who lives where', gives: 'Population on a 100 m grid, 2026', use: 'People in each hexagon, town and spot; settlement density' },
-  { match: /Open Buildings/i, group: 'Who lives where', gives: 'Every building footprint in Ghana (Google and Microsoft, combined by VIDA)', use: 'Buildings and people per building; high density points' },
-  { match: /Census district boundaries/i, group: 'Boundaries', gives: 'The 261 districts used by GHS and DHIMS2', use: 'Map, district totals, joining DHIMS2' },
-  { match: /sleeping rooms/i, group: 'Who is at risk', gives: 'Household size and sleeping rooms by district', use: 'Crowded homes' },
-  { match: /poverty/i, group: 'Who is at risk', gives: 'Share of people in multidimensional poverty, by district', use: 'Poorer districts' },
-  { match: /DHS/i, group: 'Who is at risk', gives: 'HIV, thinness and smoking rates by region', use: 'Which regions carry more risk' },
-  { match: /OpenStreetMap/i, group: 'Places and access', gives: 'Health facilities, towns and villages, markets, lorry stations, prisons, mines, ports, industrial zones, schools, places of worship, roads', use: 'Town areas, screening spots, congregate sites, road access' },
-  { match: /WHO\/KEMRI|Ghana Health Service facility/i, group: 'Places and access', gives: 'Public health facilities incl. CHPS compounds, merged with OpenStreetMap (duplicates within 100 m removed)', use: 'One facility list for every distance, travel time and facility count' },
-  { match: /Malaria Atlas|friction/i, group: 'Places and access', gives: 'Walking and driving speed for every ~1 km of Ghana (2020)', use: 'Walk and drive time to the merged facility list; who is far from care' },
-];
-const describe = (name: string) => CATALOG.find((c) => c.match.test(name)) || { group: 'Other', gives: '', use: '' };
-const cleanName = (n: string) => n.replace(/\s*\((\d[\d,]*)\s*\w*\)$/, '').replace(/^OpenStreetMap: /, 'OpenStreetMap · ');
+const cleanName = (n: string) => n.replace(/\s*\((\d[\d,]*)\s*\w*\)$/, '');
 
 export default function Evidence({ data }: { data: TbData }) {
   const { dist, params, results, campaigns } = data;
   const meta = dist.data.meta;
   const [uploading, setUploading] = useState(false);
-  const sources = useMemo(() => meta?.sources || [], [meta]);
-  const okCount = sources.filter((s) => s.ok).length;
+  const news = data.news.data;
+  // the pipeline's own log of what it pulled this run (and what it chose not to use, with why), plus the daily news feed
+  const sources = useMemo(() => [
+    ...(meta?.sources || []),
+    { name: 'TB news: Google News and Bing News feeds, summarised by Gemini', url: 'https://news.google.com/', page: 'https://news.google.com/', ok: !!news, at: news?.generated_at || '',
+      note: news ? `${news.articles} articles read for the summary of ${fmtTime(news.generated_at)}` : 'No summary written yet', group: 'News', gives: 'Recent TB news for Ghana, West Africa and the world', use: 'The daily "Latest on TB" summary', aurum: null },
+  ], [meta, news]);
+  const used = sources.filter((s) => s.ok !== null);
+  const okCount = used.filter((s) => s.ok).length;
   const groups = useMemo(() => {
-    const g: Record<string, typeof sources> = {};
-    for (const s of sources) (g[describe(s.name).group] ||= []).push(s);
-    return ['TB numbers', 'Who lives where', 'Who is at risk', 'Where people live and reach care', 'Boundaries', 'Other'].filter((k) => g[k]).map((k) => [k, g[k]] as const);
+    const g = new Map<string, typeof sources>();
+    for (const s of sources) g.set(s.group || 'Other', [...(g.get(s.group || 'Other') || []), s]);
+    return [...g.entries()].sort((a, b) => Number(a[0] === 'Not used yet') - Number(b[0] === 'Not used yet'));
   }, [sources]);
   const notifDistricts = dist.data.notifiedDistricts;
   const dh = dist.data.dhims2;
@@ -45,43 +34,44 @@ export default function Evidence({ data }: { data: TbData }) {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <Tile ok={okCount === sources.length && sources.length > 0} title="Open datasets" value={`${okCount} of ${sources.length} pulled`} sub={meta ? `Last refresh ${fmtTime(meta.updated_at)} · weekly` : 'Not run yet'} />
+        <Tile ok={okCount === used.length && used.length > 0} title="Open datasets" value={`${okCount} of ${used.length} pulled`} sub={meta ? `Last refresh ${fmtTime(meta.updated_at)} · weekly` : 'Not run yet'} />
         <Tile ok={!!dh?.connected} warn={!dh?.connected} title="DHIMS2 district data" value={dh?.connected ? `${dh.districts_matched} districts` : 'Not connected'} sub={dh?.connected ? `${dh.months?.[0]} to ${dh.months?.[1]}` : dh?.configured ? dh.message : 'Needs a read-only account from NTP / GHS'} />
         <Tile ok={notifDistricts > 0} warn={!notifDistricts} title="Uploaded notifications" value={notifDistricts ? `${notifDistricts} districts` : 'None yet'} sub={<button type="button" className="text-brand-700 hover:underline" onClick={() => setUploading(true)}>Upload from a report</button>} />
         <Tile ok={results.data.length > 0} warn={!results.data.length} title="Campaign results" value={results.data.length ? `${results.data.length} reports` : 'None yet'} sub={`${campaigns.data.length} campaign${campaigns.data.length === 1 ? '' : 's'}`} />
       </div>
 
       <Card pad={false}>
-        <div className="p-6 pb-2"><CardHeader title="Datasets in use" subtitle="Pulled automatically every week. Click a name to open the source." /></div>
+        <div className="p-6 pb-2"><CardHeader title="Datasets" subtitle="Listed straight from the weekly pipeline run: what it pulled, the counts it got, and what it chose not to use and why. Tagged rows come from Aurum's data list. Click a name to open the source." /></div>
         <div className="overflow-x-auto">
           <table className="w-full text-[15px]">
             <thead>
               <tr className="text-left text-sm text-gray-500 border-y border-gray-100 bg-gray-50/60">
-                <th className="px-6 py-2.5 font-medium">Dataset</th><th className="px-3 py-2.5 font-medium">What it gives</th><th className="px-3 py-2.5 font-medium">Used for</th><th className="px-6 py-2.5 font-medium text-right">Status</th>
+                <th className="px-6 py-2.5 font-medium">Dataset</th><th className="px-3 py-2.5 font-medium">What it gives</th><th className="px-3 py-2.5 font-medium">Used for</th><th className="px-6 py-2.5 font-medium">This run</th>
               </tr>
             </thead>
             {groups.map(([g, list]) => (
               <tbody key={g}>
                 <tr><td colSpan={4} className="px-6 pt-4 pb-1 text-xs font-semibold uppercase tracking-wide text-gray-400">{g}</td></tr>
-                {list.map((s, i) => {
-                  const d = describe(s.name);
-                  const count = s.name.match(/\((\d[\d,]*)\s+([a-z]+)\)$/i);
-                  return (
-                    <tr key={i} className="border-b border-gray-100 align-top">
-                      <td className="px-6 py-3 min-w-[260px]"><ExtLink href={s.page || s.url}>{cleanName(s.name)}</ExtLink>{count && <span className="block text-xs text-gray-500">{count[1]} {count[2] || 'records'}</span>}</td>
-                      <td className="px-3 py-3 text-sm text-gray-700 min-w-[220px]">{d.gives}</td>
-                      <td className="px-3 py-3 text-sm text-gray-700 min-w-[200px]">{d.use}</td>
-                      <td className="px-6 py-3 text-right whitespace-nowrap">
-                        <span className={cx('inline-flex items-center gap-1.5 text-sm', s.ok ? 'text-green-700' : 'text-red-700')} title={s.note || ''}><Icon name={s.ok ? 'checkCircle' : 'alert'} size={16} />{s.ok ? 'Pulled' : 'Failed'}</span>
-                      </td>
-                    </tr>
-                  );
-                })}
+                {list.map((s, i) => (
+                  <tr key={i} className="border-b border-gray-100 align-top">
+                    <td className="px-6 py-3 min-w-[240px]">
+                      <ExtLink href={s.page || s.url}>{cleanName(s.name)}</ExtLink>
+                      {s.aurum != null && <span className="ml-2 inline-block rounded bg-amber-50 px-1.5 py-px text-[11px] font-medium text-amber-800 align-[1px]">Aurum #{s.aurum}</span>}
+                    </td>
+                    <td className="px-3 py-3 text-sm text-gray-700 min-w-[200px]">{s.gives}</td>
+                    <td className="px-3 py-3 text-sm text-gray-700 min-w-[180px]">{s.use}</td>
+                    <td className="px-6 py-3 min-w-[230px] max-w-[320px]">
+                      <span className={cx('inline-flex items-center gap-1.5 text-sm font-medium', s.ok === null ? 'text-gray-600' : s.ok ? 'text-green-700' : 'text-red-700')}>
+                        <Icon name={s.ok === null ? 'clock' : s.ok ? 'checkCircle' : 'alert'} size={16} />{s.ok === null ? 'Not used' : s.ok ? 'Pulled' : 'Failed this run'}
+                      </span>
+                      {s.note && <span className="block text-xs text-gray-500 mt-0.5">{s.note}</span>}
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             ))}
           </table>
         </div>
-        <p className="px-6 py-4 text-xs text-gray-500">Not used yet because they need data-sharing agreements: DHIMS2 district TB data, the TB e-Tracker, GeneXpert results (GxAlert), and phone-based movement data.</p>
       </Card>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
