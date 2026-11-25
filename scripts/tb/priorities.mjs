@@ -121,20 +121,25 @@ function unwrap(u) {
 async function news(queries) {
   const since = new Date(Date.now() - NEWS_DAYS * 864e5).toISOString().slice(0, 10);
   const out = new Map();
+  const got = {};
   for (const q of queries) {
     for (const feed of FEEDS) {
+      const host = new URL(feed(q)).hostname;
       try {
-        for (const it of parseFeed(await (await http(feed(q), {}, 30000)).text())) {
+        const feedItems = parseFeed(await (await http(feed(q), {}, 30000)).text());
+        got[host] = (got[host] || 0) + feedItems.length;
+        for (const it of feedItems) {
           const [title, source = ''] = it.title.split(/ - (?=[^-]+$)/);
           const key = title.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
           if (!/tuberculosis|\btb\b/i.test(`${it.title} ${it.text}`) || (it.date && it.date.slice(0, 10) < since) || out.has(key)) continue;
           out.set(key, { kind: 'news', title, source, url: unwrap(it.url), date: it.date ? it.date.slice(0, 10) : null, text: (it.text || '').replace(title, '').slice(0, 300) });
         }
       } catch (e) {
-        log('feed failed', new URL(feed(q)).hostname, q, e.message);
+        log('feed failed', host, q, e.message);
       }
     }
   }
+  log('news feeds returned', got, '→', out.size, 'recent TB items');
   return [...out.values()];
 }
 
@@ -159,7 +164,8 @@ async function research() {
 function describe(d, items, camps, natRate) {
   const sites = [['prison', d.prisons], ['mine', d.mines], ['port', d.ports], ['market', d.markets]].filter(([, n]) => n).map(([k, n]) => `${n} ${k}${n > 1 ? 's' : ''}`).join(', ') || 'none mapped';
   const c = camps.filter((x) => x.district_id === d.id);
-  const towns = d.towns.slice(0, TOWNS_SHOWN).map((t) => `${t.name} (${num(t.pop)} people, ${num(t.expected)} cases/yr, facility ${t.facility_km != null ? `${t.facility_km.toFixed(1)} km` : '?'})`).join('; ');
+  const busy = new Set(c.filter((x) => x.status === 'planned' || x.status === 'active').map((x) => x.town));
+  const towns = d.towns.slice(0, TOWNS_SHOWN).map((t) => `${t.name}${busy.has(t.name) ? ' [campaign already here]' : ''} (${num(t.pop)} people, ${num(t.expected)} cases/yr, facility ${t.facility_km != null ? `${t.facility_km.toFixed(1)} km` : '?'})`).join('; ');
   const refs = items.map((it, i) => (it.places.includes(d.id) ? i : -1)).filter((i) => i >= 0);
   return [
     `${d.id} | ${d.name}, ${d.region}`,
@@ -178,7 +184,7 @@ async function main() {
   const dists = loadDistricts();
   const byId = new Map(dists.map((d) => [d.id, d]));
   const natRate = readJson('tb/meta.json', {})?.national?.rate_100k ?? null;
-  const camps = await sb.select('tb_campaigns', 'select=name,district_id,status');
+  const camps = await sb.select('tb_campaigns', 'select=name,district_id,town,status');
   const g = gazetteer(dists);
 
   let cands = candidates(dists);
@@ -193,7 +199,7 @@ async function main() {
 
   const prompt = `You help a Ghana TB programme officer decide which districts to screen in next, and which towns to start with.
 Rank up to ${MAX_PICKS} of the candidate districts below. Use their figures (from the programme's dashboard) and the numbered news and research items.
-How to weigh: expected cases and rate show where TB is likely; few facilities, long walks to care, dense settlements, crowding and poverty mean cases go unfound; prisons, mines and ports are WHO priority settings. A recent report of TB in a place (an outbreak, cluster, school or prison cases, stock-outs, a screening gap) can lift a district above one with higher modelled burden: say so when it does. A district with an active campaign is lower priority unless the evidence says more is needed there.
+How to weigh: expected cases and rate show where TB is likely; few facilities, long walks to care, dense settlements, crowding and poverty mean cases go unfound; prisons, mines and ports are WHO priority settings. A recent report of TB in a place (an outbreak, cluster, school or prison cases, stock-outs, a screening gap) can lift a district above one with higher modelled burden: say so when it does. A campaign already planned or active in a district LOWERS its priority: never give a campaign as a reason to pick a district or a town, and do not suggest a town that already has a campaign. Rank such a district only if the evidence shows need beyond that campaign, and say so.
 Rules: quote only figures given here; a news or research factor must cite item numbers that name that place; never invent places, numbers or events; town names must come from that district's town list.
 
 CANDIDATE DISTRICTS (id | name, region | figures):
@@ -202,7 +208,7 @@ ${cands.map((d) => describe(d, items, camps, natRate)).join('\n')}
 ITEMS ([number] date | kind | publisher | title | snippet):
 ${items.map((it, i) => `[${i}] ${it.date || ''} | ${it.kind} | ${it.source} | ${it.title} | ${it.text}`).join('\n') || 'none found'}`;
 
-  const out = await gemini(prompt, { json: true, schema: SCHEMA, temperature: 0.2 });
+  const out = await gemini(prompt, { json: true, schema: SCHEMA, quality: true, temperature: 0.2 }); // one call a day: use the stronger model
   const seen = new Set();
   const picks = (out.picks || []).flatMap((p) => {
     const d = cands.find((x) => x.id === p.id);
@@ -212,7 +218,8 @@ ${items.map((it, i) => `[${i}] ${it.date || ''} | ${it.kind} | ${it.source} | ${
       kind: f.kind, text: f.text,
       sources: f.kind === 'data' ? [] : [...new Set(f.n || [])].map((n) => items[n]).filter((it) => it && it.places.includes(d.id)).map(({ title, url, source, date }) => ({ title, url, source, date })),
     })).filter((f) => f.text && (f.kind === 'data' || f.sources.length)); // a news or research factor without a matching item is dropped
-    const towns = (p.towns || []).filter((t) => d.towns.some((x) => x.name === t.name)).slice(0, 3);
+    const busy = camps.filter((x) => x.district_id === d.id && (x.status === 'planned' || x.status === 'active')).map((x) => x.town);
+    const towns = (p.towns || []).filter((t) => d.towns.some((x) => x.name === t.name) && !busy.includes(t.name)).slice(0, 3); // never a town already being screened
     return factors.length ? [{ district_id: d.id, district_name: d.name, why: p.why, signal: p.signal, factors, towns }] : [];
   }).slice(0, MAX_PICKS);
   if (!picks.length) throw new Error('the model returned no usable priorities');
