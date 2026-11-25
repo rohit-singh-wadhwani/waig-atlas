@@ -12,20 +12,25 @@ export default function Evidence({ data }: { data: TbData }) {
   const { dist, params, results, campaigns } = data;
   const meta = dist.data.meta;
   const [uploading, setUploading] = useState(false);
-  const news = data.news.data;
-  // the pipeline's own log of what it pulled this run (and what it chose not to use, with why), plus the daily news feed
+  const prio = data.priorities.data;
+  // the pipeline's own log of what it pulled this run (and what it chose not to use, with why), plus the daily AI ranking's inputs
   const sources = useMemo(() => [
     ...(meta?.sources || []),
-    { name: 'TB news: Google News and Bing News feeds, summarised by Gemini', url: 'https://news.google.com/', page: 'https://news.google.com/', ok: !!news, at: news?.generated_at || '',
-      note: news ? `${news.articles} articles read for the summary of ${fmtTime(news.generated_at)}` : 'No summary written yet', group: 'News', gives: 'Recent TB news for Ghana, West Africa and the world', use: 'The daily "Latest on TB" summary', aurum: null },
-  ], [meta, news]);
+    ...[
+      { name: 'Google News and Bing News (TB in Ghana, nationally and by district name)', url: 'https://news.google.com/', count: prio?.inputs.news, what: 'news reports', gives: `TB news from the last ${prio?.inputs.news_days ?? 90} days naming Ghanaian places` },
+      { name: 'PubMed (research on TB in Ghana)', url: 'https://pubmed.ncbi.nlm.nih.gov/?term=tuberculosis+Ghana', count: prio?.inputs.research, what: 'papers', gives: `Research published in the last ${Math.round((prio?.inputs.research_days ?? 730) / 365)} years` },
+    ].map((x) => ({
+      name: x.name, url: x.url, page: x.url, ok: !!prio, at: prio?.generated_at || '', group: 'AI insights', gives: x.gives, use: 'The daily AI priority ranking of where to screen next', aurum: null,
+      note: prio ? `${x.count ?? 0} ${x.what} read for the ranking of ${fmtTime(prio.generated_at)}` : 'No ranking written yet',
+    })),
+  ], [meta, prio]);
   const used = sources.filter((s) => s.ok !== null);
   const okCount = used.filter((s) => s.ok).length;
   const groups = useMemo(() => {
     const g = new Map<string, typeof sources>();
     for (const s of sources) g.set(s.group || 'Other', [...(g.get(s.group || 'Other') || []), s]);
-    // the pipeline sets the order; anything it doesn't name (the news feed) comes before "Not used yet"
-    const order = [...(meta?.source_groups || []).filter((x) => x !== 'Not used yet'), 'News', 'Not used yet'];
+    // the pipeline sets the order; anything it doesn't name (the AI ranking's inputs) comes before "Not used yet"
+    const order = [...(meta?.source_groups || []).filter((x) => x !== 'Not used yet'), 'AI insights', 'Not used yet'];
     const at = (k: string) => (order.indexOf(k) < 0 ? order.length - 1.5 : order.indexOf(k));
     return [...g.entries()].sort((a, b) => at(a[0]) - at(b[0]));
   }, [sources, meta]);

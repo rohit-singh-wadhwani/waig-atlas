@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { PageHeader, useMe } from '../../components/Layout';
 import { Empty, Segmented } from '../../components/ui';
 import { useData, useLocalPref } from '../../lib/hooks';
-import { latestTbNews, loadTbDistricts, tbList, TbCampaign, TbParam, TbPlaybook, TbResult, TbTask, TbTaskUpdate } from '../../lib/tb';
+import { latestTbPriorities, loadTbDistricts, tbList, TbCampaign, TbParam, TbPlaybook, TbResult, TbTask, TbTaskUpdate } from '../../lib/tb';
 import Explorer from './Explorer';
 import Campaigns, { CampaignForm } from './Campaigns';
 import Evidence from './Evidence';
@@ -20,9 +20,9 @@ export function useTbData() {
   const results = useData(() => tbList<TbResult>('tb_campaign_results'), [], []);
   const tasks = useData(() => tbList<TbTask>('tb_tasks'), [], []);
   const updates = useData(() => tbList<TbTaskUpdate>('tb_task_updates'), [], []);
-  const news = useData(latestTbNews, [], null);
+  const priorities = useData(latestTbPriorities, [], null);
   const P = useMemo(() => Object.fromEntries(params.data.map((p) => [p.id, Number(p.value)])) as Record<string, number>, [params.data]);
-  return { dist, params, playbooks, campaigns, results, tasks, updates, news, P };
+  return { dist, params, playbooks, campaigns, results, tasks, updates, priorities, P };
 }
 export type TbData = ReturnType<typeof useTbData>;
 

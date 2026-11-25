@@ -12,8 +12,8 @@ import { daysUntil, fmtDate, fmtTime, fmtUsd, scoreTone } from '../lib/format';
 import { personName } from '../lib/team';
 import type { GrantTracking, Project, ProjectMilestone } from '../lib/types';
 import { KINDS } from './Insights';
-import TbNewsCard from '../components/TbNewsCard';
-import { latestTbNews } from '../lib/tb';
+import { PrioritiesCard } from './tb/Priorities';
+import { latestTbPriorities } from '../lib/tb';
 import { isDone, statusOf } from '../lib/projects';
 
 export default function OverviewPage() {
@@ -25,7 +25,7 @@ export default function OverviewPage() {
   const tracking = useData(() => db.list<GrantTracking & { id: string }>('grant_tracking'), [], []);
   const projects = useData(() => db.list<Project>('projects'), [], []);
   const ms = useData(() => db.list<ProjectMilestone>('project_milestones'), [], []);
-  const tbNews = useData(latestTbNews, [], null);
+  const tbPriorities = useData(latestTbPriorities, [], null);
 
   const open = grants.data.items.filter((g) => (daysUntil(g.deadline) ?? 1) >= 0);
   const strong = open.filter((g) => (g.score ?? 0) >= 70);
@@ -105,7 +105,7 @@ export default function OverviewPage() {
         <KpiCard icon="calendar" tint="gray" label="Milestones due (45d)" value={due.length} foot={due[0] ? `next ${fmtDate(due[0].target_date, { day: 'numeric', month: 'short' })}` : undefined} />
       </div>
 
-      {tbNews.data && <div className="mb-6"><TbNewsCard news={tbNews.data} /></div>}
+      {tbPriorities.data && <div className="mb-6"><PrioritiesCard p={tbPriorities.data} /></div>}
 
       <div className="grid grid-cols-1 xl:grid-cols-[1.6fr_1fr] gap-6 mb-6">
         <Card>

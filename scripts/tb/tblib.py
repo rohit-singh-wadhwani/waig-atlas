@@ -50,6 +50,7 @@ def not_used():
     source('DHS 2022 cluster data (GPS)', 'https://dhsprogram.com/data/Access-Instructions.cfm', None, 'Cluster files need an approved DHS data request. Regional DHS 2022 indicators are used meanwhile.', group=NU, gives='Survey clusters with nutrition and wealth, GPS displaced', use='Covariates and validation', aurum=15)
     source('District Assembly lists of markets, stations, ports, prisons, mines', 'https://www.ghanadistricts.gov.gh/', None, 'No public machine-readable lists found; OpenStreetMap is used. AIG to supply or verify.', group=NU, gives='Official points of interest', use='Congregate and occupational exposure', aurum=14)
     source('Ghana Health Service facility list (2012)', 'https://data.gov.gh/dataset/health-facilities-ghana', None, 'data.gov.gh is not reachable from the automatic refresh. The WHO/KEMRI list covers public facilities including CHPS.', group=NU, gives='Public, CHAG and private facilities', use='Facility list')
+    source('X (Twitter) posts', 'https://developer.x.com/en/products/x-api', None, 'Reading posts needs a paid X API plan. The AI ranking reads news and research instead.', group=NU, gives='Public posts naming Ghanaian places', use='Early reports of TB clusters')
     source('DHIMS2, TB e-Tracker, GxAlert', 'https://dhims.chimgh.org/', None, 'Need data-sharing agreements with NTP / GHS. The DHIMS2 connector is built and waiting for a read-only account.', group=NU, gives='District TB notifications, case records, GeneXpert results', use='Measured district gaps and outcomes')
 
 

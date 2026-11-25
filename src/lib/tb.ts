@@ -21,10 +21,12 @@ export type TbHexRow = { h: string; p: number; e: number; k: number; f: number |
 export type TbTown = { id: number; nodata?: boolean; name: string; place: string; lon: number; lat: number; radius_km: number; area_km2: number; pop: number; expected: number; expected_km2: number; geom: any; buildings?: number | null; facility?: string | null; hospital?: string | null; facility_km: number | null; hospital_km: number | null; drive_min: number | null; walk_min: number | null };
 export type TbVenue = { name: string; kind: string; cong: boolean; t?: number; lon: number; lat: number; pop_1km: number; expected_1km: number; facility?: string | null; facility_km: number | null; hospital_km?: number | null; walk_min: number | null; district?: string; district_id?: string };
 export type TbFacility = { name: string; kind: string; lab: boolean; own?: string | null; src?: string; lon: number; lat: number };
-/** One daily TB news summary written by Gemini from news feeds (scripts/tb/news.mjs); every source is a fetched article. */
-export type TbNewsSource = { title: string; url: string; source?: string; date?: string | null };
-export type TbNews = { id: string; generated_at: string; model?: string; headline: string; articles: number;
-  points: { text: string; scope: 'Ghana' | 'West Africa' | 'Global'; kind: string; sources: TbNewsSource[] }[]; actions: { action: string; who: string; why: string }[] };
+/** The daily AI ranking of where to screen next (scripts/tb/priorities.mjs). Data factors quote dashboard figures;
+ *  news and research factors carry the fetched items they came from. */
+export type TbPriorityFactor = { kind: 'data' | 'news' | 'research'; text: string; sources: { title: string; url: string; source?: string; date?: string | null }[] };
+export type TbPriorityPick = { district_id: string; district_name: string; why: string; signal: 'data' | 'news' | 'research' | 'mixed'; factors: TbPriorityFactor[]; towns: { name: string; why: string }[] };
+export type TbPriorities = { id: string; generated_at: string; model?: string | null; summary: string; picks: TbPriorityPick[];
+  inputs: { districts: number; news: number; research: number; news_days: number; research_days: number } };
 export type TbDetail = { id: string; hexes: TbHexRow[]; towns: TbTown[]; venues: TbVenue[]; facilities: TbFacility[] };
 export type TbParam = { id: string; grp: string; label: string; value: number; unit?: string; description?: string; source_title?: string; source_url?: string; status: 'evidence' | 'assumption' | 'policy'; updated_at?: string; updated_by?: string };
 /** A playbook step. `per_spot` steps become one task per screening point ({spot} in the title is replaced); `guide` names the guideline step it follows. */
@@ -235,5 +237,5 @@ export function cascadeTotals(rows: TbResult[]) {
 export const pct = (a: number, b: number) => (b > 0 ? `${((a / b) * 100).toFixed(a / b < 0.1 ? 1 : 0)}%` : '—');
 export const fmtInt = (v: number | null | undefined) => (v == null || !isFinite(v) ? '—' : Math.round(v).toLocaleString('en-GB'));
 
-/** The most recent daily TB news summary, or null if none has been written yet. */
-export const latestTbNews = () => tbList<TbNews>('tb_news').then((r) => [...r].sort((a, b) => String(b.generated_at).localeCompare(String(a.generated_at)))[0] || null);
+/** The most recent AI ranking, or null if none has been written yet. */
+export const latestTbPriorities = () => tbList<TbPriorities>('tb_priorities').then((r) => [...r].sort((a, b) => String(b.generated_at).localeCompare(String(a.generated_at)))[0] || null);
