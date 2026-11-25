@@ -24,6 +24,9 @@ const FEEDS = [
   (q) => `https://news.google.com/rss/search?q=${encodeURIComponent(`${q} when:${NEWS_DAYS}d`)}&hl=en-GH&gl=GH&ceid=GH:en`,
   (q) => `https://www.bing.com/news/search?format=rss&count=30&q=${encodeURIComponent(q)}`,
 ];
+// Ghanaian outlets often leave the country out of a local headline, so their reports count as Ghanaian
+const GH_OUTLETS = /ghana|myjoyonline|joynews|citi ?newsroom|graphic|3news|adom|starr ?fm|peace ?fm|pulse\.com\.gh|\bgna\b|asaase|todaygh|norvanreports/i;
+const isGhanaian = (it) => /ghana/i.test(`${it.title} ${it.text}`) || GH_OUTLETS.test(it.source) || /\.gh(\/|$)/.test((() => { try { return new URL(it.url).hostname; } catch { return ''; } })());
 const NATIONAL = ['tuberculosis Ghana', 'TB screening Ghana', 'TB outbreak Ghana', 'Ghana Health Service tuberculosis', 'tuberculosis Ghana prison OR mine OR market'];
 
 const SCHEMA = {
@@ -191,7 +194,7 @@ async function main() {
   const queries = [...NATIONAL, ...cands.slice(0, SEARCHED).map((d) => `tuberculosis "${d.name.replace(/\s*\(.*\)/, '').replace(/\b(Municipal|Metropolitan|District|Area)\b/g, '').replace(/\s+/g, ' ').trim()}"`)];
   const items = [...(await news(queries)), ...(await research())]
     .map((it) => ({ ...it, places: mentions(`${it.title} ${it.text}`, g) }))
-    .filter((it) => it.places.length || /ghana/i.test(`${it.title} ${it.text}`));
+    .filter((it) => it.places.length || isGhanaian(it));
   // districts named in recent news or research join the candidates even if their figures did not put them there
   for (const it of items) for (const id of it.places) if (!cands.some((d) => d.id === id) && byId.has(id)) cands.push(byId.get(id));
   cands = cands.slice(0, MAX_CANDIDATES);
