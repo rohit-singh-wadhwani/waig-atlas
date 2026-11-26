@@ -1,6 +1,34 @@
 {
- "updated_at": "2026-11-25T22:16:50.779Z",
+ "updated_at": "2026-11-26T01:43:00.090Z",
  "insights": [
+  {
+   "id": "b2ee9506899e5190",
+   "title": "LIVE from #Haiti: Media briefing on the health situation with Dr Tedros",
+   "summary": "WHO Director-General Dr. Tedros holds a media briefing on the current health situation in Haiti.",
+   "url": "https://www.youtube.com/watch?v=C280MYCwnkE",
+   "published_at": "2026-11-26T00:42:00.000Z",
+   "source_id": "who-youtube",
+   "source_name": "WHO on YouTube",
+   "kind": "news",
+   "countries": [
+    "HTI"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "0ca70e612336411a",
+   "title": "Tuberculosis after CAR T Cell Therapy: When Should the Differential Diagnosis Be Reopened?",
+   "summary": "A clinical paper discusses considerations for diagnosing tuberculosis in patients who have undergone CAR T cell therapy.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/43084041/",
+   "published_at": "2026-11-25T17:33:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [],
+   "diseases": [
+    "tuberculosis"
+   ]
+  },
   {
    "id": "2bee4ccc6ed00de4",
    "title": "[Expert consensus on imaging diagnosis of comorbid pulmonary tuberculosis and lung cancer (2026 edition)].",
