@@ -1,5 +1,5 @@
 {
- "updated_at": "2026-11-26T10:28:25.985Z",
+ "updated_at": "2026-11-26T13:42:59.879Z",
  "insights": [
   {
    "id": "b2ee9506899e5190",
@@ -45,6 +45,60 @@
     "tuberculosis",
     "lung cancer"
    ]
+  },
+  {
+   "id": "0354eb191cddc6e7",
+   "title": "Supply, Installation, and Commissioning of Power Backup Infrastructure and Wireless Network Upgrade",
+   "summary": "The Africa CDC has issued an invitation for bids for power backup infrastructure and wireless network upgrades to combat public health threats.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00483788",
+   "published_at": "2026-11-25T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "d93ddf5524b2bcd1",
+   "title": "Consultancy service for Feasibility Study & Detail Designs for  Small Dam for Water Supply and Sanitation Purpose for El-ogaden, Mubarak, Marsin,  Filtu, Dollo-bay & Aware project Woredas",
+   "summary": "Request for feasibility study and design for water supply and sanitation dams in Ethiopia.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00483618",
+   "published_at": "2026-11-25T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "ETH"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "efc2c2c58072d78e",
+   "title": "Supply and delivery of Laboratory equipment,reagents and essential supplies for the 69 project Districts  and the National bull stud under Lots Lots 1,2&3",
+   "summary": "Invitation to bid for the supply of laboratory equipment, reagents, and essential supplies across districts in Uganda.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00483699",
+   "published_at": "2026-11-25T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "UGA"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "77917feb1dcad26e",
+   "title": "Equipment Procurement for Department of Agriculture and Rural Affairs (14th Contract 4rd Batch)（1.4.2）",
+   "summary": "Equipment procurement for an emerging infectious diseases prevention, preparedness, and response project in China.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00482792",
+   "published_at": "2026-11-25T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "CHN"
+   ],
+   "diseases": []
   },
   {
    "id": "ddbbfa24701b8b52",
