@@ -105,4 +105,4 @@ def _locate(places, features, dists, which, near, people_within, hex_res, catch_
     source(NAME, f'{SB_URL}/rest/v1/tb_outreach', True,
            f'{len(sites)} communities named in the returns; {found} located in OpenStreetMap', page='https://www.auruminstitute.org/', group='TB numbers',
            gives='Monthly people screened, presumed, tested, positive and started on treatment, by community (members only)',
-           use='Ground-truth yield shown beside the estimates; communities placed on the map', aurum='shared')
+           use='The Sekondi-Takoradi campaigns, their spots on the map and their daily reports', aurum='shared')

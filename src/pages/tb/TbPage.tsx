@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { PageHeader, useMe } from '../../components/Layout';
 import { Empty, Segmented } from '../../components/ui';
 import { useData, useLocalPref } from '../../lib/hooks';
-import { latestTbPriorities, loadTbDistricts, outreachAreas, tbList, TbCampaign, TbOutreachReport, TbOutreachRow, TbOutreachSite, TbParam, TbPlaybook, TbResult, TbStaffRole, TbTask, TbTaskUpdate } from '../../lib/tb';
+import { latestTbPriorities, loadTbDistricts, tbList, TbCampaign, TbParam, TbPlaybook, TbResult, TbStaffRole, TbTask, TbTaskUpdate } from '../../lib/tb';
 import Explorer from './Explorer';
 import Campaigns, { CampaignForm } from './Campaigns';
 import Evidence from './Evidence';
@@ -22,14 +22,9 @@ export function useTbData() {
   const tasks = useData(() => tbList<TbTask>('tb_tasks'), [], []);
   const updates = useData(() => tbList<TbTaskUpdate>('tb_task_updates'), [], []);
   const priorities = useData(latestTbPriorities, [], null);
-  const outReports = useData(() => tbList<TbOutreachReport>('tb_outreach_reports'), [], []);
-  const outRows = useData(() => tbList<TbOutreachRow>('tb_outreach'), [], []);
-  const outSites = useData(() => tbList<TbOutreachSite>('tb_outreach_sites'), [], []);
   const roles = useData(() => tbList<TbStaffRole>('tb_staff_roles'), [], []);
   const P = useMemo(() => Object.fromEntries(params.data.map((p) => [p.id, Number(p.value)])) as Record<string, number>, [params.data]);
-  // partner outreach returns, one area per reporting directorate; the busiest is the demo's focus
-  const outreach = useMemo(() => outreachAreas(outReports.data, outRows.data, outSites.data), [outReports.data, outRows.data, outSites.data]);
-  return { dist, params, playbooks, campaigns, results, tasks, updates, priorities, P, outreach, roles, scope: null as ReturnType<typeof scopeOf> };
+  return { dist, params, playbooks, campaigns, results, tasks, updates, priorities, P, roles, scope: null as ReturnType<typeof scopeOf> };
 }
 export type TbData = ReturnType<typeof useTbData>;
 
@@ -55,7 +50,8 @@ export default function TbPage() {
   const [persona, setPersona] = useLocalPref<Persona | null>('tb-viewas', null);
   const scope = useMemo(() => scopeOf(persona, all.dist.data.list, all.roles.data), [persona, all.dist.data.list, all.roles.data]);
   const data = useMemo(() => narrow(all, scope), [all, scope]);
-  const focus = all.dist.data.list.find((d) => d.id === all.outreach[0]?.id) || null;
+  // the district with the most of our own screening is where a role preview starts
+  const focus = [...all.dist.data.list].sort((a, b) => b.screened - a.screened).find((d) => d.screened > 0) || null;
   const [pref, setTab] = useLocalPref<Tab>('tb-tab-v3', 'explore');
   const tab: Tab = TABS.includes(pref) ? pref : 'explore';
   const [plan, setPlan] = useState<Partial<TbCampaign> | null>(null);

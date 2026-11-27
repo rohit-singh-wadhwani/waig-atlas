@@ -47,21 +47,29 @@ export default function App() {
     <MeContext.Provider value={me}>
       <HashRouter>
         <Shell>
-          <Routes>
-            <Route path="/" element={TB_ONLY ? <TbPage /> : <OverviewPage />} />
-            <Route path="/grants" element={<GrantsPage />} />
-            <Route path="/health" element={<HealthPage />} />
-            <Route path="/tb" element={TB_ONLY ? <Navigate to="/" replace /> : <TbPage />} />
-            <Route path="/insights" element={<InsightsPage />} />
-            <Route path="/sources" element={<SourcesPage />} />
-            <Route path="/projects" element={<ProjectsPage />} />
-            <Route path="/projects/:slug" element={<ProjectDetail />} />
-            <Route path="/projects/:slug/:mid" element={<ProjectDetail />} />
-            <Route path="/templates" element={<TemplatesPage />} />
-            <Route path="/context" element={<OrgContextPage />} />
-            <Route path="/people" element={<PeoplePage />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+          {TB_ONLY ? (
+            // demo build: the TB dashboard is the only page; any other address (old links, browser back) lands on it
+            <Routes>
+              <Route path="/" element={<TbPage />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          ) : (
+            <Routes>
+              <Route path="/" element={<OverviewPage />} />
+              <Route path="/grants" element={<GrantsPage />} />
+              <Route path="/health" element={<HealthPage />} />
+              <Route path="/tb" element={<TbPage />} />
+              <Route path="/insights" element={<InsightsPage />} />
+              <Route path="/sources" element={<SourcesPage />} />
+              <Route path="/projects" element={<ProjectsPage />} />
+              <Route path="/projects/:slug" element={<ProjectDetail />} />
+              <Route path="/projects/:slug/:mid" element={<ProjectDetail />} />
+              <Route path="/templates" element={<TemplatesPage />} />
+              <Route path="/context" element={<OrgContextPage />} />
+              <Route path="/people" element={<PeoplePage />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          )}
         </Shell>
       </HashRouter>
     </MeContext.Provider>

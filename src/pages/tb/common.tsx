@@ -78,3 +78,32 @@ export function Stat({ label, value, sub, basis, how }: { label: string; value: 
     </div>
   );
 }
+
+/** The screening cascade as a horizontal funnel: one column per step, block height to scale, each label on one line,
+ *  and the share kept from the step before. `t` uses campaign result keys (see cascadeTotals). */
+const FUNNEL: { key: string; label: string; tone: string }[] = [
+  { key: 'screened', label: 'Screened', tone: 'bg-brand-300' }, { key: 'presumptive', label: 'Presumptive', tone: 'bg-brand-500' },
+  { key: 'tested', label: 'Tested', tone: 'bg-brand-600' }, { key: 'confirmed', label: 'TB found', tone: 'bg-red-700' },
+  { key: 'started_treatment', label: 'Treated', tone: 'bg-green-600' },
+];
+export function Funnel({ t }: { t: Record<string, number> }) {
+  const top = Math.max(t.screened || 0, 1);
+  return (
+    <div>
+      <ol className="grid grid-cols-5 gap-1">
+        {FUNNEL.map((s, i) => {
+          const v = t[s.key] || 0, prev = i ? t[FUNNEL[i - 1].key] || 0 : 0;
+          return (
+            <li key={s.key} className="min-w-0">
+              <div className="text-[11px] text-gray-500 whitespace-nowrap truncate">{s.label}</div>
+              <div className="text-[15px] font-semibold tabular-nums text-gray-900 whitespace-nowrap">{v.toLocaleString('en-GB')}</div>
+              <div className="h-12 flex items-center"><div className={cx('w-full rounded-sm', s.tone)} style={{ height: `${Math.max(6, (v / top) * 48)}px` }} /></div>
+              <div className="text-[11px] text-gray-500 tabular-nums whitespace-nowrap">{i ? (prev ? `${Math.round((v / prev) * 100)}%` : '—') : ' '}</div>
+            </li>
+          );
+        })}
+      </ol>
+      <p className="text-[11px] text-gray-400 mt-0.5">Each % is the share of the step before.</p>
+    </div>
+  );
+}

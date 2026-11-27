@@ -64,16 +64,6 @@ export type TbMeta = {
   national?: { year: number; incidence: number; incidence_lo?: number | null; incidence_hi?: number | null; notified: number; cdr: number; pop: number; rate_100k?: number; tbhiv_pct?: number | null };
   counts?: Record<string, number>;
 };
-/** Partner community outreach returns (members only). Counts are as written in the report; a month with no
- *  report for the directorate has has_data false and no community rows. */
-export type OutreachCounts = { screened: number; presumed: number; tested: number; positive: number; treated: number };
-export type TbOutreachReport = { id: string; directorate_id: string; directorate_name: string; period: string; has_data: boolean; reported: OutreachCounts | null; note?: string | null; source?: string | null; shared_by?: string | null };
-export type TbOutreachRow = OutreachCounts & { id: string; report_id: string; directorate_id: string; period: string; community: string; site_id: string };
-/** Where a community was found in OpenStreetMap by the pipeline: exact name, a close spelling, or a feature named
- *  after it (approximate). No coordinates means it was not found. */
-export type TbOutreachSite = { id: string; directorate_id: string; community: string; lon: number | null; lat: number | null; osm_name?: string | null; osm_place?: string | null;
-  match?: 'exact' | 'close' | 'feature' | null; district_id?: string | null; district_name?: string | null; hex?: string | null; pop_1km?: number | null;
-  facility?: string | null; facility_km?: number | null; walk_min?: number | null; located_at?: string | null; note?: string | null };
 /** Health-system levels, top to bottom. */
 export type TbLevel = 'national' | 'regional' | 'district' | 'subdistrict' | 'facility' | 'community';
 export const LEVELS: { key: TbLevel; label: string }[] = [
@@ -259,35 +249,3 @@ export const fmtInt = (v: number | null | undefined) => (v == null || !isFinite(
 
 /** The most recent AI ranking, or null if none has been written yet. */
 export const latestTbPriorities = () => tbList<TbPriorities>('tb_priorities').then((r) => [...r].sort((a, b) => String(b.generated_at).localeCompare(String(a.generated_at)))[0] || null);
-
-/* ---------- partner outreach ---------- */
-export type OutreachCommunity = { id: string; name: string; site: TbOutreachSite | null; periods: string[]; totals: OutreachCounts };
-/** One directorate's outreach returns: every month of its reporting span (months without a report included, so
- *  gaps show as gaps), totals, and one row per community visited. */
-export type OutreachArea = { id: string; name: string; sharedBy: string | null; source: string | null; months: TbOutreachReport[]; reported: number; totals: OutreachCounts; communities: OutreachCommunity[]; notes: { period: string; note: string }[] };
-
-const ZERO: OutreachCounts = { screened: 0, presumed: 0, tested: 0, positive: 0, treated: 0 };
-export const addCounts = (a: OutreachCounts, b: OutreachCounts): OutreachCounts => ({ screened: a.screened + b.screened, presumed: a.presumed + b.presumed, tested: a.tested + b.tested, positive: a.positive + b.positive, treated: a.treated + b.treated });
-
-export function outreachAreas(reports: TbOutreachReport[], rows: TbOutreachRow[], sites: TbOutreachSite[]): OutreachArea[] {
-  const ids = Array.from(new Set(reports.map((r) => r.directorate_id)));
-  return ids.map((id) => {
-    const months = reports.filter((r) => r.directorate_id === id).sort((a, b) => a.period.localeCompare(b.period));
-    const mine = rows.filter((r) => r.directorate_id === id);
-    const byCommunity = new Map<string, OutreachCommunity>();
-    for (const r of mine) {
-      const c = byCommunity.get(r.site_id) || { id: r.site_id, name: r.community, site: sites.find((s) => s.id === r.site_id) || null, periods: [], totals: ZERO };
-      c.periods = [...c.periods, r.period];
-      c.totals = addCounts(c.totals, r);
-      byCommunity.set(r.site_id, c);
-    }
-    const last = months[months.length - 1];
-    return {
-      id, name: last?.directorate_name || id, sharedBy: last?.shared_by || null, source: last?.source || null, months,
-      reported: months.filter((m) => m.has_data).length,
-      totals: mine.reduce(addCounts, ZERO),
-      communities: Array.from(byCommunity.values()).sort((a, b) => b.totals.positive - a.totals.positive || b.totals.screened - a.totals.screened),
-      notes: months.filter((m) => m.has_data && m.note).map((m) => ({ period: m.period, note: m.note! })),
-    };
-  }).sort((a, b) => b.totals.screened - a.totals.screened);
-}
