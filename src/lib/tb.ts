@@ -41,8 +41,8 @@ export type TbCampaign = {
 };
 export type TbSpot = { name: string; kind: string; lon: number; lat: number; pop_1km?: number };
 export type TbResult = {
-  id: string; campaign_id: string; report_date: string; screened: number; cough_flagged: number; cxr_flagged: number; presumptive: number; tested: number; confirmed: number;
-  rr_confirmed: number; started_treatment: number; contacts_identified: number; contacts_screened: number; tpt_started: number; cough_flagged_confirmed: number; cxr_flagged_confirmed: number;
+  id: string; campaign_id: string; report_date: string; screened: number; presumptive: number; tested: number; confirmed: number;
+  rr_confirmed: number; started_treatment: number; contacts_identified: number; contacts_screened: number; tpt_started: number;
   outreach_sessions: number; people_reached: number; spot?: string | null;
   notes?: string; reported_by?: string; task_id?: string | null;
 };
@@ -221,13 +221,12 @@ export async function createCampaign(c: TbCampaign, playbook: TbPlaybook | undef
     const start = c.start_date || new Date().toISOString().slice(0, 10);
     // per-spot steps become one task per screening point, carrying the point's location, so each goes to a place
     const spots: (TbSpot | null)[] = c.spots?.length ? c.spots : [null];
-    const area = c.town ? `${c.town}` : c.district_name || 'the selected area';
     for (const s of playbook.steps) {
       const holders = people.filter((p) => p.role && p.role.toLowerCase() === s.role.toLowerCase());
       const who = holders.find((p) => p.district && c.district_name && p.district.toLowerCase() === c.district_name.toLowerCase()) || holders[0];
       for (const sp of s.per_spot ? spots : [null]) {
         await tbSave('tb_tasks', {
-          id: uid('tbt'), campaign_id: c.id, title: s.title.replace('{spot}', sp?.name || area), detail: s.detail || null, role: s.role, assignee: who?.email || null,
+          id: uid('tbt'), campaign_id: c.id, title: s.title, detail: s.detail || null, role: s.role, assignee: who?.email || null,
           district_id: c.district_id || null, district_name: c.district_name || null, due: addDays(start, s.due_days), status: 'todo', step_key: s.key, created_by: me,
           guide: s.guide || null, spot: sp?.name || null, lon: sp?.lon ?? null, lat: sp?.lat ?? null,
         } as TbTask);
@@ -238,7 +237,7 @@ export async function createCampaign(c: TbCampaign, playbook: TbPlaybook | undef
 }
 
 export function cascadeTotals(rows: TbResult[]) {
-  const keys: (keyof TbResult)[] = ['outreach_sessions', 'people_reached', 'screened', 'cough_flagged', 'cxr_flagged', 'presumptive', 'tested', 'confirmed', 'rr_confirmed', 'started_treatment', 'contacts_identified', 'contacts_screened', 'tpt_started', 'cough_flagged_confirmed', 'cxr_flagged_confirmed'];
+  const keys: (keyof TbResult)[] = ['outreach_sessions', 'people_reached', 'screened', 'presumptive', 'tested', 'confirmed', 'rr_confirmed', 'started_treatment', 'contacts_identified', 'contacts_screened', 'tpt_started'];
   const t: Record<string, number> = {};
   for (const k of keys) t[k as string] = rows.reduce((s, r) => s + (Number(r[k]) || 0), 0);
   return t;

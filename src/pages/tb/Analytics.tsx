@@ -8,10 +8,10 @@ const WHO_HANDBOOK = 'https://www.who.int/publications-detail-redirect/978924002
 /** The screening cascade, in the order WHO's handbook (section 2.7.2) monitors it. */
 const STEPS: { key: string; label: string; note: string }[] = [
   { key: 'people_reached', label: 'Reached by outreach', note: 'People reached by community sensitisation' },
-  { key: 'screened', label: 'Screened', note: 'Symptoms, cough AI and/or chest X-ray AI' },
-  { key: 'presumptive', label: 'At risk (presumptive TB)', note: 'Screen-positive, referred for a test' },
+  { key: 'screened', label: 'Screened', note: 'Symptom screen (cough of 2+ weeks, fever, weight loss, night sweats)' },
+  { key: 'presumptive', label: 'Symptomatic', note: 'Flagged by the clinician as symptomatic and referred for a test' },
   { key: 'tested', label: 'Tested', note: 'Sputum tested with Xpert' },
-  { key: 'confirmed', label: 'Confirmed TB', note: 'Bacteriologically confirmed' },
+  { key: 'confirmed', label: 'TB found', note: 'Bacteriologically confirmed' },
   { key: 'started_treatment', label: 'Started treatment', note: 'Registered and on treatment' },
 ];
 
@@ -41,8 +41,8 @@ export default function Analytics({ data }: { data: TbData }) {
       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
         <Kpi label="People screened" value={fmtInt(t.screened)} sub={target ? `${pct(t.screened, target)} of ${fmtInt(target)} target · ${fmtInt(Math.max(0, target - t.screened))} left` : 'No target set'} bar={target ? t.screened / target : undefined} />
         <Kpi label="Community outreach" value={fmtInt(t.outreach_sessions)} sub={t.people_reached ? `sessions · ${fmtInt(t.people_reached)} people reached` : 'screening sessions'} />
-        <Kpi label="At risk identified" value={fmtInt(t.presumptive)} sub={`${pct(t.presumptive, t.screened)} of screened were presumptive TB`} />
-        <Kpi label="Confirmed TB" value={fmtInt(t.confirmed)} sub={t.confirmed ? `1 case per ${fmtInt(t.screened / t.confirmed)} screened` : '—'} />
+        <Kpi label="Symptomatic" value={fmtInt(t.presumptive)} sub={`${pct(t.presumptive, t.screened)} of screened, flagged by the clinician`} />
+        <Kpi label="TB found" value={fmtInt(t.confirmed)} sub={t.confirmed ? `1 case per ${fmtInt(t.screened / t.confirmed)} screened` : '—'} />
         <Kpi label="Started treatment" value={pct(t.started_treatment, t.confirmed)} sub={`${fmtInt(t.started_treatment)} of ${fmtInt(t.confirmed)} confirmed`} />
         <Kpi label="Lost to follow-up" value={fmtInt(preDx + preTx)} sub={`${fmtInt(preDx)} not tested · ${fmtInt(preTx)} not started on treatment`} alert={preDx + preTx > 0} />
       </div>
@@ -59,8 +59,6 @@ export default function Analytics({ data }: { data: TbData }) {
             <Pair label="Contacts screened" value={`${fmtInt(t.contacts_screened)} (${pct(t.contacts_screened, t.contacts_identified)})`} />
             <Pair label="Preventive treatment started" value={fmtInt(t.tpt_started)} />
             <Pair label="Drug-resistant TB (RR)" value={fmtInt(t.rr_confirmed)} />
-            <Pair label="Cough AI flags confirmed" value={pct(t.cough_flagged_confirmed, t.cough_flagged)} />
-            <Pair label="X-ray AI flags confirmed" value={pct(t.cxr_flagged_confirmed, t.cxr_flagged)} />
           </dl>
         </Card>
       </div>
@@ -97,7 +95,7 @@ function Pair({ label, value }: { label: string; value: React.ReactNode }) {
 
 /** Horizontal cascade, one hue; widths relative to people screened, with the drop between steps written out. */
 /** Drops that are losses to follow-up (WHO 2.7.2); the other drops are people who tested or screened negative. */
-const LOSS: Record<number, string> = { 3: 'presumptive not tested (lost before diagnosis)', 5: 'confirmed not started on treatment (lost before treatment)' };
+const LOSS: Record<number, string> = { 3: 'symptomatic not tested (lost before diagnosis)', 5: 'confirmed not started on treatment (lost before treatment)' };
 const DROP: Record<number, string> = { 1: 'reached but not screened', 2: 'screened negative', 4: 'tested negative' };
 
 /** Bars to scale; the "reached" step shows only when campaigns reported reach. */
@@ -129,7 +127,7 @@ function ByCampaign({ campaigns, results, onOpen }: { campaigns: TbCampaign[]; r
   return (
     <table className="w-full text-sm">
       <thead className="text-xs text-gray-500 border-y border-gray-100 bg-gray-50/60">
-        <tr>{['Campaign', 'Status', 'Screened', 'At risk', 'Tested', 'Confirmed', 'On treatment', 'Lost to follow-up', 'Screened per case'].map((h) => <th key={h} className="text-left font-medium px-4 py-2 whitespace-nowrap">{h}</th>)}</tr>
+        <tr>{['Campaign', 'Status', 'Screened', 'Symptomatic', 'Tested', 'TB found', 'On treatment', 'Lost to follow-up', 'Screened per case'].map((h) => <th key={h} className="text-left font-medium px-4 py-2 whitespace-nowrap">{h}</th>)}</tr>
       </thead>
       <tbody className="divide-y divide-gray-100">
         {campaigns.map((c) => {
@@ -160,7 +158,7 @@ function BySpot({ rows }: { rows: TbResult[] }) {
   return (
     <table className="w-full text-sm">
       <thead className="text-xs text-gray-500 border-y border-gray-100 bg-gray-50/60">
-        <tr>{['Screening point', 'Outreach sessions', 'Screened', 'At risk', 'Tested', 'Confirmed', 'On treatment', 'Lost to follow-up'].map((h) => <th key={h} className="text-left font-medium px-4 py-2 whitespace-nowrap">{h}</th>)}</tr>
+        <tr>{['Screening point', 'Outreach sessions', 'Screened', 'Symptomatic', 'Tested', 'TB found', 'On treatment', 'Lost to follow-up'].map((h) => <th key={h} className="text-left font-medium px-4 py-2 whitespace-nowrap">{h}</th>)}</tr>
       </thead>
       <tbody className="divide-y divide-gray-100">
         {spots.map((sp) => {

@@ -7,9 +7,9 @@ import { useMe } from '../../components/Layout';
 import { useData } from '../../lib/hooks';
 import { uid } from '../../lib/store';
 import { peopleOptions, personName, usePeople } from '../../lib/team';
-import { APPROACH, approachOf, cascadeTotals, createCampaign, expectedPositivity, fmtInt, loadDistrictDetail, loadReportedRegions, rulesFrom, tbSave, TbCampaign, TbDistrict, TbHexRow, TbPriorities, TbResult, TbStaffRole, TbTask, TbTown, TbVenue } from '../../lib/tb';
+import { APPROACH, approachOf, cascadeTotals, createCampaign, expectedPositivity, fmtInt, loadDistrictDetail, loadReportedRegions, rulesFrom, tbSave, TbCampaign, TbDistrict, TbHexRow, TbPriorities, TbPriorityPick, TbResult, TbStaffRole, TbTask, TbTown, TbVenue } from '../../lib/tb';
 import { BasisTag, esc, Funnel, HowTag, kmFmt, Panel, pctFmt, Stat, Why } from './common';
-import { DistrictInsight, PRIORITY_HOW, priorityInputs, PriorityRow } from './Priorities';
+import { DistrictInsight, Factors, PRIORITY_HOW, priorityInputs, SignalTag, Towns } from './Priorities';
 import { directorateOf, WhoDoesWhat } from './Roles';
 import type { TbData } from './TbPage';
 
@@ -289,7 +289,7 @@ function CampaignPanel({ id, data, onClose, onOpen, onGo }: { id: string; data: 
   const late = ct.filter((t) => t.status !== 'done' && t.due && t.due < today).length;
   const tot = cascadeTotals(cr);
   const started = cr.length > 0 || done + doing > 0;
-  const steps: [string, number][] = [['Screened', tot.screened], ['Presumptive', tot.presumptive], ['Tested', tot.tested], ['Confirmed', tot.confirmed], ['Treated', tot.started_treatment]];
+  const steps: [string, number][] = [['Screened', tot.screened], ['Symptomatic', tot.presumptive], ['Tested', tot.tested], ['TB found', tot.confirmed], ['Treated', tot.started_treatment]];
   return (
     <Panel title={<span className="inline-flex items-center gap-2"><img src={iconUrl(started ? 'flag-green' : 'flag-red')} alt="" width={13} height={17} />{c.name}</span>}
       sub={`${[c.town, c.district_name].filter(Boolean).join(', ')}${c.start_date ? ` · starts ${c.start_date}` : ''} · ${c.status}`}
@@ -419,12 +419,16 @@ function GhanaPanel({ field, roles, scoped, list, nat, natRate, rank, campaigns,
   const sort = picked ?? (priorities?.picks.length ? 'ai' : 'count');
   const [region, setRegion] = useState('');
   const byId = useMemo(() => new Map(list.map((d) => [d.id, d])), [list]);
-  const aiRows = (priorities?.picks || []).map((p) => ({ p, d: byId.get(p.district_id) })).filter((x): x is { p: typeof x.p; d: TbDistrict } => !!x.d && !field.has(x.d.id) && (!region || x.d.region === region));
+  const picks = useMemo(() => new Map((priorities?.picks || []).map((p) => [p.district_id, p])), [priorities]);
   const [all, setAll] = useState(false);
   const regions = useMemo(() => Array.from(new Set(list.map((d) => d.region))).sort(), [list]);
+  const inRegion = (d: TbDistrict) => !region || d.region === region;
   // districts where our campaigns have reported results lead the list in every ordering; the ranking follows
-  const pinned = list.filter((d) => field.has(d.id) && (!region || d.region === region)).sort((a, b) => field.get(b.id)!.totals.screened - field.get(a.id)!.totals.screened);
-  const shown = [...list].filter((d) => !field.has(d.id) && (!region || d.region === region)).sort((a, b) => (sort === 'count' ? b.expected - a.expected : b.expected_100k - a.expected_100k));
+  const pinned = list.filter((d) => field.has(d.id) && inRegion(d)).sort((a, b) => field.get(b.id)!.totals.screened - field.get(a.id)!.totals.screened);
+  const ranked = sort === 'ai'
+    ? (priorities?.picks || []).map((p) => byId.get(p.district_id)).filter((d): d is TbDistrict => !!d && !field.has(d.id) && inRegion(d))
+    : list.filter((d) => !field.has(d.id) && inRegion(d)).sort((a, b) => (sort === 'count' ? b.expected - a.expected : b.expected_100k - a.expected_100k));
+  const rows = [...pinned, ...(sort === 'ai' || all ? ranked : ranked.slice(0, 12))];
   const active = campaigns.filter((c) => c.status === 'planned' || c.status === 'active');
   return (
     <>
@@ -442,36 +446,12 @@ function GhanaPanel({ field, roles, scoped, list, nat, natRate, rank, campaigns,
         right={<div className="flex items-center gap-2 shrink-0"><Why text={sort === 'ai' ? PRIORITY_HOW : `Cases a year = new TB cases expected in this district in one year, not cases counted (district notifications need DHIMS2). Made from WHO's ${nat?.year ?? 'latest'} Ghana rates by age and sex (WHO Global TB Programme) × the district's people by age and sex (GSS Census 2021, grown to 2026 with WorldPop) × its region's HIV, undernourishment and smoking (DHS 2022/2014), scaled so all ${list.length} districts add up to WHO's ${fmtInt(nat?.incidence)}. Per 100k people = cases a year ÷ people living there × 100,000, so districts of different size compare fairly${natRate ? `; Ghana's is ${fmtInt(natRate)}` : ''}.`} /><div className="flex rounded-lg bg-gray-100 p-0.5 text-sm">{(priorities?.picks.length ? (['ai', 'count', 'rate'] as const) : (['count', 'rate'] as const)).map((k) => <button key={k} type="button" onClick={() => setSort(k)} className={cx('px-2.5 py-1 rounded-md whitespace-nowrap', sort === k ? 'bg-white shadow-sm font-medium' : 'text-gray-600')}>{k === 'ai' ? 'AI priority' : k === 'count' ? 'Most cases' : 'Highest rate'}</button>)}</div></div>}>
         {sort === 'ai' && priorities && <p className="text-xs text-gray-500 -mt-1 mb-3">{priorityInputs(priorities)}</p>}
         <Select className="w-full mb-2 [&_select]:h-9 [&_select]:text-sm" value={region} onChange={setRegion} placeholder={`All ${regions.length} regions`} options={regions.map((r) => ({ value: r, label: r }))} />
-        {pinned.length > 0 && <ul className="divide-y divide-gray-100 border-b border-gray-100 mb-1">{pinned.map((d) => <FieldRow key={d.id} d={d} f={field.get(d.id)!} onOpen={() => onOpen(d.id)} />)}</ul>}
-        {sort === 'ai' ? (
-          aiRows.length ? <ol className="divide-y divide-gray-100">{aiRows.map(({ p, d }, i) => <PriorityRow key={p.district_id} pick={p} rank={i + 1} d={d} flags={flagsFor(d, rank)} onOpen={() => onOpen(d.id)} />)}</ol>
-            : <p className="text-sm text-gray-500 py-3">No AI priority in this region today. Switch to Most cases or Highest rate to see its districts.</p>
-        ) : (
-        <ol className="divide-y divide-gray-100 -mx-1">
-          {shown.slice(0, all ? shown.length : 12).map((d, i) => {
-            const flags = flagsFor(d, rank);
-            return (
-              <li key={d.id}>
-                <button type="button" onClick={() => onOpen(d.id)} className="w-full text-left px-1 py-3.5 flex gap-3 hover:bg-gray-50 rounded-lg">
-                  <span className="w-6 text-sm text-gray-400 tabular-nums pt-0.5">{i + 1}</span>
-                  <span className="min-w-0 flex-1">
-                    <span className="flex items-baseline justify-between gap-2">
-                      <span className="font-medium text-gray-900 truncate">{d.name}</span>
-                      <span className="shrink-0 tabular-nums font-semibold">{sort === 'count' ? fmtInt(d.expected) : fmtInt(d.expected_100k)}<span className="text-xs font-normal text-gray-500">{sort === 'count' ? ' cases a year' : ' per 100k people'}</span></span>
-                    </span>
-                    <span className="flex items-center justify-between gap-2 text-xs text-gray-500">
-                      <span className="truncate">{d.region} · {sort === 'count' ? `${fmtInt(d.expected_100k)} per 100k people` : `${fmtInt(d.expected)} cases a year`}</span>
-                      <span className={cx('shrink-0 font-medium', d.vs_ghana >= 1 ? 'text-red-700' : 'text-green-700')}>{vsGhana(d.vs_ghana)}</span>
-                    </span>
-                    {flags.length > 0 && <span className="flex flex-wrap gap-1 mt-1">{flags.map((f) => <span key={f} className="text-[11px] px-1.5 py-px rounded bg-orange-50 text-orange-800">{f}</span>)}</span>}
-                  </span>
-                </button>
-              </li>
-            );
-          })}
-        </ol>
+        {!rows.length ? <p className="text-sm text-gray-500 py-3">No AI priority in this region today. Switch to Most cases or Highest rate to see its districts.</p> : (
+          <ol className="divide-y divide-gray-100">
+            {rows.map((d, i) => <DistrictRow key={d.id} d={d} rank={i + 1} sort={sort} pick={picks.get(d.id) || null} flags={flagsFor(d, rank)} field={field.get(d.id) || null} onOpen={() => onOpen(d.id)} />)}
+          </ol>
         )}
-        {sort !== 'ai' && shown.length > 12 && <button type="button" className="text-sm text-brand-700 hover:underline mt-2" onClick={() => setAll(!all)}>{all ? 'Show top 12' : `Show all ${shown.length}`}</button>}
+        {sort !== 'ai' && ranked.length > 12 && <button type="button" className="text-sm text-brand-700 hover:underline mt-2" onClick={() => setAll(!all)}>{all ? 'Show top 12' : `Show all ${ranked.length + pinned.length}`}</button>}
       </Panel>
       <WhoDoesWhat roles={roles} levels={['national', 'regional']} here={scoped && regions.length === 1 ? `Ghana and the ${regions[0]} region` : 'Ghana and its regions'} />
     </>
@@ -853,38 +833,61 @@ const monthOf = (iso: string, year = false) => new Date(`${iso.slice(0, 7)}-01T0
 const spanWords = (f: FieldStats) => `${monthOf(f.first)}–${monthOf(f.last, true)}`;
 const oneIn = (found: number, screened: number) => (found > 0 ? `1 in ${fmtInt(screened / found)}` : 'none found');
 
-/** A pinned list row for a district with our results; the arrow opens its cascade. */
-function FieldRow({ d, f, onOpen }: { d: TbDistrict; f: FieldStats; onOpen: () => void }) {
-  const [open, setOpen] = useState(false);
-  const t = f.totals;
+/** Made-up cascade for a district no campaign has reported from yet, so every list row works the same way for the
+ *  demo. Deterministic per district (screening a few times its expected yearly cases) and always labelled as sample. */
+function sampleCascade(d: TbDistrict): Record<string, number> {
+  let h = 0;
+  for (const ch of d.id) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  const r = (k: number) => ((h >>> k) % 1000) / 1000;
+  const screened = Math.round(d.expected * (4 + 4 * r(0)));
+  const presumptive = Math.round(screened * (0.3 + 0.15 * r(3)));
+  const tested = Math.round(presumptive * (0.55 + 0.2 * r(6)));
+  const confirmed = Math.round(tested * (0.08 + 0.1 * r(9)));
+  return { screened, presumptive, tested, confirmed, started_treatment: Math.round(confirmed * (0.85 + 0.15 * r(12))) };
+}
+
+/** One district in "Where to screen next": the same row for every district and every ordering. The funnel shows our
+ *  reported results where campaigns have reported, and sample figures elsewhere. */
+function DistrictRow({ d, rank, sort, pick, flags, field, onOpen }: { d: TbDistrict; rank: number; sort: 'ai' | 'count' | 'rate'; pick: TbPriorityPick | null; flags: string[]; field: FieldStats | null; onOpen: () => void }) {
+  const [open, setOpen] = useState<'' | 'why' | 'funnel'>('');
+  const t = field?.totals || sampleCascade(d);
+  const flip = (k: 'why' | 'funnel') => setOpen(open === k ? '' : k);
   return (
-    <li className="py-1">
-      <div className="flex items-start gap-1">
-        <button type="button" onClick={onOpen} className="min-w-0 flex-1 text-left px-1 py-2.5 flex gap-3 hover:bg-gray-50 rounded-lg">
-          <Icon name="flag" size={16} className="text-green-700 mt-0.5 shrink-0" />
-          <span className="min-w-0 flex-1">
-            <span className="flex items-baseline justify-between gap-2">
-              <span className="font-medium text-gray-900 truncate">{d.name}</span>
-              <span className="shrink-0 tabular-nums font-semibold">{fmtInt(t.confirmed)}<span className="text-xs font-normal text-gray-500"> found</span></span>
-            </span>
-            <span className="flex items-center justify-between gap-2 text-xs text-gray-500">
-              <span className="truncate">{d.region} · {f.campaigns.length} campaign{f.campaigns.length === 1 ? '' : 's'} reporting · {spanWords(f)}</span>
-              <span className="shrink-0">{fmtInt(t.screened)} screened</span>
-            </span>
-            <span className="inline-block mt-1 text-[11px] px-1.5 py-px rounded bg-green-50 text-green-800">Our field results</span>
-          </span>
-        </button>
-        <button type="button" onClick={() => setOpen(!open)} aria-expanded={open} aria-label={open ? 'Hide results' : 'Show results'} className="mt-2 w-8 h-8 rounded-lg grid place-items-center text-gray-500 hover:bg-gray-100 shrink-0">
-          <Icon name="chevronDown" size={16} className={open ? 'rotate-180' : ''} />
-        </button>
-      </div>
-      {open && (
-        <div className="px-1 pb-3 pt-1">
-          <Funnel t={t} />
-          <p className="text-xs text-gray-600 mt-2.5"><b>{oneIn(t.confirmed, t.screened)}</b> people screened had TB · {f.open} open task{f.open === 1 ? '' : 's'}</p>
-          <Button variant="primary" icon="map" className="mt-2.5" onClick={onOpen}>Open {d.name.replace(/\s*\(.*\)$/, '')}</Button>
+    <li className="py-4 flex gap-3">
+      <span className="w-6 text-sm text-gray-400 tabular-nums pt-0.5">{rank}</span>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-start justify-between gap-2">
+          <button type="button" onClick={onOpen} className="min-w-0 text-left font-medium text-gray-900 hover:underline">{d.name}</button>
+          {sort === 'ai' ? pick && <SignalTag s={pick.signal} />
+            : <span className="shrink-0 tabular-nums font-semibold">{fmtInt(sort === 'count' ? d.expected : d.expected_100k)}<span className="text-xs font-normal text-gray-500">{sort === 'count' ? ' cases a year' : ' per 100k'}</span></span>}
         </div>
-      )}
+        <div className="flex items-center justify-between gap-2 text-xs text-gray-500 mt-0.5">
+          <span className="truncate">{d.region} · {fmtInt(d.expected)} cases a year · {fmtInt(d.expected_100k)} per 100k people</span>
+          {sort !== 'ai' && <span className={cx('shrink-0 font-medium', d.vs_ghana >= 1 ? 'text-red-700' : 'text-green-700')}>{vsGhana(d.vs_ghana)}</span>}
+        </div>
+        {pick && sort === 'ai' && <p className="text-sm text-gray-800 mt-2 leading-relaxed">{pick.why}</p>}
+        {(field || flags.length > 0) && (
+          <div className="flex flex-wrap gap-1 mt-2">
+            {field && <span className="text-[11px] px-1.5 py-px rounded bg-green-50 text-green-800">Our field results: {fmtInt(field.totals.confirmed)} found in {fmtInt(field.totals.screened)} screened</span>}
+            {flags.slice(0, 3).map((f) => <span key={f} className="text-[11px] px-1.5 py-px rounded bg-orange-50 text-orange-800">{f}</span>)}
+          </div>
+        )}
+        <div className="flex gap-4 mt-2 text-sm">
+          {pick && <button type="button" onClick={() => flip('why')} aria-expanded={open === 'why'} className="inline-flex items-center gap-1 text-brand-700 hover:underline">Why this district <Icon name="chevronDown" size={14} className={open === 'why' ? 'rotate-180' : ''} /></button>}
+          <button type="button" onClick={() => flip('funnel')} aria-expanded={open === 'funnel'} className="inline-flex items-center gap-1 text-brand-700 hover:underline">Screening funnel <Icon name="chevronDown" size={14} className={open === 'funnel' ? 'rotate-180' : ''} /></button>
+        </div>
+        {open === 'why' && pick && <div className="mt-2 rounded-xl bg-gray-50 p-3.5"><Factors pick={pick} /><Towns pick={pick} /></div>}
+        {open === 'funnel' && (
+          <div className="mt-2 -ml-9 rounded-xl bg-gray-50 p-3">
+            <div className="flex items-start justify-between gap-2 mb-2 text-xs text-gray-600">
+              <span>{field ? `${field.campaigns.length} campaign${field.campaigns.length === 1 ? '' : 's'} · daily reports ${spanWords(field)} · ${field.open} open task${field.open === 1 ? '' : 's'}` : 'No campaign has reported here yet: these are sample figures, not data.'}</span>
+              {field ? <BasisTag b="reported" /> : <span className="shrink-0 rounded px-1.5 py-px text-[11px] font-medium bg-gray-200 text-gray-700">Sample</span>}
+            </div>
+            <Funnel t={t} />
+            <p className="text-xs text-gray-600 mt-2"><b>{oneIn(t.confirmed, t.screened)}</b> people screened had TB</p>
+          </div>
+        )}
+      </div>
     </li>
   );
 }

@@ -179,8 +179,11 @@ export function WhoDoesWhat({ roles, levels, categories, here, active }: { roles
   );
 }
 
-/** Roles a task can be given, grouped by level, for a select. */
-export const roleOptions = (roles: TbStaffRole[]) => LEVELS.flatMap((l) => roles.filter((r) => r.level === l.key).sort((a, b) => a.sort - b.sort).map((r) => ({ value: roleName(r), label: `${l.label}: ${roleName(r)}${r.tb_role && r.tb_role !== r.cadre ? ` · ${r.cadre}` : ''}` })));
-/** The staff role behind a task's role name, if any. */
-export const roleBehind = (roles: TbStaffRole[], name: string | null | undefined) => (name ? roles.find((r) => roleName(r).toLowerCase() === name.toLowerCase()) || null : null);
-export const roleLine = (r: TbStaffRole) => `Done by the ${r.cadre} (${levelLabel(r.level).toLowerCase()} level: ${r.unit_type}).${r.duty ? ` ${r.duty}` : ''}`;
+/** Roles a task can be given, grouped by level, for a select. A name used at two levels (a cadre and a playbook role)
+ *  appears once, at the level whose role the playbooks assign. */
+export const roleOptions = (roles: TbStaffRole[]) => {
+  const owner = new Map<string, TbStaffRole>();
+  for (const r of roles) if (!owner.has(roleName(r)) || r.tb_role) owner.set(roleName(r), r);
+  return LEVELS.flatMap((l) => roles.filter((r) => r.level === l.key && owner.get(roleName(r)) === r).sort((a, b) => a.sort - b.sort)
+    .map((r) => ({ value: roleName(r), label: `${l.label}: ${roleName(r)}${r.tb_role && r.tb_role !== r.cadre ? ` · ${r.cadre}` : ''}` })));
+};

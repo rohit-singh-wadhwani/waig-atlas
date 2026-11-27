@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import Icon, { IconName } from './Icon';
 import { initials } from '../lib/format';
 
@@ -161,7 +162,8 @@ export function Drawer({ open, onClose, title, subtitle, children, width = 720 }
     return () => window.removeEventListener('keydown', k);
   }, [open, onClose]);
   if (!open) return null;
-  return (
+  // rendered on <body> so the dimmed backdrop always covers the whole window, whatever the page around it does
+  return createPortal(
     <div className="fixed inset-0 z-50 flex justify-end">
       <div className="absolute inset-0 bg-gray-900/20" onClick={onClose} />
       <aside className="relative bg-gray-50 h-full overflow-y-auto shadow-2xl border-l border-gray-200 w-full" style={{ maxWidth: width }}>
@@ -174,13 +176,14 @@ export function Drawer({ open, onClose, title, subtitle, children, width = 720 }
         </div>
         <div className="p-6 space-y-5">{children}</div>
       </aside>
-    </div>
+    </div>,
+    document.body
   );
 }
 
 export function Modal({ open, onClose, title, children, footer }: { open: boolean; onClose: () => void; title: string; children: React.ReactNode; footer?: React.ReactNode }) {
   if (!open) return null;
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-gray-900/30" onClick={onClose} />
       <div role="dialog" aria-modal="true" className="relative bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col">
@@ -191,7 +194,8 @@ export function Modal({ open, onClose, title, children, footer }: { open: boolea
         <div className="px-6 py-4 space-y-3 overflow-y-auto min-h-0">{children}</div>
         {footer && <div className="px-6 pb-5 flex justify-end gap-2">{footer}</div>}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 

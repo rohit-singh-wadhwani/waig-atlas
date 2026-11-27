@@ -82,7 +82,7 @@ export function Stat({ label, value, sub, basis, how }: { label: string; value: 
 /** The screening cascade as a horizontal funnel: one column per step, block height to scale, each label on one line,
  *  and the share kept from the step before. `t` uses campaign result keys (see cascadeTotals). */
 const FUNNEL: { key: string; label: string; tone: string }[] = [
-  { key: 'screened', label: 'Screened', tone: 'bg-brand-300' }, { key: 'presumptive', label: 'Presumptive', tone: 'bg-brand-500' },
+  { key: 'screened', label: 'Screened', tone: 'bg-brand-300' }, { key: 'presumptive', label: 'Symptomatic', tone: 'bg-brand-500' },
   { key: 'tested', label: 'Tested', tone: 'bg-brand-600' }, { key: 'confirmed', label: 'TB found', tone: 'bg-red-700' },
   { key: 'started_treatment', label: 'Treated', tone: 'bg-green-600' },
 ];

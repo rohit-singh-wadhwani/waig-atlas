@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardHeader, ExtLink, cx } from '../../components/ui';
-import Icon from '../../components/Icon';
 import { fmtDate } from '../../lib/format';
-import { fmtInt, TbDistrict, TbPriorities, TbPriorityPick } from '../../lib/tb';
+import { TbPriorities, TbPriorityPick } from '../../lib/tb';
 
 // The daily AI ranking of where to screen next, shown in the district list, inside a district, and on the Overview.
 
@@ -43,7 +42,7 @@ export function Factors({ pick }: { pick: TbPriorityPick }) {
 }
 
 /** "Start with" towns for a pick; clickable when the district's towns are on screen. */
-function Towns({ pick, onTown }: { pick: TbPriorityPick; onTown?: (name: string) => void }) {
+export function Towns({ pick, onTown }: { pick: TbPriorityPick; onTown?: (name: string) => void }) {
   if (!pick.towns.length) return null;
   return (
     <div className="mt-3 pt-3 border-t border-gray-200/70">
@@ -57,29 +56,6 @@ function Towns({ pick, onTown }: { pick: TbPriorityPick; onTown?: (name: string)
         ))}
       </ul>
     </div>
-  );
-}
-
-/** One district in the AI-ranked list: the reason in a line, key flags, and the full reasoning on request. */
-export function PriorityRow({ pick, rank, d, flags, onOpen }: { pick: TbPriorityPick; rank: number; d: TbDistrict; flags: string[]; onOpen: () => void }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <li className="py-4 flex gap-3">
-      <span className="w-6 text-sm text-gray-400 tabular-nums pt-0.5">{rank}</span>
-      <div className="min-w-0 flex-1">
-        <div className="flex items-start justify-between gap-2">
-          <button type="button" onClick={onOpen} className="text-left font-medium text-gray-900 hover:underline">{d.name}</button>
-          <SignalTag s={pick.signal} />
-        </div>
-        <div className="text-xs text-gray-500 mt-0.5">{d.region} · {fmtInt(d.expected)} cases a year · {fmtInt(d.expected_100k)} per 100k people</div>
-        <p className="text-sm text-gray-800 mt-2 leading-relaxed">{pick.why}</p>
-        {flags.length > 0 && <div className="flex flex-wrap gap-1 mt-2">{flags.slice(0, 3).map((f) => <span key={f} className="text-[11px] px-1.5 py-px rounded bg-orange-50 text-orange-800">{f}</span>)}</div>}
-        <button type="button" onClick={() => setOpen(!open)} aria-expanded={open} className="mt-2 inline-flex items-center gap-1 text-sm text-brand-700 hover:underline">
-          Why this district <Icon name="chevronDown" size={14} className={open ? 'rotate-180' : ''} />
-        </button>
-        {open && <div className="mt-2 rounded-xl bg-gray-50 p-3.5"><Factors pick={pick} /><Towns pick={pick} /></div>}
-      </div>
-    </li>
   );
 }
 

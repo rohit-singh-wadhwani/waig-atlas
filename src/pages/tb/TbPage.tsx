@@ -75,7 +75,7 @@ export default function TbPage() {
           <div className="mb-5 overflow-x-auto">
             <Segmented<Tab>
               value={tab}
-              onChange={setTab}
+              onChange={(t) => { setOpenId(null); setTab(t); }}
               options={[
                 { value: 'explore', label: 'Find and act' },
                 { value: 'campaigns', label: `Campaigns & tasks${open.length ? ` (${open.length} open)` : ''}` },
