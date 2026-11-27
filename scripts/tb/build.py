@@ -57,6 +57,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from tblib import (OUT, NOW, SOURCES, GROUPS, S, get, source, not_used, log, r2, km_xy, norm_region,  # noqa: E402
                    map_friction, travel_field, haversine_km, dhs_regional, who_tb)
 import osm  # noqa: E402
+import outreach  # noqa: E402
 import buildings  # noqa: E402
 
 PX = 'https://statsbank.statsghana.gov.gh/api/v1/en/PHC%202021%20StatsBank/'
@@ -380,7 +381,8 @@ def main():
     who_year, age_groups = who_age_sex()
     dhs = dhs_regional()
     cen = census()
-    facilities, sites, towns, comm, roads = osm.load()
+    facilities, sites, places, comm, roads = osm.load()
+    towns = [p for p in places if p['place'] in osm.PLACES]
     facilities = merge_facilities(facilities, who_kemri_facilities())
     b_lon, b_lat = buildings.load()
     reported = dhims_regions()
@@ -575,6 +577,8 @@ def main():
         fmin, hmin = np.where(fkm > 0, np.maximum(fmin, 1), fmin), np.where(hkm > 0, np.maximum(hmin, 1), hmin)  # never show 0 min
         return dict(fkm=fkm, fmin=np.where(fok, fmin, np.nan), fname=[facilities[k]['name'] if k >= 0 else None for k in fi],
                     hkm=hkm, hmin=np.where(hok, hmin, np.nan), hname=[hosp[k]['name'] if k >= 0 else None for k in hi])
+
+    outreach.locate(places, facilities + sites + comm, dists, which, near, people_within, HEX_RES, CATCH_KM)
 
     # ---- hexagons per district ----
     # every populated 100 m cell gets its hexagon; cells are then sorted so each hexagon's cells sit together

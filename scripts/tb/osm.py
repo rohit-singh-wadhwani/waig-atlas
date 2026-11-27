@@ -5,7 +5,8 @@ queries whose answers depended on which server replied. Returns:
   facilities  clinics, hospitals, health posts, labs (with ownership where tagged)
   sites       congregate and occupational exposure: markets, lorry stations, prisons, mines and quarries,
               ports, industrial zones
-  places      named cities, towns, suburbs, villages, hamlets
+  places      named cities, towns, suburbs, villages, hamlets, plus neighbourhoods, quarters and localities
+              (these last three only name places, e.g. for outreach returns; they do not become town areas)
   venues      community gathering places: schools, places of worship, community centres, pharmacies, NGO offices
   roads       points along motorable roads and tracks (for snapping suggested screening points to a road)
 """
@@ -26,7 +27,8 @@ PBF_PATH = '/tmp/ghana-latest.osm.pbf'
 HEALTH_AMENITY = {'hospital', 'clinic', 'doctors', 'health_post'}
 HEALTH_CARE = {'hospital', 'clinic', 'centre', 'laboratory', 'doctor'}
 COMMUNITY = {'school': 'school', 'place_of_worship': 'place of worship', 'community_centre': 'community centre', 'pharmacy': 'pharmacy'}
-PLACES = {'city', 'town', 'suburb', 'village', 'hamlet'}
+PLACES = {'city', 'town', 'suburb', 'village', 'hamlet'}  # become town areas
+LOCALITIES = {'neighbourhood', 'quarter', 'locality'}
 # roads a screening team can reach by vehicle or motorbike
 ROADS = {'motorway', 'trunk', 'primary', 'secondary', 'tertiary', 'unclassified', 'residential', 'living_street', 'service', 'track',
          'trunk_link', 'primary_link', 'secondary_link', 'tertiary_link'}
@@ -75,7 +77,7 @@ class _Handler(osmium.SimpleHandler):
         t = n.tags
         if not len(t):
             return
-        if t.get('place') in PLACES and t.get('name'):
+        if (t.get('place') in PLACES or t.get('place') in LOCALITIES) and t.get('name'):
             self.places.append({'lon': n.location.lon, 'lat': n.location.lat, 'name': t['name'], 'place': t['place']})
             return
         self._take(dict(t), n.location.lon, n.location.lat)

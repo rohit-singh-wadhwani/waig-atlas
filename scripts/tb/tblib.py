@@ -33,7 +33,7 @@ RISK_NAMES = {'hiv': 'HIV', 'und': 'undernourishment', 'smk': 'smoking', 'alc': 
 GROUPS = ('TB numbers', 'Who lives where', 'Who is at risk', 'Places and access', 'Boundaries', 'Not used yet')
 
 
-AURUM = ('used', 'replaced', 'share')  # recommended by Aurum and in use · recommended but better data used · Aurum to share
+AURUM = ('used', 'replaced', 'share', 'shared')  # recommended by Aurum and in use · recommended but better data used · Aurum to share · shared by Aurum
 
 
 def source(name, url, ok, note='', page=None, group='Other', gives='', use='', aurum=None):
@@ -41,7 +41,7 @@ def source(name, url, ok, note='', page=None, group='Other', gives='', use='', a
     says why). `page` is the dataset's landing page (shown to users), `url` what the pipeline fetched; `gives` and
     `use` say what it holds and what Atlas does with it. `aurum` ties it to Aurum: 'used' = on Aurum's recommended
     list and in use, 'replaced' = recommended but better data is used (the note says which), 'share' = data Aurum
-    or its partners need to share."""
+    or its partners need to share, 'shared' = data Aurum has shared and Atlas uses."""
     assert aurum in (None, *AURUM), aurum
     SOURCES.append({'name': name, 'url': url, 'page': page or url, 'ok': ok, 'note': note, 'at': NOW, 'group': group, 'gives': gives, 'use': use, 'aurum': aurum})
     log('SOURCE', name, {True: 'OK', False: 'FAILED', None: 'NOT USED'}[ok], note)
