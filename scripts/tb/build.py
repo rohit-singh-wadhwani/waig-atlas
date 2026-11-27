@@ -626,6 +626,8 @@ def main():
 
     # ---- write per-district files ----
     feats = []
+    # crowding is measured against Ghana as a whole: people per building over every district
+    ppb_ghana = sum(d['pop'] for d in dists) / max(sum(d.get('buildings') or 0 for d in dists), 1) if bgrid is not None else None
     for d in dists:
         i = d['i'] + 1
         hexes = by_d.get(d['i'], [])
@@ -719,6 +721,14 @@ def main():
         for f in d['facilities']:
             own[f.get('own') or 'not recorded'] = own.get(f.get('own') or 'not recorded', 0) + 1
         json.dump({'id': d['id'], 'hexes': hex_out, 'towns': town_out, 'venues': keep, 'facilities': fac_out}, open(os.path.join(DD, f'{d["id"]}.json'), 'w'), separators=(',', ':'), allow_nan=False)
+        # likely next hotspots: the hexagons where most TB is expected in a year, weighted by how crowded their homes are
+        # against Ghana's average (both measured). The prediction model replaces this once monthly DHIMS2 and screening
+        # data are connected.
+        def crowd(h):
+            return (h['p'] / h['b']) / ppb_ghana if ppb_ghana and h.get('b') else 1.0
+        hot = [{'h': h['h'], 'town': town_out[h['t']]['name'] if 0 <= h['t'] < len(town_out) else None, 'lon': h['s'][0], 'lat': h['s'][1], 'p': h['p'], 'b': h.get('b'),
+                'e': h['e'], 'w': h['w'], 'f': h['f'], 'crowd': r2(crowd(h), 2), 'score': r2((h['e'] or 0) * crowd(h), 2)}
+               for h in sorted((h for h in hex_out if h.get('s')), key=lambda h: -(h['e'] or 0) * crowd(h))[:3]]
 
         c = d['cen']
         gj = mapping(d['geom'].simplify(0.003, preserve_topology=True))
@@ -736,7 +746,7 @@ def main():
             'drive_min': r2(d_min[i], 0), 'walk_min': r2(d_wmin[i], 0), 'walk_far': r2(d_wfar[i], 3),
             'facilities': len(d['facilities']), 'fac_own': own, 'hospitals': d['hospitals'], 'labs': d['labs'], 'fac_100k': r2(len(d['facilities']) / max(d['pop'], 1) * 1e5, 2),
             'markets': d['markets'], 'hubs': d['hubs'], 'prisons': d['prisons'], 'mines': d['mines'], 'ports': d['ports'], 'industrial': d['industrial'], 'towns': len(town_out),
-            'lon': r2(d['lon'], 4), 'lat': r2(d['lat'], 4)}})
+            'lon': r2(d['lon'], 4), 'lat': r2(d['lat'], 4), 'hot': hot}})
     json.dump({'type': 'FeatureCollection', 'features': feats}, open(os.path.join(OUT, 'districts.geojson'), 'w'), separators=(',', ':'), allow_nan=False)
     json.dump(reported, open(os.path.join(OUT, 'reported_regions.json'), 'w'), separators=(',', ':'))
     json.dump({'years': years, 'latest': nat}, open(os.path.join(OUT, 'national.json'), 'w'), indent=1)
