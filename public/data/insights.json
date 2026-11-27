@@ -1,6 +1,105 @@
 {
- "updated_at": "2026-11-25T10:27:06.245Z",
+ "updated_at": "2026-11-27T07:44:20.682Z",
  "insights": [
+  {
+   "id": "b2ee9506899e5190",
+   "title": "LIVE from #Haiti: Media briefing on the health situation with Dr Tedros",
+   "summary": "WHO Director-General Dr. Tedros holds a media briefing on the current health situation in Haiti.",
+   "url": "https://www.youtube.com/watch?v=C280MYCwnkE",
+   "published_at": "2026-11-26T00:42:00.000Z",
+   "source_id": "who-youtube",
+   "source_name": "WHO on YouTube",
+   "kind": "news",
+   "countries": [
+    "HTI"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "0ca70e612336411a",
+   "title": "Tuberculosis after CAR T Cell Therapy: When Should the Differential Diagnosis Be Reopened?",
+   "summary": "A clinical paper discusses considerations for diagnosing tuberculosis in patients who have undergone CAR T cell therapy.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/43084041/",
+   "published_at": "2026-11-25T17:33:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [],
+   "diseases": [
+    "tuberculosis"
+   ]
+  },
+  {
+   "id": "2bee4ccc6ed00de4",
+   "title": "[Expert consensus on imaging diagnosis of comorbid pulmonary tuberculosis and lung cancer (2026 edition)].",
+   "summary": "This expert consensus outlines imaging diagnostic criteria for comorbid pulmonary tuberculosis and lung cancer. It provides clinical reference standards relevant for imaging analysis and AI diagnostics.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/43079827/",
+   "published_at": "2026-11-25T05:33:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [
+    "CHN"
+   ],
+   "diseases": [
+    "tuberculosis",
+    "lung cancer"
+   ]
+  },
+  {
+   "id": "0354eb191cddc6e7",
+   "title": "Supply, Installation, and Commissioning of Power Backup Infrastructure and Wireless Network Upgrade",
+   "summary": "The Africa CDC has issued an invitation for bids for power backup infrastructure and wireless network upgrades to combat public health threats.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00483788",
+   "published_at": "2026-11-25T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "d93ddf5524b2bcd1",
+   "title": "Consultancy service for Feasibility Study & Detail Designs for  Small Dam for Water Supply and Sanitation Purpose for El-ogaden, Mubarak, Marsin,  Filtu, Dollo-bay & Aware project Woredas",
+   "summary": "Request for feasibility study and design for water supply and sanitation dams in Ethiopia.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00483618",
+   "published_at": "2026-11-25T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "ETH"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "efc2c2c58072d78e",
+   "title": "Supply and delivery of Laboratory equipment,reagents and essential supplies for the 69 project Districts  and the National bull stud under Lots Lots 1,2&3",
+   "summary": "Invitation to bid for the supply of laboratory equipment, reagents, and essential supplies across districts in Uganda.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00483699",
+   "published_at": "2026-11-25T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "UGA"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "77917feb1dcad26e",
+   "title": "Equipment Procurement for Department of Agriculture and Rural Affairs (14th Contract 4rd Batch)（1.4.2）",
+   "summary": "Equipment procurement for an emerging infectious diseases prevention, preparedness, and response project in China.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00482792",
+   "published_at": "2026-11-25T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "CHN"
+   ],
+   "diseases": []
+  },
   {
    "id": "ddbbfa24701b8b52",
    "title": "Influenza A(H5N1) - United States of America",
@@ -28,6 +127,120 @@
    "diseases": [
     "Ebola"
    ]
+  },
+  {
+   "id": "78637dad21cfcd9d",
+   "title": "Recrutement du Coordonnateur du Projet HeSP",
+   "summary": "A recruitment notice has been posted for a Project Coordinator for the Health Security Program in Western and Central Africa.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00483563",
+   "published_at": "2026-11-24T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "5197fef2d72b90c0",
+   "title": "Supply and Delivery of 10 No. Laboratory Testing Commodities for National Strategic Stockpile (Fisher Scientific UK)",
+   "summary": "A contract was awarded for the supply and delivery of laboratory testing commodities for the national strategic stockpile in Eastern and Southern Africa.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00483308",
+   "published_at": "2026-11-24T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "bbf62c9d41a5e89d",
+   "title": "Supply and Delivery of 14 No. Laboratory Testing Commodities for National Strategic Stockpile (Eppendorf)",
+   "summary": "A contract was awarded for laboratory testing commodities for the national strategic stockpile across Eastern and Southern Africa.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00483313",
+   "published_at": "2026-11-24T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "c829c64d1b76cc0d",
+   "title": "Supply and Delivery of Laboratory Testing Commodities for National Strategic Stockpile (Illumina)",
+   "summary": "A contract was awarded for the supply of laboratory testing commodities for the national strategic stockpile in Eastern and Southern Africa.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00483309",
+   "published_at": "2026-11-24T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "c6a9bd1d40067e33",
+   "title": "Supply and Delivery of ICT Hardware- 10 No. Laptops, 5 No. desktops, 1 No. Server, 1 No. Backup And Restore Appliance  and 1 No. Smart Rack Appliance",
+   "summary": "A contract has been awarded for the procurement of ICT hardware, including servers and laptops, to support health emergency preparedness in Eastern and Southern Africa.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00483331",
+   "published_at": "2026-11-24T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "ebdabe05c743616b",
+   "title": "Supply and Delivery of Laboratory Testing Commodities for National Strategic Stockpile (Medico)",
+   "summary": "A contract has been awarded for the supply of laboratory testing commodities to support national strategic stockpiles in Eastern and Southern Africa.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00483307",
+   "published_at": "2026-11-24T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [],
+   "diseases": []
+  },
+  {
+   "id": "1561f13374578e0a",
+   "title": "Supply and delivery of Mobile (smartphones), tablets, and Solar Charging Solutions for smartphones for Female Health Workers (FHW) – Ministry of Health",
+   "summary": "Somalia is procuring mobile devices and solar charging solutions to support female health workers in the field.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00483351",
+   "published_at": "2026-11-24T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "SOM"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "918ab7f64a322a21",
+   "title": "Individual Consultant to enhance NICHE MIS and Develop ADoP MIS.",
+   "summary": "Kenya is seeking a consultant to enhance the NICHE management information system and develop a new ADoP MIS.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00483444",
+   "published_at": "2026-11-24T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "KEN"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "f0acc6df995b2962",
+   "title": "Bonriki Water Reserve Sanitary Survey and Rainwater Harvesting Assessment",
+   "summary": "Kiribati is conducting a sanitary survey and rainwater harvesting assessment for the Bonriki Water Reserve, which is relevant to waterborne disease prevention.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00483558",
+   "published_at": "2026-11-24T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "KIR"
+   ],
+   "diseases": []
   },
   {
    "id": "5960ee1d8b8fed93",

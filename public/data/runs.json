@@ -2,6 +2,156 @@
  "runs": [
   {
    "job": "insights",
+   "at": "2026-11-27T07:44:20.683Z",
+   "ok": true,
+   "message": "0 new insights (0 candidates), 240 kept · Gemini 0/6 calls ok (last error: Gemini gemini-3.1-flash-lite-preview (search) quota: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://aistudio.google.com/docs/rate-)"
+  },
+  {
+   "job": "insights",
+   "at": "2026-11-27T04:28:37.845Z",
+   "ok": true,
+   "message": "0 new insights (0 candidates), 240 kept · Gemini 0/6 calls ok (last error: Gemini gemini-3.1-flash-lite-preview (search) quota: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://aistudio.google.com/docs/rate-)"
+  },
+  {
+   "job": "grants",
+   "at": "2026-11-27T03:53:29.510Z",
+   "ok": true,
+   "message": "0 new calls added (8 candidates), 92 tracked · Gemini 2/2 calls ok"
+  },
+  {
+   "job": "scout",
+   "at": "2026-11-27T03:53:12.440Z",
+   "ok": true,
+   "message": "0 new opportunities written up (0 rated High/Medium) from 1 candidates (0 queued for the next run) · Gemini 4/22 calls ok (last error: Gemini gemini-3.8-flash 503)"
+  },
+  {
+   "job": "grants",
+   "at": "2026-11-27T02:42:01.106Z",
+   "ok": true,
+   "message": "1 new calls added (9 candidates), 92 tracked · Gemini 2/2 calls ok"
+  },
+  {
+   "job": "health",
+   "at": "2026-11-27T02:10:25.590Z",
+   "ok": true,
+   "message": "6 indicators"
+  },
+  {
+   "job": "insights",
+   "at": "2026-11-27T01:44:29.006Z",
+   "ok": true,
+   "message": "0 new insights (0 candidates), 240 kept · Gemini 0/6 calls ok (last error: Gemini gemini-3.1-flash-lite-preview (search) quota: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://aistudio.google.com/docs/rate-)"
+  },
+  {
+   "job": "insights",
+   "at": "2026-11-26T22:16:18.621Z",
+   "ok": true,
+   "message": "0 new insights (0 candidates), 240 kept · Gemini 0/6 calls ok (last error: Gemini gemini-3.1-flash-lite-preview (search) quota: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://aistudio.google.com/docs/rate-)"
+  },
+  {
+   "job": "insights",
+   "at": "2026-11-26T19:24:27.258Z",
+   "ok": true,
+   "message": "0 new insights (0 candidates), 240 kept · Gemini 0/6 calls ok (last error: Gemini gemini-3.1-flash-lite-preview (search) quota: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://aistudio.google.com/docs/rate-)"
+  },
+  {
+   "job": "insights",
+   "at": "2026-11-26T16:25:32.706Z",
+   "ok": true,
+   "message": "0 new insights (0 candidates), 240 kept · Gemini 0/6 calls ok (last error: Gemini gemini-3.1-flash-lite-preview (search) quota: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://aistudio.google.com/docs/rate-)"
+  },
+  {
+   "job": "grants",
+   "at": "2026-11-26T14:43:18.762Z",
+   "ok": true,
+   "message": "0 new calls added (11 candidates), 92 tracked · Gemini 2/2 calls ok"
+  },
+  {
+   "job": "insights",
+   "at": "2026-11-26T13:42:59.880Z",
+   "ok": true,
+   "message": "4 new insights (23 candidates), 240 kept · Gemini 2/8 calls ok (last error: Gemini gemini-3.1-flash-lite-preview (search) quota: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://aistudio.google.com/docs/rate-)"
+  },
+  {
+   "job": "insights",
+   "at": "2026-11-26T10:28:25.986Z",
+   "ok": true,
+   "message": "0 new insights (0 candidates), 236 kept · Gemini 0/6 calls ok (last error: Gemini gemini-3.1-flash-lite-preview (search) quota: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://aistudio.google.com/docs/rate-)"
+  },
+  {
+   "job": "insights",
+   "at": "2026-11-26T07:45:22.813Z",
+   "ok": true,
+   "message": "0 new insights (0 candidates), 236 kept · Gemini 0/6 calls ok (last error: Gemini gemini-3.1-flash-lite-preview (search) quota: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://aistudio.google.com/docs/rate-)"
+  },
+  {
+   "job": "insights",
+   "at": "2026-11-26T04:25:25.024Z",
+   "ok": true,
+   "message": "0 new insights (0 candidates), 236 kept · Gemini 0/6 calls ok (last error: Gemini gemini-3.1-flash-lite-preview (search) quota: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://aistudio.google.com/docs/rate-)"
+  },
+  {
+   "job": "grants",
+   "at": "2026-11-26T03:40:06.280Z",
+   "ok": true,
+   "message": "0 new calls added (9 candidates), 92 tracked · Gemini 2/2 calls ok"
+  },
+  {
+   "job": "scout",
+   "at": "2026-11-26T03:39:45.740Z",
+   "ok": true,
+   "message": "0 new opportunities written up (0 rated High/Medium) from 4 candidates (0 queued for the next run) · Gemini 6/19 calls ok (last error: Gemini gemini-flash-latest quota: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://a"
+  },
+  {
+   "job": "grants",
+   "at": "2026-11-26T02:41:08.091Z",
+   "ok": true,
+   "message": "0 new calls added (10 candidates), 92 tracked · Gemini 2/2 calls ok"
+  },
+  {
+   "job": "health",
+   "at": "2026-11-26T02:06:43.821Z",
+   "ok": true,
+   "message": "6 indicators"
+  },
+  {
+   "job": "insights",
+   "at": "2026-11-26T01:43:00.092Z",
+   "ok": true,
+   "message": "2 new insights (2 candidates), 236 kept · Gemini 1/7 calls ok (last error: Gemini gemini-3.1-flash-lite-preview (search) quota: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://aistudio.google.com/docs/rate-)"
+  },
+  {
+   "job": "insights",
+   "at": "2026-11-25T22:16:50.780Z",
+   "ok": true,
+   "message": "0 new insights (0 candidates), 234 kept · Gemini 0/6 calls ok (last error: Gemini gemini-3.1-flash-lite-preview (search) quota: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://aistudio.google.com/docs/rate-)"
+  },
+  {
+   "job": "insights",
+   "at": "2026-11-25T19:17:04.477Z",
+   "ok": true,
+   "message": "0 new insights (0 candidates), 234 kept · Gemini 0/6 calls ok (last error: Gemini gemini-3.1-flash-lite-preview (search) quota: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://aistudio.google.com/docs/rate-)"
+  },
+  {
+   "job": "insights",
+   "at": "2026-11-25T16:29:34.910Z",
+   "ok": true,
+   "message": "0 new insights (1 candidates), 234 kept · Gemini 1/7 calls ok (last error: Gemini gemini-3.1-flash-lite-preview (search) quota: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://aistudio.google.com/docs/rate-)"
+  },
+  {
+   "job": "grants",
+   "at": "2026-11-25T14:51:21.988Z",
+   "ok": true,
+   "message": "9 new calls added (9 candidates), 92 tracked · Gemini 0/25 calls ok (last error: Gemini gemini-3.1-flash-lite-preview 503)"
+  },
+  {
+   "job": "insights",
+   "at": "2026-11-25T13:46:22.109Z",
+   "ok": true,
+   "message": "10 new insights (34 candidates), 234 kept · Gemini 3/21 calls ok (last error: Gemini gemini-flash-lite-latest 503)"
+  },
+  {
+   "job": "insights",
    "at": "2026-11-25T10:27:06.246Z",
    "ok": true,
    "message": "0 new insights (0 candidates), 224 kept · Gemini 0/6 calls ok (last error: Gemini gemini-3.1-flash-lite-preview (search) quota: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://aistudio.google.com/docs/rate-)"
@@ -209,156 +359,6 @@
    "at": "2026-11-22T22:00:34.986Z",
    "ok": true,
    "message": "0 new insights (0 candidates), 203 kept · Gemini 0/6 calls ok (last error: Gemini gemini-3.1-flash-lite-preview (search) quota: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://aistudio.google.com/docs/rate-)"
-  },
-  {
-   "job": "insights",
-   "at": "2026-11-22T19:12:25.389Z",
-   "ok": true,
-   "message": "0 new insights (0 candidates), 203 kept · Gemini 0/6 calls ok (last error: Gemini gemini-3.1-flash-lite-preview (search) quota: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://aistudio.google.com/docs/rate-)"
-  },
-  {
-   "job": "insights",
-   "at": "2026-11-22T16:02:12.582Z",
-   "ok": true,
-   "message": "0 new insights (0 candidates), 203 kept · Gemini 0/6 calls ok (last error: Gemini gemini-3.1-flash-lite-preview (search) quota: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://aistudio.google.com/docs/rate-)"
-  },
-  {
-   "job": "grants",
-   "at": "2026-11-22T14:29:07.221Z",
-   "ok": true,
-   "message": "0 new calls added (6 candidates), 89 tracked · Gemini 1/1 calls ok"
-  },
-  {
-   "job": "insights",
-   "at": "2026-11-22T13:19:19.627Z",
-   "ok": true,
-   "message": "0 new insights (2 candidates), 203 kept · Gemini 1/7 calls ok (last error: Gemini gemini-3.1-flash-lite-preview (search) quota: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://aistudio.google.com/docs/rate-)"
-  },
-  {
-   "job": "insights",
-   "at": "2026-11-22T10:05:18.295Z",
-   "ok": true,
-   "message": "0 new insights (0 candidates), 203 kept · Gemini 0/6 calls ok (last error: Gemini gemini-3.1-flash-lite-preview (search) quota: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://aistudio.google.com/docs/rate-)"
-  },
-  {
-   "job": "insights",
-   "at": "2026-11-22T07:32:49.056Z",
-   "ok": true,
-   "message": "0 new insights (0 candidates), 203 kept · Gemini 0/6 calls ok (last error: Gemini gemini-3.1-flash-lite-preview (search) quota: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://aistudio.google.com/docs/rate-)"
-  },
-  {
-   "job": "insights",
-   "at": "2026-11-22T04:15:25.094Z",
-   "ok": true,
-   "message": "0 new insights (0 candidates), 203 kept · Gemini 0/6 calls ok (last error: Gemini gemini-3.1-flash-lite-preview (search) quota: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://aistudio.google.com/docs/rate-)"
-  },
-  {
-   "job": "grants",
-   "at": "2026-11-22T03:23:55.608Z",
-   "ok": true,
-   "message": "0 new calls added (6 candidates), 89 tracked · Gemini 1/1 calls ok"
-  },
-  {
-   "job": "scout",
-   "at": "2026-11-22T03:23:45.742Z",
-   "ok": true,
-   "message": "0 new opportunities written up (0 rated High/Medium) from 1 candidates (0 queued for the next run) · Gemini 2/12 calls ok (last error: Gemini gemini-3.8-flash quota: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://aist"
-  },
-  {
-   "job": "grants",
-   "at": "2026-11-22T02:33:59.328Z",
-   "ok": true,
-   "message": "0 new calls added (6 candidates), 89 tracked · Gemini 1/1 calls ok"
-  },
-  {
-   "job": "health",
-   "at": "2026-11-22T01:55:41.917Z",
-   "ok": true,
-   "message": "6 indicators"
-  },
-  {
-   "job": "insights",
-   "at": "2026-11-22T01:31:11.558Z",
-   "ok": true,
-   "message": "0 new insights (0 candidates), 203 kept · Gemini 0/6 calls ok (last error: Gemini gemini-3.1-flash-lite-preview (search) quota: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://aistudio.google.com/docs/rate-)"
-  },
-  {
-   "job": "insights",
-   "at": "2026-11-21T21:58:50.311Z",
-   "ok": true,
-   "message": "0 new insights (0 candidates), 203 kept · Gemini 0/6 calls ok (last error: Gemini gemini-3.1-flash-lite-preview (search) quota: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://aistudio.google.com/docs/rate-)"
-  },
-  {
-   "job": "insights",
-   "at": "2026-11-21T19:10:31.510Z",
-   "ok": true,
-   "message": "0 new insights (0 candidates), 203 kept · Gemini 0/6 calls ok (last error: Gemini gemini-3.1-flash-lite-preview (search) quota: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://aistudio.google.com/docs/rate-)"
-  },
-  {
-   "job": "insights",
-   "at": "2026-11-21T16:02:56.600Z",
-   "ok": true,
-   "message": "0 new insights (0 candidates), 203 kept · Gemini 0/6 calls ok (last error: Gemini gemini-3.1-flash-lite-preview (search) quota: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://aistudio.google.com/docs/rate-)"
-  },
-  {
-   "job": "grants",
-   "at": "2026-11-21T14:28:37.800Z",
-   "ok": true,
-   "message": "0 new calls added (6 candidates), 89 tracked · Gemini 1/2 calls ok (last error: Gemini gemini-flash-lite-latest 503)"
-  },
-  {
-   "job": "insights",
-   "at": "2026-11-21T13:21:14.795Z",
-   "ok": true,
-   "message": "7 new insights (20 candidates), 203 kept · Gemini 2/8 calls ok (last error: Gemini gemini-3.1-flash-lite-preview (search) quota: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://aistudio.google.com/docs/rate-)"
-  },
-  {
-   "job": "insights",
-   "at": "2026-11-21T10:06:54.460Z",
-   "ok": true,
-   "message": "0 new insights (0 candidates), 196 kept · Gemini 0/6 calls ok (last error: Gemini gemini-3.1-flash-lite-preview (search) quota: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://aistudio.google.com/docs/rate-)"
-  },
-  {
-   "job": "insights",
-   "at": "2026-11-21T07:32:59.937Z",
-   "ok": true,
-   "message": "2 new insights (2 candidates), 196 kept · Gemini 1/7 calls ok (last error: Gemini gemini-3.1-flash-lite-preview (search) quota: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://aistudio.google.com/docs/rate-)"
-  },
-  {
-   "job": "insights",
-   "at": "2026-11-21T04:13:11.980Z",
-   "ok": true,
-   "message": "0 new insights (0 candidates), 194 kept · Gemini 0/6 calls ok (last error: Gemini gemini-3.1-flash-lite-preview (search) quota: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://aistudio.google.com/docs/rate-)"
-  },
-  {
-   "job": "grants",
-   "at": "2026-11-21T03:27:47.675Z",
-   "ok": true,
-   "message": "0 new calls added (6 candidates), 89 tracked · Gemini 1/1 calls ok"
-  },
-  {
-   "job": "scout",
-   "at": "2026-11-21T03:27:36.826Z",
-   "ok": true,
-   "message": "0 new opportunities written up (0 rated High/Medium) from 4 candidates (0 queued for the next run) · Gemini 2/10 calls ok (last error: Gemini network error: fetch failed)"
-  },
-  {
-   "job": "grants",
-   "at": "2026-11-21T02:31:43.097Z",
-   "ok": true,
-   "message": "0 new calls added (6 candidates), 89 tracked · Gemini 1/1 calls ok"
-  },
-  {
-   "job": "health",
-   "at": "2026-11-21T01:57:13.868Z",
-   "ok": true,
-   "message": "6 indicators"
-  },
-  {
-   "job": "insights",
-   "at": "2026-11-21T01:36:14.124Z",
-   "ok": true,
-   "message": "1 new insights (1 candidates), 194 kept · Gemini 1/7 calls ok (last error: Gemini gemini-3.1-flash-lite-preview (search) quota: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://aistudio.google.com/docs/rate-)"
   }
  ]
 }
