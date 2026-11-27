@@ -382,7 +382,7 @@ def main():
     dhs = dhs_regional()
     cen = census()
     facilities, sites, places, comm, roads = osm.load()
-    towns = [p for p in places if p['place'] in osm.PLACES]
+    towns = [p for p in places if p['place'] in osm.PLACES and not p['area']]
     facilities = merge_facilities(facilities, who_kemri_facilities())
     b_lon, b_lat = buildings.load()
     reported = dhims_regions()

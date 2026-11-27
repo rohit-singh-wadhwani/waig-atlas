@@ -5,8 +5,9 @@ queries whose answers depended on which server replied. Returns:
   facilities  clinics, hospitals, health posts, labs (with ownership where tagged)
   sites       congregate and occupational exposure: markets, lorry stations, prisons, mines and quarries,
               ports, industrial zones
-  places      named cities, towns, suburbs, villages, hamlets, plus neighbourhoods, quarters and localities
-              (these last three only name places, e.g. for outreach returns; they do not become town areas)
+  places      named cities, towns, suburbs, villages, hamlets (points), plus neighbourhoods, quarters, localities and
+              places mapped as outlines (`area` True); these extra ones only name places, e.g. for outreach returns,
+              and never become town areas. `alt` holds other names the place is known by (alt_name, old_name)
   venues      community gathering places: schools, places of worship, community centres, pharmacies, NGO offices
   roads       points along motorable roads and tracks (for snapping suggested screening points to a road)
 """
@@ -73,12 +74,16 @@ class _Handler(osmium.SimpleHandler):
         if amen in COMMUNITY or t.get('office') == 'ngo':
             self.venues.append({'lon': lon, 'lat': lat, 'kind': 'NGO office' if t.get('office') == 'ngo' else COMMUNITY[amen], 'name': name})
 
+    def _place(self, t, lon, lat, area):
+        alt = [x.strip() for k in ('alt_name', 'old_name', 'loc_name') for x in (t.get(k) or '').split(';') if x.strip()]
+        self.places.append({'lon': lon, 'lat': lat, 'name': t['name'], 'place': t['place'], 'alt': alt, 'area': area})
+
     def node(self, n):
         t = n.tags
         if not len(t):
             return
         if (t.get('place') in PLACES or t.get('place') in LOCALITIES) and t.get('name'):
-            self.places.append({'lon': n.location.lon, 'lat': n.location.lat, 'name': t['name'], 'place': t['place']})
+            self._place(t, n.location.lon, n.location.lat, False)
             return
         self._take(dict(t), n.location.lon, n.location.lat)
 
@@ -98,6 +103,9 @@ class _Handler(osmium.SimpleHandler):
                 self.road_lat.append(lat)
             return
         xs, ys = zip(*locs)
+        if (t.get('place') in PLACES or t.get('place') in LOCALITIES) and t.get('name'):
+            self._place(t, sum(xs) / len(xs), sum(ys) / len(ys), True)
+            return
         self._take(dict(t), sum(xs) / len(xs), sum(ys) / len(ys))
 
 

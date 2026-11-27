@@ -36,10 +36,11 @@ def _rest(path, method='get', **kw):
 def _find(name, places, features):
     """Best OpenStreetMap match for a community name: (row, how) or (None, None)."""
     k = _key(name)
-    exact = [p for p in places if _key(p['name']) == k]
+    names = lambda p: [p['name'], *p.get('alt', [])]
+    exact = [p for p in places if any(_key(n) == k for n in names(p))]
     if exact:
         return exact[0], 'exact'
-    close = sorted(((difflib.SequenceMatcher(None, k, _key(p['name'])).ratio(), p) for p in places), key=lambda x: -x[0])
+    close = sorted(((max(difflib.SequenceMatcher(None, k, _key(n)).ratio() for n in names(p)), p) for p in places), key=lambda x: -x[0])
     if close and close[0][0] >= CLOSE:
         return close[0][1], 'close'
     named = [f for f in features if re.match(rf'{re.escape(name)}\b', f.get('name') or '', re.I)]
@@ -75,7 +76,7 @@ def _locate(places, features, dists, which, near, people_within, hex_res, catch_
         area = d['geom'].buffer(MARGIN_DEG) if d else None
         inside = lambda r: area is not None and area.contains(Point(r['lon'], r['lat']))
         p, how = _find(s['community'], [x for x in places if inside(x)], [x for x in features if inside(x)])
-        row = {'id': s['id'], 'located_at': NOW, 'lon': None, 'lat': None, 'osm_name': None, 'osm_place': None, 'match': None, 'district_id': None,
+        row = {'id': s['id'], 'directorate_id': s['directorate_id'], 'community': s['community'], 'located_at': NOW, 'lon': None, 'lat': None, 'osm_name': None, 'osm_place': None, 'match': None, 'district_id': None,
                'district_name': None, 'hex': None, 'pop_1km': None, 'facility': None, 'facility_km': None, 'walk_min': None,
                'note': None if p else 'Not found in OpenStreetMap near this directorate'}
         if p:
@@ -87,7 +88,11 @@ def _locate(places, features, dists, which, near, people_within, hex_res, catch_
                        hex=h3.latlng_to_cell(p['lat'], p['lon'], hex_res), pop_1km=round(people_within(p['lon'], p['lat'], catch_km)),
                        facility=nr['fname'][0], facility_km=r2(nr['fkm'][0], 2), walk_min=r2(nr['fmin'][0], 0))
         out.append(row)
-        log('outreach', s['community'], how, p and p['name'])
+        if p:
+            log('outreach', s['community'], how, p['name'])
+        else:  # the nearest names, to check by hand whether OpenStreetMap knows it under another spelling
+            near_names = sorted({x['name'] for x in places if inside(x)}, key=lambda n: -difflib.SequenceMatcher(None, _key(s['community']), _key(n)).ratio())[:5]
+            log('outreach', s['community'], 'not found; nearest names:', near_names)
     _rest('tb_outreach_sites', 'post', json=out, headers={'prefer': 'resolution=merge-duplicates'})
     source(NAME, f'{SB_URL}/rest/v1/tb_outreach', True,
            f'{len(sites)} communities named in the returns; {found} located in OpenStreetMap', page='https://www.auruminstitute.org/', group='TB numbers',
