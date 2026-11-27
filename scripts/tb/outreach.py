@@ -2,8 +2,8 @@
 
 Outreach reports (shared by partners, stored members-only in Supabase) name the communities visited, not
 coordinates. Each run looks every community up in the same OpenStreetMap snapshot as the rest of the pipeline,
-inside the reporting directorate's district (with a margin, since a metro directorate's report can reach
-communities just over a 2019 district line), and writes the location back with how it was found:
+inside the reporting directorate's own district first, then within a margin around it (a metro directorate's
+report can reach communities just over a 2019 district line), and writes the location back with how it was found:
   exact    an OpenStreetMap place (town, suburb, neighbourhood, quarter, locality) with the same name
   close    a place whose name differs by a letter or two (a spelling variant)
   feature  no place, but a mapped feature named after the community (e.g. "Ketan Cluster of Schools");
@@ -73,9 +73,15 @@ def _locate(places, features, dists, which, near, people_within, hex_res, catch_
     out, found = [], 0
     for s in sites:
         d = by_id.get(s['directorate_id'])
-        area = d['geom'].buffer(MARGIN_DEG) if d else None
-        inside = lambda r: area is not None and area.contains(Point(r['lon'], r['lat']))
-        p, how = _find(s['community'], [x for x in places if inside(x)], [x for x in features if inside(x)])
+        p, how = None, None
+        # the directorate's own district first: a namesake just over the line (e.g. a village in the next district)
+        # only counts when nothing in the district carries the name
+        for area in ([d['geom'], d['geom'].buffer(MARGIN_DEG)] if d else []):
+            w, so, e, n = area.bounds
+            inside = lambda r, a=area: w <= r['lon'] <= e and so <= r['lat'] <= n and a.contains(Point(r['lon'], r['lat']))
+            p, how = _find(s['community'], [x for x in places if inside(x)], [x for x in features if inside(x)])
+            if p:
+                break
         row = {'id': s['id'], 'directorate_id': s['directorate_id'], 'community': s['community'], 'located_at': NOW, 'lon': None, 'lat': None, 'osm_name': None, 'osm_place': None, 'match': None, 'district_id': None,
                'district_name': None, 'hex': None, 'pop_1km': None, 'facility': None, 'facility_km': None, 'walk_min': None,
                'note': None if p else 'Not found in OpenStreetMap near this directorate'}
@@ -91,7 +97,9 @@ def _locate(places, features, dists, which, near, people_within, hex_res, catch_
         if p:
             log('outreach', s['community'], how, p['name'])
         else:  # the nearest names, to check by hand whether OpenStreetMap knows it under another spelling
-            near_names = sorted({x['name'] for x in places if inside(x)}, key=lambda n: -difflib.SequenceMatcher(None, _key(s['community']), _key(n)).ratio())[:5]
+            margin = d['geom'].buffer(MARGIN_DEG) if d else None
+            near_names = sorted({x['name'] for x in places if margin is not None and margin.contains(Point(x['lon'], x['lat']))},
+                                key=lambda n: -difflib.SequenceMatcher(None, _key(s['community']), _key(n)).ratio())[:5]
             log('outreach', s['community'], 'not found; nearest names:', near_names)
     _rest('tb_outreach_sites', 'post', json=out, headers={'prefer': 'resolution=merge-duplicates'})
     source(NAME, f'{SB_URL}/rest/v1/tb_outreach', True,

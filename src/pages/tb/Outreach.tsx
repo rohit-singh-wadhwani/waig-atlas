@@ -27,9 +27,10 @@ function Cascade({ t }: { t: OutreachCounts }) {
         <li key={label} className={cx('rounded-lg px-2 py-2 min-w-0', i === 3 ? 'bg-red-50' : 'bg-gray-50')}>
           <div className="text-[11px] text-gray-500 leading-tight">{label}</div>
           <div className={cx('text-base font-semibold tabular-nums', i === 3 ? 'text-red-800' : 'text-gray-900')}>{fmtInt(n)}</div>
-          <div className="text-[11px] text-gray-500 tabular-nums">{of ? `${of} of prev.` : ' '}</div>
+          <div className="text-[11px] text-gray-500 tabular-nums">{of || ' '}</div>
         </li>
       ))}
+      <li className="col-span-5 text-[11px] text-gray-400 -mt-0.5">Each % is the share of the step before.</li>
     </ol>
   );
 }
@@ -126,7 +127,7 @@ export function OutreachDetail({ area, d, P, natRate, onCommunity }: { area: Out
         {area.notes.map((n) => <p key={n.period} className="text-sm bg-amber-50 text-amber-900 rounded-lg px-3 py-2 mt-3"><b>{MONTH(n.period, true)}:</b> {n.note}</p>)}
       </>}
       <table className="w-full text-sm mt-4">
-        <thead><tr className="text-xs text-gray-500 text-left"><th className="font-normal pb-1.5">Community</th><th className="font-normal pb-1.5 text-right">Screened</th><th className="font-normal pb-1.5 text-right">TB+</th><th className="font-normal pb-1.5 text-right">Yield</th></tr></thead>
+        <thead><tr className="text-xs text-gray-500 text-left"><th className="font-normal pb-1.5">Community</th><th className="font-normal pb-1.5 pl-3 text-right">Screened</th><th className="font-normal pb-1.5 pl-3 text-right">TB+</th><th className="font-normal pb-1.5 pl-3 text-right">Yield</th></tr></thead>
         <tbody className="divide-y divide-gray-100">
           {comms.map((c) => (
             <tr key={c.id} className="cursor-pointer hover:bg-gray-50" onClick={() => onCommunity(c)}>
@@ -134,9 +135,9 @@ export function OutreachDetail({ area, d, P, natRate, onCommunity }: { area: Out
                 <span className="flex items-center gap-1.5 font-medium text-gray-900"><span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: c.site?.lon != null ? OUTREACH_COLOR : '#d1d5db' }} />{c.name}</span>
                 <span className="block text-xs text-gray-500">{c.periods.length} visit{c.periods.length === 1 ? '' : 's'} · {placeWords(c)}</span>
               </td>
-              <td className="py-2 text-right tabular-nums">{fmtInt(c.totals.screened)}</td>
-              <td className="py-2 text-right tabular-nums font-semibold">{fmtInt(c.totals.positive)}</td>
-              <td className="py-2 text-right tabular-nums text-gray-600 whitespace-nowrap">{oneIn(c.totals.positive, c.totals.screened)}</td>
+              <td className="py-2 pl-3 text-right tabular-nums align-top">{fmtInt(c.totals.screened)}</td>
+              <td className="py-2 pl-3 text-right tabular-nums align-top font-semibold">{fmtInt(c.totals.positive)}</td>
+              <td className="py-2 pl-3 text-right tabular-nums align-top text-gray-600 whitespace-nowrap">{oneIn(c.totals.positive, c.totals.screened)}</td>
             </tr>
           ))}
         </tbody>
