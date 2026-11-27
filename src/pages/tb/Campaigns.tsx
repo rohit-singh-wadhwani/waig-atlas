@@ -7,6 +7,7 @@ import { fmtTime } from '../../lib/format';
 import { uid, uploadFile } from '../../lib/store';
 import { peopleOptions, personName, usePeople } from '../../lib/team';
 import { cascadeTotals, createCampaign, expectedPositivity, fmtInt, pct, SETTINGS, tbRemove, tbSave, TbCampaign, TbFile, TbResult, TbTask, TbTaskUpdate } from '../../lib/tb';
+import { roleBehind, roleLine, roleName, roleOptions } from './Roles';
 import type { TbData } from './TbPage';
 
 const STATUS_CLS: Record<string, string> = { planned: 'bg-gray-100 text-gray-700', active: 'bg-brand-50 text-brand-700', done: 'bg-green-50 text-green-700', cancelled: 'bg-red-50 text-red-700' };
@@ -24,6 +25,8 @@ const GUIDES: { prefix: string; title: string; url: string }[] = [
   { prefix: 'WHO', title: 'WHO operational handbook on TB, Module 2', url: 'https://www.who.int/publications-detail-redirect/9789240022614' },
   { prefix: 'DAK', title: 'Ghana TB Digital Adaptation Kit', url: 'https://media.path.org/documents/Ghana_Digital_Adaptation_Kit_for_TB_2025.pdf' },
 ];
+/** Role options from the staffing norms, plus any role name already in use that is not one of them. */
+const withOthers = (opts: { value: string; label: string }[], names: string[]) => [...opts, ...names.filter((n) => n && !opts.some((o) => o.value === n)).map((n) => ({ value: n, label: n }))];
 const mapsLink = (lat: number, lon: number) => `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`;
 
 /** Campaigns & tasks: what is active, who owns it, what is late; each task opens into a workspace. */
@@ -45,7 +48,7 @@ export default function Campaigns({ data, onPlan, openId }: { data: TbData; onPl
     for (const r of results.data) (m[r.campaign_id] ||= []).push(r);
     return m;
   }, [results.data]);
-  const roles = useMemo(() => Array.from(new Set([...playbooks.data.flatMap((p) => p.steps.map((s) => s.role)), ...tasks.data.map((t) => t.role || '')].filter(Boolean))).sort(), [playbooks.data, tasks.data]);
+  const roles = useMemo(() => Array.from(new Set([...data.roles.data.map(roleName), ...playbooks.data.flatMap((p) => p.steps.map((s) => s.role)), ...tasks.data.map((t) => t.role || '')].filter(Boolean))), [data.roles.data, playbooks.data, tasks.data]);
   const match = (t: TbTask, f: Filter) =>
     f === 'done' ? t.status === 'done'
     : t.status !== 'done' && (f === 'open' || (f === 'overdue' && !!t.due && t.due < today) || (f === 'week' && !!t.due && t.due >= today && t.due <= weekEnd) || (f === 'doing' && t.status === 'doing') || (f === 'blocked' && t.status === 'blocked'));
@@ -80,7 +83,7 @@ export default function Campaigns({ data, onPlan, openId }: { data: TbData; onPl
         <div className="p-5 pb-3">
           <CardHeader title="Campaigns" subtitle={`${camps.length} campaign${camps.length === 1 ? '' : 's'}. Open one to see its ${FILTERS.find((f) => f.value === filter)!.label.toLowerCase()} tasks, then click a task to add notes, links, files or results.`}
             right={<><Segmented<'all' | 'mine'> size="sm" value={mine ? 'mine' : 'all'} onChange={(v) => setMine(v === 'mine')} options={[{ value: 'all', label: 'Everyone' }, { value: 'mine', label: 'Mine' }]} />
-              <Select className="w-[200px] [&_select]:h-9 [&_select]:text-sm" value={role} onChange={setRole} placeholder="All roles" options={roles.map((r) => ({ value: r, label: r }))} />
+              <Select className="w-[220px] [&_select]:h-9 [&_select]:text-sm" value={role} onChange={setRole} placeholder="All roles" options={roles.filter((r) => tasks.data.some((t) => t.role === r)).map((r) => ({ value: r, label: r }))} />
               <Button icon="plus" onClick={() => setAdding(true)}>Task</Button>
               <Button variant="primary" icon="plus" onClick={() => onPlan({ setting: 'community', playbook_id: 'acf_community' })}>Campaign</Button></>} />
         </div>
@@ -132,7 +135,7 @@ export default function Campaigns({ data, onPlan, openId }: { data: TbData; onPl
       <Drawer open={!!curTask} onClose={() => setOpenTask(null)} title={curTask?.title} subtitle={curTask ? [campaigns.data.find((c) => c.id === curTask.campaign_id)?.name, curTask.role].filter(Boolean).join(' · ') : ''}>
         {curTask && <TaskWorkspace t={curTask} c={campaigns.data.find((x) => x.id === curTask.campaign_id) || null} data={data} />}
       </Drawer>
-      {adding && <AddTask roles={roles} campaigns={campaigns.data.map((c) => ({ value: c.id, label: c.name }))} districts={dist.data.list.map((d) => ({ value: d.id, label: d.name }))} me={me.email} people={peopleOptions(people)} onClose={() => setAdding(false)} />}
+      {adding && <AddTask roles={withOthers(roleOptions(data.roles.data), roles)} campaigns={campaigns.data.map((c) => ({ value: c.id, label: c.name }))} districts={dist.data.list.map((d) => ({ value: d.id, label: d.name }))} me={me.email} people={peopleOptions(people)} onClose={() => setAdding(false)} />}
     </div>
   );
 }
@@ -172,6 +175,7 @@ function TaskWorkspace({ t, c, data }: { t: TbTask; c: TbCampaign | null; data: 
   const [results, setResults] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const save = (patch: Partial<TbTask>) => tbSave('tb_tasks', { ...t, ...patch, updated_at: new Date().toISOString() });
+  const staff = roleBehind(data.roles.data, t.role);
   const feed = data.updates.data.filter((u) => u.task_id === t.id).sort((a, b) => b.created_at.localeCompare(a.created_at));
   const linked = data.results.data.filter((r) => r.task_id === t.id);
   const now = () => new Date().toISOString();
@@ -215,6 +219,10 @@ function TaskWorkspace({ t, c, data }: { t: TbTask; c: TbCampaign | null; data: 
           <Field label="Status"><Select value={t.status} onChange={(v) => save({ status: v as TbTask['status'] })} options={TASK_STATUS} /></Field>
           <Field label="Owner"><Select value={t.assignee || ''} onChange={(v) => save({ assignee: v || null })} placeholder="Unassigned" options={peopleOptions(people, t.assignee)} /></Field>
           <Field label="Due"><TextInput type="date" className="w-full" value={t.due || ''} onChange={(e) => save({ due: e.target.value || null })} /></Field>
+        </div>
+        <div className="mt-3">
+          <Field label="Role"><Select value={t.role || ''} onChange={(v) => save({ role: v || null })} placeholder="No role" options={withOthers(roleOptions(data.roles.data), t.role ? [t.role] : [])} /></Field>
+          {staff && <p className="text-xs text-gray-500 mt-1">{roleLine(staff)}{staff.duty ? `: ${staff.duty}` : ''}</p>}
         </div>
         {(t.spot || t.guide) && (
           <div className="mt-3 rounded-lg bg-gray-50 px-3 py-2.5 text-sm space-y-1">
@@ -488,7 +496,7 @@ export function CampaignForm({ data, initial, me, onClose, onSaved }: { data: Tb
       {pb && (
         <div className="text-sm">
           <div className="font-medium mb-1">Tasks that will be created</div>
-          <ol className="list-decimal pl-5 space-y-0.5 text-gray-700">{pb.steps.map((s) => <li key={s.key}>{s.title} <span className="text-gray-400">· {s.role} · day {s.due_days}</span></li>)}</ol>
+          <ol className="list-decimal pl-5 space-y-0.5 text-gray-700">{pb.steps.map((s) => { const r = roleBehind(data.roles.data, s.role); return <li key={s.key}>{s.title} <span className="text-gray-400">· {s.role}{r ? ` (${r.cadre})` : ''} · day {s.due_days}</span></li>; })}</ol>
           <p className="text-xs text-gray-500 mt-1">Each task goes to the person with that role on the People page (same district first).</p>
         </div>
       )}
@@ -497,7 +505,7 @@ export function CampaignForm({ data, initial, me, onClose, onSaved }: { data: Tb
   );
 }
 
-function AddTask({ roles, campaigns, districts, people, me, onClose }: { roles: string[]; campaigns: { value: string; label: string }[]; districts: { value: string; label: string }[]; people: { value: string; label: string }[]; me: string; onClose: () => void }) {
+function AddTask({ roles, campaigns, districts, people, me, onClose }: { roles: { value: string; label: string }[]; campaigns: { value: string; label: string }[]; districts: { value: string; label: string }[]; people: { value: string; label: string }[]; me: string; onClose: () => void }) {
   const [t, setT] = useState<Partial<TbTask>>({ status: 'todo' });
   const save = async () => {
     if (!t.title?.trim()) return;
@@ -508,13 +516,12 @@ function AddTask({ roles, campaigns, districts, people, me, onClose }: { roles: 
     <Modal open onClose={onClose} title="Add task" footer={<><Button onClick={onClose}>Cancel</Button><Button variant="primary" onClick={save} disabled={!t.title?.trim()}>Add</Button></>}>
       <Field label="Task"><TextInput className="w-full" value={t.title || ''} onChange={(e) => setT({ ...t, title: e.target.value })} /></Field>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <Field label="Role"><TextInput className="w-full" list="tb-roles" value={t.role || ''} onChange={(e) => setT({ ...t, role: e.target.value })} /></Field>
+        <Field label="Role"><Select value={t.role || ''} onChange={(v) => setT({ ...t, role: v || null })} placeholder="No role" options={roles} /></Field>
         <Field label="Owner"><Select value={t.assignee || ''} onChange={(v) => setT({ ...t, assignee: v || null })} placeholder="Unassigned" options={people} /></Field>
         <Field label="Campaign"><Select value={t.campaign_id || ''} onChange={(v) => setT({ ...t, campaign_id: v || null })} placeholder="None" options={campaigns} /></Field>
         <Field label="District"><Select value={t.district_id || ''} onChange={(v) => setT({ ...t, district_id: v || null })} placeholder="None" options={districts} /></Field>
         <Field label="Due"><TextInput type="date" className="w-full" value={t.due || ''} onChange={(e) => setT({ ...t, due: e.target.value })} /></Field>
       </div>
-      <datalist id="tb-roles">{roles.map((r) => <option key={r} value={r} />)}</datalist>
     </Modal>
   );
 }

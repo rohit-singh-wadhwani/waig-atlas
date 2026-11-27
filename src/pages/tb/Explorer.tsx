@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import ExplorerMap, { bboxOf, breaksFor, LayerGroup, TB_RAMP, VENUE_COLORS } from '../../components/ExplorerMap';
+import ExplorerMap, { bboxOf, breaksFor, LayerGroup, OUTREACH_COLOR, TB_RAMP, VENUE_COLORS } from '../../components/ExplorerMap';
 import { iconUrl, MapIcon } from '../../components/mapIcons';
 import { Badge, Button, ExtLink, Field, Select, TextInput, cx } from '../../components/ui';
 import Icon from '../../components/Icon';
@@ -7,9 +7,11 @@ import { useMe } from '../../components/Layout';
 import { useData } from '../../lib/hooks';
 import { uid } from '../../lib/store';
 import { peopleOptions, personName, usePeople } from '../../lib/team';
-import { APPROACH, approachOf, cascadeTotals, createCampaign, expectedPositivity, fmtInt, loadDistrictDetail, loadReportedRegions, rulesFrom, tbSave, TbCampaign, TbDistrict, TbHexRow, TbPriorities, TbTask, TbTown, TbVenue } from '../../lib/tb';
-import { BASIS, BasisTag, esc, kmFmt, pctFmt } from './common';
+import { APPROACH, approachOf, cascadeTotals, createCampaign, expectedPositivity, fmtInt, loadDistrictDetail, loadReportedRegions, rulesFrom, tbSave, OutreachArea, OutreachCommunity, TbCampaign, TbDistrict, TbHexRow, TbPriorities, TbStaffRole, TbTask, TbTown, TbVenue } from '../../lib/tb';
+import { BasisTag, esc, HowTag, kmFmt, Panel, pctFmt, Stat, Why } from './common';
 import { DistrictInsight, PRIORITY_HOW, priorityInputs, PriorityRow } from './Priorities';
+import { OutreachCard, OutreachDetail, outreachFc, OutreachInTown, outreachTip, placeOf } from './Outreach';
+import { directorateOf, WhoDoesWhat } from './Roles';
 import type { TbData } from './TbPage';
 
 const GHANA: [number, number, number, number] = [-3.3, 4.6, 1.3, 11.2];
@@ -43,7 +45,8 @@ const SIGNALS: { key: keyof TbDistrict; label: string; fmt: (v: number) => strin
 ];
 
 export default function Explorer({ data, goTab }: { data: TbData; goTab: (t: string, campaignId?: string) => void }) {
-  const { dist, campaigns, tasks, results, P } = data;
+  const { dist, campaigns, tasks, results, P, outreach, roles, scope } = data;
+  const area = outreach[0] || null; // the outreach area the demo opens on
   const rules = rulesFrom(P);
   const nat = dist.data.meta?.national;
   const natRate = nat?.rate_100k ?? (nat ? (nat.incidence / nat.pop) * 1e5 : null);
@@ -138,13 +141,37 @@ export default function Explorer({ data, goTab }: { data: TbData; goTab: (t: str
   // moved or any result is in, red while nothing has happened since it was created
   const [flag, setFlag] = useState<string | null>(null);
   // "Go to its town" from a campaign: the district opens first, then the town once that district's detail has loaded
-  const [goTown, setGoTown] = useState<{ district: string; town: string } | null>(null);
+  // (or a point: the town whose area holds it, i.e. the nearest town)
+  const [goTown, setGoTown] = useState<{ district: string; town?: string; at?: { lon: number; lat: number } } | null>(null);
   useEffect(() => {
     if (!goTown || !det || det.id !== goTown.district) return;
-    const t = det.towns.find((x) => x.name === goTown.town);
+    const at = goTown.at;
+    const t = goTown.town ? det.towns.find((x) => x.name === goTown.town) : at ? [...det.towns].filter((x) => !x.nodata).sort((a, b) => distKm(a, at) - distKm(b, at))[0] : null;
     if (t) setTKey(townKey(t));
     setGoTown(null);
   }, [goTown, det]);
+  // previewing a role opens the place it covers
+  const scopeKey = scope ? JSON.stringify(scope.persona) : '';
+  useEffect(() => {
+    if (!scope) return;
+    const only = scope.districts && scope.districts.size === 1 ? Array.from(scope.districts)[0] : null;
+    setDistrictId(only);
+    if (only && scope.town) setGoTown({ district: only, town: scope.town });
+  }, [scopeKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  const outFc = useMemo(() => outreachFc(outreach), [outreach]);
+  const highlightFc = useMemo(() => ({ type: 'FeatureCollection', features: outreach.map((a) => byId.get(a.id)).filter((x): x is TbDistrict => !!x).map((x) => ({ type: 'Feature', properties: { id: x.id, name: `Outreach: ${placeOf(outreach.find((a) => a.id === x.id)!)}` }, geometry: { type: 'Point', coordinates: [x.lon, x.lat] } })) }), [outreach, byId]);
+  const goCommunity = (c: OutreachCommunity) => {
+    const s = c.site;
+    if (!s || s.lon == null || s.lat == null || !s.district_id) return;
+    setDistrictId(s.district_id);
+    setGoTown({ district: s.district_id, at: { lon: s.lon, lat: s.lat } });
+  };
+  // outreach communities inside the open town (by hexagon, else the town's area is the nearest-town area)
+  const townOutreach = useMemo(() => {
+    if (!det || !town) return [] as OutreachCommunity[];
+    const hexIds = new Set(townHexes.map((h) => h.h));
+    return outreach.flatMap((a) => a.communities).filter((c) => c.site?.district_id === det.id && c.site.lon != null && (hexIds.has(c.site.hex || '') || [...det.towns].filter((x) => !x.nodata).sort((p, q) => distKm(p, c.site as any) - distKm(q, c.site as any))[0]?.id === town.id));
+  }, [outreach, det, town, townHexes]);
   const flagFc = useMemo(() => {
     const features: any[] = [];
     for (const c of campaigns.data) {
@@ -159,6 +186,7 @@ export default function Explorer({ data, goTab }: { data: TbData; goTab: (t: str
   }, [campaigns.data, tasks.data, results.data, det, byId]);
 
   const tip = (pr: any, layer: string) => {
+    if (layer === 'outreach') return outreachTip(pr);
     if (layer === 'campaigns') return `<b>${esc(pr.name)}</b>${pr.spot ? `<br/>Spot: ${esc(pr.spot)}` : ''}<br/><span style="color:${pr.progress === true || pr.progress === 'true' ? '#15803d' : '#b91c1c'}">${pr.progress === true || pr.progress === 'true' ? 'Under way' : 'Not started yet'}</span> · ${esc(pr.status)}<br/><i>Click for its progress</i>`;
     if (layer === 'd-fill') return districtId ? '' : `<b>${esc(pr.name)}</b> · ${esc(String(pr.region))}<br/>About <b>${fmtInt(Number(pr.expected))}</b> new TB cases a year<br/>${fmtInt(Number(pr.expected_100k))} per 100,000 people (${vsGhana(Number(pr.vs_ghana))})<br/><i>Click to open</i>`;
     if (layer === 'suggested') return `<b>High density point</b><br/>≈${fmtInt(Number(pr.sp))} people${pr.sb != null && pr.sb !== '' ? ` and ${plural(Number(pr.sb), 'building')}` : ''} within ~350 m, inside this hexagon<br/>${roadWords(pr.rd)}<br/><i>Click to ${pr.used === true || pr.used === 'true' ? 'remove from' : 'add to'} the campaign</i>`;
@@ -207,21 +235,23 @@ export default function Explorer({ data, goTab }: { data: TbData; goTab: (t: str
       <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_460px] gap-5 items-start xl:items-stretch xl:flex-1 xl:min-h-0">
         <div className="xl:flex xl:flex-col xl:min-h-0">
           <div className="relative h-[440px] md:h-[560px] xl:h-auto xl:flex-1 xl:min-h-[360px]">
-            <LayerControl satellite={satellite} setSatellite={setSatellite} hidden={hidden} setHidden={setHidden} level={!d ? 'ghana' : town ? 'town' : 'district'} />
+            <LayerControl satellite={satellite} setSatellite={setSatellite} hidden={hidden} setHidden={setHidden} level={!d ? 'ghana' : town ? 'town' : 'district'} outreach={outFc.features.length > 0} />
             <span className="absolute top-2.5 left-1/2 -translate-x-1/2 z-10 hidden md:block rounded-full bg-white/90 px-3 py-1 text-xs text-gray-600 shadow-sm pointer-events-none">{!d ? 'Click a district to open it' : !town ? 'Click a town to open it' : pinMode ? 'Click inside a selected hexagon to place the point' : 'Select hexagons, then pick spots or place a point'}</span>
             <ExplorerMap districts={geo} districtMetric="expected_100k" districtBreaks={dBreaks} focusId={districtId} hexes={hexFc} hexBreaks={hBreaks} towns={townFc} townBreaks={tBreaks} venues={venueFc} facilities={facFc}
               picked={picked} focusTown={tKey} selectedHexes={selHex} pins={pinFc} pinMode={pinMode} onHex={toggleHex} onPin={dropPin} satellite={satellite} fit={fit}
-              suggested={suggestedFc} campaigns={flagFc} onCampaign={(pr) => { setFlag(pr.id); panelRef.current?.scrollTo({ top: 0, behavior: 'smooth' }); }} hidden={hidden} onSuggested={(pr) => { const h = townHexes.find((x) => x.h === pr.h); if (h) pickSuggested(h); }} onDistrict={(pr) => setDistrictId(pr.id)} onTown={(pr) => setTKey(pr.key)} onVenue={onVenue} tooltip={tip} />
+              suggested={suggestedFc} outreach={outFc} highlight={highlightFc} scopeIds={scope?.districts ? Array.from(scope.districts) : null}
+              onOutreach={(pr) => { const c = outreach.flatMap((a) => a.communities).find((x) => x.id === pr.id); if (c) goCommunity(c); }} campaigns={flagFc} onCampaign={(pr) => { setFlag(pr.id); panelRef.current?.scrollTo({ top: 0, behavior: 'smooth' }); }} hidden={hidden} onSuggested={(pr) => { const h = townHexes.find((x) => x.h === pr.h); if (h) pickSuggested(h); }} onDistrict={(pr) => setDistrictId(pr.id)} onTown={(pr) => setTKey(pr.key)} onVenue={onVenue} tooltip={tip} />
           </div>
-          <MapLegend level={!d ? 'ghana' : town ? 'town' : 'district'} breaks={!d ? dBreaks : town ? hBreaks : tBreaks} flags={flagFc.features.length > 0 && !hidden.includes('campaigns')} />
+          <MapLegend level={!d ? 'ghana' : town ? 'town' : 'district'} breaks={!d ? dBreaks : town ? hBreaks : tBreaks} flags={flagFc.features.length > 0 && !hidden.includes('campaigns')} outreach={outFc.features.length > 0 && !hidden.includes('outreach')} />
         </div>
         <aside ref={panelRef} className="min-w-0 space-y-4 xl:min-h-0 xl:overflow-y-auto xl:pr-1 xl:pb-4">
           {flag && <CampaignPanel id={flag} data={data} onClose={() => setFlag(null)} onOpen={() => goTab('campaigns', flag)}
             onGo={(c) => { if (c.district_id) { setDistrictId(c.district_id); if (c.town) setGoTown({ district: c.district_id, town: c.town }); } }} />}
-          {!d && <GhanaPanel list={list} nat={nat} natRate={natRate} rank={rank} campaigns={campaigns.data} notified={dist.data.notifiedDistricts} onOpen={setDistrictId} goTab={goTab} priorities={data.priorities.data} />}
-          {d && !town && <DistrictPanel d={d} det={det} loading={detail.loading} rank={rank} n={list.length} venues={venues} campaigns={campaigns.data.filter((c) => c.district_id === d.id)} onTown={(t) => setTKey(townKey(t))} rules={rules} natRate={natRate} priorities={data.priorities.data} />}
+          {!d && <GhanaPanel area={area && (!scope?.districts || scope.districts.has(area.id)) ? area : null} onArea={() => area && setDistrictId(area.id)} roles={roles.data} scoped={!!scope}
+            list={scope?.districts ? list.filter((x) => scope.districts!.has(x.id)) : list} nat={nat} natRate={natRate} rank={rank} campaigns={campaigns.data} notified={dist.data.notifiedDistricts} onOpen={setDistrictId} goTab={goTab} priorities={data.priorities.data} />}
+          {d && !town && <DistrictPanel areas={outreach} P={P} onCommunity={goCommunity} roles={roles.data} d={d} det={det} loading={detail.loading} rank={rank} n={list.length} venues={venues} campaigns={campaigns.data.filter((c) => c.district_id === d.id)} onTown={(t) => setTKey(townKey(t))} rules={rules} natRate={natRate} priorities={data.priorities.data} />}
           {d && town && !planning && !created && (
-            <TownPanel pickSuggested={pickSuggested} d={d} town={town} venues={hexVenues} hexes={townHexes} selHex={selHex} clearHex={() => { setSelHex([]); setPins([]); }} pins={pins} setPins={setPins} pinMode={pinMode} setPinMode={setPinMode} spots={spots} facilities={det?.facilities.filter((f) => distKm(f, town) <= town.radius_km + 3).sort((a, b) => distKm(a, town) - distKm(b, town)) || []}
+            <TownPanel outreach={townOutreach} roles={roles.data} pickSuggested={pickSuggested} d={d} town={town} venues={hexVenues} hexes={townHexes} selHex={selHex} clearHex={() => { setSelHex([]); setPins([]); }} pins={pins} setPins={setPins} pinMode={pinMode} setPinMode={setPinMode} spots={spots} facilities={det?.facilities.filter((f) => distKm(f, town) <= town.radius_km + 3).sort((a, b) => distKm(a, town) - distKm(b, town)) || []}
               picked={picked} toggle={toggle} campaigns={campaigns.data.filter((c) => c.district_id === d.id && c.town === town.name)} onPlan={() => setPlanning(true)} />
           )}
           {d && town && planning && !created && <PlanPanel d={d} town={town} spots={spots} hexIds={selHex} reachHex={townHexes.filter((h) => selHex.includes(h.h)).reduce((a, h) => a + h.p, 0)} data={data} onCancel={() => setPlanning(false)} onCreated={(id) => { setCreated(id); setPlanning(false); }} natRate={natRate} />}
@@ -299,9 +329,10 @@ function CampaignPanel({ id, data, onClose, onOpen, onGo }: { id: string; data: 
 }
 
 /** One control for the basemap and the optional layers, in the corner of the map. */
-function LayerControl({ satellite, setSatellite, hidden, setHidden, level }: { satellite: boolean; setSatellite: (b: boolean) => void; hidden: LayerGroup[]; setHidden: (h: LayerGroup[]) => void; level: 'ghana' | 'district' | 'town' }) {
+function LayerControl({ satellite, setSatellite, hidden, setHidden, level, outreach }: { satellite: boolean; setSatellite: (b: boolean) => void; hidden: LayerGroup[]; setHidden: (h: LayerGroup[]) => void; level: 'ghana' | 'district' | 'town'; outreach: boolean }) {
   const [open, setOpen] = useState(false);
   const groups: { g: LayerGroup; label: string; icon: React.ReactNode; show: boolean }[] = [
+    { g: 'outreach', label: 'Outreach communities', icon: <span className="w-3 h-3 rounded-full" style={{ background: OUTREACH_COLOR }} />, show: outreach },
     { g: 'campaigns', label: 'Campaigns', icon: <img src={iconUrl('flag-green')} alt="" width={11} height={14} />, show: true },
     { g: 'facilities', label: 'Health facilities', icon: <MapIconImg k="hospital" size={14} />, show: level === 'town' },
     { g: 'venues', label: 'Gathering places', icon: <span className="w-3 h-3 rounded-full bg-[#7c3aed]" />, show: level === 'town' },
@@ -337,11 +368,12 @@ function Crumb({ children, on, active }: { children: React.ReactNode; on?: () =>
 /** A map icon at legend size. */
 const MapIconImg = ({ k, size = 16 }: { k: MapIcon; size?: number }) => <img src={iconUrl(k)} alt="" height={size} className="shrink-0 w-auto" style={{ height: size }} />;
 
-function MapLegend({ level, breaks, flags }: { level: 'ghana' | 'district' | 'town'; breaks: number[]; flags: boolean }) {
+function MapLegend({ level, breaks, flags, outreach }: { level: 'ghana' | 'district' | 'town'; breaks: number[]; flags: boolean; outreach: boolean }) {
   const [open, setOpen] = useState(false);
   const fmt = (v: number) => (level === 'ghana' ? fmtInt(v) : v < 1 ? v.toFixed(2) : v.toFixed(1));
   const labels = breaks.length ? [`< ${fmt(breaks[0])}`, ...breaks.slice(0, -1).map((b, i) => `${fmt(b)}–${fmt(breaks[i + 1])}`), `> ${fmt(breaks[breaks.length - 1])}`] : [];
   const symbols: [React.ReactNode, string][] = [
+    ...(outreach ? ([[<span className="w-3 h-3 rounded-full" style={{ background: OUTREACH_COLOR }} />, 'Outreach community (size: TB found)'], [<span className="w-4 h-2.5 rounded-sm border-2" style={{ borderColor: OUTREACH_COLOR }} />, 'Outreach area']] as [React.ReactNode, string][]) : []),
     ...(flags ? ([[<img src={iconUrl('flag-green')} alt="" width={11} height={14} />, 'Campaign under way'], [<img src={iconUrl('flag-red')} alt="" width={11} height={14} />, 'Campaign not started']] as [React.ReactNode, string][]) : []),
     ...(level === 'town' ? ([
       [<MapIconImg k="building" size={14} />, 'High density point'], [<MapIconImg k="hospital" size={14} />, 'Hospital'], [<MapIconImg k="clinic" size={14} />, 'Clinic or CHPS'],
@@ -375,69 +407,8 @@ function MapLegend({ level, breaks, flags }: { level: 'ghana' | 'district' | 'to
   );
 }
 
-function Panel({ title, sub, right, children, className }: { title?: React.ReactNode; sub?: React.ReactNode; right?: React.ReactNode; children: React.ReactNode; className?: string }) {
-  return (
-    <section className={cx('rounded-2xl border border-gray-200 bg-white p-5', className)}>
-      {(title || right) && (
-        <div className="mb-3">
-          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
-            {title && <h3 className="text-base font-semibold text-gray-900 min-w-0">{title}</h3>}
-            {right}
-          </div>
-          {sub && <p className="text-sm text-gray-500 mt-1">{sub}</p>}
-        </div>
-      )}
-      {children}
-    </section>
-  );
-}
-
-/** The Reported / Measured / Estimated tag; hover (or tap) shows the dataset and calculation in a floating note. */
-/** One hover/focus popover for an explanation, positioned so it never leaves the screen. */
-function Tip({ text, label, children }: { text: React.ReactNode; label: string; children: React.ReactNode }) {
-  const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
-  const show = (el: HTMLElement) => {
-    const r = el.getBoundingClientRect();
-    const w = 300;
-    setPos({ x: Math.max(8, Math.min(r.right - w, window.innerWidth - w - 8)), y: r.bottom + 6 });
-  };
-  return (
-    <span className="inline-flex shrink-0 cursor-help" tabIndex={0} aria-label={label}
-      onMouseEnter={(e) => show(e.currentTarget)} onMouseLeave={() => setPos(null)}
-      onFocus={(e) => show(e.currentTarget)} onBlur={() => setPos(null)}>
-      {children}
-      {pos && <span role="tooltip" className="fixed z-50 w-[300px] rounded-lg bg-gray-900 px-3 py-2 text-xs leading-relaxed text-white shadow-lg pointer-events-none" style={{ left: pos.x, top: pos.y }}>{text}</span>}
-    </span>
-  );
-}
-
-/** The Reported / Measured / Estimated tag; hovering shows what the tag means and how this number was made. */
-function HowTag({ b, how }: { b: 'reported' | 'measured' | 'estimated'; how?: string }) {
-  const x = BASIS[b];
-  return (
-    <Tip label={`${x.label}: ${how || x.title}`} text={<><b>{x.label}:</b> {x.title.charAt(0).toLowerCase() + x.title.slice(1)}.{how && <span className="block mt-1.5">{how}</span>}</>}>
-      <BasisTag b={b} bare />
-    </Tip>
-  );
-}
-
-/** A "?" that explains a term or a figure on hover. */
-function Why({ text }: { text: string }) {
-  return <Tip label={text} text={text}><span className="w-4 h-4 rounded-full border border-gray-400 text-gray-500 text-[10px] font-semibold grid place-items-center hover:border-gray-700 hover:text-gray-800">?</span></Tip>;
-}
-
 /** One explanation for every distance and travel time on the dashboard. */
 const TRAVEL_HOW = 'One facility list: OpenStreetMap (refreshed weekly) merged with the WHO/KEMRI public facility list (2019), duplicates within 100 m removed. Distance is the straight line to the facility; travel time is the route to the same facility over the Malaria Atlas Project 2020 walking or driving speed map (~1 km cells).';
-
-function Stat({ label, value, sub, basis, how }: { label: string; value: React.ReactNode; sub?: React.ReactNode; basis?: 'reported' | 'measured' | 'estimated'; how?: string }) {
-  return (
-    <div className="rounded-xl bg-gray-50 p-3 min-w-0">
-      <div className="flex items-start justify-between gap-2 text-xs text-gray-500"><span className="min-w-0">{label}</span>{basis && <HowTag b={basis} how={how} />}</div>
-      <div className="text-lg font-semibold text-gray-900 tabular-nums mt-0.5">{value}</div>
-      {sub && <div className="text-xs text-gray-500 mt-0.5">{sub}</div>}
-    </div>
-  );
-}
 
 /** Facility count in words, with ownership where the source recorded it: "3 health facilities (2 public, 1 faith-based)". */
 function facilityWords(d: TbDistrict) {
@@ -461,7 +432,7 @@ function flagsFor(d: TbDistrict, rank: Record<string, Map<string, number>>) {
 }
 
 // ---------------- level 1: Ghana ----------------
-function GhanaPanel({ list, nat, natRate, rank, campaigns, notified, onOpen, goTab, priorities }: { list: TbDistrict[]; nat: any; natRate: number | null; rank: Record<string, Map<string, number>>; campaigns: TbCampaign[]; notified: number; onOpen: (id: string) => void; goTab: (t: string) => void; priorities: TbPriorities | null }) {
+function GhanaPanel({ area, onArea, roles, scoped, list, nat, natRate, rank, campaigns, notified, onOpen, goTab, priorities }: { area: OutreachArea | null; onArea: () => void; roles: TbStaffRole[]; scoped: boolean; list: TbDistrict[]; nat: any; natRate: number | null; rank: Record<string, Map<string, number>>; campaigns: TbCampaign[]; notified: number; onOpen: (id: string) => void; goTab: (t: string) => void; priorities: TbPriorities | null }) {
   // the AI ranking leads once one exists; the two data rankings stay one click away
   const [picked, setSort] = useState<'ai' | 'count' | 'rate' | null>(null);
   const sort = picked ?? (priorities?.picks.length ? 'ai' : 'count');
@@ -474,6 +445,7 @@ function GhanaPanel({ list, nat, natRate, rank, campaigns, notified, onOpen, goT
   const active = campaigns.filter((c) => c.status === 'planned' || c.status === 'active');
   return (
     <>
+      {area && <OutreachCard area={area} onOpen={onArea} />}
       <Panel title="Ghana" sub={nat ? `WHO estimate for ${nat.year}` : ''}>
         <div className="grid grid-cols-2 gap-2.5">
           <Stat label="New TB cases a year" value={fmtInt(nat?.incidence)} basis="reported" sub={natRate ? `${fmtInt(natRate)} per 100,000 people` : undefined} how={`WHO Global TB Programme estimate for Ghana, ${nat?.year ?? 'latest year'}. WHO's own uncertainty range: ${fmtInt(nat?.incidence_lo)}–${fmtInt(nat?.incidence_hi)}. Rate = cases ÷ WHO population (${fmtInt(nat?.pop)}) × 100,000.`} />
@@ -518,12 +490,13 @@ function GhanaPanel({ list, nat, natRate, rank, campaigns, notified, onOpen, goT
         )}
         {sort !== 'ai' && shown.length > 12 && <button type="button" className="text-sm text-brand-700 hover:underline mt-2" onClick={() => setAll(!all)}>{all ? 'Show top 12' : `Show all ${shown.length}`}</button>}
       </Panel>
+      <WhoDoesWhat roles={roles} levels={['national', 'regional']} here={scoped && regions.length === 1 ? `Ghana and the ${regions[0]} region` : 'Ghana and its regions'} />
     </>
   );
 }
 
 // ---------------- level 2: district ----------------
-function DistrictPanel({ d, det, loading, rank, n, venues, campaigns, onTown, rules, natRate, priorities }: { priorities: TbPriorities | null; natRate: number | null; d: TbDistrict; det: any; loading: boolean; rank: Record<string, Map<string, number>>; n: number; venues: TbVenue[]; campaigns: TbCampaign[]; onTown: (t: TbTown) => void; rules: any }) {
+function DistrictPanel({ areas, P, onCommunity, roles, d, det, loading, rank, n, venues, campaigns, onTown, rules, natRate, priorities }: { areas: OutreachArea[]; P: Record<string, number>; onCommunity: (c: OutreachCommunity) => void; roles: TbStaffRole[]; priorities: TbPriorities | null; natRate: number | null; d: TbDistrict; det: any; loading: boolean; rank: Record<string, Map<string, number>>; n: number; venues: TbVenue[]; campaigns: TbCampaign[]; onTown: (t: TbTown) => void; rules: any }) {
   const a = APPROACH[d.approach];
   const reported = useData(loadReportedRegions, [], {} as Record<string, { period: string; tb: number }[]>);
   const series = reported.data[d.region] || null;
@@ -547,6 +520,9 @@ function DistrictPanel({ d, det, loading, rank, n, venues, campaigns, onTown, ru
           <Stat how="Sum of results entered for campaigns in this district (Campaigns & tasks tab)." label="Our screening here" value={d.screened ? `${fmtInt(d.confirmed)} found` : 'None yet'} basis="reported" sub={d.screened ? `${fmtInt(d.screened)} screened` : `${campaigns.length} campaign${campaigns.length === 1 ? '' : 's'}`} />
         </div>
       </Panel>
+
+      {areas.map((a) => <OutreachDetail key={a.id} area={a} d={d} P={P} natRate={natRate} onCommunity={onCommunity} />)}
+      <WhoDoesWhat roles={roles} levels={['district', 'subdistrict']} here={d.name} categories={{ district: directorateOf(d) }} />
 
       <Panel title="Towns to start with" sub="Click a town to see its neighbourhoods and screening spots."
         right={<div className="flex rounded-lg bg-gray-100 p-0.5 text-sm shrink-0">{(['cases', 'far'] as const).map((k) => <button key={k} type="button" onClick={() => setTSort(k)} className={cx('px-2.5 py-1 rounded-md whitespace-nowrap', tSort === k ? 'bg-white shadow-sm font-medium' : 'text-gray-600')}>{k === 'cases' ? 'Most cases' : 'Farthest from care'}</button>)}</div>}>
@@ -667,9 +643,9 @@ function inRing(pt: [number, number], ring: [number, number][]) {
 type TownPanelProps = {
   d: TbDistrict; town: TbTown; venues: TbVenue[]; hexes: TbHexRow[]; selHex: string[]; clearHex: () => void; pins: Pin[]; setPins: React.Dispatch<React.SetStateAction<Pin[]>>;
   pinMode: boolean; setPinMode: (b: boolean) => void; spots: Spot[]; facilities: any[]; picked: string[]; toggle: (k: string) => void; campaigns: TbCampaign[]; onPlan: () => void;
-  pickSuggested: (h: TbHexRow) => void;
+  pickSuggested: (h: TbHexRow) => void; outreach: OutreachCommunity[]; roles: TbStaffRole[];
 };
-function TownPanel({ d, town, venues, hexes, selHex, clearHex, pins, setPins, pinMode, setPinMode, spots, facilities, picked, toggle, campaigns, onPlan, pickSuggested }: TownPanelProps) {
+function TownPanel({ outreach, roles, d, town, venues, hexes, selHex, clearHex, pins, setPins, pinMode, setPinMode, spots, facilities, picked, toggle, campaigns, onPlan, pickSuggested }: TownPanelProps) {
   const [kind, setKind] = useState('');
   const kinds = Array.from(new Set(venues.map((v) => v.kind)));
   const shown = venues.filter((v) => !kind || v.kind === kind);
@@ -695,6 +671,7 @@ function TownPanel({ d, town, venues, hexes, selHex, clearHex, pins, setPins, pi
         {town.nodata && <p className="text-sm mt-3 text-gray-700 bg-gray-50 rounded-lg px-3 py-2">No population is mapped in this area, so there are no estimates. If people live here, screening can still be planned.</p>}
         {campaigns.length > 0 && <p className="text-sm mt-3 text-green-800 bg-green-50 rounded-lg px-3 py-2">✓ {campaigns.length} campaign{campaigns.length > 1 ? 's' : ''} already here: {campaigns.map((c) => c.name).join(', ')}</p>}
       </Panel>
+      <OutreachInTown comms={outreach} />
 
       <Panel title="1. Select hexagons" sub="Click hexagons on the map to choose the areas to cover. Darker ones are expected to have more TB per km²; white dots are each hexagon's high density point."
         right={selHex.length > 0 && <button type="button" className="text-sm text-brand-700 hover:underline" onClick={clearHex}>Clear</button>}>
@@ -782,6 +759,7 @@ function TownPanel({ d, town, venues, hexes, selHex, clearHex, pins, setPins, pi
           <ul className="space-y-1.5 text-sm">{facilities.slice(0, 6).map((f, i) => <li key={i} className="flex justify-between gap-3"><span className="truncate">{f.name || 'Unnamed facility'}<span className="text-gray-500"> · {f.kind}{f.lab ? ' · lab' : ''}</span></span><span className="text-gray-500 shrink-0">{kmFmt(distKm(f, town))}</span></li>)}</ul>
         </Panel>
       )}
+      <WhoDoesWhat roles={roles} levels={['facility', 'community']} here={town.name} />
     </>
   );
 }

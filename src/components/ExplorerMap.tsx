@@ -5,6 +5,8 @@ export const VENUE_COLORS: Record<string, string> = {
   market: '#7c3aed', 'transport hub': '#0891b2', prison: '#111827', 'mine / quarry': '#a16207', port: '#1e3a8a', 'industrial zone': '#57534e',
   school: '#16a34a', 'place of worship': '#db2777', 'community centre': '#ea580c', pharmacy: '#0d9488', 'NGO office': '#4f46e5',
 };
+/** Accent for partner outreach: the outreach area's outline and its community points. */
+export const OUTREACH_COLOR = '#c8102e';
 /** Sequential orange ramp for TB burden (light -> dark). */
 export const TB_RAMP = ['#fef0d9', '#fdd49e', '#fdbb84', '#fc8d59', '#e34a33', '#b30000'];
 
@@ -21,7 +23,7 @@ const BASEMAP_STYLE = 'https://tiles.openfreemap.org/styles/positron';
 const SATELLITE = { type: 'raster', tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'], tileSize: 256, maxzoom: 18, attribution: 'Imagery © Esri, Maxar, Earthstar Geographics' };
 const EMPTY = { type: 'FeatureCollection', features: [] };
 /** Optional layers a user can switch off in the layer control. */
-export const LAYER_GROUPS = { campaigns: ['campaigns'], facilities: ['facilities'], venues: ['venues', 'venue-icons'], suggested: ['suggested'] } as const;
+export const LAYER_GROUPS = { outreach: ['outreach'], campaigns: ['campaigns'], facilities: ['facilities'], venues: ['venues', 'venue-icons'], suggested: ['suggested'] } as const;
 /** Gathering places drawn as icons rather than dots. */
 const ICON_KINDS = ['prison', 'mine / quarry'];
 export type LayerGroup = keyof typeof LAYER_GROUPS;
@@ -51,6 +53,10 @@ export type ExplorerMapProps = {
   suggested?: any | null;             // high density point of each hexagon
   campaigns?: any | null;             // a flag per campaign spot; `progress` picks green or red
   onCampaign?: (p: any) => void;
+  outreach?: any | null;              // partner outreach communities; `pos` (TB found) sets the size
+  onOutreach?: (p: any) => void;
+  highlight?: any | null;             // outreach areas: points (district centre) with a `name`; the district outline is drawn by `id`
+  scopeIds?: string[] | null;         // districts a previewed role covers: the rest are faded
   hidden?: LayerGroup[];
   onSuggested?: (p: any) => void;
   pinMode?: boolean;                  // next click inside a selected hexagon drops a pin
@@ -95,10 +101,11 @@ export default function ExplorerMap(p: ExplorerMapProps) {
       const below = (m.getStyle().layers || []).find((l: any) => l.type === 'symbol')?.id;
       m.addSource('satellite', SATELLITE);
       m.addLayer({ id: 'satellite', type: 'raster', source: 'satellite', layout: { visibility: 'none' } }, below);
-      for (const id of ['districts', 'towns', 'hexes', 'townlabels', 'venues', 'facilities', 'suggested', 'pins', 'campaigns']) m.addSource(id, { type: 'geojson', data: EMPTY, ...(id === 'districts' ? { promoteId: 'id' } : {}) });
+      for (const id of ['districts', 'towns', 'hexes', 'townlabels', 'venues', 'facilities', 'suggested', 'pins', 'campaigns', 'outreach', 'highlight']) m.addSource(id, { type: 'geojson', data: EMPTY, ...(id === 'districts' ? { promoteId: 'id' } : {}) });
       m.addLayer({ id: 'd-fill', type: 'fill', source: 'districts', paint: { 'fill-color': TB_RAMP[1], 'fill-opacity': 0.75 } }, below);
       m.addLayer({ id: 'd-line', type: 'line', source: 'districts', paint: { 'line-color': '#ffffff', 'line-width': 0.7 } }, below);
       m.addLayer({ id: 'd-focus', type: 'line', source: 'districts', paint: { 'line-color': '#0f172a', 'line-width': 2.5 }, filter: ['==', ['get', 'id'], ''] }, below);
+      m.addLayer({ id: 'd-outreach', type: 'line', source: 'districts', paint: { 'line-color': OUTREACH_COLOR, 'line-width': 3 }, filter: ['in', ['get', 'id'], ['literal', []]] }, below);
       m.addLayer({ id: 'town-fill', type: 'fill', source: 'towns', paint: { 'fill-color': TB_RAMP[1], 'fill-opacity': 0.75 } }, below);
       m.addLayer({ id: 'h-fill', type: 'fill', source: 'hexes', paint: { 'fill-color': TB_RAMP[1], 'fill-opacity': 0.75 } }, below);
       m.addLayer({ id: 'h-sel', type: 'line', source: 'hexes', paint: { 'line-color': '#0f172a', 'line-width': 2.5 }, filter: ['in', ['get', 'h'], ['literal', []]] }, below);
@@ -120,6 +127,13 @@ export default function ExplorerMap(p: ExplorerMapProps) {
         'icon-allow-overlap': true, 'icon-ignore-placement': true,
       } });
       m.addLayer({ id: 'pins', type: 'circle', source: 'pins', paint: { 'circle-radius': 8, 'circle-color': '#dc2626', 'circle-stroke-color': '#0f172a', 'circle-stroke-width': 3 } });
+      m.addLayer({ id: 'outreach', type: 'circle', source: 'outreach', paint: {
+        'circle-radius': ['interpolate', ['linear'], ['get', 'pos'], 0, 5, 40, 15], 'circle-color': OUTREACH_COLOR, 'circle-opacity': 0.85,
+        'circle-stroke-color': '#ffffff', 'circle-stroke-width': 2,
+      } });
+      m.addLayer({ id: 'highlight', type: 'symbol', source: 'highlight', layout: {
+        'text-field': ['get', 'name'], 'text-font': ['Noto Sans Regular'], 'text-size': 13, 'text-offset': [0, -2.2], 'text-allow-overlap': true,
+      }, paint: { 'text-color': OUTREACH_COLOR, 'text-halo-color': '#fff', 'text-halo-width': 2 } });
       // campaign flags stand just right of their spot, clear of a high density pin or placed pin on the same spot
       m.addLayer({ id: 'campaigns', type: 'symbol', source: 'campaigns', layout: {
         'icon-image': ['case', ['get', 'progress'], 'tb-flag-green', 'tb-flag-red'], 'icon-anchor': 'bottom-left', 'icon-offset': [17, 1],
@@ -127,7 +141,7 @@ export default function ExplorerMap(p: ExplorerMapProps) {
       } });
       setReady(true);
     });
-    const layers = ['campaigns', 'pins', 'suggested', 'venue-icons', 'venues', 'facilities', 'h-fill', 'town-fill', 'd-fill'];
+    const layers = ['campaigns', 'outreach', 'pins', 'suggested', 'venue-icons', 'venues', 'facilities', 'h-fill', 'town-fill', 'd-fill'];
     m.on('mousemove', (e: any) => {
       const f = m.queryRenderedFeatures(e.point, { layers: layers.filter((l) => m.getLayer(l)) })[0];
       m.getCanvas().style.cursor = props.current.pinMode ? 'crosshair' : f ? 'pointer' : '';
@@ -140,9 +154,10 @@ export default function ExplorerMap(p: ExplorerMapProps) {
     m.on('mouseout', () => popup.remove());
     m.on('click', (e: any) => {
       const cur = props.current;
-      const f = m.queryRenderedFeatures(e.point, { layers: ['campaigns', 'suggested', 'venue-icons', 'venues', 'h-fill', 'town-fill', 'd-fill'].filter((l) => m.getLayer(l) && m.getLayoutProperty(l, 'visibility') !== 'none') })[0];
+      const f = m.queryRenderedFeatures(e.point, { layers: ['campaigns', 'outreach', 'suggested', 'venue-icons', 'venues', 'h-fill', 'town-fill', 'd-fill'].filter((l) => m.getLayer(l) && m.getLayoutProperty(l, 'visibility') !== 'none') })[0];
       if (!f) return;
       if (f.layer.id === 'campaigns') return cur.onCampaign?.(f.properties);
+      if (f.layer.id === 'outreach') return cur.onOutreach?.(f.properties);
       if (f.layer.id === 'suggested') return cur.onSuggested?.(f.properties);
       if (cur.pinMode && f.layer.id === 'h-fill') {
         if ((cur.selectedHexes || []).includes(f.properties.h)) cur.onPin?.([e.lngLat.lng, e.lngLat.lat], f.properties.h);
@@ -172,7 +187,10 @@ export default function ExplorerMap(p: ExplorerMapProps) {
     m.getSource('facilities').setData(p.facilities || EMPTY);
     m.getSource('suggested').setData(p.suggested || EMPTY);
     m.getSource('campaigns').setData(p.campaigns || EMPTY);
-  }, [ready, p.districts, p.hexes, p.facilities, p.suggested, p.campaigns]);
+    m.getSource('outreach').setData(p.outreach || EMPTY);
+    m.getSource('highlight').setData(p.highlight || EMPTY);
+    m.setFilter('d-outreach', ['in', ['get', 'id'], ['literal', (p.highlight?.features || []).map((f: any) => f.properties.id)]]);
+  }, [ready, p.districts, p.hexes, p.facilities, p.suggested, p.campaigns, p.outreach, p.highlight]);
 
   useEffect(() => {
     const m = map.current;
@@ -198,13 +216,14 @@ export default function ExplorerMap(p: ExplorerMapProps) {
     const m = map.current;
     if (!ready || !m) return;
     m.setPaintProperty('d-fill', 'fill-color', step(p.districtMetric, p.districtBreaks));
-    m.setPaintProperty('d-fill', 'fill-opacity', p.focusId ? ['case', ['==', ['get', 'id'], p.focusId], 0.08, 0.35] : 0.75);
+    m.setPaintProperty('d-fill', 'fill-opacity', p.focusId ? ['case', ['==', ['get', 'id'], p.focusId], 0.08, 0.35] : p.scopeIds ? ['case', ['in', ['get', 'id'], ['literal', p.scopeIds]], 0.8, 0.12] : 0.75);
+    m.setLayoutProperty('highlight', 'visibility', p.focusId ? 'none' : 'visible');
     m.setFilter('d-focus', ['==', ['get', 'id'], p.focusId || '']);
     m.setPaintProperty('h-fill', 'fill-color', step('k', p.hexBreaks || []));
     m.setPaintProperty('town-fill', 'fill-color', ['case', ['==', ['get', 'nodata'], true], '#d1d5db', step('expected_km2', p.townBreaks || [])]);
     // an opened town shows its hexagons; neighbouring towns stay visible but faded
     m.setPaintProperty('town-fill', 'fill-opacity', p.focusTown ? ['case', ['==', ['get', 'key'], p.focusTown], 0, 0.28] : 0.75);
-  }, [ready, p.districtMetric, p.districtBreaks, p.focusId, p.hexBreaks, p.townBreaks, p.focusTown]);
+  }, [ready, p.districtMetric, p.districtBreaks, p.focusId, p.scopeIds, p.hexBreaks, p.townBreaks, p.focusTown]);
 
   useEffect(() => {
     const m = map.current;

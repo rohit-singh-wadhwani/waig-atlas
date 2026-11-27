@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ALLOWED_DOMAIN, signInWithEmail } from '../lib/store';
 import { Button, TextInput } from '../components/ui';
 import Icon from '../components/Icon';
+import { BRAND, TB_ONLY } from '../components/Layout';
 
 export default function SignIn() {
   const [email, setEmail] = useState('');
@@ -20,9 +21,9 @@ export default function SignIn() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="bg-white border border-gray-200 rounded-2xl shadow-card w-full max-w-md p-8">
-        <img src={`${process.env.PUBLIC_URL}/logo.png`} alt="Wadhwani AI Global" className="h-[52px]" />
+        <img src={`${process.env.PUBLIC_URL}/${BRAND.logo}`} alt={BRAND.name} className={TB_ONLY ? 'h-[76px]' : 'h-[52px]'} />
         <h1 className="text-2xl font-bold text-gray-900 mt-6">WAIG Atlas</h1>
-        <p className="text-gray-600 mt-1">Grants, health intelligence and project dashboards.</p>
+        <p className="text-gray-600 mt-1">{TB_ONLY ? 'TB surveillance for Ghana.' : 'Grants, health intelligence and project dashboards.'}</p>
         {sent ? (
           <div className="mt-6 bg-brand-50 border border-brand-100 rounded-xl p-4 text-[15px] text-brand-800 flex gap-3">
             <Icon name="checkCircle" size={20} className="mt-0.5 shrink-0" />

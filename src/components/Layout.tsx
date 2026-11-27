@@ -5,6 +5,11 @@ import { Avatar, Badge, cx } from './ui';
 import { DEMO, Me, onSaveError, signOut } from '../lib/store';
 import { useLocalPref } from '../lib/hooks';
 
+/** Demo build: Atlas opens straight on TB surveillance under the Aurum Institute's logo, with the sidebar (and every
+ *  other page) hidden. The pages and their data jobs are untouched; set this to false to bring them back. */
+export const TB_ONLY = true;
+export const BRAND = TB_ONLY ? { logo: 'aurum-logo.png', name: 'The Aurum Institute' } : { logo: 'logo.png', name: 'Wadhwani AI Global' };
+
 export const MeContext = createContext<Me | null>(null);
 export const useMe = () => useContext(MeContext)!;
 
@@ -71,7 +76,7 @@ export function Sidebar() {
         ) : (
           <>
             <div className="flex items-start justify-between gap-2">
-              <img src={`${process.env.PUBLIC_URL}/logo.png`} alt="Wadhwani AI Global" className="h-[52px] w-auto" />
+              <img src={`${process.env.PUBLIC_URL}/${BRAND.logo}`} alt={BRAND.name} className="h-[52px] w-auto" />
               <button type="button" onClick={() => setCollapsed(true)} title="Collapse sidebar" aria-label="Collapse sidebar" className="hidden lg:flex w-9 h-9 rounded-lg items-center justify-center text-gray-500 hover:bg-gray-100 shrink-0">
                 <Icon name="chevronsLeft" size={18} />
               </button>
@@ -143,10 +148,13 @@ export function PageHeader({ title, subtitle, updatedAt, actions }: { title: str
   }, []);
   const stamp = updatedAt ? new Date(updatedAt) : now;
   return (
-    <header className="flex flex-col xl:flex-row items-start gap-4 justify-between mb-7 pl-12 lg:pl-0">
-      <div className="min-w-0 flex-1">
-        <h1 className="text-[34px] sm:text-[40px] font-bold tracking-tight text-gray-900 leading-tight">{title}</h1>
-        {subtitle && <p className="text-[17px] text-gray-600 mt-2">{subtitle}</p>}
+    <header className={cx('flex flex-col xl:flex-row items-start gap-4 justify-between mb-7', !TB_ONLY && 'pl-12 lg:pl-0')}>
+      <div className="min-w-0 flex-1 flex items-start gap-5">
+        {TB_ONLY && <img src={`${process.env.PUBLIC_URL}/${BRAND.logo}`} alt={BRAND.name} className="h-[76px] w-auto shrink-0" />}
+        <div className="min-w-0">
+          <h1 className="text-[34px] sm:text-[40px] font-bold tracking-tight text-gray-900 leading-tight">{title}</h1>
+          {subtitle && <p className="text-[17px] text-gray-600 mt-2">{subtitle}</p>}
+        </div>
       </div>
       <div className="flex items-center gap-3 flex-wrap shrink-0">
         {actions}
@@ -208,7 +216,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
   }, []);
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <Sidebar />
+      {!TB_ONLY && <Sidebar />}
       <main className="flex-1 min-w-0 px-4 sm:px-8 lg:px-12 py-6 lg:py-10">
         {stale && (
           <div className="mb-5 flex flex-wrap items-center gap-3 bg-brand-50 border border-brand-200 text-brand-800 rounded-2xl px-5 py-3 text-[15px]">

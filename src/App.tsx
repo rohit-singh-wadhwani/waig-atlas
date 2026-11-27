@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom';
 import type { Session } from '@supabase/supabase-js';
-import { MeContext, Shell } from './components/Layout';
+import { MeContext, Shell, TB_ONLY } from './components/Layout';
 import { DEMO, meFromSession, supabase } from './lib/store';
 import OverviewPage from './pages/Overview';
 import GrantsPage from './pages/Grants';
@@ -48,10 +48,10 @@ export default function App() {
       <HashRouter>
         <Shell>
           <Routes>
-            <Route path="/" element={<OverviewPage />} />
+            <Route path="/" element={TB_ONLY ? <TbPage /> : <OverviewPage />} />
             <Route path="/grants" element={<GrantsPage />} />
             <Route path="/health" element={<HealthPage />} />
-            <Route path="/tb" element={<TbPage />} />
+            <Route path="/tb" element={TB_ONLY ? <Navigate to="/" replace /> : <TbPage />} />
             <Route path="/insights" element={<InsightsPage />} />
             <Route path="/sources" element={<SourcesPage />} />
             <Route path="/projects" element={<ProjectsPage />} />
