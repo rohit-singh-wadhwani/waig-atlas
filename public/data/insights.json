@@ -1,5 +1,5 @@
 {
- "updated_at": "2026-11-27T13:39:42.283Z",
+ "updated_at": "2026-11-27T16:24:19.180Z",
  "insights": [
   {
    "id": "346346bfcaf32527",
@@ -43,6 +43,20 @@
    "kind": "news",
    "countries": [
     "HTI"
+   ],
+   "diseases": []
+  },
+  {
+   "id": "7e71f37d779f3776",
+   "title": "Individual Consultant: Coordinating assessment for the implementation of healthy living",
+   "summary": "Indonesia is seeking an individual consultant to coordinate an assessment for implementing healthy living initiatives under a World Bank pandemic preparedness project.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00480471",
+   "published_at": "2026-11-26T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "IDN"
    ],
    "diseases": []
   },
