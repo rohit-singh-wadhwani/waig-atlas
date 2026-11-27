@@ -1,6 +1,37 @@
 {
- "updated_at": "2026-11-27T10:26:04.581Z",
+ "updated_at": "2026-11-27T13:39:42.283Z",
  "insights": [
+  {
+   "id": "346346bfcaf32527",
+   "title": "Zero-code deep learning platform for diagnosing tuberculosis and COVID-19 via chest X-ray findings.",
+   "summary": "This study evaluates a zero-code deep learning platform for diagnosing tuberculosis and COVID-19 from chest X-rays.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/43099781/",
+   "published_at": "2026-11-27T05:38:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [
+    "LBY"
+   ],
+   "diseases": [
+    "tuberculosis",
+    "COVID-19"
+   ]
+  },
+  {
+   "id": "0c22636e92b3a412",
+   "title": "Development and validation of a machine learning model for early prediction of severe scrub typhus in older patients.",
+   "summary": "Researchers developed and validated a machine learning model to predict early severe scrub typhus in older patients.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/43099892/",
+   "published_at": "2026-11-27T05:38:00.000Z",
+   "source_id": "pubmed-ai-tb-malaria-dengue",
+   "source_name": "PubMed: AI for TB, malaria, dengue",
+   "kind": "research",
+   "countries": [],
+   "diseases": [
+    "scrub typhus"
+   ]
+  },
   {
    "id": "b2ee9506899e5190",
    "title": "LIVE from #Haiti: Media briefing on the health situation with Dr Tedros",
@@ -14,6 +45,22 @@
     "HTI"
    ],
    "diseases": []
+  },
+  {
+   "id": "313704e7700bfec5",
+   "title": "Procurement of 54,000 TTI Screening reagents Liaison for Liasion Equipment",
+   "summary": "Kenya procured screening reagents for laboratory equipment as part of its COVID-19 health emergency response project.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00229910",
+   "published_at": "2026-11-26T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "KEN"
+   ],
+   "diseases": [
+    "COVID-19"
+   ]
   },
   {
    "id": "0ca70e612336411a",
@@ -45,6 +92,20 @@
     "tuberculosis",
     "lung cancer"
    ]
+  },
+  {
+   "id": "1ec660ca9420c058",
+   "title": "Consulting Firm for Renovation of Health Facilities Under HIIP",
+   "summary": "Consulting contract awarded for the renovation of health facilities under the Cambodia Health Equity and Quality Improvement Project.",
+   "url": "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00483874",
+   "published_at": "2026-11-25T00:00:00.000Z",
+   "source_id": "worldbank-health-tenders",
+   "source_name": "World Bank: health procurement notices",
+   "kind": "tender",
+   "countries": [
+    "KHM"
+   ],
+   "diseases": []
   },
   {
    "id": "0354eb191cddc6e7",
