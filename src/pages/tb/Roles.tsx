@@ -1,33 +1,21 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Select, cx } from '../../components/ui';
+import { Avatar, Select, cx } from '../../components/ui';
 import Icon from '../../components/Icon';
 import { useData } from '../../lib/hooks';
+import { personName } from '../../lib/team';
 import { LEVELS, loadDistrictDetail, TbCampaign, TbDistrict, TbLevel, TbStaffRole, TbTask } from '../../lib/tb';
-import { Panel, Tip } from './common';
+import { Panel } from './common';
 
-/* Who does what, by level, from the MoH Staffing Norms (2018), and a preview of what each role would see.
- * The preview only filters the screen: sign-in access by role comes later (Ghana Health Information Exchange). */
+/* Roles from the MoH Staffing Norms (2018): who is assigned to the campaigns in view, and a preview of what each role
+ * would see. The preview only filters the screen: sign-in access by role comes later (Ghana Health Information Exchange). */
 
 export const NORMS_DOC = 'Staffing Norms for the Health Sector in Ghana, Ministry of Health, validated May 2018';
 const levelLabel = (l: TbLevel) => LEVELS.find((x) => x.key === l)!.label;
-/** The directorate category a district's staffing norms use, from its politico-administrative name. */
-export const directorateOf = (d: Pick<TbDistrict, 'name'>) => (/metropolitan/i.test(d.name) ? 'Metropolitan' : /municipal/i.test(d.name) ? 'Municipal' : 'District');
 /** The lead role at a level (the one that owns the work there). */
 export const leadOf = (roles: TbStaffRole[], level: TbLevel) => roles.filter((r) => r.level === level).sort((a, b) => a.sort - b.sort)[0] || null;
 /** The name a task uses for a role: its playbook role when it fills one, else the cadre. */
 export const roleName = (r: TbStaffRole) => r.tb_role || r.cadre;
 
-/** Staff in post for a role, as "2–4" for one category or the span across categories, with the full list for a tooltip. */
-export function normText(r: TbStaffRole, category?: string) {
-  const n = r.norms;
-  if (!n) return null;
-  const one = category && n[category];
-  const list = Object.entries(n).map(([k, [a, b]]) => `${k}: ${a === b ? a : `${a}–${b}`}`).join(' · ');
-  if (one) return { text: `${one[0] === one[1] ? one[0] : `${one[0]}–${one[1]}`} in post`, tip: `${category} norm. All categories: ${list}` };
-  const lo = Math.min(...Object.values(n).map((x) => x[0])), hi = Math.max(...Object.values(n).map((x) => x[1]));
-  return { text: `${lo === hi ? lo : `${lo}–${hi}`} in post, by size`, tip: list };
-}
-const sourceWords = (r: TbStaffRole) => (r.basis === 'assumed' ? 'Not in the staffing norms; assumed for the prototype.' : `${NORMS_DOC}, ${r.source_table}${r.source_page ? `, p.${r.source_page}` : ''}.`);
 
 /* ---------------- preview a role ---------------- */
 export type Persona = { level: TbLevel; region?: string; district?: string; town?: string };
@@ -132,49 +120,49 @@ export function ScopeBanner({ scope, counts, onExit }: { scope: Scope; counts: {
   );
 }
 
-/** Who does the TB work at the levels shown here, with the staff the norms expect in post. */
-export function WhoDoesWhat({ roles, levels, categories, here, active }: { roles: TbStaffRole[]; levels: TbLevel[]; categories?: Partial<Record<TbLevel, string>>; here: string; active?: TbLevel | null }) {
-  const [open, setOpen] = useState(false);
-  const shown = levels.map((l) => ({ l, rows: roles.filter((r) => r.level === l).sort((a, b) => a.sort - b.sort) })).filter((x) => x.rows.length);
-  if (!shown.length) return null;
+/** Who is assigned to the campaigns in view: each role, the people holding its tasks, and how far they have got. */
+export function CampaignTeam({ campaigns, tasks, roles, here }: { campaigns: TbCampaign[]; tasks: TbTask[]; roles: TbStaffRole[]; here: string }) {
+  const ids = new Set(campaigns.map((c) => c.id));
+  const mine = tasks.filter((t) => t.campaign_id && ids.has(t.campaign_id));
+  if (!mine.length) return null;
+  const byRole = new Map<string, Map<string, { open: number; done: number; camps: Set<string> }>>();
+  for (const t of mine) {
+    const people = byRole.get(t.role || '') || new Map();
+    const a = people.get(t.assignee || '') || { open: 0, done: 0, camps: new Set<string>() };
+    if (t.status === 'done') a.done++; else a.open++;
+    a.camps.add(t.campaign_id!);
+    people.set(t.assignee || '', a);
+    byRole.set(t.role || '', people);
+  }
+  // roles in the order of the health-system levels; a role the norms do not know goes last
+  const staff = (name: string) => roles.find((r) => roleName(r) === name);
+  const rank = (name: string) => { const r = staff(name); return r ? LEVELS.findIndex((l) => l.key === r.level) * 10 + r.sort : 999; };
+  const rows = Array.from(byRole.entries()).sort((a, b) => rank(a[0]) - rank(b[0]));
+  const people = new Set(mine.map((t) => t.assignee).filter(Boolean)).size;
+  const open = mine.filter((t) => t.status !== 'done').length;
+  const unassigned = mine.filter((t) => !t.assignee).length;
   return (
-    <Panel title="Who does what here" sub={`TB case-finding roles for ${here}, from the MoH staffing norms`}
-      right={<button type="button" onClick={() => setOpen(!open)} aria-expanded={open} className="inline-flex items-center gap-1 text-sm text-brand-700 hover:underline">{open ? 'Hide' : `Show ${shown.reduce((a, x) => a + x.rows.length, 0)} roles`}<Icon name="chevronDown" size={14} className={open ? 'rotate-180' : ''} /></button>}>
-      {!open ? (
-        <ul className="space-y-1.5 text-sm">
-          {shown.map(({ l, rows }) => (
-            <li key={l} className="flex gap-2"><span className="w-28 shrink-0 text-gray-500">{levelLabel(l)}</span><span className="min-w-0 text-gray-900"><b className="font-medium">{rows[0].cadre}</b>{rows.length > 1 ? <span className="text-gray-500"> + {rows.length - 1} more</span> : null}</span></li>
-          ))}
-        </ul>
-      ) : (
-        <div className="space-y-4">
-          {shown.map(({ l, rows }) => (
-            <div key={l}>
-              <div className="flex items-baseline justify-between gap-2 border-b border-gray-100 pb-1 mb-2">
-                <span className="text-sm font-semibold text-gray-900">{levelLabel(l)}</span>
-                <span className="text-xs text-gray-500 text-right">{rows[0].unit_type}{categories?.[l] ? ` · ${categories[l]}` : ''}</span>
-              </div>
-              <ul className="space-y-2.5">
-                {rows.map((r, i) => {
-                  const n = normText(r, categories?.[l]);
-                  return (
-                    <li key={r.id} className={cx('text-sm rounded-lg', active === l && i === 0 && 'bg-violet-50 -mx-2 px-2 py-1.5')}>
-                      <div className="flex items-baseline justify-between gap-3">
-                        <span className="font-medium text-gray-900">{r.cadre}{r.tb_role && r.tb_role !== r.cadre && <span className="ml-1.5 text-xs font-normal text-gray-500">({r.tb_role})</span>}</span>
-                        <Tip label={sourceWords(r)} text={<>{n?.tip && <span className="block mb-1">{n.tip}</span>}{sourceWords(r)}</>}>
-                          <span className={cx('text-xs whitespace-nowrap tabular-nums', r.basis === 'assumed' ? 'text-amber-700' : 'text-gray-500')}>{n ? n.text : 'assumed'}</span>
-                        </Tip>
-                      </div>
-                      {r.duty && <p className="text-gray-600 mt-0.5">{r.duty}</p>}
-                    </li>
-                  );
-                })}
+    <Panel title="Who is assigned" sub={`${campaigns.length} campaign${campaigns.length === 1 ? '' : 's'} in ${here} · ${people} ${people === 1 ? 'person' : 'people'} · ${open} open task${open === 1 ? '' : 's'}${unassigned ? ` · ${unassigned} unassigned` : ''}`}>
+      <ul className="divide-y divide-gray-100">
+        {rows.map(([role, ppl]) => {
+          const r = staff(role);
+          return (
+            <li key={role || 'none'} className="py-2.5">
+              <div className="text-sm font-medium text-gray-900">{role || 'No role'}</div>
+              {r && <div className="text-xs text-gray-500">{levelLabel(r.level)}{r.tb_role && r.tb_role !== r.cadre ? ` · ${r.cadre}` : ''}</div>}
+              <ul className="mt-1.5 space-y-1">
+                {Array.from(ppl.entries()).map(([email, a]) => (
+                  <li key={email || 'nobody'} className="flex items-center gap-2 text-sm">
+                    {email ? <Avatar name={personName(email)} size={22} /> : <span className="w-[22px] h-[22px] rounded-full border border-dashed border-gray-300 shrink-0" />}
+                    <span className={cx('min-w-0 truncate', email ? 'text-gray-800' : 'text-amber-700')}>{email ? personName(email) : 'Unassigned'}</span>
+                    <span className="ml-auto shrink-0 text-xs text-gray-500 tabular-nums">{a.open} open · {a.done} done · {a.camps.size} campaign{a.camps.size === 1 ? '' : 's'}</span>
+                  </li>
+                ))}
               </ul>
-            </div>
-          ))}
-          <p className="text-xs text-gray-500">Staff numbers: {NORMS_DOC}. The TB duties are the prototype's reading of each cadre's job; the norms give numbers, not tasks.</p>
-        </div>
-      )}
+            </li>
+          );
+        })}
+      </ul>
     </Panel>
   );
 }

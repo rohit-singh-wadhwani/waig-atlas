@@ -10,7 +10,7 @@ import { peopleOptions, personName, usePeople } from '../../lib/team';
 import { APPROACH, approachOf, cascadeTotals, createCampaign, expectedPositivity, fmtInt, loadDistrictDetail, loadReportedRegions, rulesFrom, tbSave, TbCampaign, TbDistrict, TbHexRow, TbHotspot, TbPriorities, TbPriorityPick, TbResult, TbStaffRole, TbTask, TbTown, TbVenue } from '../../lib/tb';
 import { BasisTag, esc, Funnel, HowTag, kmFmt, Panel, pctFmt, Stat, Why } from './common';
 import { DistrictInsight, Factors, PRIORITY_HOW, priorityInputs, SignalTag, Towns } from './Priorities';
-import { directorateOf, WhoDoesWhat } from './Roles';
+import { CampaignTeam } from './Roles';
 import type { TbData } from './TbPage';
 
 const GHANA: [number, number, number, number] = [-3.3, 4.6, 1.3, 11.2];
@@ -244,11 +244,11 @@ export default function Explorer({ data, goTab }: { data: TbData; goTab: (t: str
         <aside ref={panelRef} className="min-w-0 space-y-4 xl:min-h-0 xl:overflow-y-auto xl:pr-1 xl:pb-4">
           {flag && <CampaignPanel id={flag} data={data} onClose={() => setFlag(null)} onOpen={() => goTab('campaigns', flag)}
             onGo={(c) => { if (c.district_id) { setDistrictId(c.district_id); if (c.town) setGoTown({ district: c.district_id, town: c.town }); } }} />}
-          {!d && <GhanaPanel onHotspot={goHotspot} field={field} roles={roles.data} scoped={!!scope}
+          {!d && <GhanaPanel tasks={tasks.data} onHotspot={goHotspot} field={field} roles={roles.data} scoped={!!scope}
             list={scope?.districts ? list.filter((x) => scope.districts!.has(x.id)) : list} nat={nat} natRate={natRate} rank={rank} campaigns={campaigns.data} notified={dist.data.notifiedDistricts} onOpen={setDistrictId} goTab={goTab} priorities={data.priorities.data} />}
-          {d && !town && <DistrictPanel field={field.get(d.id) || null} onCampaign={(id) => { setFlag(id); panelRef.current?.scrollTo({ top: 0, behavior: 'smooth' }); }} roles={roles.data} d={d} det={det} loading={detail.loading} rank={rank} n={list.length} venues={venues} campaigns={campaigns.data.filter((c) => c.district_id === d.id)} onTown={(t) => setTKey(townKey(t))} rules={rules} natRate={natRate} priorities={data.priorities.data} />}
+          {d && !town && <DistrictPanel tasks={tasks.data} field={field.get(d.id) || null} onCampaign={(id) => { setFlag(id); panelRef.current?.scrollTo({ top: 0, behavior: 'smooth' }); }} roles={roles.data} d={d} det={det} loading={detail.loading} rank={rank} n={list.length} venues={venues} campaigns={campaigns.data.filter((c) => c.district_id === d.id)} onTown={(t) => setTKey(townKey(t))} rules={rules} natRate={natRate} priorities={data.priorities.data} />}
           {d && town && !planning && !created && (
-            <TownPanel roles={roles.data} pickSuggested={pickSuggested} d={d} town={town} venues={hexVenues} hexes={townHexes} selHex={selHex} clearHex={() => { setSelHex([]); setPins([]); }} pins={pins} setPins={setPins} pinMode={pinMode} setPinMode={setPinMode} spots={spots} facilities={det?.facilities.filter((f) => distKm(f, town) <= town.radius_km + 3).sort((a, b) => distKm(a, town) - distKm(b, town)) || []}
+            <TownPanel tasks={tasks.data} roles={roles.data} pickSuggested={pickSuggested} d={d} town={town} venues={hexVenues} hexes={townHexes} selHex={selHex} clearHex={() => { setSelHex([]); setPins([]); }} pins={pins} setPins={setPins} pinMode={pinMode} setPinMode={setPinMode} spots={spots} facilities={det?.facilities.filter((f) => distKm(f, town) <= town.radius_km + 3).sort((a, b) => distKm(a, town) - distKm(b, town)) || []}
               picked={picked} toggle={toggle} campaigns={campaigns.data.filter((c) => c.district_id === d.id && c.town === town.name)} onPlan={() => setPlanning(true)} />
           )}
           {d && town && planning && !created && <PlanPanel d={d} town={town} spots={spots} hexIds={selHex} reachHex={townHexes.filter((h) => selHex.includes(h.h)).reduce((a, h) => a + h.p, 0)} data={data} onCancel={() => setPlanning(false)} onCreated={(id) => { setCreated(id); setPlanning(false); }} natRate={natRate} />}
@@ -427,7 +427,7 @@ function flagsFor(d: TbDistrict, rank: Record<string, Map<string, number>>) {
 }
 
 // ---------------- level 1: Ghana ----------------
-function GhanaPanel({ onHotspot, field, roles, scoped, list, nat, natRate, rank, campaigns, notified, onOpen, goTab, priorities }: { onHotspot: (districtId: string, x: TbHotspot) => void; field: Map<string, FieldStats>; roles: TbStaffRole[]; scoped: boolean; list: TbDistrict[]; nat: any; natRate: number | null; rank: Record<string, Map<string, number>>; campaigns: TbCampaign[]; notified: number; onOpen: (id: string) => void; goTab: (t: string) => void; priorities: TbPriorities | null }) {
+function GhanaPanel({ tasks, onHotspot, field, roles, scoped, list, nat, natRate, rank, campaigns, notified, onOpen, goTab, priorities }: { tasks: TbTask[]; onHotspot: (districtId: string, x: TbHotspot) => void; field: Map<string, FieldStats>; roles: TbStaffRole[]; scoped: boolean; list: TbDistrict[]; nat: any; natRate: number | null; rank: Record<string, Map<string, number>>; campaigns: TbCampaign[]; notified: number; onOpen: (id: string) => void; goTab: (t: string) => void; priorities: TbPriorities | null }) {
   // the AI ranking leads once one exists; the two data rankings stay one click away
   const [region, setRegion] = useState('');
   const byId = useMemo(() => new Map(list.map((d) => [d.id, d])), [list]);
@@ -467,13 +467,13 @@ function GhanaPanel({ onHotspot, field, roles, scoped, list, nat, natRate, rank,
         {ranked.length > 12 && <button type="button" className="text-sm text-brand-700 hover:underline mt-2" onClick={() => setAll(!all)}>{all ? 'Show top 12' : `Show all ${ranked.length + pinned.length}`}</button>}
       </Panel>
       <NextHotspots list={list.filter(inRegion)} field={field} onGo={onHotspot} />
-      <WhoDoesWhat roles={roles} levels={['national', 'regional']} here={scoped && regions.length === 1 ? `Ghana and the ${regions[0]} region` : 'Ghana and its regions'} />
+      <CampaignTeam campaigns={campaigns.filter((c) => list.some((d) => d.id === c.district_id))} tasks={tasks} roles={roles} here={region || (scoped ? 'this area' : 'Ghana')} />
     </>
   );
 }
 
 // ---------------- level 2: district ----------------
-function DistrictPanel({ field, onCampaign, roles, d, det, loading, rank, n, venues, campaigns, onTown, rules, natRate, priorities }: { field: FieldStats | null; onCampaign: (id: string) => void; roles: TbStaffRole[]; priorities: TbPriorities | null; natRate: number | null; d: TbDistrict; det: any; loading: boolean; rank: Record<string, Map<string, number>>; n: number; venues: TbVenue[]; campaigns: TbCampaign[]; onTown: (t: TbTown) => void; rules: any }) {
+function DistrictPanel({ tasks, field, onCampaign, roles, d, det, loading, rank, n, venues, campaigns, onTown, rules, natRate, priorities }: { tasks: TbTask[]; field: FieldStats | null; onCampaign: (id: string) => void; roles: TbStaffRole[]; priorities: TbPriorities | null; natRate: number | null; d: TbDistrict; det: any; loading: boolean; rank: Record<string, Map<string, number>>; n: number; venues: TbVenue[]; campaigns: TbCampaign[]; onTown: (t: TbTown) => void; rules: any }) {
   const a = APPROACH[d.approach];
   const reported = useData(loadReportedRegions, [], {} as Record<string, { period: string; tb: number }[]>);
   const series = reported.data[d.region] || null;
@@ -499,7 +499,7 @@ function DistrictPanel({ field, onCampaign, roles, d, det, loading, rank, n, ven
       </Panel>
 
       {field && <FieldResults f={field} onCampaign={onCampaign} />}
-      <WhoDoesWhat roles={roles} levels={['district', 'subdistrict']} here={d.name} categories={{ district: directorateOf(d) }} />
+      <CampaignTeam campaigns={campaigns} tasks={tasks} roles={roles} here={d.name} />
 
       <Panel title="Towns to start with" sub="Click a town to see its neighbourhoods and screening spots."
         right={<div className="flex rounded-lg bg-gray-100 p-0.5 text-sm shrink-0">{(['cases', 'far'] as const).map((k) => <button key={k} type="button" onClick={() => setTSort(k)} className={cx('px-2.5 py-1 rounded-md whitespace-nowrap', tSort === k ? 'bg-white shadow-sm font-medium' : 'text-gray-600')}>{k === 'cases' ? 'Most cases' : 'Farthest from care'}</button>)}</div>}>
@@ -620,9 +620,9 @@ function inRing(pt: [number, number], ring: [number, number][]) {
 type TownPanelProps = {
   d: TbDistrict; town: TbTown; venues: TbVenue[]; hexes: TbHexRow[]; selHex: string[]; clearHex: () => void; pins: Pin[]; setPins: React.Dispatch<React.SetStateAction<Pin[]>>;
   pinMode: boolean; setPinMode: (b: boolean) => void; spots: Spot[]; facilities: any[]; picked: string[]; toggle: (k: string) => void; campaigns: TbCampaign[]; onPlan: () => void;
-  pickSuggested: (h: TbHexRow) => void; roles: TbStaffRole[];
+  pickSuggested: (h: TbHexRow) => void; roles: TbStaffRole[]; tasks: TbTask[];
 };
-function TownPanel({ roles, d, town, venues, hexes, selHex, clearHex, pins, setPins, pinMode, setPinMode, spots, facilities, picked, toggle, campaigns, onPlan, pickSuggested }: TownPanelProps) {
+function TownPanel({ tasks, roles, d, town, venues, hexes, selHex, clearHex, pins, setPins, pinMode, setPinMode, spots, facilities, picked, toggle, campaigns, onPlan, pickSuggested }: TownPanelProps) {
   const [kind, setKind] = useState('');
   const kinds = Array.from(new Set(venues.map((v) => v.kind)));
   const shown = venues.filter((v) => !kind || v.kind === kind);
@@ -735,7 +735,7 @@ function TownPanel({ roles, d, town, venues, hexes, selHex, clearHex, pins, setP
           <ul className="space-y-1.5 text-sm">{facilities.slice(0, 6).map((f, i) => <li key={i} className="flex justify-between gap-3"><span className="truncate">{f.name || 'Unnamed facility'}<span className="text-gray-500"> · {f.kind}{f.lab ? ' · lab' : ''}</span></span><span className="text-gray-500 shrink-0">{kmFmt(distKm(f, town))}</span></li>)}</ul>
         </Panel>
       )}
-      <WhoDoesWhat roles={roles} levels={['facility', 'community']} here={town.name} />
+      <CampaignTeam campaigns={campaigns} tasks={tasks} roles={roles} here={town.name} />
     </>
   );
 }
