@@ -40,7 +40,7 @@ export function scopeOf(p: Persona | null, list: TbDistrict[], roles: TbStaffRol
   const districts = p.level === 'national' ? null : p.level === 'regional' ? new Set(list.filter((x) => x.region === p.region).map((x) => x.id)) : new Set(d ? [d.id] : []);
   const town = ['subdistrict', 'facility', 'community'].includes(p.level) ? p.town || null : null;
   // facility and community staff see only the tasks their roles carry; everyone above sees all tasks in their area
-  const taskRoles = p.level === 'facility' || p.level === 'community' ? roles.filter((r) => r.level === p.level).map(roleName) : null;
+  const taskRoles = p.level === 'facility' || p.level === 'community' ? roles.filter((r) => r.level === p.level).sort((a, b) => a.sort - b.sort).map(roleName) : null;
   const place = p.level === 'national' ? 'Ghana' : p.level === 'regional' ? `${p.region} region` : town ? `${town}, ${d?.name || ''}` : d?.name || '';
   return { persona: p, lead, districts, town, taskRoles, place };
 }
@@ -114,6 +114,8 @@ export function ViewAs({ value, onChange, roles, list, focus }: { value: Persona
   );
 }
 
+const listWords = (xs: string[]) => (xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`);
+
 /** Banner under the header while previewing a role. */
 export function ScopeBanner({ scope, counts, onExit }: { scope: Scope; counts: { districts: number; campaigns: number; tasks: number }; onExit: () => void }) {
   const l = scope.lead;
@@ -123,7 +125,7 @@ export function ScopeBanner({ scope, counts, onExit }: { scope: Scope; counts: {
       <div className="min-w-0 flex-1">
         <b>Previewing as {l ? l.cadre : levelLabel(scope.persona.level)}</b> · {scope.place}
         {l?.duty && <span className="block text-sm text-violet-900/80">{l.duty}</span>}
-        <span className="block text-sm text-violet-900/80">Sees {counts.districts === 1 ? '1 district' : `${counts.districts} districts`}, {counts.campaigns} campaign{counts.campaigns === 1 ? '' : 's'} and {counts.tasks} open task{counts.tasks === 1 ? '' : 's'}{scope.taskRoles ? ` for ${scope.taskRoles.join(' and ')}` : ''}. Preview only: access by role is not enforced yet.</span>
+        <span className="block text-sm text-violet-900/80">Sees {counts.districts === 1 ? '1 district' : `${counts.districts} districts`}, {counts.campaigns} campaign{counts.campaigns === 1 ? '' : 's'} and {counts.tasks} open task{counts.tasks === 1 ? '' : 's'}{scope.taskRoles ? ` for ${listWords(scope.taskRoles)}` : ''}. Preview only: access by role is not enforced yet.</span>
       </div>
       <button type="button" onClick={onExit} className="shrink-0 rounded-lg bg-white px-3 h-9 text-sm font-medium text-violet-800 ring-1 ring-violet-200 hover:bg-violet-100">Exit preview</button>
     </div>
@@ -178,7 +180,7 @@ export function WhoDoesWhat({ roles, levels, categories, here, active }: { roles
 }
 
 /** Roles a task can be given, grouped by level, for a select. */
-export const roleOptions = (roles: TbStaffRole[]) => LEVELS.flatMap((l) => roles.filter((r) => r.level === l.key).sort((a, b) => a.sort - b.sort).map((r) => ({ value: roleName(r), label: `${l.label} · ${roleName(r)}${r.tb_role ? ` (${r.cadre})` : ''}` })));
+export const roleOptions = (roles: TbStaffRole[]) => LEVELS.flatMap((l) => roles.filter((r) => r.level === l.key).sort((a, b) => a.sort - b.sort).map((r) => ({ value: roleName(r), label: `${l.label}: ${roleName(r)}${r.tb_role && r.tb_role !== r.cadre ? ` · ${r.cadre}` : ''}` })));
 /** The staff role behind a task's role name, if any. */
 export const roleBehind = (roles: TbStaffRole[], name: string | null | undefined) => (name ? roles.find((r) => roleName(r).toLowerCase() === name.toLowerCase()) || null : null);
-export const roleLine = (r: TbStaffRole) => `${levelLabel(r.level)} · ${r.cadre} at the ${r.unit_type.toLowerCase().startsWith('district') ? 'district health directorate' : r.unit_type}`;
+export const roleLine = (r: TbStaffRole) => `Done by the ${r.cadre} (${levelLabel(r.level).toLowerCase()} level: ${r.unit_type}).${r.duty ? ` ${r.duty}` : ''}`;

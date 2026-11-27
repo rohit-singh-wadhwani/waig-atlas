@@ -23,7 +23,7 @@ const BASEMAP_STYLE = 'https://tiles.openfreemap.org/styles/positron';
 const SATELLITE = { type: 'raster', tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'], tileSize: 256, maxzoom: 18, attribution: 'Imagery © Esri, Maxar, Earthstar Geographics' };
 const EMPTY = { type: 'FeatureCollection', features: [] };
 /** Optional layers a user can switch off in the layer control. */
-export const LAYER_GROUPS = { outreach: ['outreach'], campaigns: ['campaigns'], facilities: ['facilities'], venues: ['venues', 'venue-icons'], suggested: ['suggested'] } as const;
+export const LAYER_GROUPS = { outreach: ['outreach-halo', 'outreach'], campaigns: ['campaigns'], facilities: ['facilities'], venues: ['venues', 'venue-icons'], suggested: ['suggested'] } as const;
 /** Gathering places drawn as icons rather than dots. */
 const ICON_KINDS = ['prison', 'mine / quarry'];
 export type LayerGroup = keyof typeof LAYER_GROUPS;
@@ -127,10 +127,10 @@ export default function ExplorerMap(p: ExplorerMapProps) {
         'icon-allow-overlap': true, 'icon-ignore-placement': true,
       } });
       m.addLayer({ id: 'pins', type: 'circle', source: 'pins', paint: { 'circle-radius': 8, 'circle-color': '#dc2626', 'circle-stroke-color': '#0f172a', 'circle-stroke-width': 3 } });
-      m.addLayer({ id: 'outreach', type: 'circle', source: 'outreach', paint: {
-        'circle-radius': ['interpolate', ['linear'], ['get', 'pos'], 0, 5, 40, 15], 'circle-color': OUTREACH_COLOR, 'circle-opacity': 0.85,
-        'circle-stroke-color': '#ffffff', 'circle-stroke-width': 2,
-      } });
+      // a white halo and a dark ring keep the red points readable on the red-orange burden colours
+      const radius = ['interpolate', ['linear'], ['get', 'pos'], 0, 5, 40, 15];
+      m.addLayer({ id: 'outreach-halo', type: 'circle', source: 'outreach', paint: { 'circle-radius': ['+', radius, 3], 'circle-color': '#ffffff' } });
+      m.addLayer({ id: 'outreach', type: 'circle', source: 'outreach', paint: { 'circle-radius': radius, 'circle-color': OUTREACH_COLOR, 'circle-stroke-color': '#111827', 'circle-stroke-width': 1.5 } });
       m.addLayer({ id: 'highlight', type: 'symbol', source: 'highlight', layout: {
         'text-field': ['get', 'name'], 'text-font': ['Noto Sans Regular'], 'text-size': 13, 'text-offset': [0, -2.2], 'text-allow-overlap': true,
       }, paint: { 'text-color': OUTREACH_COLOR, 'text-halo-color': '#fff', 'text-halo-width': 2 } });

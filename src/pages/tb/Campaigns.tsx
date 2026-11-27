@@ -88,7 +88,7 @@ export default function Campaigns({ data, onPlan, openId }: { data: TbData; onPl
               <Button variant="primary" icon="plus" onClick={() => onPlan({ setting: 'community', playbook_id: 'acf_community' })}>Campaign</Button></>} />
         </div>
         {!groups.length ? (
-          <div className="px-5 pb-5"><Empty icon="checkCircle" title={camps.length ? 'Nothing in this view' : 'No campaigns yet'}>{camps.length ? 'Try another filter above.' : 'Plan one from a town on Find and act; its tasks are created from the playbook.'}</Empty></div>
+          <div className="px-5 pb-5"><Empty icon="checkCircle" title={camps.length ? 'Nothing in this view' : data.scope ? 'Nothing assigned here yet' : 'No campaigns yet'}>{camps.length ? 'Try another filter above.' : data.scope ? `Campaigns planned for ${data.scope.place} show here, with the tasks this role carries.` : 'Plan one from a town on Find and act; its tasks are created from the playbook.'}</Empty></div>
         ) : groups.map(({ c, items }) => {
           const key = c?.id || 'other';
           const open = groups.length === 1 || expanded.includes(key);
@@ -222,7 +222,7 @@ function TaskWorkspace({ t, c, data }: { t: TbTask; c: TbCampaign | null; data: 
         </div>
         <div className="mt-3">
           <Field label="Role"><Select value={t.role || ''} onChange={(v) => save({ role: v || null })} placeholder="No role" options={withOthers(roleOptions(data.roles.data), t.role ? [t.role] : [])} /></Field>
-          {staff && <p className="text-xs text-gray-500 mt-1">{roleLine(staff)}{staff.duty ? `: ${staff.duty}` : ''}</p>}
+          {staff && <p className="text-xs text-gray-500 mt-1">{roleLine(staff)}</p>}
         </div>
         {(t.spot || t.guide) && (
           <div className="mt-3 rounded-lg bg-gray-50 px-3 py-2.5 text-sm space-y-1">

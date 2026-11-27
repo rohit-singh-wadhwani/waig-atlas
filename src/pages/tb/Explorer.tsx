@@ -15,6 +15,7 @@ import { directorateOf, WhoDoesWhat } from './Roles';
 import type { TbData } from './TbPage';
 
 const GHANA: [number, number, number, number] = [-3.3, 4.6, 1.3, 11.2];
+const AREA_PAD = 0.35; // degrees (~40 km) of context around the outreach area when the map opens on it
 const townKey = (t: TbTown) => String(t.id);
 const venueKey = (v: TbVenue) => `${v.kind}|${v.lon}|${v.lat}`;
 const KIND_LABEL: Record<string, string> = { 'transport hub': 'Lorry station', market: 'Market', prison: 'Prison', 'mine / quarry': 'Mine / quarry', port: 'Port', 'industrial zone': 'Industrial zone', school: 'School', 'place of worship': 'Church / mosque', 'community centre': 'Community centre', pharmacy: 'Pharmacy', 'NGO office': 'NGO office' };
@@ -71,6 +72,7 @@ export default function Explorer({ data, goTab }: { data: TbData; goTab: (t: str
   const [hidden, setHidden] = useState<LayerGroup[]>([]);
   const [planning, setPlanning] = useState(false);
   const [created, setCreated] = useState<string | null>(null);
+  const [wholeGhana, setWholeGhana] = useState(false);
   const d = districtId ? byId.get(districtId) || null : null;
   const detail = useData(() => (districtId ? loadDistrictDetail(districtId) : Promise.resolve(null)), [districtId], null);
   const det = detail.data && detail.data.id === districtId ? detail.data : null;
@@ -134,8 +136,10 @@ export default function Explorer({ data, goTab }: { data: TbData; goTab: (t: str
       return [town.lon - dLon, town.lat - dLat, town.lon + dLon, town.lat + dLat];
     }
     if (d && dist.data.geo) return bboxOf(dist.data.geo.features.find((f: any) => f.properties.id === d.id)?.geometry) || GHANA;
-    return GHANA;
-  }, [town, d, dist.data.geo]);
+    // the Ghana view opens on the outreach area with its neighbours around it; one click shows all of Ghana
+    const ab = area && !wholeGhana && dist.data.geo ? bboxOf(dist.data.geo.features.find((f: any) => f.properties.id === area.id)?.geometry) : null;
+    return ab ? [ab[0] - AREA_PAD, ab[1] - AREA_PAD, ab[2] + AREA_PAD, ab[3] + AREA_PAD] : GHANA;
+  }, [town, d, dist.data.geo, area, wholeGhana]);
 
   // one flag per campaign spot (or at its town, else its district, when it has no spots): green once any task has
   // moved or any result is in, red while nothing has happened since it was created
@@ -236,6 +240,11 @@ export default function Explorer({ data, goTab }: { data: TbData; goTab: (t: str
         <div className="xl:flex xl:flex-col xl:min-h-0">
           <div className="relative h-[440px] md:h-[560px] xl:h-auto xl:flex-1 xl:min-h-[360px]">
             <LayerControl satellite={satellite} setSatellite={setSatellite} hidden={hidden} setHidden={setHidden} level={!d ? 'ghana' : town ? 'town' : 'district'} outreach={outFc.features.length > 0} />
+            {!d && area && (
+              <button type="button" onClick={() => setWholeGhana(!wholeGhana)} className="absolute bottom-3 left-3 z-10 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-sm shadow-sm hover:bg-gray-50">
+                <Icon name={wholeGhana ? 'target' : 'globe'} size={15} />{wholeGhana ? `Back to ${placeOf(area)}` : 'Show all of Ghana'}
+              </button>
+            )}
             <span className="absolute top-2.5 left-1/2 -translate-x-1/2 z-10 hidden md:block rounded-full bg-white/90 px-3 py-1 text-xs text-gray-600 shadow-sm pointer-events-none">{!d ? 'Click a district to open it' : !town ? 'Click a town to open it' : pinMode ? 'Click inside a selected hexagon to place the point' : 'Select hexagons, then pick spots or place a point'}</span>
             <ExplorerMap districts={geo} districtMetric="expected_100k" districtBreaks={dBreaks} focusId={districtId} hexes={hexFc} hexBreaks={hBreaks} towns={townFc} townBreaks={tBreaks} venues={venueFc} facilities={facFc}
               picked={picked} focusTown={tKey} selectedHexes={selHex} pins={pinFc} pinMode={pinMode} onHex={toggleHex} onPin={dropPin} satellite={satellite} fit={fit}
