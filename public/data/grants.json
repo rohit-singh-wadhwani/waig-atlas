@@ -1,6 +1,38 @@
 {
- "updated_at": "2026-11-26T14:43:05.488Z",
+ "updated_at": "2026-11-27T02:41:50.030Z",
  "grants": [
+  {
+   "id": "d33989bb629a7887",
+   "title": "AI hardware: Increasing Energy Efficiency strand 2",
+   "funder": "Innovate UK",
+   "summary": "This competition funds the development of energy-efficient AI hardware solutions. It is designed for UK-registered startups, SMEs, and academic research institutions with a clear commercialization plan.",
+   "amount_text": null,
+   "amount_usd": null,
+   "deadline": "2027-01-20",
+   "open_date": "2026-11-25",
+   "eligibility": "UK-registered SMEs, startups, spinouts, and academic institutions.",
+   "requirements": "Must be a UK entity or consortium including a UK SME; clear path to commercialization required.",
+   "countries": [
+    "GBR"
+   ],
+   "regions": [],
+   "themes": [
+    "AI",
+    "Hardware",
+    "Energy Efficiency"
+   ],
+   "url": "https://www.ukri.org/opportunity/ai-hardware-increasing-energy-efficiency-strand-2/",
+   "source_id": "ukri-opportunities",
+   "source_name": "UKRI funding finder",
+   "fetched_at": "2026-11-27T02:41:50.030Z",
+   "score": null,
+   "strengths": [],
+   "weaknesses": [],
+   "score_reason": null,
+   "fit": null,
+   "eligible_as": null,
+   "notes": null
+  },
   {
    "id": "f4a4ef7d5c8b0fd4",
    "title": "Science of Learning and Augmented Intelligence (SL)",
@@ -1835,40 +1867,6 @@
    "notes": null,
    "added_by": null,
    "updated_at": "2026-11-07T21:06:34.547621+00:00"
-  },
-  {
-   "id": "d33989bb629a7887",
-   "title": "AI hardware: Increasing Energy Efficiency strand 2",
-   "funder": "",
-   "summary": "This competition will be open to start ups, spin outs, universities and UK registered SMEs. A clear plan must be provided by RO’s and RTO’s applying for this competition on how they will commercialise or spin out products. Innovate UK",
-   "amount_text": null,
-   "amount_usd": null,
-   "deadline": null,
-   "open_date": "2026-11-25",
-   "eligibility": null,
-   "requirements": null,
-   "countries": [
-    "GBR"
-   ],
-   "regions": [],
-   "themes": [],
-   "url": "https://www.ukri.org/opportunity/ai-hardware-increasing-energy-efficiency-strand-2/",
-   "source_id": "ukri-opportunities",
-   "source_name": "UKRI funding finder",
-   "fetched_at": "2026-11-25T14:46:53.625+00:00",
-   "score": null,
-   "strengths": [],
-   "weaknesses": [],
-   "score_reason": null,
-   "curated": false,
-   "deadline_text": null,
-   "sector": null,
-   "fit": null,
-   "eligible_as": null,
-   "geography": null,
-   "notes": null,
-   "added_by": null,
-   "updated_at": "2026-11-25T14:51:21.803268+00:00"
   },
   {
    "id": "sc_56f3991cb6b0a6e2",
