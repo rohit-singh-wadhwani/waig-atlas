@@ -6,8 +6,9 @@ import { fmtTime } from '../../lib/format';
 import { fmtInt, tbSave } from '../../lib/tb';
 import type { TbData } from './TbPage';
 
-/** How a dataset relates to Aurum: on its recommended list (in use, or replaced by better data) or data it should share. */
-const AURUM: Record<'used' | 'replaced' | 'share', { label: string; cls: string }> = {
+/** How a dataset relates to Aurum: on its recommended list (in use, or replaced by better data), data it should share, or data it has shared. */
+const AURUM: Record<'used' | 'replaced' | 'share' | 'shared', { label: string; cls: string }> = {
+  shared: { label: 'Shared by Aurum · in use', cls: 'bg-red-50 text-red-800' },
   used: { label: 'Aurum recommended · in use', cls: 'bg-green-50 text-green-800' },
   replaced: { label: 'Aurum recommended · better data used', cls: 'bg-sky-50 text-sky-800' },
   share: { label: 'Aurum to share', cls: 'bg-amber-50 text-amber-800' },
@@ -56,7 +57,7 @@ export default function Evidence({ data }: { data: TbData }) {
       </div>
 
       <Card pad={false}>
-        <div className="p-6 pb-2"><CardHeader title="Datasets" subtitle="Listed straight from the weekly pipeline run: what it pulled, the counts it got, and what it chose not to use and why. Tags show Aurum's part: datasets it recommended (in use, or replaced by better data, with the reason under This run) and data it needs to share. Click a name to open the source." /></div>
+        <div className="p-6 pb-2"><CardHeader title="Datasets" subtitle="Listed straight from the weekly pipeline run: what it pulled, the counts it got, and what it chose not to use and why. Tags show Aurum's part: data it has shared, datasets it recommended (in use, or replaced by better data, with the reason under This run) and data it needs to share. Click a name to open the source." /></div>
         <div className="overflow-x-auto">
           <table className="w-full text-[15px]">
             <thead>

@@ -1,6 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { Badge, Card, CardHeader, Empty, ExtLink, Select, cx } from '../../components/ui';
-import { cascadeTotals, fmtInt, pct, TbCampaign, TbResult } from '../../lib/tb';
+import { cascadeTotals, fmtInt, OutreachArea, pct, TbCampaign, TbResult } from '../../lib/tb';
+import { BasisTag } from './common';
+import { placeOf, spanOf } from './Outreach';
 import type { TbData } from './TbPage';
 
 const WHO_HANDBOOK = 'https://www.who.int/publications-detail-redirect/9789240022614';
@@ -27,12 +29,14 @@ export default function Analytics({ data }: { data: TbData }) {
   const t = cascadeTotals(rows);
   const target = shown.reduce((s, c) => s + (c.target_screened || 0), 0);
 
-  if (!campaigns.data.length) return <Empty icon="chart" title="No campaigns yet">Plan a campaign from a town on Find and act; its results show here.</Empty>;
+  const outreach = data.outreach.map((a) => <OutreachAnalytics key={a.id} area={a} />);
+  if (!campaigns.data.length) return <div className="space-y-5">{outreach}<Empty icon="chart" title="No campaigns yet">Plan a campaign from a town on Find and act; its results show here.</Empty></div>;
 
   const preDx = Math.max(0, t.presumptive - t.tested);
   const preTx = Math.max(0, t.confirmed - t.started_treatment);
   return (
     <div className="space-y-5">
+      {outreach}
       <div className="flex flex-wrap items-center gap-3">
         <Select className="w-[320px] max-w-full" value={scope} onChange={setScope} placeholder="All campaigns" options={campaigns.data.map((c) => ({ value: c.id, label: c.name }))} />
         <span className="ml-auto text-xs text-gray-500">Indicators follow the <ExtLink href={WHO_HANDBOOK}>WHO screening handbook, section 2.7.2</ExtLink></span>
@@ -100,13 +104,15 @@ function Pair({ label, value }: { label: string; value: React.ReactNode }) {
 const LOSS: Record<number, string> = { 3: 'presumptive not tested (lost before diagnosis)', 5: 'confirmed not started on treatment (lost before treatment)' };
 const DROP: Record<number, string> = { 1: 'reached but not screened', 2: 'screened negative', 4: 'tested negative' };
 
+/** Bars to scale for the steps present in `t` (outreach returns have no "reached" step). */
 function Cascade({ t }: { t: Record<string, number> }) {
   const base = Math.max(t.people_reached || 0, t.screened || 0, 1);
+  const steps = STEPS.filter((s) => s.key in t);
   return (
     <ol className="space-y-2.5">
-      {STEPS.map((s, i) => {
+      {steps.map((s, i) => {
         const v = t[s.key] || 0;
-        const prev = i > 0 ? t[STEPS[i - 1].key] || 0 : null;
+        const prev = i > 0 ? t[steps[i - 1].key] || 0 : null;
         const w = Math.min(100, (v / base) * 100);
         return (
           <li key={s.key} title={s.note}>
@@ -115,7 +121,7 @@ function Cascade({ t }: { t: Record<string, number> }) {
               <span className="tabular-nums text-gray-900 font-medium">{fmtInt(v)}{prev != null && <span className="text-xs text-gray-500 font-normal"> · {pct(v, prev)} of previous</span>}</span>
             </div>
             <div className="h-3 mt-1 rounded bg-gray-100 overflow-hidden"><div className={cx('h-full rounded', i === 0 ? 'bg-brand-300' : 'bg-brand-600')} style={{ width: `${Math.max(w, v ? 0.8 : 0)}%` }} /></div>
-            {prev != null && prev > v && <div className={cx('text-xs mt-0.5', LOSS[i] ? 'text-red-700' : 'text-gray-500')}>{fmtInt(prev - v)} {LOSS[i] || DROP[i]}</div>}
+            {prev != null && prev > v && <div className={cx('text-xs mt-0.5', LOSS[STEPS.indexOf(s)] ? 'text-red-700' : 'text-gray-500')}>{fmtInt(prev - v)} {LOSS[STEPS.indexOf(s)] || DROP[STEPS.indexOf(s)]}</div>}
           </li>
         );
       })}
@@ -179,5 +185,26 @@ function BySpot({ rows }: { rows: TbResult[] }) {
         })}
       </tbody>
     </table>
+  );
+}
+
+/** Partner outreach returns as the same cascade: what the teams found, and where people were lost. */
+function OutreachAnalytics({ area }: { area: OutreachArea }) {
+  const o = area.totals;
+  const t = { screened: o.screened, presumptive: o.presumed, tested: o.tested, confirmed: o.positive, started_treatment: o.treated };
+  const notTested = Math.max(0, o.presumed - o.tested), notTreated = Math.max(0, o.positive - o.treated);
+  return (
+    <Card>
+      <CardHeader title={<span className="inline-flex items-center gap-2">Outreach in {placeOf(area)} · {spanOf(area)}<BasisTag b="reported" /></span>}
+        subtitle={`Community outreach returns${area.sharedBy ? ` shared by ${area.sharedBy}` : ''}: ${area.reported} of ${area.months.length} months reported, ${area.communities.length} communities. Counts as written in the report.`} />
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-5">
+        <Kpi label="People screened" value={fmtInt(o.screened)} sub={`${area.communities.length} communities`} />
+        <Kpi label="Presumptive TB" value={fmtInt(o.presumed)} sub={`${pct(o.presumed, o.screened)} of screened`} />
+        <Kpi label="TB positive" value={fmtInt(o.positive)} sub={o.positive ? `1 case per ${fmtInt(o.screened / o.positive)} screened` : '—'} />
+        <Kpi label="Started treatment" value={pct(o.treated, o.positive)} sub={`${fmtInt(o.treated)} of ${fmtInt(o.positive)} positive`} />
+        <Kpi label="Not tested" value={fmtInt(notTested)} sub={`${pct(notTested, o.presumed)} of presumptive cases${notTreated ? ` · ${fmtInt(notTreated)} positive not treated` : ''}`} alert={notTested > 0} />
+      </div>
+      <Cascade t={t} />
+    </Card>
   );
 }
