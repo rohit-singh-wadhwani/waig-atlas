@@ -149,6 +149,11 @@ export default function Explorer({ data, goTab }: { data: TbData; goTab: (t: str
   // one flag per campaign spot (or at its town, else its district, when it has no spots): green once any task has
   // moved or any result is in, red while nothing has happened since it was created
   const [flag, setFlag] = useState<string | null>(null);
+  // an opened campaign stays only while the view is its district (and its town, inside a town); moving elsewhere closes it
+  useEffect(() => {
+    const c = flag ? campaigns.data.find((x) => x.id === flag) : null;
+    if (flag && (!c || (districtId && c.district_id !== districtId) || (town && c.town !== town.name))) setFlag(null);
+  }, [districtId, town]); // eslint-disable-line react-hooks/exhaustive-deps
   // "Go to its town" from a campaign: the district opens first, then the town once that district's detail has loaded
   const [goTown, setGoTown] = useState<{ district: string; town: string } | null>(null);
   useEffect(() => {
