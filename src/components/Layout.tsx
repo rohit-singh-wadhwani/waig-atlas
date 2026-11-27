@@ -5,10 +5,10 @@ import { Avatar, Badge, cx } from './ui';
 import { DEMO, Me, onSaveError, signOut } from '../lib/store';
 import { useLocalPref } from '../lib/hooks';
 
-/** Demo build: Atlas opens straight on TB surveillance under the Aurum Institute's logo, with the sidebar (and every
- *  other page) hidden. The pages and their data jobs are untouched; set this to false to bring them back. */
+/** Demo build: Atlas opens straight on TB surveillance, with the logo in the page header instead of the sidebar and
+ *  every other page hidden. The pages and their data jobs are untouched; set this to false to bring them back. */
 export const TB_ONLY = true;
-export const BRAND = TB_ONLY ? { logo: 'aurum-logo.png', name: 'The Aurum Institute' } : { logo: 'logo.png', name: 'Wadhwani AI Global' };
+export const BRAND = { logo: 'logo.png', name: 'Wadhwani AI Global' };
 
 export const MeContext = createContext<Me | null>(null);
 export const useMe = () => useContext(MeContext)!;
@@ -149,12 +149,10 @@ export function PageHeader({ title, subtitle, updatedAt, actions }: { title: str
   const stamp = updatedAt ? new Date(updatedAt) : now;
   return (
     <header className={cx('flex flex-col xl:flex-row items-start gap-4 justify-between mb-7', !TB_ONLY && 'pl-12 lg:pl-0')}>
-      <div className="min-w-0 flex-1 flex items-start gap-5">
-        {TB_ONLY && <img src={`${process.env.PUBLIC_URL}/${BRAND.logo}`} alt={BRAND.name} className="h-[76px] w-auto shrink-0" />}
-        <div className="min-w-0">
-          <h1 className="text-[34px] sm:text-[40px] font-bold tracking-tight text-gray-900 leading-tight">{title}</h1>
-          {subtitle && <p className="text-[17px] text-gray-600 mt-2">{subtitle}</p>}
-        </div>
+      <div className="min-w-0 flex-1">
+        {TB_ONLY && <img src={`${process.env.PUBLIC_URL}/${BRAND.logo}`} alt={BRAND.name} className="h-[52px] w-auto mb-4" />}
+        <h1 className="text-[34px] sm:text-[40px] font-bold tracking-tight text-gray-900 leading-tight">{title}</h1>
+        {subtitle && <p className="text-[17px] text-gray-600 mt-2">{subtitle}</p>}
       </div>
       <div className="flex items-center gap-3 flex-wrap shrink-0">
         {actions}
