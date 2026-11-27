@@ -14,7 +14,12 @@ export type TbDistrict = {
   markets: number; hubs: number; prisons: number; mines: number; ports: number; industrial: number; towns: number; lon: number; lat: number;
   // joined in the app (members only)
   notified: number | null; notified_basis: string | null; detection: number | null; screened: number; confirmed: number; approach: ApproachKey;
+  /** Likely next hotspots: the district's top hexagons by expected cases a year × crowding against Ghana (pipeline). */
+  hot?: TbHotspot[];
 };
+/** A hexagon where a hotspot is most likely next: its town, high density point, people, buildings, expected cases a
+ *  year (e), walking minutes (w) and km (f) to care, crowding as a multiple of Ghana's people per building, and the score. */
+export type TbHotspot = { h: string; town: string | null; lon: number; lat: number; p: number; b: number | null; e: number; w: number | null; f: number | null; crowd: number; score: number };
 /** One H3 hexagon. b = buildings; u = settlement density (d dense urban, t town/peri-urban, r rural);
  *  s = suggested screening point, sp/sb = people/buildings within ~350 m of it, rd = metres from it to a road. */
 export type TbHexRow = { h: string; p: number; e: number; k: number; f: number | null; w: number | null; t: number; b: number | null; u: 'd' | 't' | 'r'; s: [number, number]; sp: number; sb: number | null; rd: number | null; r: [number, number][] };

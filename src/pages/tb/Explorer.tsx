@@ -7,7 +7,7 @@ import { useMe } from '../../components/Layout';
 import { useData } from '../../lib/hooks';
 import { uid } from '../../lib/store';
 import { peopleOptions, personName, usePeople } from '../../lib/team';
-import { APPROACH, approachOf, cascadeTotals, createCampaign, expectedPositivity, fmtInt, loadDistrictDetail, loadReportedRegions, rulesFrom, tbSave, TbCampaign, TbDistrict, TbHexRow, TbPriorities, TbPriorityPick, TbResult, TbStaffRole, TbTask, TbTown, TbVenue } from '../../lib/tb';
+import { APPROACH, approachOf, cascadeTotals, createCampaign, expectedPositivity, fmtInt, loadDistrictDetail, loadReportedRegions, rulesFrom, tbSave, TbCampaign, TbDistrict, TbHexRow, TbHotspot, TbPriorities, TbPriorityPick, TbResult, TbStaffRole, TbTask, TbTown, TbVenue } from '../../lib/tb';
 import { BasisTag, esc, Funnel, HowTag, kmFmt, Panel, pctFmt, Stat, Why } from './common';
 import { DistrictInsight, Factors, PRIORITY_HOW, priorityInputs, SignalTag, Towns } from './Priorities';
 import { directorateOf, WhoDoesWhat } from './Roles';
@@ -122,6 +122,15 @@ export default function Explorer({ data, goTab }: { data: TbData; goTab: (t: str
   // the suggested screening point of each hexagon in the open town (filled red once added to the campaign)
   const suggestedFc = useMemo(() => (town ? { type: 'FeatureCollection', features: townHexes.filter((h) => h.s).map((h) => ({ type: 'Feature', properties: { h: h.h, sp: h.sp, sb: h.sb, rd: h.rd, sel: selHex.includes(h.h), used: pins.some((x) => x.h === h.h && x.lon === h.s[0] && x.lat === h.s[1]) }, geometry: { type: 'Point', coordinates: h.s } })) } : null), [town, townHexes, selHex, pins]);
   const hBreaks = useMemo(() => breaksFor(townHexes.map((h) => h.k)), [townHexes]);
+  // a hotspot chosen in the Ghana panel: once its town is open, its hexagon is selected
+  const [goHex, setGoHex] = useState<string | null>(null);
+  useEffect(() => {
+    if (goHex && townHexes.some((h) => h.h === goHex)) { setSelHex([goHex]); setGoHex(null); }
+  }, [goHex, townHexes]);
+  const goHotspot = (districtId: string, x: TbHotspot) => {
+    setDistrictId(districtId);
+    if (x.town) { setGoTown({ district: districtId, town: x.town }); setGoHex(x.h); }
+  };
   const townFc = useMemo(() => (det ? { type: 'FeatureCollection', features: det.towns.filter((t) => t.geom).map((t) => ({ type: 'Feature', properties: { key: townKey(t), nodata: !!t.nodata, name: t.name, place: t.place, pop: t.pop, expected: t.expected, expected_km2: t.expected_km2, lon: t.lon, lat: t.lat }, geometry: t.geom })) } : null), [det]);
   const tBreaks = useMemo(() => (det ? breaksFor(det.towns.filter((t) => !t.nodata).map((t) => t.expected_km2)) : []), [det]);
   const venueFc = useMemo(() => ({ type: 'FeatureCollection', features: venues.map((v) => ({ type: 'Feature', properties: { ...v, key: venueKey(v) }, geometry: { type: 'Point', coordinates: [v.lon, v.lat] } })) }), [venues]);
@@ -230,7 +239,7 @@ export default function Explorer({ data, goTab }: { data: TbData; goTab: (t: str
         <aside ref={panelRef} className="min-w-0 space-y-4 xl:min-h-0 xl:overflow-y-auto xl:pr-1 xl:pb-4">
           {flag && <CampaignPanel id={flag} data={data} onClose={() => setFlag(null)} onOpen={() => goTab('campaigns', flag)}
             onGo={(c) => { if (c.district_id) { setDistrictId(c.district_id); if (c.town) setGoTown({ district: c.district_id, town: c.town }); } }} />}
-          {!d && <GhanaPanel field={field} roles={roles.data} scoped={!!scope}
+          {!d && <GhanaPanel onHotspot={goHotspot} field={field} roles={roles.data} scoped={!!scope}
             list={scope?.districts ? list.filter((x) => scope.districts!.has(x.id)) : list} nat={nat} natRate={natRate} rank={rank} campaigns={campaigns.data} notified={dist.data.notifiedDistricts} onOpen={setDistrictId} goTab={goTab} priorities={data.priorities.data} />}
           {d && !town && <DistrictPanel field={field.get(d.id) || null} onCampaign={(id) => { setFlag(id); panelRef.current?.scrollTo({ top: 0, behavior: 'smooth' }); }} roles={roles.data} d={d} det={det} loading={detail.loading} rank={rank} n={list.length} venues={venues} campaigns={campaigns.data.filter((c) => c.district_id === d.id)} onTown={(t) => setTKey(townKey(t))} rules={rules} natRate={natRate} priorities={data.priorities.data} />}
           {d && town && !planning && !created && (
@@ -413,10 +422,8 @@ function flagsFor(d: TbDistrict, rank: Record<string, Map<string, number>>) {
 }
 
 // ---------------- level 1: Ghana ----------------
-function GhanaPanel({ field, roles, scoped, list, nat, natRate, rank, campaigns, notified, onOpen, goTab, priorities }: { field: Map<string, FieldStats>; roles: TbStaffRole[]; scoped: boolean; list: TbDistrict[]; nat: any; natRate: number | null; rank: Record<string, Map<string, number>>; campaigns: TbCampaign[]; notified: number; onOpen: (id: string) => void; goTab: (t: string) => void; priorities: TbPriorities | null }) {
+function GhanaPanel({ onHotspot, field, roles, scoped, list, nat, natRate, rank, campaigns, notified, onOpen, goTab, priorities }: { onHotspot: (districtId: string, x: TbHotspot) => void; field: Map<string, FieldStats>; roles: TbStaffRole[]; scoped: boolean; list: TbDistrict[]; nat: any; natRate: number | null; rank: Record<string, Map<string, number>>; campaigns: TbCampaign[]; notified: number; onOpen: (id: string) => void; goTab: (t: string) => void; priorities: TbPriorities | null }) {
   // the AI ranking leads once one exists; the two data rankings stay one click away
-  const [picked, setSort] = useState<'ai' | 'count' | 'rate' | null>(null);
-  const sort = picked ?? (priorities?.picks.length ? 'ai' : 'count');
   const [region, setRegion] = useState('');
   const byId = useMemo(() => new Map(list.map((d) => [d.id, d])), [list]);
   const picks = useMemo(() => new Map((priorities?.picks || []).map((p) => [p.district_id, p])), [priorities]);
@@ -425,10 +432,11 @@ function GhanaPanel({ field, roles, scoped, list, nat, natRate, rank, campaigns,
   const inRegion = (d: TbDistrict) => !region || d.region === region;
   // districts where our campaigns have reported results lead the list in every ordering; the ranking follows
   const pinned = list.filter((d) => field.has(d.id) && inRegion(d)).sort((a, b) => field.get(b.id)!.totals.screened - field.get(a.id)!.totals.screened);
-  const ranked = sort === 'ai'
-    ? (priorities?.picks || []).map((p) => byId.get(p.district_id)).filter((d): d is TbDistrict => !!d && !field.has(d.id) && inRegion(d))
-    : list.filter((d) => !field.has(d.id) && inRegion(d)).sort((a, b) => (sort === 'count' ? b.expected - a.expected : b.expected_100k - a.expected_100k));
-  const rows = [...pinned, ...(sort === 'ai' || all ? ranked : ranked.slice(0, 12))];
+  // the AI ranking when it exists, else expected cases; districts with our field results lead
+  const ranked = priorities?.picks.length
+    ? priorities.picks.map((p) => byId.get(p.district_id)).filter((d): d is TbDistrict => !!d && !field.has(d.id) && inRegion(d))
+    : list.filter((d) => !field.has(d.id) && inRegion(d)).sort((a, b) => b.expected - a.expected);
+  const rows = [...pinned, ...(all ? ranked : ranked.slice(0, 12))];
   const active = campaigns.filter((c) => c.status === 'planned' || c.status === 'active');
   return (
     <>
@@ -442,17 +450,18 @@ function GhanaPanel({ field, roles, scoped, list, nat, natRate, rank, campaigns,
         {!notified && <p className="text-xs text-amber-800 bg-amber-50 rounded-lg px-3 py-2 mt-3">District notifications are not connected yet (needs DHIMS2), so district figures are expected cases, not measured gaps.</p>}
       </Panel>
 
-      <Panel title="Where to screen next" sub={sort === 'ai' && priorities ? priorities.summary : "Estimated new TB cases in a year, by district. Red or green shows the district's rate against Ghana's."}
-        right={<div className="flex items-center gap-2 shrink-0"><Why text={sort === 'ai' ? PRIORITY_HOW : `Cases a year = new TB cases expected in this district in one year, not cases counted (district notifications need DHIMS2). Made from WHO's ${nat?.year ?? 'latest'} Ghana rates by age and sex (WHO Global TB Programme) × the district's people by age and sex (GSS Census 2021, grown to 2026 with WorldPop) × its region's HIV, undernourishment and smoking (DHS 2022/2014), scaled so all ${list.length} districts add up to WHO's ${fmtInt(nat?.incidence)}. Per 100k people = cases a year ÷ people living there × 100,000, so districts of different size compare fairly${natRate ? `; Ghana's is ${fmtInt(natRate)}` : ''}.`} /><div className="flex rounded-lg bg-gray-100 p-0.5 text-sm">{(priorities?.picks.length ? (['ai', 'count', 'rate'] as const) : (['count', 'rate'] as const)).map((k) => <button key={k} type="button" onClick={() => setSort(k)} className={cx('px-2.5 py-1 rounded-md whitespace-nowrap', sort === k ? 'bg-white shadow-sm font-medium' : 'text-gray-600')}>{k === 'ai' ? 'AI priority' : k === 'count' ? 'Most cases' : 'Highest rate'}</button>)}</div></div>}>
-        {sort === 'ai' && priorities && <p className="text-xs text-gray-500 -mt-1 mb-3">{priorityInputs(priorities)}</p>}
+      <Panel title="Where to screen next" sub={priorities ? priorities.summary : "Districts by expected new TB cases in a year."}
+        right={<Why text={priorities ? PRIORITY_HOW : `Cases a year = new TB cases expected in this district in one year, not cases counted (district notifications need DHIMS2). Made from WHO's ${nat?.year ?? 'latest'} Ghana rates by age and sex × the district's people by age and sex (GSS Census 2021, grown to 2026 with WorldPop) × its region's HIV, undernourishment and smoking (DHS 2022/2014), scaled so all ${list.length} districts add up to WHO's ${fmtInt(nat?.incidence)}.`} />}>
+        {priorities && <p className="text-xs text-gray-500 -mt-1 mb-3">{priorityInputs(priorities)}</p>}
         <Select className="w-full mb-2 [&_select]:h-9 [&_select]:text-sm" value={region} onChange={setRegion} placeholder={`All ${regions.length} regions`} options={regions.map((r) => ({ value: r, label: r }))} />
         {!rows.length ? <p className="text-sm text-gray-500 py-3">No AI priority in this region today. Switch to Most cases or Highest rate to see its districts.</p> : (
           <ol className="divide-y divide-gray-100">
-            {rows.map((d, i) => <DistrictRow key={d.id} d={d} rank={i + 1} sort={sort} pick={picks.get(d.id) || null} flags={flagsFor(d, rank)} field={field.get(d.id) || null} onOpen={() => onOpen(d.id)} />)}
+            {rows.map((d, i) => <DistrictRow key={d.id} d={d} rank={i + 1} pick={picks.get(d.id) || null} flags={flagsFor(d, rank)} field={field.get(d.id) || null} onOpen={() => onOpen(d.id)} />)}
           </ol>
         )}
-        {sort !== 'ai' && ranked.length > 12 && <button type="button" className="text-sm text-brand-700 hover:underline mt-2" onClick={() => setAll(!all)}>{all ? 'Show top 12' : `Show all ${ranked.length + pinned.length}`}</button>}
+        {ranked.length > 12 && <button type="button" className="text-sm text-brand-700 hover:underline mt-2" onClick={() => setAll(!all)}>{all ? 'Show top 12' : `Show all ${ranked.length + pinned.length}`}</button>}
       </Panel>
+      <NextHotspots list={list.filter(inRegion)} field={field} onGo={onHotspot} />
       <WhoDoesWhat roles={roles} levels={['national', 'regional']} here={scoped && regions.length === 1 ? `Ghana and the ${regions[0]} region` : 'Ghana and its regions'} />
     </>
   );
@@ -848,7 +857,7 @@ function sampleCascade(d: TbDistrict): Record<string, number> {
 
 /** One district in "Where to screen next": the same row for every district and every ordering. The funnel shows our
  *  reported results where campaigns have reported, and sample figures elsewhere. */
-function DistrictRow({ d, rank, sort, pick, flags, field, onOpen }: { d: TbDistrict; rank: number; sort: 'ai' | 'count' | 'rate'; pick: TbPriorityPick | null; flags: string[]; field: FieldStats | null; onOpen: () => void }) {
+function DistrictRow({ d, rank, pick, flags, field, onOpen }: { d: TbDistrict; rank: number; pick: TbPriorityPick | null; flags: string[]; field: FieldStats | null; onOpen: () => void }) {
   const [open, setOpen] = useState<'' | 'why' | 'funnel'>('');
   const t = field?.totals || sampleCascade(d);
   const flip = (k: 'why' | 'funnel') => setOpen(open === k ? '' : k);
@@ -858,14 +867,13 @@ function DistrictRow({ d, rank, sort, pick, flags, field, onOpen }: { d: TbDistr
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-2">
           <button type="button" onClick={onOpen} className="min-w-0 text-left font-medium text-gray-900 hover:underline">{d.name}</button>
-          {sort === 'ai' ? pick && <SignalTag s={pick.signal} />
-            : <span className="shrink-0 tabular-nums font-semibold">{fmtInt(sort === 'count' ? d.expected : d.expected_100k)}<span className="text-xs font-normal text-gray-500">{sort === 'count' ? ' cases a year' : ' per 100k'}</span></span>}
+          {pick ? <SignalTag s={pick.signal} /> : <span className="shrink-0 tabular-nums font-semibold">{fmtInt(d.expected)}<span className="text-xs font-normal text-gray-500"> cases a year</span></span>}
         </div>
         <div className="flex items-center justify-between gap-2 text-xs text-gray-500 mt-0.5">
           <span className="truncate">{d.region} · {fmtInt(d.expected)} cases a year · {fmtInt(d.expected_100k)} per 100k people</span>
-          {sort !== 'ai' && <span className={cx('shrink-0 font-medium', d.vs_ghana >= 1 ? 'text-red-700' : 'text-green-700')}>{vsGhana(d.vs_ghana)}</span>}
+          <span className={cx('shrink-0 font-medium', d.vs_ghana >= 1 ? 'text-red-700' : 'text-green-700')}>{vsGhana(d.vs_ghana)}</span>
         </div>
-        {pick && sort === 'ai' && <p className="text-sm text-gray-800 mt-2 leading-relaxed">{pick.why}</p>}
+        {pick && <p className="text-sm text-gray-800 mt-2 leading-relaxed">{pick.why}</p>}
         {(field || flags.length > 0) && (
           <div className="flex flex-wrap gap-1 mt-2">
             {field && <span className="text-[11px] px-1.5 py-px rounded bg-green-50 text-green-800">Our field results: {fmtInt(field.totals.confirmed)} found in {fmtInt(field.totals.screened)} screened</span>}
@@ -941,6 +949,45 @@ function FieldResults({ f, onCampaign }: { f: FieldStats; onCampaign: (id: strin
         </tbody>
       </table>
       <p className="text-xs text-gray-500 mt-2">Click a campaign for its tasks, roles and daily reports.</p>
+    </Panel>
+  );
+}
+
+/** Where the next hotspot may be: the hexagons with the most expected TB a year, weighted by crowding, in districts with
+ *  our field results first and then across Ghana. Each opens on the map with its hexagon selected. */
+function NextHotspots({ list, field, onGo }: { list: TbDistrict[]; field: Map<string, FieldStats>; onGo: (districtId: string, x: TbHotspot) => void }) {
+  const rows = useMemo(() => {
+    const all = list.flatMap((d) => (d.hot || []).map((x) => ({ d, x })));
+    const ours = all.filter((r) => field.has(r.d.id)).sort((a, b) => b.x.score - a.x.score);
+    const rest = all.filter((r) => !field.has(r.d.id)).sort((a, b) => b.x.score - a.x.score);
+    return [...ours, ...rest].slice(0, 8);
+  }, [list, field]);
+  if (!rows.length) return null;
+  return (
+    <Panel title="Where the next hotspot may be" sub="Hexagons (about 0.74 km²) where the most TB is expected in a year, weighted by how crowded homes are. Open one to place a screening point at its high density point."
+      right={<Why text="Score = expected TB cases a year in the hexagon (people living there × the district's expected rate) × crowding (its people per building ÷ Ghana's). Both come from measured layers: WorldPop, Open Buildings and the district estimate. Districts with our field results come first. Once DHIMS2 monthly notifications and day-to-day screening results from partner and GHS sites are connected, a model trained on them, with weather, air pollution and the other map layers, will predict where cases rise next; this list is the starting estimate." />}>
+      <ol className="divide-y divide-gray-100">
+        {rows.map(({ d, x }, i) => (
+          <li key={x.h}>
+            <button type="button" onClick={() => onGo(d.id, x)} className="w-full text-left py-3 flex gap-3 hover:bg-gray-50 rounded-lg px-1">
+              <span className="w-6 text-sm text-gray-400 tabular-nums pt-0.5">{i + 1}</span>
+              <span className="min-w-0 flex-1">
+                <span className="flex items-baseline justify-between gap-2">
+                  <span className="font-medium text-gray-900 truncate">{x.town || 'Unnamed area'}<span className="font-normal text-gray-500">, {d.name.replace(/\s*\(.*\)$/, '')}</span></span>
+                  <span className="shrink-0 tabular-nums font-semibold">≈{x.e < 10 ? x.e.toFixed(1) : fmtInt(x.e)}<span className="text-xs font-normal text-gray-500"> cases a year</span></span>
+                </span>
+                <span className="block text-xs text-gray-500 mt-0.5">{fmtInt(x.p)} people · crowding {x.crowd.toFixed(1)}× Ghana · {x.w != null ? `${x.w < 5 ? 'under 5' : fmtInt(x.w)} min walk to care` : `${kmFmt(x.f)} to care`}</span>
+                <span className="flex flex-wrap gap-1 mt-1.5">
+                  <BasisTag b="estimated" />
+                  {field.has(d.id) && <span className="text-[11px] px-1.5 py-px rounded bg-green-50 text-green-800">District with our field results</span>}
+                  {x.w != null && x.w >= 60 && <span className="text-[11px] px-1.5 py-px rounded bg-orange-50 text-orange-800">Far from care</span>}
+                </span>
+              </span>
+              <Icon name="chevronRight" size={16} className="text-gray-400 mt-1" />
+            </button>
+          </li>
+        ))}
+      </ol>
     </Panel>
   );
 }
