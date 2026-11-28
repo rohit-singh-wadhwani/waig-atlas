@@ -1,5 +1,5 @@
 {
- "updated_at": "2026-11-28T02:36:37.858Z",
+ "updated_at": "2026-11-28T03:34:59.639Z",
  "grants": [
   {
    "id": "f4a4ef7d5c8b0fd4",
@@ -2738,6 +2738,45 @@
    "notes": null,
    "added_by": null,
    "updated_at": "2026-11-25T14:51:21.803268+00:00"
+  },
+  {
+   "id": "sc_3d657e7ae0265a30",
+   "title": "Development of monoclonal antibodies to prevent and treat infections from Filo-, Nairo-, Phenui-, Picorna- and Toga viruses (HORIZON-HLTH-2027-01-DISEASE-07)",
+   "funder": "European Commission",
+   "summary": "Funds research and experimental development of monoclonal antibody therapeutics and prophylactics against emerging viral threats. WAIG develops AI software and triage algorithms, not wet-lab biologics or pharmaceutical products.",
+   "amount_text": null,
+   "amount_usd": null,
+   "deadline": "2027-02-17",
+   "open_date": null,
+   "eligibility": "Consortium partner (EU lead required)",
+   "requirements": "Collaborative Horizon Europe consortium with at least three independent legal entities from EU Member States or Associated Countries. Targets preclinical and clinical development of antiviral monoclonal antibodies.",
+   "countries": [
+    "GLOBAL"
+   ],
+   "regions": [],
+   "themes": [
+    "Infectious Disease",
+    "Therapeutics",
+    "Virology",
+    "Pandemic Preparedness"
+   ],
+   "url": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-HLTH-2027-01-DISEASE-07",
+   "source_id": "scout-eu-ai-health",
+   "source_name": "EU Funding & Tenders: AI + health",
+   "fetched_at": "2026-11-28T03:28:06.097+00:00",
+   "score": null,
+   "strengths": [],
+   "weaknesses": [],
+   "score_reason": null,
+   "curated": false,
+   "deadline_text": "Deadline 17 Feb 2027",
+   "sector": "Healthcare (Therapeutics / Virology)",
+   "fit": null,
+   "eligible_as": null,
+   "geography": "Europe and Associated Countries",
+   "notes": null,
+   "added_by": null,
+   "updated_at": "2026-11-28T03:28:06.097+00:00"
   }
  ]
 }

@@ -2,6 +2,18 @@
  "runs": [
   {
    "job": "grants",
+   "at": "2026-11-28T03:35:09.483Z",
+   "ok": true,
+   "message": "0 new calls added (8 candidates), 91 tracked · Gemini 2/2 calls ok"
+  },
+  {
+   "job": "scout",
+   "at": "2026-11-28T03:34:55.358Z",
+   "ok": true,
+   "message": "1 new opportunities written up (0 rated High/Medium) from 5 candidates (0 queued for the next run) · Gemini 3/11 calls ok (last error: Gemini network error: The operation was aborted due to timeout)"
+  },
+  {
+   "job": "grants",
    "at": "2026-11-28T02:36:48.143Z",
    "ok": true,
    "message": "0 new calls added (8 candidates), 90 tracked · Gemini 2/2 calls ok"
@@ -347,18 +359,6 @@
    "at": "2026-11-23T16:25:53.785Z",
    "ok": true,
    "message": "1 new insights (1 candidates), 205 kept · Gemini 1/11 calls ok (last error: Gemini gemini-3.5-flash-lite 503)"
-  },
-  {
-   "job": "grants",
-   "at": "2026-11-23T14:45:18.242Z",
-   "ok": true,
-   "message": "0 new calls added (6 candidates), 89 tracked · Gemini 1/6 calls ok (last error: Gemini gemini-3.5-flash-lite 503)"
-  },
-  {
-   "job": "insights",
-   "at": "2026-11-23T13:43:14.853Z",
-   "ok": true,
-   "message": "1 new insights (4 candidates), 204 kept · Gemini 1/7 calls ok (last error: Gemini gemini-3.1-flash-lite-preview (search) quota: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://aistudio.google.com/docs/rate-)"
   }
  ]
 }
